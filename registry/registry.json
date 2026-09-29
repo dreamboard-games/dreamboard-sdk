@@ -171,7 +171,8 @@
           "target": "@components/dreamboard/players.tsx"
         }
       ],
-      "registryDependencies": ["@dreamboard/tokens"]
+      "registryDependencies": ["@dreamboard/tokens"],
+      "dependencies": ["cn@^0.4.0"]
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",
@@ -186,7 +187,8 @@
           "target": "@components/dreamboard/resources.tsx"
         }
       ],
-      "registryDependencies": ["@dreamboard/tokens"]
+      "registryDependencies": ["@dreamboard/tokens"],
+      "dependencies": ["cn@^0.4.0"]
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",
@@ -216,7 +218,8 @@
           "target": "@components/dreamboard/event-log.tsx"
         }
       ],
-      "registryDependencies": ["@dreamboard/tokens"]
+      "registryDependencies": ["@dreamboard/tokens"],
+      "dependencies": ["cn@^0.4.0"]
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",
@@ -231,7 +234,7 @@
           "target": "@components/dreamboard/standings.tsx"
         }
       ],
-      "registryDependencies": ["@dreamboard/tokens"]
+      "registryDependencies": ["@dreamboard/tokens", "table"]
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",
@@ -249,7 +252,11 @@
           "target": "@components/dreamboard/hand.tsx"
         }
       ],
-      "registryDependencies": ["@dreamboard/tokens"]
+      "registryDependencies": ["@dreamboard/tokens", "button"],
+      "dependencies": [
+        "@base-ui/react@^1.8.0",
+        "class-variance-authority@^0.7.1"
+      ]
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",
@@ -303,7 +310,16 @@
           "target": "@components/dreamboard/interaction-form.tsx"
         }
       ],
-      "registryDependencies": ["@dreamboard/actions"]
+      "registryDependencies": [
+        "@dreamboard/actions",
+        "button",
+        "input",
+        "label"
+      ],
+      "dependencies": [
+        "@base-ui/react@^1.8.0",
+        "class-variance-authority@^0.7.1"
+      ]
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",
@@ -321,7 +337,11 @@
           "target": "@components/dreamboard/actions.tsx"
         }
       ],
-      "registryDependencies": ["@dreamboard/tokens"]
+      "registryDependencies": ["@dreamboard/tokens", "button"],
+      "dependencies": [
+        "@base-ui/react@^1.8.0",
+        "class-variance-authority@^0.7.1"
+      ]
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",
@@ -356,7 +376,17 @@
           "target": "@components/dreamboard/scenario-controls.tsx"
         }
       ],
-      "registryDependencies": ["@dreamboard/tokens"]
+      "registryDependencies": [
+        "@dreamboard/tokens",
+        "button",
+        "label",
+        "native-select"
+      ],
+      "dependencies": [
+        "@base-ui/react@^1.8.0",
+        "class-variance-authority@^0.7.1",
+        "lucide-react@^1.48.0"
+      ]
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",

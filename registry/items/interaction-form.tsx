@@ -1,3 +1,6 @@
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import type { InputControl } from "@dreamboard-games/sdk";
 import { useGame } from "@game";
 import type { ReactNode } from "react";
@@ -65,9 +68,10 @@ function Control({ control }: { control: InputControl }) {
     };
     if (control.mode === "single")
       return (
-        <label>
+        <Label className="m-1 inline-flex flex-col items-start gap-1">
           {control.key}
-          <input
+          <Input
+            className="min-h-11 max-w-32"
             {...control.props}
             {...attributes}
             value={control.value ?? ""}
@@ -79,16 +83,17 @@ function Control({ control }: { control: InputControl }) {
               )
             }
           />
-        </label>
+        </Label>
       );
     return (
-      <fieldset disabled={control.disabled}>
+      <fieldset className="my-4" disabled={control.disabled}>
         <legend>{control.key}</legend>
         {control.value.map((value, index) => (
           <div key={index}>
-            <label>
+            <Label className="m-1 inline-flex flex-col items-start gap-1">
               {control.key} {index + 1}
-              <input
+              <Input
+                className="min-h-11 max-w-32"
                 {...control.props}
                 {...attributes}
                 value={value}
@@ -104,8 +109,10 @@ function Control({ control }: { control: InputControl }) {
                   )
                 }
               />
-            </label>
-            <button
+            </Label>
+            <Button
+              variant="outline"
+              className="m-1 min-h-11 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
               type="button"
               onClick={() =>
                 control.setValue(
@@ -114,10 +121,12 @@ function Control({ control }: { control: InputControl }) {
               }
             >
               Remove value {index + 1}
-            </button>
+            </Button>
           </div>
         ))}
-        <button
+        <Button
+          variant="outline"
+          className="m-1 min-h-11 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
           type="button"
           disabled={
             control.value.length >=
@@ -130,7 +139,7 @@ function Control({ control }: { control: InputControl }) {
           }
         >
           Add value
-        </button>
+        </Button>
       </fieldset>
     );
   }
@@ -143,9 +152,13 @@ function Control({ control }: { control: InputControl }) {
       change: (value: Record<string, number>) => void,
     ) =>
       control.domain.resources.map((resource) => (
-        <label key={resource.resourceId}>
+        <Label
+          className="m-1 inline-flex flex-col items-start gap-1"
+          key={resource.resourceId}
+        >
           {resource.label ?? resource.resourceId}
-          <input
+          <Input
+            className="min-h-11 max-w-32"
             {...control.props}
             type="number"
             min={resource.min}
@@ -163,20 +176,20 @@ function Control({ control }: { control: InputControl }) {
               })
             }
           />
-        </label>
+        </Label>
       ));
     if (control.mode === "single")
       return (
-        <fieldset disabled={control.disabled}>
+        <fieldset className="my-4" disabled={control.disabled}>
           <legend>{control.key}</legend>
           {row(control.value ?? empty, control.setValue)}
         </fieldset>
       );
     return (
-      <fieldset disabled={control.disabled}>
+      <fieldset className="my-4" disabled={control.disabled}>
         <legend>{control.key}</legend>
         {control.value.map((value, index) => (
-          <fieldset key={index}>
+          <fieldset className="my-4" key={index}>
             <legend>Allocation {index + 1}</legend>
             {row(value, (next) =>
               control.setValue(
@@ -185,7 +198,9 @@ function Control({ control }: { control: InputControl }) {
                 ),
               ),
             )}
-            <button
+            <Button
+              variant="outline"
+              className="m-1 min-h-11 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
               type="button"
               onClick={() =>
                 control.setValue(
@@ -194,10 +209,12 @@ function Control({ control }: { control: InputControl }) {
               }
             >
               Remove allocation {index + 1}
-            </button>
+            </Button>
           </fieldset>
         ))}
-        <button
+        <Button
+          variant="outline"
+          className="m-1 min-h-11 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
           type="button"
           disabled={
             control.value.length >=
@@ -208,17 +225,23 @@ function Control({ control }: { control: InputControl }) {
           onClick={() => control.setValue([...control.value, empty])}
         >
           Add allocation
-        </button>
+        </Button>
       </fieldset>
     );
   }
   return (
-    <fieldset disabled={control.disabled}>
+    <fieldset className="my-4" disabled={control.disabled}>
       <legend>{control.key}</legend>
       {control.options.map((option, index) => (
-        <button key={index} {...option.props} aria-pressed={option.selected}>
+        <Button
+          variant="outline"
+          className="m-1 min-h-11 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
+          key={index}
+          {...option.props}
+          aria-pressed={option.selected}
+        >
           {option.label}
-        </button>
+        </Button>
       ))}
       {control.options.length === 0 && <p>No choices available</p>}
     </fieldset>

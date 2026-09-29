@@ -25,6 +25,9 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
 :root {
@@ -92,7 +95,7 @@ select:focus-visible {
   gap: 0.5rem;
   justify-content: center;
 }
-.hearts-hand button {
+.hearts-hand button[data-action="select"] {
   background: transparent;
   border: 0;
   padding: 0.25rem;
@@ -100,11 +103,11 @@ select:focus-visible {
   min-height: 44px;
   min-width: 44px;
 }
-.hearts-hand button[data-selected="true"] {
+.hearts-hand button[data-action="select"][data-selected="true"] {
   outline: 3px solid #be123c;
   transform: translateY(-0.35rem);
 }
-.hearts-hand button:disabled {
+.hearts-hand button[data-action="select"]:disabled {
   opacity: 0.65;
 }
 .hearts-hand .db-card {

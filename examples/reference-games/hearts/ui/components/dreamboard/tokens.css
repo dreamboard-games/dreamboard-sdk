@@ -1,25 +1,6 @@
 @layer theme, base, components, utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #192b35;
-  --card: #ffffff;
-  --card-foreground: #192b35;
-  --popover: #ffffff;
-  --popover-foreground: #192b35;
-  --primary: #23576a;
-  --primary-foreground: #ffffff;
-  --secondary: #e4edf0;
-  --secondary-foreground: #203f4b;
-  --muted: #edf2f4;
-  --muted-foreground: #526570;
-  --accent: #d7e9ec;
-  --accent-foreground: #203f4b;
-  --destructive: #b32b37;
-  --border: #c7d4db;
-  --input: #c7d4db;
-  --ring: #147f97;
-  --radius: 0.5rem;
   --table: #164d50;
   --table-foreground: #f3fbfb;
   --card-w: 6.5rem;
@@ -39,23 +20,6 @@
   --seat-6: #237b80;
 }
 .dark {
-  --background: #172c35;
-  --foreground: #edf4f7;
-  --card: #213b46;
-  --card-foreground: #edf4f7;
-  --popover: #213b46;
-  --popover-foreground: #edf4f7;
-  --primary: #abd5e1;
-  --primary-foreground: #173b48;
-  --secondary: #304d59;
-  --secondary-foreground: #edf4f7;
-  --muted: #304d59;
-  --muted-foreground: #b6cbd4;
-  --accent: #345c65;
-  --accent-foreground: #edf4f7;
-  --border: #526d79;
-  --input: #526d79;
-  --ring: #abd5e1;
   --eligible: #71cda0;
   --selected: #79bdf0;
   --invalid: #ff97a0;
@@ -171,60 +135,10 @@
       sans-serif;
     pointer-events: none;
   }
-  .db-players,
-  .db-dice,
-  .db-event-log {
+  .db-dice {
     margin: 0;
     padding: 0;
     list-style: none;
-  }
-  .db-players {
-    display: grid;
-    gap: 0.75rem;
-  }
-  .db-players li {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-  .db-players small {
-    display: block;
-    color: var(--muted-foreground);
-    margin-top: 0.2rem;
-  }
-  .db-seat-mark {
-    width: 0.7rem;
-    height: 1.7rem;
-    border-radius: 0.25rem;
-    background: var(--seat-color);
-  }
-  .db-player-detail {
-    margin-inline-start: auto;
-    font-variant-numeric: tabular-nums;
-  }
-  .db-resources {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin: 0;
-  }
-  .db-resources > div {
-    display: flex;
-    align-items: baseline;
-    gap: 1rem;
-    padding: 0.5rem 0.75rem;
-    background: var(--muted);
-    border-radius: 0.35rem;
-  }
-  .db-resources dt {
-    font-size: 0.875rem;
-  }
-  .db-resources dd {
-    margin: 0;
-    font-weight: 650;
-    font-variant-numeric: tabular-nums;
-  }
-  .db-dice {
     display: flex;
     gap: 0.65rem;
     flex-wrap: wrap;
@@ -243,137 +157,14 @@
     font-size: 1.5rem;
     font-weight: 700;
   }
-  .db-event-log li {
-    padding-block: 0.7rem;
-    border-bottom: 1px solid var(--border);
-  }
-  .db-event-log small {
-    display: block;
-    color: var(--muted-foreground);
-    margin-top: 0.25rem;
-  }
-  .db-empty {
-    color: var(--muted-foreground);
-  }
-  .db-standings {
-    width: 100%;
-    border-collapse: collapse;
-    font-variant-numeric: tabular-nums;
-  }
-  .db-standings caption {
-    text-align: start;
-    font-weight: 700;
-    padding-bottom: 0.75rem;
-  }
-  .db-standings th,
-  .db-standings td {
-    text-align: start;
-    padding: 0.65rem;
-    border-bottom: 1px solid var(--border);
-  }
-  .db-standings thead {
-    color: var(--muted-foreground);
-    font-size: 0.875rem;
-  }
-  .db-standings th:last-child,
-  .db-standings td:last-child {
-    text-align: end;
-  }
 }
 
 @layer components {
-  .db-hand {
-    display: flex;
-    gap: 0.5rem;
-    align-items: flex-start;
-    overflow-x: auto;
-    padding: 0.5rem;
-  }
-  .db-hand > div {
-    flex: 0 0 auto;
-    display: grid;
-    gap: 0.25rem;
-  }
-  .db-hand > div > button {
-    flex: 0 0 auto;
-    border: 0;
-    padding: 0;
-    background: transparent;
-    border-radius: var(--radius);
-  }
-  .db-hand > div > button[aria-pressed="true"] {
-    outline: 3px solid var(--ring);
-    outline-offset: 2px;
-  }
-  .db-hand > div > button:focus-visible,
   .db-grid [role="button"]:focus-visible {
     outline: 3px solid var(--ring);
     outline-offset: 2px;
   }
-  .db-hand [data-drag-card] {
-    min-height: 2rem;
-    cursor: grab;
-  }
   .db-grid [data-drop-over="true"] {
     outline: 3px solid var(--ring);
-  }
-  .db-hand-drawer > summary {
-    cursor: pointer;
-  }
-}
-
-@layer components {
-  .db-actions,
-  .db-scenario-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.75rem;
-  }
-  .db-scenario-controls {
-    padding: 1rem;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-  }
-  .db-scenario-controls > summary {
-    width: 100%;
-    cursor: pointer;
-    font-weight: 650;
-    margin-bottom: 0.75rem;
-  }
-  .db-scenario-controls:not([open]) > :not(summary) {
-    display: none;
-  }
-  .db-scenario-controls label,
-  .db-interaction-form label {
-    display: inline-flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    margin: 0.25rem;
-  }
-  .db-scenario-controls button,
-  .db-scenario-controls select,
-  .db-interaction-form button,
-  .db-interaction-form input,
-  .db-actions button {
-    min-height: 44px;
-    border: 1px solid var(--border);
-    border-radius: calc(var(--radius) / 2);
-    background: var(--background);
-    color: var(--foreground);
-    padding: 0.5rem 0.75rem;
-  }
-  .db-interaction-form input {
-    max-width: 8rem;
-  }
-  .db-interaction-form fieldset {
-    margin-block: 1rem;
-  }
-  .db-interaction-form button {
-    margin: 0.25rem;
-  }
-  .db-scenario-controls button:disabled,
-  .db-actions button:disabled {
-    opacity: 0.55;
   }
 }

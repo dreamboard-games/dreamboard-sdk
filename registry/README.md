@@ -1,6 +1,6 @@
 # Dreamboard source registry
 
-React building blocks copied into the game that owns them. Pure display items have no SDK imports and accept ordinary DOM props and children. Bound items read the workspace’s `@game` hook and delegate interactions to the headless SDK. Local scenario controls and a browser-test helper support development without adding hosted gameplay authority. Animation remains optional and app-owned.
+React building blocks copied into the game that owns them. Pure display items have no SDK imports and accept ordinary DOM props and children. Shared controls compose installed shadcn Base UI primitives; layout uses Tailwind utilities. Bound items read the workspace’s `@game` hook and delegate interactions to the headless SDK. Local scenario controls and a browser-test helper support development without adding hosted gameplay authority. Animation remains optional and app-owned.
 
 ## Local proof
 
@@ -100,6 +100,12 @@ the actual pinned shadcn CLI for each reference game's selected items, then writ
 the intended registry URL back to their `components.json`. This proves local
 installation, not deployment of the registry hostname.
 
+Before deploying bound items, publish and pin an SDK version containing the
+registry's input-control APIs (`InputControl` and `getControl`). The currently
+published `0.5.0-alpha.4` predates those APIs. The packed-SDK smoke test proves
+source compatibility; production consumers and the compiler must use the matching
+public npm release and updated lockfile.
+
 `browser-game` installs test-only Playwright locators under `test/helpers/`, using the public gameplay DOM attributes without a command tape or executable authority.
 
 ## Compiler and authored CSS
@@ -116,3 +122,17 @@ The registry Storybook uses real Tailwind compilation. Upstream shadcn files und
 `components/ui` are development fixtures installed with the pinned CLI and are not
 republished as Dreamboard primitives. Update them with
 `pnpm --dir registry exec shadcn add button input label native-select table --yes --overwrite`.
+
+## Styling boundaries
+
+Actions, numeric fields, scenario selectors and standings compose upstream shadcn
+Button, Input, Label, NativeSelect and Table. Keep the SDK-provided handlers,
+disabled state and `data-*` props on those controls. Choice buttons remain SDK-owned
+selection actions; adding a second selection store would desynchronize drafts.
+
+Tailwind owns ordinary flex/grid layouts, spacing and typography in the hand,
+players, resources and event log. Copied game CSS retains card faces and backs,
+dice, piles, SVG geometry, board focus/drop feedback and seat/state tokens. Native
+card buttons and inline `details` disclosures retain their existing interactions.
+Customize semantic theme variables instead of styling every descendant button;
+for per-seat branding override `--seat-color` on the relevant `data-seat` element.

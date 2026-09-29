@@ -1,3 +1,4 @@
+import { cn } from "cn";
 import "./tokens.css";
 import type { ComponentProps, ReactNode } from "react";
 export type ResourceDisplay = {
@@ -15,13 +16,20 @@ export function Resources({
   ...props
 }: ResourcesProps) {
   return (
-    <dl {...props} className={`db-resources ${className}`}>
+    <dl
+      {...props}
+      className={cn("db-resources m-0 flex flex-wrap gap-2", className)}
+    >
       {resources.map((resource) => (
-        <div key={resource.id} data-resource-id={resource.id}>
-          <dt>
+        <div
+          className="flex items-baseline gap-4 rounded-md bg-muted px-3 py-2"
+          key={resource.id}
+          data-resource-id={resource.id}
+        >
+          <dt className="text-sm">
             <span aria-hidden="true">{resource.icon}</span> {resource.label}
           </dt>
-          <dd>{resource.count}</dd>
+          <dd className="m-0 font-semibold tabular-nums">{resource.count}</dd>
         </div>
       ))}
     </dl>

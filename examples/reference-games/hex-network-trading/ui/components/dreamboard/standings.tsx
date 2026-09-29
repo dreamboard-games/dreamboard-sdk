@@ -1,3 +1,12 @@
+import {
+  Table,
+  TableCaption,
+  TableHeader,
+  TableHead,
+  TableRow,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
 import "./tokens.css";
 import type { ComponentProps, ReactNode } from "react";
 export type StandingDisplay = {
@@ -20,24 +29,28 @@ export function Standings({
   ...props
 }: StandingsProps) {
   return (
-    <table {...props} className={`db-standings ${className}`}>
-      <caption>{caption}</caption>
-      <thead>
-        <tr>
-          <th scope="col">Rank</th>
-          <th scope="col">Player</th>
-          <th scope="col">{scoreLabel}</th>
-        </tr>
-      </thead>
-      <tbody>
+    <Table {...props} className={`db-standings tabular-nums ${className}`}>
+      <TableCaption className="mb-3 mt-0 caption-top text-start font-bold text-foreground">
+        {caption}
+      </TableCaption>
+      <TableHeader>
+        <TableRow>
+          <TableHead scope="col">Rank</TableHead>
+          <TableHead scope="col">Player</TableHead>
+          <TableHead scope="col" className="text-end">
+            {scoreLabel}
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
         {standings.map((row) => (
-          <tr key={row.id}>
-            <td>{row.rank}</td>
-            <th scope="row">{row.name}</th>
-            <td>{row.score}</td>
-          </tr>
+          <TableRow key={row.id}>
+            <TableCell>{row.rank}</TableCell>
+            <TableHead scope="row">{row.name}</TableHead>
+            <TableCell className="text-end">{row.score}</TableCell>
+          </TableRow>
         ))}
-      </tbody>
-    </table>
+      </TableBody>
+    </Table>
   );
 }

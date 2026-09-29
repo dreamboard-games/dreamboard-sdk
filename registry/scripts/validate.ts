@@ -42,6 +42,7 @@ for (const item of registry.items) {
       if (
         name !== "react" &&
         !name.startsWith("./") &&
+        !(name === "cn" && item.dependencies?.includes("cn@^0.4.0")) &&
         !(
           name.startsWith("@/components/ui/") &&
           item.registryDependencies?.includes(
