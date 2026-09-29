@@ -56,7 +56,8 @@ try {
     const cwd = path.resolve(root, "../examples/reference-games", name);
     const config = {
       $schema: "https://ui.shadcn.com/schema.json",
-      style: "new-york",
+      style: "base-nova",
+      iconLibrary: "lucide",
       rsc: false,
       tsx: true,
       tailwind: {

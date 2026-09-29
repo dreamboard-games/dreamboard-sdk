@@ -1,25 +1,6 @@
 @layer theme, base, components, utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #192b35;
-  --card: #ffffff;
-  --card-foreground: #192b35;
-  --popover: #ffffff;
-  --popover-foreground: #192b35;
-  --primary: #23576a;
-  --primary-foreground: #ffffff;
-  --secondary: #e4edf0;
-  --secondary-foreground: #203f4b;
-  --muted: #edf2f4;
-  --muted-foreground: #526570;
-  --accent: #d7e9ec;
-  --accent-foreground: #203f4b;
-  --destructive: #b32b37;
-  --border: #c7d4db;
-  --input: #c7d4db;
-  --ring: #147f97;
-  --radius: 0.5rem;
   --table: #164d50;
   --table-foreground: #f3fbfb;
   --card-w: 6.5rem;
@@ -39,23 +20,6 @@
   --seat-6: #237b80;
 }
 .dark {
-  --background: #172c35;
-  --foreground: #edf4f7;
-  --card: #213b46;
-  --card-foreground: #edf4f7;
-  --popover: #213b46;
-  --popover-foreground: #edf4f7;
-  --primary: #abd5e1;
-  --primary-foreground: #173b48;
-  --secondary: #304d59;
-  --secondary-foreground: #edf4f7;
-  --muted: #304d59;
-  --muted-foreground: #b6cbd4;
-  --accent: #345c65;
-  --accent-foreground: #edf4f7;
-  --border: #526d79;
-  --input: #526d79;
-  --ring: #abd5e1;
   --eligible: #71cda0;
   --selected: #79bdf0;
   --invalid: #ff97a0;

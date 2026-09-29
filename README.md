@@ -25,6 +25,8 @@ Only `@dreamboard-games/sdk`, `/react`, `/reducer`, `/testing` and package metad
 are public entrypoints. Hosted UIs import their game definition **as a type**;
 executable reducers belong in the server or local testing entry.
 
-The [registry](registry/README.md) installs editable UI source into the application.
+The [registry](registry/README.md) installs editable UI source into the application,
+using Tailwind CSS v4 and shadcn Base UI primitives. The starter includes the
+Tailwind pipeline for local builds and authored CSS for the Dreamboard compiler.
 It is not a styled SDK package. Registry hostname deployment is tracked separately
 from local build and installation proof. See [publishing](docs/alpha-publish.md).

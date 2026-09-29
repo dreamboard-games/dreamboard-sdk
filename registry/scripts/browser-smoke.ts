@@ -85,6 +85,24 @@ try {
         );
         await expect(page.getByRole("alert")).toHaveCount(0);
       }
+      if (story.id === "registry-primitives--controls") {
+        const primary = page.getByRole("button", { name: "Primary action" });
+        await expect(primary).toHaveCSS("height", "44px");
+        await expect(primary).toHaveCSS("background-color", "rgb(35, 87, 106)");
+        await expect(
+          page.getByRole("button", { name: "Unavailable" }),
+        ).toBeDisabled();
+        await primary.focus();
+        await expect(primary).toBeFocused();
+        await page.getByRole("spinbutton", { name: "Quantity" }).fill("3");
+        await expect(
+          page.getByRole("spinbutton", { name: "Quantity" }),
+        ).toHaveValue("3");
+        await expect(page.getByRole("combobox", { name: "Seat" })).toHaveCSS(
+          "height",
+          "44px",
+        );
+      }
       if (story.id.endsWith("composed-selection")) {
         const button = page.getByRole("button", {
           name: "Select ace of hearts",
@@ -99,7 +117,7 @@ try {
         const card = page.getByTestId("utility-card");
         await expect(card).toHaveCSS("width", "180px");
         await expect(card).toHaveCSS("border-radius", "0px");
-        await expect(card).toHaveCSS("box-shadow", "none");
+        await expect(card).toHaveCSS("--tw-shadow", "0 0 #0000");
         for (const kind of ["hex", "square"]) {
           const overlay = page.getByTestId(`${kind}-overlay`);
           await expect(overlay).toHaveCSS("fill", "rgb(255, 165, 0)");

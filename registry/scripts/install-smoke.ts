@@ -1,3 +1,6 @@
+import { build, preview } from "vite";
+import tailwindcss from "@tailwindcss/vite";
+import { chromium, expect } from "@playwright/test";
 import { z } from "zod";
 import { createServer } from "node:http";
 import { mkdtemp, mkdir, readFile, writeFile, rm } from "node:fs/promises";
@@ -79,6 +82,7 @@ try {
       },
       devDependencies: {
         ...(bound ? { "@playwright/test": "1.63.0" } : {}),
+        tailwindcss: "4.3.3",
         typescript: "6.0.3",
         "@types/react": "19.3.0",
         "@types/react-dom": "19.3.0",
@@ -113,7 +117,8 @@ try {
     path.join(project, "components.json"),
     JSON.stringify({
       $schema: "https://ui.shadcn.com/schema.json",
-      style: "new-york",
+      style: "base-nova",
+      iconLibrary: "lucide",
       rsc: false,
       tsx: true,
       tailwind: {
@@ -171,7 +176,69 @@ try {
     ],
     root,
   );
+  await writeFile(
+    path.join(project, "index.html"),
+    '<div id="root"></div><script type="module" src="/src/main.tsx"></script>',
+  );
+  await writeFile(
+    path.join(project, "src/main.tsx"),
+    `
+    import { createRoot } from "react-dom/client";
+    import { PlayingCard } from "./components/dreamboard/playing-card";
+    ${bound ? 'import { ScenarioControls } from "./components/dreamboard/scenario-controls";' : ""}
+    import "./style.css";
+    createRoot(document.getElementById("root")!).render(<main>
+      <div data-testid="theme-proof" className="flex h-11 w-[173px] bg-primary text-primary-foreground">Tailwind</div>
+      <PlayingCard rank="A" suit="hearts" />
+      ${bound ? '<ScenarioControls scenarios={["opening"]} players={[{ playerId: "one" }]} me="one" onSeatChange={() => {}} onCheckpoint={() => ({ turn: 1 })} onRestore={() => {}} />' : ""}
+    </main>);
+  `,
+  );
   await run(["exec", "tsc", "--noEmit"], project);
+  await build({
+    root: project,
+    configFile: false,
+    plugins: [tailwindcss()],
+    resolve: { alias: { "@": path.join(project, "src") } },
+    build: { outDir: "dist" },
+  });
+  const host = await preview({
+    root: project,
+    configFile: false,
+    preview: { host: "127.0.0.1", port: 0 },
+  });
+  const browser = await chromium.launch(
+    process.env.CI ? {} : { channel: "chrome" },
+  );
+  try {
+    const page = await browser.newPage();
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.goto(host.resolvedUrls!.local[0]);
+    const proof = page.getByTestId("theme-proof");
+    await expect(proof).toHaveCSS("display", "flex");
+    await expect(proof).toHaveCSS("height", "44px");
+    await expect(proof).toHaveCSS("width", "173px");
+    await expect(proof).toHaveCSS("background-color", "rgb(35, 87, 106)");
+    if (bound) {
+      await expect(
+        page.getByRole("button", { name: "Restore checkpoint" }),
+      ).toBeDisabled();
+      await page.getByRole("button", { name: "Save checkpoint" }).click();
+      await expect(
+        page.getByRole("button", { name: "Restore checkpoint" }),
+      ).toBeEnabled();
+      await expect(
+        page.getByRole("combobox", { name: "Selected seat" }),
+      ).toHaveValue("one");
+    }
+    expect(errors).toEqual([]);
+  } finally {
+    await browser.close();
+    await new Promise<void>((resolve, reject) =>
+      host.httpServer.close((error) => (error ? reject(error) : resolve())),
+    );
+  }
   for (const item of manifest.items.filter(
     (item) => bound || !item.meta?.binding,
   )) {
@@ -188,8 +255,8 @@ try {
   }
   console.log(
     bound
-      ? "Installed and typechecked all registry items against the packed SDK."
-      : "Installed and typechecked all pure registry items in an SDK-free consumer.",
+      ? "Installed and typechecked all registry items; rendered a consumer against the packed SDK."
+      : "Installed, typechecked and rendered pure registry source in an SDK-free consumer.",
   );
 } finally {
   server.close();

@@ -57,11 +57,16 @@ with Giget and runs install, check, and build against the unchanged published pi
 
 ## Optional UI components
 
-To install source registry items, initialize shadcn for your application and set
+Tailwind v4 is configured in Vite and imported by both UI entries. The application
+stylesheet owns the shadcn semantic theme and `@theme inline` mappings. The hosted
+compiler processes the same CSS through Tailwind/PostCSS; Vite configuration is
+only for local development.
+
+To install source registry items, initialize shadcn with Base UI (`base-nova`) and set
 `@dreamboard` to `https://registry.dreamboard.games/r/{name}.json` in
 `components.json` once that registry is deployed. The bound items import `@game`;
 this template maps it to `ui/game.tsx` in TypeScript and Vite. Export your binding's
 `useGame` there and enable each installed item's required features. For example,
-`board-targets` requires board and pan/zoom features. The
+`board-targets` requires board, drag and pan/zoom features. The
 [registry guide](https://github.com/dreamboard-games/dreamboard-sdk/blob/main/registry/README.md)
 describes local installation proof and deployment status.

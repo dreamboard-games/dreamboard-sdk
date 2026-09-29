@@ -13,7 +13,7 @@ pnpm --dir registry storybook:build
 pnpm --dir registry browser:smoke
 ```
 
-`check` validates the source registry using the installed official shadcn schemas, checks pure imports, typechecks components and stories, and runs `shadcn build`. Built installable items are written to `registry/build/r/`. `smoke` serves that output on an ephemeral loopback port, installs every item with the real shadcn CLI into a disposable independent React project, and typechecks the installed source. It requires npm access and deletes the temporary project afterward.
+`check` validates the source registry using the installed official shadcn schemas, checks pure imports, typechecks components and stories, and runs `shadcn build`. Built installable items are written to `registry/build/r/`. `smoke` serves that output on an ephemeral loopback port, installs every item with the real shadcn CLI into a disposable independent React project, typechecks the installed source, builds it with Tailwind and Vite, and verifies computed styles in Chrome/Chromium. It requires npm access and deletes the temporary project afterward.
 
 `storybook` starts the presentation catalog on port 6007. `browser:smoke` serves a previously built Storybook on port 6008, renders every story at 390px and 1280px, checks overflow and runtime errors, and verifies native keyboard selection. It uses installed Chrome locally and Playwright Chromium in CI. Screenshots are retained in ignored `registry/build/screenshots/`.
 
@@ -35,7 +35,13 @@ The hostname is the design's intended deployment target, not a claim that this b
 pnpm dlx shadcn@4.21.0 add @dreamboard/playing-card @dreamboard/pile
 ```
 
-Sources install below the consumer's `components` alias in `dreamboard/`. Each component imports the copied `tokens.css`; shadcn resolves the `@dreamboard/tokens` dependency and the playing-card's `@dreamboard/card` dependency. The CSS supplies shadcn base tokens, game tokens, seat colors and component styles. Component defaults live in the `components` CSS layer, so Tailwind v4 layered utilities and unlayered application CSS can override them. Grid cell and label styles target only generated elements, leaving overlay children untouched. It works without Tailwind or a theme provider. Edit the copied source and override variables after its import; `.dark` supplies a dark base palette while playing-card faces stay readable.
+Use Tailwind CSS v4 and initialize shadcn with the Base UI `base-nova` style.
+The registry composes upstream `button`, `input`, `label`, `native-select` and
+`table` source through `registryDependencies`; games own the installed primitives.
+Keep their npm dependencies in the authored package manifest so both Vite and
+the Dreamboard compiler can resolve them.
+
+Sources install below the consumer's `components` alias in `dreamboard/`. Each component imports the copied `tokens.css`; shadcn resolves the `@dreamboard/tokens` dependency and the playing-card's `@dreamboard/card` dependency. The tokens item adds shadcn theme defaults and Tailwind semantic mappings to the consumer stylesheet through registry metadata; its copied CSS supplies game tokens, seat colors and game-specific component styles. Component defaults live in the `components` CSS layer, so Tailwind v4 layered utilities and unlayered application CSS can override them. Grid cell and label styles target only generated elements, leaving overlay children untouched. Tailwind v4 compiles the installed component utilities. No React theme provider is required. Edit the copied source and customize the semantic variables in your application stylesheet; `.dark` supplies a dark base palette while playing-card faces stay readable.
 
 ```tsx
 import { PlayingCard } from "@/components/dreamboard/playing-card";
@@ -95,3 +101,18 @@ the intended registry URL back to their `components.json`. This proves local
 installation, not deployment of the registry hostname.
 
 `browser-game` installs test-only Playwright locators under `test/helpers/`, using the public gameplay DOM attributes without a command tape or executable authority.
+
+## Compiler and authored CSS
+
+Import one application CSS entry from the hosted `ui/index.tsx` and local UI entry.
+That stylesheet imports `tailwindcss` before local styles and defines the shadcn
+`@theme inline` mappings. Keep complete utility class names in source; use CSS
+variables for runtime game values rather than constructing class names.
+The Dreamboard UI compiler runs Tailwind v4/PostCSS over the authored CSS graph
+and embeds the resulting CSS in its HTML artifact. Vite plugins configure local
+development only; the hosted compiler consumes source, aliases and package dependencies.
+
+The registry Storybook uses real Tailwind compilation. Upstream shadcn files under
+`components/ui` are development fixtures installed with the pinned CLI and are not
+republished as Dreamboard primitives. Update them with
+`pnpm --dir registry exec shadcn add button input label native-select table --yes --overwrite`.

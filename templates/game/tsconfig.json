@@ -12,8 +12,10 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "paths": {
-      "@game": ["./ui/game.tsx"]
-    }
+      "@game": ["./ui/game.tsx"],
+      "@/*": ["./ui/*"]
+    },
+    "types": ["vite/client"]
   },
   "include": [
     "manifest.ts",

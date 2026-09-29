@@ -5,19 +5,16 @@
   "tsx": true,
   "tailwind": {
     "config": "",
-    "css": "ui/style.css",
+    "css": "styles.css",
     "baseColor": "slate",
     "cssVariables": true
   },
+  "iconLibrary": "lucide",
   "aliases": {
     "components": "@/components",
     "utils": "@/lib/utils",
     "ui": "@/components/ui",
     "lib": "@/lib",
     "hooks": "@/hooks"
-  },
-  "registries": {
-    "@dreamboard": "https://registry.dreamboard.games/r/{name}.json"
-  },
-  "iconLibrary": "lucide"
+  }
 }
