@@ -59,6 +59,7 @@ import { Pile } from "@/components/dreamboard/pile";
 | `tokens`       | CSS variables and styles, including six `data-seat` colors                               |
 | `card`         | Children and `idle`, `eligible`, `selected`, `invalid` visual state; separate `CardBack` |
 | `playing-card` | Rank and suit, composed from `Card`                                                      |
+| `image-card`   | Face image URL and name, composed from `Card`; shows a card view or a hidden card's back |
 | `pile`         | Count, label and top-card children; explicit empty presentation                          |
 | `hex-grid`     | Precomputed polygon points, centers and labels; SVG overlay children                     |
 | `square-grid`  | Precomputed cell positions and size; SVG overlay children                                |

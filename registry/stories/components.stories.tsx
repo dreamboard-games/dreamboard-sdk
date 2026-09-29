@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { Card, CardBack } from "../items/card";
 import { PlayingCard } from "../items/playing-card";
+import { ImageCard } from "../items/image-card";
 import { Pile } from "../items/pile";
 import { HexGrid } from "../items/hex-grid";
 import { SquareGrid } from "../items/square-grid";
@@ -48,6 +49,23 @@ export const PlayingCards: Story = {
       {(["hearts", "diamonds", "clubs", "spades"] as const).map((suit) => (
         <PlayingCard key={suit} rank="Q" suit={suit} />
       ))}
+    </div>
+  ),
+};
+const face = (fill: string, label: string) =>
+  `data:image/svg+xml,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 350"><rect width="250" height="350" rx="14" fill="${fill}"/><text x="125" y="185" font-size="36" text-anchor="middle" fill="#fff" font-family="sans-serif">${label}</text></svg>`,
+  )}`;
+export const ImageCards: Story = {
+  render: () => (
+    <div className="story-row story-table">
+      <ImageCard src={face("#7552a2", "Fireball")} alt="Fireball" />
+      <ImageCard
+        src={face("#28734e", "Knight")}
+        alt="Knight"
+        state="selected"
+      />
+      <ImageCard src={face("#192b35", "")} alt="Face-down card" />
     </div>
   ),
 };
