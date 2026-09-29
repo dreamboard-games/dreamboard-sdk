@@ -102,8 +102,8 @@ the intended registry URL back to their `components.json`. This proves local
 installation, not deployment of the registry hostname.
 
 Before deploying bound items, publish and pin an SDK version containing the
-registry's input-control APIs (`InputControl` and `getControl`). The currently
-published `0.5.0-alpha.4` predates those APIs. The packed-SDK smoke test proves
+registry's input-control APIs (`InputControl` and `getControl`), first
+published in `0.5.0-alpha.5`. The packed-SDK smoke test proves
 source compatibility; production consumers and the compiler must use the matching
 public npm release and updated lockfile.
 
