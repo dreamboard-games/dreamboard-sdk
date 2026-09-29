@@ -9,10 +9,10 @@ import type {
   PlayerIdOfTable,
 } from "../reducer/model/extract.js";
 import type {
-  IdOf,
   InputKey,
   InputKind,
   InteractionKey,
+  SeatCardId,
   TableOfGame,
 } from "./model.js";
 
@@ -77,7 +77,7 @@ export type BoardTarget<G> = [TableOfGame<G>] extends [never]
       [B in BoardIdOfTable<TableOfGame<G>>]: TargetOnBoard<TableOfGame<G>, B>;
     }[BoardIdOfTable<TableOfGame<G>>];
 export type SelectionTarget<G> =
-  BoardTarget<G> | { readonly kind: "card"; readonly value: IdOf<G, "cardId"> };
+  BoardTarget<G> | { readonly kind: "card"; readonly value: SeatCardId<G> };
 /** Input disambiguation belongs to a particular interaction. */
 export type TargetOptions<G> =
   | { readonly interaction?: undefined; readonly input?: never }

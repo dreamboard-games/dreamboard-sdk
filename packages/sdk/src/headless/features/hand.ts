@@ -1,4 +1,4 @@
-import type { Card, CoreInstance, IdOf, Zone } from "../model.js";
+import type { Card, CoreInstance, SeatCardId, Zone } from "../model.js";
 
 export interface HandOptions<G> {
   /** Compare projected card data only; hidden cards never expose private fields. */
@@ -7,6 +7,10 @@ export interface HandOptions<G> {
     right: Card<G, Record<never, never>>,
   ) => number;
 }
+
+// Generic G defers the card visibility union, so ids widen to string here.
+const seatCardId = <G>(card: { readonly id: string }) =>
+  card.id as SeatCardId<G>;
 
 /** Optional hand helpers reuse the zone order and the core selection router. */
 export function handFeature<G>(
@@ -17,22 +21,22 @@ export function handFeature<G>(
     zone: {
       getSortedCardIds(
         this: Zone<G, Record<never, never>>,
-      ): readonly IdOf<G, "cardId">[] {
-        return this.getCards({ sort: options.sort }).map((card) => card.id);
+      ): readonly SeatCardId<G>[] {
+        return this.getCards({ sort: options.sort }).map(seatCardId<G>);
       },
       getSelectedCardIds(
         this: Zone<G, Record<never, never>>,
-      ): readonly IdOf<G, "cardId">[] {
+      ): readonly SeatCardId<G>[] {
         return this.getCards()
           .filter((card) => card.getIsSelected())
-          .map((card) => card.id);
+          .map(seatCardId<G>);
       },
       getSelectableCardIds(
         this: Zone<G, Record<never, never>>,
-      ): readonly IdOf<G, "cardId">[] {
+      ): readonly SeatCardId<G>[] {
         return this.getCards()
           .filter((card) => card.getCanSelect())
-          .map((card) => card.id);
+          .map(seatCardId<G>);
       },
     },
   };

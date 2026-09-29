@@ -7,7 +7,7 @@ import type {
 import type { RuntimeJson } from "../runtime-json.js";
 
 export const DREAMBOARD_PLUGIN_PROTOCOL = "dreamboard-plugin" as const;
-export const DREAMBOARD_PLUGIN_PROTOCOL_VERSION = 6 as const;
+export const DREAMBOARD_PLUGIN_PROTOCOL_VERSION = 7 as const;
 
 export type InteractionResult =
   | {

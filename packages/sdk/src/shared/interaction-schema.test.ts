@@ -82,6 +82,7 @@ describe("canonical interaction admission", () => {
             hand: {
               cardIds: ["c1"],
               cardViewsById: { c1: "{}" },
+              cardBacksById: {},
               playableByCardId: { c1: ["pick"] },
             },
           },
@@ -104,6 +105,7 @@ describe("canonical interaction admission", () => {
               hand: {
                 cardIds: [],
                 cardViewsById: {},
+                cardBacksById: {},
                 playableByCardId: { c1: [123] },
               },
             },

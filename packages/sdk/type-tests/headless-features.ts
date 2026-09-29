@@ -2,6 +2,7 @@ import type { z } from "zod";
 import type { definition } from "./authoring-model-types.js";
 import { createGameInstance } from "../src/headless/instance.js";
 import type { CommandSource } from "../src/headless/sources/types.js";
+import type { HiddenCardId } from "../src/headless/model.js";
 import { boardFeature } from "../src/headless/features/board.js";
 import { dragFeature } from "../src/headless/features/drag.js";
 import { handFeature } from "../src/headless/features/hand.js";
@@ -48,7 +49,7 @@ board.game.boards.get("island").getLabel();
 const card = game.zones.get("hand").getCards()[0];
 game.drag.begin(card.id, { interaction: "playerTurn.pick" });
 card.getBadge();
-const selected: readonly ("card-1" | "card-2")[] = game.zones
+const selected: readonly ("card-1" | "card-2" | HiddenCardId)[] = game.zones
   .get("hand")
   .getSelectedCardIds();
 game.getSnapshot().viewport.getTransform();

@@ -159,11 +159,12 @@ describe("source request lifecycle", () => {
       ...frame(),
       zones: {
         hand: {
-          cardIds: ["card-1", "card-2"],
+          cardIds: ["card-1", "card-2", "hidden:hand:2"],
           cardViewsById: {
             "card-1": JSON.stringify(card),
             "card-2": JSON.stringify({ rank: "A" }),
           },
+          cardBacksById: { "hidden:hand:2": "assets/cards/spell.webp" },
           playableByCardId: {},
         },
       },
@@ -183,6 +184,11 @@ describe("source request lifecycle", () => {
       );
     expect(view.frontImage).toMatch(/^blob:/);
     expect(view.backImage).toBe("assets/cards/missing.webp");
+    expect(
+      x.source.store.get().snapshot!.frame.zones.hand.cardBacksById[
+        "hidden:hand:2"
+      ],
+    ).toBe(view.frontImage);
     expect(view.properties).toEqual({ power: 7 });
     expect(
       JSON.parse(
@@ -213,6 +219,7 @@ describe("source request lifecycle", () => {
             cardViewsById: {
               "card-1": JSON.stringify({ frontImage: 42 }),
             },
+            cardBacksById: {},
             playableByCardId: {},
           },
         },

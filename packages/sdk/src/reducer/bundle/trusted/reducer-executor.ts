@@ -1,5 +1,6 @@
 import { normalizeGameEvents } from "./trusted-runtime-result";
 import { evaluateStepPrefix } from "./step-prefix";
+import { concealCards, revealSubmittedCards } from "./card-concealment";
 import { implicitResultOf } from "./trusted-runtime-args";
 import type { DispatchTraceEntry } from "../../core/types";
 import type { RuntimePayload } from "../../model";
@@ -484,11 +485,25 @@ export function createReducerExecutor<
         trace: [{ type: "acceptedClientInput", input }],
       });
     }
+    // Seats name the cards hidden from them by position.
+    const params = revealSubmittedCards(
+      input.params as Record<string, unknown>,
+      concealCards(
+        state.table,
+        input.playerId,
+        scope.definition.contract.manifest.literals.playerZoneIds.map(String),
+      ),
+    );
+    if (params === null)
+      return rejectResult(
+        "CARD_TARGET_NOT_ELIGIBLE",
+        "Card target is not eligible.",
+      );
     const decision = interactions.resolveInteractionDecision({
       state,
       playerId: input.playerId,
       interactionId: input.interactionId,
-      params: input.params as Record<string, unknown>,
+      params,
       mode: "submit",
     });
     if (!decision.validation.valid)

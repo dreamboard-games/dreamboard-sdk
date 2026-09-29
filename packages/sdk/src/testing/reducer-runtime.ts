@@ -10,6 +10,10 @@ import {
 } from "../reducer/bundle/trusted/runtime-scope";
 import { createInteractionResolver } from "../reducer/bundle/trusted/interaction-resolver";
 import { createProjectionBuilder } from "../reducer/bundle/trusted/projection-builder";
+import {
+  concealCards,
+  concealSubmittedCards,
+} from "../reducer/bundle/trusted/card-concealment";
 import type {
   InteractionActionabilityResult,
   InteractionExplanation,
@@ -83,8 +87,29 @@ export function createReducerTestingRuntime<
       interactionId,
     };
   }
+  // Tests act with full knowledge of the table; seats name the cards hidden
+  // from them by position, so dispatch does too.
+  async function dispatch({
+    state,
+    input,
+  }: Wire.DispatchRequest): Promise<Wire.DispatchResult> {
+    if (input.kind !== "interaction") return bundle.dispatch({ state, input });
+    const concealment = concealCards(
+      scope.toCombinedState(parseState(state)).table,
+      input.playerId,
+      scope.definition.contract.manifest.literals.playerZoneIds.map(String),
+    );
+    return bundle.dispatch({
+      state,
+      input: {
+        ...input,
+        params: concealSubmittedCards(input.params, concealment),
+      },
+    });
+  }
   return {
     ...bundle,
+    dispatch,
     async validateInput({ state, input }) {
       return interactions.validateClientInput(
         scope.toCombinedState(parseState(state)),
@@ -92,7 +117,7 @@ export function createReducerTestingRuntime<
       );
     },
     async reduce(input) {
-      const result = await bundle.dispatch(input);
+      const result = await dispatch(input);
       if (result.kind === "reject") return result;
       return {
         kind: result.kind,

@@ -655,7 +655,7 @@ describe("trusted interaction decision pipeline", () => {
       },
     });
   });
-  test("automatic zone projection respects hidden zones and component visibility", async () => {
+  test("zone projection lists cards hidden from a seat only by position", async () => {
     const bundle = makeBundle();
     const state = (
       await bundle.initialize({
@@ -670,8 +670,23 @@ describe("trusted interaction decision pipeline", () => {
       state,
       playerIds: ["player-1", "player-2"],
     });
-    expect(hidden.seats["player-1"].zones).not.toHaveProperty("playZone");
-    expect(hidden.seats["player-2"].zones).not.toHaveProperty("playZone");
+    for (const seat of ["player-1", "player-2"]) {
+      const zone = hidden.seats[seat].zones?.playZone;
+      expect(zone).toMatchObject({
+        cardIds: ["hidden:playZone:0", "hidden:playZone:1"],
+        cardViewsById: {},
+        cardBacksById: {},
+      });
+      // Descriptors name hidden cards by position too.
+      const [play] = hydrateCardRefs(
+        hidden,
+        zone?.playableByCardId["hidden:playZone:0"],
+      );
+      expect(play?.inputs[0]?.domain).toMatchObject({
+        eligibleTargets: ["hidden:playZone:0"],
+      });
+      expect(JSON.stringify(hidden.interactionsByRef)).not.toContain("card-a");
+    }
     table.zones.visibility.playZone = "ownerOnly";
     table.visibility["card-a"] = {
       faceUp: false,
@@ -687,6 +702,7 @@ describe("trusted interaction decision pipeline", () => {
       "card-b",
     ]);
     expect(visible.seats["player-2"].zones?.playZone.cardIds).toEqual([
+      "hidden:playZone:0",
       "card-b",
     ]);
     expect(

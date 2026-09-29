@@ -16,7 +16,7 @@ import {
   PointerActivationConstraints,
 } from "@dnd-kit/dom";
 import { pointerIntersection } from "@dnd-kit/collision";
-import type { IdOf } from "../headless/model.js";
+import type { SeatCardId } from "../headless/model.js";
 import type { DragController } from "../headless/features/drag.js";
 import type { DropTarget, TargetOptions } from "../headless/targets.js";
 
@@ -115,7 +115,7 @@ export function GameDragProvider<G>({
 /** Bound by createGameHook so card and interaction IDs use the authored game. */
 export function useCardDraggable<G>(
   game: DragBinding<G>,
-  cardId: IdOf<G, "cardId">,
+  cardId: SeatCardId<G>,
   options?: TargetOptions<G>,
 ) {
   const id = useId();

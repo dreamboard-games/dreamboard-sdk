@@ -2,7 +2,7 @@ import { z } from "zod";
 import type * as Wire from "./runtime-types.js";
 
 /** Exact worker ABI version; hosts must reject mismatched bundles. */
-export const REDUCER_CONTRACT_VERSION = "0.7.0" as const;
+export const REDUCER_CONTRACT_VERSION = "0.8.0" as const;
 export type MaybePromise<T> = T | Promise<T>;
 
 export interface ReducerBundleContract {

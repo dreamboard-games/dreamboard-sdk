@@ -409,6 +409,7 @@ describe("headless instance", () => {
         hand: {
           cardIds: ["ace", "hidden"],
           cardViewsById: { ace: JSON.stringify({ rank: "A" }) },
+          cardBacksById: {},
           playableByCardId: {
             ace: [
               action([target]),
@@ -782,6 +783,7 @@ it("per-card descriptor identity resolves against the latest frame and drop writ
       hand: {
         cardIds: ["ace"],
         cardViewsById: { ace: JSON.stringify({ rank: "A" }) },
+        cardBacksById: {},
         playableByCardId: { ace: [route] },
       },
     },
@@ -919,6 +921,7 @@ it("reconciles with the selected card's narrow domain, not the broad global desc
     hand: {
       cardIds: ["ace"],
       cardViewsById: { ace: "{}" },
+      cardBacksById: {},
       playableByCardId: { ace: [route] },
     },
   });

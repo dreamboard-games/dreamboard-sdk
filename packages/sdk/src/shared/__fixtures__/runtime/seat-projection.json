@@ -9,6 +9,7 @@
       "cardViewsById": {
         "c1": "{}"
       },
+      "cardBacksById": {},
       "playableByCardId": {
         "c1": ["claim-ref"]
       }

@@ -1,4 +1,5 @@
 import type {
+  CardIdOfTable,
   CompatibleCardIdForHandAndDeck,
   CompatibleCardIdForTwoPlayerZones,
   DeckCardsOfTable,
@@ -685,6 +686,18 @@ export function addCardToSharedZoneInPlace<
   position: "top" | "bottom" = "bottom",
 ): void {
   appendToDeckInPlace(table, deckId, cardId, playedBy, position);
+}
+
+/** Turn a card in a shared zone face up or face down; face down, no seat sees it. */
+export function flipCardInPlace<Table extends RuntimeTableRecord>(
+  table: Table,
+  cardId: CardIdOfTable<Table>,
+  faceUp: boolean,
+): void {
+  if (table.componentLocations[cardId]?.type !== "InDeck") {
+    throw new Error(`Card '${cardId}' is not in a shared zone.`);
+  }
+  table.visibility[cardId] = { faceUp };
 }
 
 export function dealCardsFromDeckToHandInPlace<

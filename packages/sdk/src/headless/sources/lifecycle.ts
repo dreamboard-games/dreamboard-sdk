@@ -302,7 +302,7 @@ function asError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error));
 }
 
-/** Replaces card image paths in encoded card views with delivered URLs. */
+/** Replaces card image paths in card views and hidden card backs with delivered URLs. */
 function withCardImageUrls(
   frame: PluginGameplayFrame,
   urls: Readonly<Record<string, string>> | null,
@@ -328,6 +328,12 @@ function withCardImageUrls(
             Object.entries(zone.cardViewsById).map(([cardId, encoded]) => [
               cardId,
               resolve(encoded),
+            ]),
+          ),
+          cardBacksById: Object.fromEntries(
+            Object.entries(zone.cardBacksById).map(([cardId, path]) => [
+              cardId,
+              urls[path] ?? path,
             ]),
           ),
         },

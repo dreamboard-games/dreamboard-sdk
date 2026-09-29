@@ -33,6 +33,7 @@ import {
   addPlayerResourcesInPlace as tableAddPlayerResourcesInPlace,
   dealCardsFromDeckToHandInPlace as tableDealCardsFromDeckToHandInPlace,
   dealCardsBetweenPlayerZonesInPlace as tableDealCardsBetweenPlayerZonesInPlace,
+  flipCardInPlace as tableFlipCardInPlace,
   moveCardBetweenPlayerZonesInPlace as tableMoveCardBetweenPlayerZonesInPlace,
   moveCardBetweenSharedZonesInPlace as tableMoveCardBetweenSharedZonesInPlace,
   moveCardFromPlayerZoneToSharedZoneInPlace as tableMoveCardFromPlayerZoneToSharedZoneInPlace,
@@ -168,6 +169,16 @@ export interface TransactionMutations<
     cardId: DeckCardsOfTable<TableOfState<State>, FromZoneId>[number];
     playedBy?: PlayerIdOfTable<TableOfState<State>> | null;
     position?: "top" | "bottom";
+  }): State;
+
+  /**
+   * Turn a card in a shared zone face up or face down. No seat sees a
+   * face-down card: frames show only its back, under a positional id. Moving
+   * the card to another zone turns it face up.
+   */
+  flipCard(args: {
+    cardId: CardIdOfTable<TableOfState<State>>;
+    faceUp: boolean;
   }): State;
 
   /**
@@ -696,6 +707,13 @@ export const transactionMutations = {
       playedBy: args.playedBy ?? null,
       position: args.position ?? "bottom",
     });
+    return state;
+  },
+  flipCard<S extends AnyState>(
+    state: S,
+    args: { cardId: string; faceUp: boolean },
+  ): S {
+    tableFlipCardInPlace(state.table, args.cardId, args.faceUp);
     return state;
   },
   dealCardsBetweenPlayerZones<S extends AnyState>(

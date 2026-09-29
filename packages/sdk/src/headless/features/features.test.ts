@@ -129,6 +129,7 @@ function source(board: RuntimeBoardState = hexBoard()) {
             red: JSON.stringify({ rank: 2 }),
             blue: JSON.stringify({ rank: 1 }),
           },
+          cardBacksById: {},
           playableByCardId: { red: [action], blue: [action] },
         },
       },

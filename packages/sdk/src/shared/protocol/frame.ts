@@ -45,7 +45,10 @@ export type ActionInteractionDescriptor<Interaction extends string = string> =
 
 export interface ZoneHandlesSnapshot<Interaction extends string = string> {
   readonly cardIds: readonly string[];
+  /** Encoded views of the cards the seat can see, by card id. */
   readonly cardViewsById: Readonly<Record<string, string>>;
+  /** Back image paths of the cards hidden from the seat, by positional id. */
+  readonly cardBacksById: Readonly<Record<string, string>>;
   readonly playableByCardId: Readonly<
     Record<string, readonly InteractionDescriptor<Interaction>[]>
   >;
