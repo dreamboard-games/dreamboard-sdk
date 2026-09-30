@@ -22,6 +22,8 @@ import type {
   PluginPlayerSummary,
 } from "../shared/protocol/frame.js";
 import type { GameEvent } from "../shared/domain/results.js";
+import type { HiddenCardId } from "../shared/domain/cards.js";
+export type { HiddenCardId } from "../shared/domain/cards.js";
 import type { RuntimeJson } from "../shared/runtime-json.js";
 import type {
   GameSource,
@@ -422,30 +424,24 @@ interface CardEntity<G> {
   getSelectHandler(options?: TargetOptions<G>): () => void;
   getProps(options?: TargetOptions<G>): ActionProps;
 }
-/**
- * A card hidden from the seat, in a hidden zone or face down, is known only by
- * its position in its zone, never by which card it is.
- */
-export type HiddenCardId = `hidden:${string}:${number}`;
 /** The id a seat knows a card by. */
 export type SeatCardId<G> = IdOf<G, "cardId"> | HiddenCardId;
-type CardVisibility<G, K extends string> =
-  | (HiddenCardId extends K
-      ? {
-          readonly hidden: true;
-          readonly id: HiddenCardId;
-          readonly view: null;
-          /** The URL of the card's back image, when it has one. */
-          readonly backImage: string | null;
-        }
-      : never)
-  | (K extends HiddenCardId
-      ? never
-      : {
-          readonly hidden: false;
-          readonly id: K;
-          readonly view: CardDataOf<G, K>;
-        });
+type HiddenCard<K extends HiddenCardId> = {
+  readonly hidden: true;
+  readonly id: K;
+  readonly view: null;
+  /** The URL of the card's back image, when it has one. */
+  readonly backImage: string | null;
+};
+/** A hidden id is hidden; any other id is visible, or either when it is `string`. */
+type CardVisibility<G, K extends string> = K extends HiddenCardId
+  ? HiddenCard<K>
+  : | (HiddenCardId extends K ? HiddenCard<HiddenCardId> : never)
+    | {
+        readonly hidden: false;
+        readonly id: K;
+        readonly view: CardDataOf<G, K>;
+      };
 export type CardBase<
   G,
   K extends SeatCardId<G> = SeatCardId<G>,

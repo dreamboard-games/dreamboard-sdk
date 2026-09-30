@@ -94,16 +94,27 @@ export function createReducerTestingRuntime<
     input,
   }: Wire.DispatchRequest): Promise<Wire.DispatchResult> {
     if (input.kind !== "interaction") return bundle.dispatch({ state, input });
-    const concealment = concealCards(
-      scope.toCombinedState(parseState(state)).table,
-      input.playerId,
-      scope.definition.contract.manifest.literals.playerZoneIds.map(String),
-    );
+    const combinedState = scope.toCombinedState(parseState(state));
+    const playerId = codec.parsePlayerId(input.playerId);
     return bundle.dispatch({
       state,
       input: {
         ...input,
-        params: concealSubmittedCards(input.params, concealment),
+        params: concealSubmittedCards(
+          input.params,
+          interactions.cardInputKeys(
+            combinedState,
+            playerId,
+            input.interactionId,
+          ),
+          concealCards(
+            combinedState.table,
+            playerId,
+            scope.definition.contract.manifest.literals.playerZoneIds.map(
+              String,
+            ),
+          ),
+        ),
       },
     });
   }

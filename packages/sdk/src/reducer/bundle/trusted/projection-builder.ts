@@ -105,6 +105,27 @@ export function createProjectionBuilder<
     };
   }
 
+  /** A descriptor as its seat sees it, naming hidden cards by position. */
+  function concealFor(
+    combinedState: State,
+    playerId: PlayerId,
+    concealment: CardConcealment,
+    descriptor: InteractionDescriptorShape,
+  ) {
+    return concealDescriptor(
+      descriptor,
+      // Only steps carry selected values, and only card steps name cards.
+      descriptor.step
+        ? interactions.cardInputKeys(
+            combinedState,
+            playerId,
+            descriptor.interactionId,
+          )
+        : new Set(),
+      concealment,
+    );
+  }
+
   function resolveZoneHandlesFor(
     combinedState: State,
     playerId: PlayerId,
@@ -179,10 +200,10 @@ export function createProjectionBuilder<
           }
           perCard.push(
             registry.add(
-              concealDescriptor(
-                { ...decision.descriptor, zoneId },
-                concealment,
-              ),
+              concealFor(combinedState, playerId, concealment, {
+                ...decision.descriptor,
+                zoneId,
+              }),
               actorSeat,
             ),
           );
@@ -438,7 +459,10 @@ export function createProjectionBuilder<
           ),
       );
       const availableInteractionRefs = availableInteractions.map((descriptor) =>
-        registry.add(concealDescriptor(descriptor, concealment), actorSeat),
+        registry.add(
+          concealFor(combinedState, playerId, concealment, descriptor),
+          actorSeat,
+        ),
       );
       const fullProjection =
         projectionMode === "full"

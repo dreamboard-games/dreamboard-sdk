@@ -64,17 +64,28 @@ export function concealCards(
   };
 }
 
-/** Rewrites a descriptor's card ids to the ones its seat knows them by. */
+/** Maps a card input's value, one card id or several. */
+function mapCards(
+  value: unknown,
+  map: (cardId: string) => string | null,
+): unknown {
+  return typeof value === "string"
+    ? map(value)
+    : Array.isArray(value)
+      ? value.map((item) => mapCards(item, map))
+      : value;
+}
+
+/**
+ * Rewrites a descriptor's card ids to the ones its seat knows them by.
+ * `cardKeys` names the inputs holding cards; other values stay as they are.
+ */
 export function concealDescriptor(
   descriptor: InteractionDescriptorShape,
+  cardKeys: ReadonlySet<string>,
   concealment: CardConcealment,
 ): InteractionDescriptorShape {
-  const conceal = (value: unknown): unknown =>
-    typeof value === "string"
-      ? concealment.seatCardId(value)
-      : Array.isArray(value)
-        ? value.map(conceal)
-        : value;
+  const conceal = (value: unknown) => mapCards(value, concealment.seatCardId);
   return {
     ...descriptor,
     inputs: descriptor.inputs.map((input) =>
@@ -100,7 +111,7 @@ export function concealDescriptor(
             selected: Object.fromEntries(
               Object.entries(descriptor.step.selected).map(([key, value]) => [
                 key,
-                conceal(value),
+                cardKeys.has(key) ? conceal(value) : value,
               ]),
             ),
           },
@@ -115,39 +126,45 @@ export function concealDescriptor(
  */
 export function concealSubmittedCards(
   params: RuntimeJson,
+  cardKeys: ReadonlySet<string>,
   concealment: CardConcealment,
 ): RuntimeJson {
   const conceal = (value: RuntimeJson): RuntimeJson =>
-    Array.isArray(value)
-      ? value.map(conceal)
-      : typeof value === "string"
-        ? concealment.seatCardId(value)
+    typeof value === "string"
+      ? concealment.seatCardId(value)
+      : Array.isArray(value)
+        ? value.map(conceal)
         : value;
-  return params !== null && typeof params === "object" && !Array.isArray(params)
-    ? Object.fromEntries(
-        Object.entries(params).map(([key, value]) => [key, conceal(value)]),
-      )
-    : params;
+  if (params === null || typeof params !== "object" || Array.isArray(params))
+    return params;
+  return Object.fromEntries(
+    Object.entries(params).map(([key, value]) => [
+      key,
+      cardKeys.has(key) ? conceal(value) : value,
+    ]),
+  );
 }
 
 /**
- * Resolves the card ids a seat submitted to table ids, or returns `null` when
+ * Resolves the cards a seat submitted to table ids, or returns `null` when
  * one names a card hidden from the seat by its table id.
  */
 export function revealSubmittedCards(
   params: Readonly<Record<string, unknown>>,
+  cardKeys: ReadonlySet<string>,
   concealment: CardConcealment,
 ): Record<string, unknown> | null {
   let named = false;
-  const reveal = (value: unknown): unknown => {
-    if (Array.isArray(value)) return value.map(reveal);
-    if (typeof value !== "string") return value;
-    const cardId = concealment.tableCardId(value);
+  const reveal = (id: string) => {
+    const cardId = concealment.tableCardId(id);
     if (cardId === null) named = true;
     return cardId;
   };
   const revealed = Object.fromEntries(
-    Object.entries(params).map(([key, value]) => [key, reveal(value)]),
+    Object.entries(params).map(([key, value]) => [
+      key,
+      cardKeys.has(key) ? mapCards(value, reveal) : value,
+    ]),
   );
   return named ? null : revealed;
 }

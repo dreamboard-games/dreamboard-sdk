@@ -144,6 +144,20 @@ for (const interaction of game.interactions.list()) {
 const cardOne = game.cards.get("card-1");
 // @ts-expect-error Input disambiguation belongs to the selected interaction.
 cardOne.select({ interaction: "playerTurn.pick", input: "missing" });
+// A card input names a hidden card by position, so a target may be hidden.
+const cardInput = game.interactions.get("playerTurn.pick").getInput("cardId");
+cardInput.setValue("hidden:hand:0");
+for (const target of cardInput.getEligibleTargets()) {
+  // @ts-expect-error An eligible target may be hidden and have no view.
+  void game.cards.get(target).view.id;
+}
+// A hidden card named by position shows its back and can still be selected.
+const hiddenCard = game.cards.get("hidden:hand:0");
+const hiddenBack: string | null = hiddenCard.backImage;
+const hiddenView: null = hiddenCard.view;
+hiddenCard.select({ interaction: "playerTurn.pick" });
+hiddenCard.isSpecial();
+void [hiddenBack, hiddenView];
 void [moodKind, moods, handId];
 
 // Ordinary assignment cannot erase a literal input's writable contract.

@@ -488,6 +488,7 @@ export function createReducerExecutor<
     // Seats name the cards hidden from them by position.
     const params = revealSubmittedCards(
       input.params as Record<string, unknown>,
+      interactions.cardInputKeys(state, input.playerId, input.interactionId),
       concealCards(
         state.table,
         input.playerId,

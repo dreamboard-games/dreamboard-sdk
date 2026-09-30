@@ -20,6 +20,7 @@ import {
   type ReducerGameDefinitionInput,
 } from "../src/reducer.js";
 import type { GameStateOf } from "../src/reducer/model.js";
+import type { HiddenCardId } from "../src/shared/domain/cards.js";
 import {
   createManifestStringLiteralSchema,
   type ClientParamsOfInteractionOfDefinition,
@@ -402,7 +403,8 @@ type _ClientParamsSurvive = Expect<
       "playerTurn",
       "pick"
     >,
-    { cardId: TestCardId; mood: "ready" | "wait" }
+    // Seats name the cards hidden from them by position.
+    { cardId: TestCardId | HiddenCardId; mood: "ready" | "wait" }
   >
 >;
 type _DefinitionStateFlowsToContractState = Expect<
