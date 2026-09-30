@@ -2,6 +2,7 @@ import type { definition } from "./authoring-model-types.js";
 import { createGameInstance } from "../src/headless/instance.js";
 import type {
   CoreInstance,
+  HiddenCardId,
   InputBase,
   InputKey,
   InteractionKey,
@@ -111,13 +112,20 @@ mood.getIsEligible(42);
 mood.getIsSelected(false);
 // @ts-expect-error Target props preserve the value type.
 mood.getTargetProps({ value: "ready" });
-const visibleCard = game.cards.get("card-1");
-if (!visibleCard.hidden) {
-  const visibleId: "card-1" = visibleCard.view.id;
-  void visibleId;
-} else {
-  const hiddenView: null = visibleCard.view;
-  void hiddenView;
+// A card named by its id is one the seat can see.
+const visibleId: "card-1" = game.cards.get("card-1").view.id;
+void visibleId;
+// Zones also list hidden cards, known only by position.
+for (const card of game.zones.get("hand").getCards()) {
+  if (card.hidden) {
+    const hiddenId: HiddenCardId = card.id;
+    const back: string | null = card.backImage;
+    const hiddenView: null = card.view;
+    void [hiddenId, back, hiddenView];
+  } else {
+    const cardId: "card-1" | "card-2" = card.view.id;
+    void cardId;
+  }
 }
 const handId: "hand" = game.zones.get("hand").id;
 for (const interaction of game.interactions.list()) {
@@ -133,8 +141,23 @@ for (const interaction of game.interactions.list()) {
     }
   }
 }
+const cardOne = game.cards.get("card-1");
 // @ts-expect-error Input disambiguation belongs to the selected interaction.
-visibleCard.select({ interaction: "playerTurn.pick", input: "missing" });
+cardOne.select({ interaction: "playerTurn.pick", input: "missing" });
+// A card input names a hidden card by position, so a target may be hidden.
+const cardInput = game.interactions.get("playerTurn.pick").getInput("cardId");
+cardInput.setValue("hidden:hand:0");
+for (const target of cardInput.getEligibleTargets()) {
+  // @ts-expect-error An eligible target may be hidden and have no view.
+  void game.cards.get(target).view.id;
+}
+// A hidden card named by position shows its back and can still be selected.
+const hiddenCard = game.cards.get("hidden:hand:0");
+const hiddenBack: string | null = hiddenCard.backImage;
+const hiddenView: null = hiddenCard.view;
+hiddenCard.select({ interaction: "playerTurn.pick" });
+hiddenCard.isSpecial();
+void [hiddenBack, hiddenView];
 void [moodKind, moods, handId];
 
 // Ordinary assignment cannot erase a literal input's writable contract.

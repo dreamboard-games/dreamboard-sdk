@@ -115,6 +115,21 @@
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "image-card",
+      "type": "registry:component",
+      "title": "Image Card",
+      "description": "Pure card presentation from a face image. No SDK dependency.",
+      "files": [
+        {
+          "path": "items/image-card.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/image-card.tsx"
+        }
+      ],
+      "registryDependencies": ["@dreamboard/tokens", "@dreamboard/card"]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
       "name": "pile",
       "type": "registry:component",
       "title": "Pile",

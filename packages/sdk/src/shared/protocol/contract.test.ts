@@ -67,6 +67,7 @@ function baseFrame() {
         cardViewsById: {
           "card-1": '{"rank":"A"}',
         },
+        cardBacksById: {},
         playableByCardId: {
           "card-1": [claimDescriptor],
         },
@@ -76,7 +77,7 @@ function baseFrame() {
 }
 
 describe("shared plugin runtime contract", () => {
-  test("strict frame and protocol schemas accept version 6 gameplay frames", () => {
+  test("strict frame and protocol schemas accept version 7 gameplay frames", () => {
     const frame = PluginGameplayFrameSchema.parse(baseFrame());
     expect(frame.basis.version).toBe(42);
 
@@ -91,7 +92,7 @@ describe("shared plugin runtime contract", () => {
       },
     } satisfies PluginProtocolEnvelope<unknown>);
 
-    expect(envelope.version).toBe(6);
+    expect(envelope.version).toBe(7);
     expect(() =>
       PluginGameplayFrameSchema.parse({ ...baseFrame(), syncId: 9 }),
     ).toThrow();
@@ -179,6 +180,7 @@ describe("shared plugin runtime contract", () => {
                 cardViewsById: {
                   "card-1": '{"rank":"A"}',
                 },
+                cardBacksById: {},
                 playableByCardId: {
                   "card-1": ["claim-ref"],
                 },

@@ -30,6 +30,11 @@ import {
 } from "./projection-context";
 import { collectCardZoneIds } from "./collector-introspection";
 import {
+  concealCards,
+  concealDescriptor,
+  type CardConcealment,
+} from "./card-concealment";
+import {
   isSimultaneousPhase,
   resolveSimultaneousActors,
   SIMULTANEOUS_SUBMIT_INTERACTION_ID,
@@ -100,63 +105,66 @@ export function createProjectionBuilder<
     };
   }
 
+  /** A descriptor as its seat sees it, naming hidden cards by position. */
+  function concealFor(
+    combinedState: State,
+    playerId: PlayerId,
+    concealment: CardConcealment,
+    descriptor: InteractionDescriptorShape,
+  ) {
+    return concealDescriptor(
+      descriptor,
+      // Only steps carry selected values, and only card steps name cards.
+      descriptor.step
+        ? interactions.cardInputKeys(
+            combinedState,
+            playerId,
+            descriptor.interactionId,
+          )
+        : new Set(),
+      concealment,
+    );
+  }
+
   function resolveZoneHandlesFor(
     combinedState: State,
     playerId: PlayerId,
     actorSeat: number,
     projection: ProjectionContext<DomainState>,
     registry: DescriptorRegistry,
+    concealment: CardConcealment,
   ) {
     const phaseName = combinedState.flow.currentPhase as PhaseName;
-    const zoneIds = new Set<string>(
-      scope.definition.contract.manifest.literals.playerZoneIds.map(String),
-    );
-    for (const [, interaction] of scope.interactionEntriesForPhase(phaseName)) {
-      for (const zoneId of collectCardZoneIds(interaction)) {
-        zoneIds.add(String(zoneId));
-      }
-    }
-    const zones = [...zoneIds];
-    if (zones.length === 0) return {};
     const q = createTableQueries<RuntimeTableRecord>(combinedState.table);
     const result: Record<
       string,
       {
         cardIds: string[];
         cardViewsById: Record<string, string>;
+        cardBacksById: Record<string, string>;
         playableByCardId: Record<string, string[]>;
       }
     > = {};
-    for (const zoneId of zones) {
-      const visibility =
-        combinedState.table.zones.visibility[zoneId] ??
-        combinedState.table.handVisibility[zoneId];
-      if (visibility === "hidden") continue;
-      const table = combinedState.table;
-      const isPlayerZone =
-        zoneId in table.hands || zoneId in table.zones.perPlayer;
-      const cardIds = Array.from(
-        isPlayerZone
-          ? q.zone.playerCards(playerId, zoneId)
-          : q.zone.sharedCards(zoneId),
-      ).filter((cardId) => {
-        const visibility = q.card.visibility(cardId);
-        return (
-          !visibility ||
-          visibility.faceUp ||
-          visibility.visibleTo?.includes(playerId)
-        );
-      });
+    for (const [zoneId, zoneCardIds] of concealment.zones) {
       const cardInteractionIds = scope
         .interactionEntriesForPhase(phaseName)
         .filter(([, interaction]) =>
           collectCardZoneIds(interaction).map(String).includes(zoneId),
         )
         .map(([interactionId]) => interactionId);
+      const cardIds: string[] = [];
       const cardViewsById: Record<string, string> = {};
+      const cardBacksById: Record<string, string> = {};
       const playableByCardId: Record<string, string[]> = {};
-      for (const cardId of cardIds) {
-        cardViewsById[cardId] = JSON.stringify(q.card.get(cardId));
+      for (const cardId of zoneCardIds) {
+        const seatCardId = concealment.seatCardId(cardId);
+        cardIds.push(seatCardId);
+        const card = q.card.get(cardId);
+        if (!concealment.isHidden(cardId)) {
+          cardViewsById[cardId] = JSON.stringify(card);
+        } else if (card.backImage !== undefined) {
+          cardBacksById[seatCardId] = card.backImage;
+        }
         const perCard: string[] = [];
         for (const interactionId of cardInteractionIds) {
           const interaction = scope.findInteractionInPhase(
@@ -192,19 +200,20 @@ export function createProjectionBuilder<
           }
           perCard.push(
             registry.add(
-              {
+              concealFor(combinedState, playerId, concealment, {
                 ...decision.descriptor,
                 zoneId,
-              },
+              }),
               actorSeat,
             ),
           );
         }
-        playableByCardId[cardId] = perCard;
+        playableByCardId[seatCardId] = perCard;
       }
       result[zoneId] = {
         cardIds,
         cardViewsById,
+        cardBacksById,
         playableByCardId,
       };
     }
@@ -432,6 +441,11 @@ export function createProjectionBuilder<
     };
     const seats: Record<string, SeatProjection> = {};
     for (const [actorSeat, playerId] of playerIds.entries()) {
+      const concealment = concealCards(
+        combinedState.table,
+        playerId,
+        scope.definition.contract.manifest.literals.playerZoneIds.map(String),
+      );
       const availableInteractions = measureProjectionTiming(
         timing,
         "resolveAvailableInteractionsMs",
@@ -445,7 +459,10 @@ export function createProjectionBuilder<
           ),
       );
       const availableInteractionRefs = availableInteractions.map((descriptor) =>
-        registry.add(descriptor, actorSeat),
+        registry.add(
+          concealFor(combinedState, playerId, concealment, descriptor),
+          actorSeat,
+        ),
       );
       const fullProjection =
         projectionMode === "full"
@@ -463,6 +480,7 @@ export function createProjectionBuilder<
                     actorSeat,
                     projection,
                     registry,
+                    concealment,
                   ),
               ),
               resources: resolveResourcesFor(combinedState, playerId),

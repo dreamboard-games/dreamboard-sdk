@@ -95,6 +95,7 @@ function hydrateZones(
       {
         cardIds: zone.cardIds,
         cardViewsById: zone.cardViewsById,
+        cardBacksById: zone.cardBacksById,
         playableByCardId: Object.fromEntries(
           Object.entries(zone.playableByCardId).map(([cardId, refs]) => [
             cardId,

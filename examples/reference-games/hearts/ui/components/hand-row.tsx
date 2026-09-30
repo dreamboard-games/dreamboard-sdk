@@ -55,7 +55,13 @@ export function HandRow({ recipientName }: { recipientName: string }) {
           <p aria-live="polite">
             Passing to {recipientName}: {selected.length}/3 selected
             {selected.length > 0
-              ? ` · ${selected.map((id) => byId.get(id)?.name ?? id).join(", ")}`
+              ? ` · ${selected
+                  .map(
+                    (id) =>
+                      game.view?.hand.find((card) => card.id === id)?.name ??
+                      id,
+                  )
+                  .join(", ")}`
               : ""}
           </p>
           {game.interactions.find("passing.submit")?.getIsAvailable() && (

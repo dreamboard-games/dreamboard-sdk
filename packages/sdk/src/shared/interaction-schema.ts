@@ -170,6 +170,7 @@ export const InteractionDescriptorSchema = InteractionBaseSchema.extend({
 export const ZoneInteractionRefsSchema = z.strictObject({
   cardIds: z.array(z.string()),
   cardViewsById: z.record(z.string(), z.string()),
+  cardBacksById: z.record(z.string(), z.string()),
   playableByCardId: z.record(z.string(), z.array(z.string())),
 });
 

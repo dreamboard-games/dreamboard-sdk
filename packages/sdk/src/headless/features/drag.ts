@@ -6,16 +6,16 @@ import type { RuntimeDropTarget, RuntimeTargetOptions } from "../targets.js";
 import type { DropTarget, TargetOptions } from "../targets.js";
 export type { DropTarget } from "../targets.js";
 import { inputValueKey } from "../../shared/input-domain.js";
-import type { CoreInstance, FeatureContext, IdOf } from "../model.js";
+import type { CoreInstance, FeatureContext, SeatCardId } from "../model.js";
 export interface DragState<G> {
-  readonly cardId: IdOf<G, "cardId">;
+  readonly cardId: SeatCardId<G>;
   readonly target: DropTarget<G> | null;
 }
 
 export interface DragController<G> {
   readonly active: DragState<G> | null;
-  getCanDrag(cardId: IdOf<G, "cardId">, options?: TargetOptions<G>): boolean;
-  begin(cardId: IdOf<G, "cardId">, options?: TargetOptions<G>): boolean;
+  getCanDrag(cardId: SeatCardId<G>, options?: TargetOptions<G>): boolean;
+  begin(cardId: SeatCardId<G>, options?: TargetOptions<G>): boolean;
   getDropTargets(): readonly DropTarget<G>[];
   setDropTarget(target: DropTarget<G> | null): void;
   drop(): void;

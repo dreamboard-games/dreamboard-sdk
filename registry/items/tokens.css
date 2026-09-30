@@ -77,6 +77,18 @@
       var(--card-back);
     border: 5px solid var(--card-face);
   }
+  .db-image-card {
+    aspect-ratio: auto;
+    border: 0;
+    background: none;
+    box-shadow: none;
+  }
+  .db-image-card > img {
+    display: block;
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 2px 3px #00182326);
+  }
   .db-card[data-suit="hearts"],
   .db-card[data-suit="diamonds"] {
     color: #b32b37;

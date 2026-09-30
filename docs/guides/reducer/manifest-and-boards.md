@@ -19,6 +19,15 @@ Card `frontImage` and `backImage` are repository paths under `assets/`, such as
 deliver them with the session; card views then carry loadable URLs in the same
 fields, so UI code renders `card.frontImage` directly.
 
+Zone `visibility` decides who sees cards: `"hidden"` zones, such as a deck, show
+no faces to anyone. `tx.flipCard({ cardId, faceUp: false })` turns a card in a
+shared zone face down; moving it to another zone turns it face up. Each seat's
+frame lists the cards hidden from it only by position, `hidden:<zone>:<index>`,
+with their back image, and a seat may target them by that id in a card input;
+other inputs, such as a form choice, never name cards. Their table ids are
+rejected from seats but accepted from tests, which know the table. Target
+rules that test a hidden card's properties reveal them through eligibility.
+
 Resources default to `visibility: "public"`. Declare `visibility: "owner"` for a
 balance only its holder may see: each seat projection's `resources` lists every
 player's public balances plus that seat's own owner-only balances. Reveal hidden

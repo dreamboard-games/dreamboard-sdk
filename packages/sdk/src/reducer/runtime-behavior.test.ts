@@ -328,7 +328,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
       "project",
       "reducerContractVersion",
     ]);
-    expect(warm.reducerContractVersion).toBe("0.7.0");
+    expect(warm.reducerContractVersion).toBe("0.8.0");
     const playerIds = ["player-1", "player-2"];
     const { state: initial } = await warm.initialize({
       table: createTable(),

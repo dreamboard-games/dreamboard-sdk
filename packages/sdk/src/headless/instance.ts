@@ -387,12 +387,14 @@ class CardObject {
   readonly seat: number;
   readonly view: Readonly<Record<string, RuntimeJson>> | null;
   readonly hidden: boolean;
+  readonly backImage: string | null;
   constructor(
     readonly owner: Controller,
     readonly id: string,
     readonly zone: string,
     readonly index: number,
     encoded: string | undefined,
+    backImage: string | undefined,
     readonly routes: readonly InteractionObject[],
   ) {
     this.epoch = owner.epoch;
@@ -404,6 +406,7 @@ class CardObject {
       ? immutableCopy(JSON.parse(encoded) as Record<string, RuntimeJson>)
       : null;
     this.hidden = this.view === null;
+    this.backImage = backImage ?? null;
   }
   get game() {
     return this.owner.instance;
@@ -1501,6 +1504,7 @@ class Controller {
                           id,
                           index,
                           zone.cardViewsById[cardId],
+                          zone.cardBacksById[cardId],
                           Object.freeze(
                             (zone.playableByCardId[cardId] ?? []).map(
                               (descriptor) =>

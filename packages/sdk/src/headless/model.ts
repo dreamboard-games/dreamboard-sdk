@@ -22,6 +22,8 @@ import type {
   PluginPlayerSummary,
 } from "../shared/protocol/frame.js";
 import type { GameEvent } from "../shared/domain/results.js";
+import type { HiddenCardId } from "../shared/domain/cards.js";
+export type { HiddenCardId } from "../shared/domain/cards.js";
 import type { RuntimeJson } from "../shared/runtime-json.js";
 import type {
   GameSource,
@@ -261,7 +263,7 @@ export interface FeatureContext<G> {
     data: BoardDataOf<G, K> & { readonly id: K },
   ): BoardBase<G, K>;
   routeTarget(target: SelectionTarget<G>, options?: TargetOptions<G>): void;
-  routeCardDrop(cardId: IdOf<G, "cardId">, target: DropTarget<G>): void;
+  routeCardDrop(cardId: SeatCardId<G>, target: DropTarget<G>): void;
   invalidate(): void;
 }
 export interface NativeEvent {
@@ -409,8 +411,7 @@ export type CardDataOf<G, K extends string> = G extends {
       : never
     : never
   : Readonly<Record<string, RuntimeJson>>;
-interface CardEntity<G, K extends IdOf<G, "cardId"> = IdOf<G, "cardId">> {
-  readonly id: K;
+interface CardEntity<G> {
   readonly zone: IdOf<G, "zoneId">;
   readonly index: number;
 
@@ -423,18 +424,33 @@ interface CardEntity<G, K extends IdOf<G, "cardId"> = IdOf<G, "cardId">> {
   getSelectHandler(options?: TargetOptions<G>): () => void;
   getProps(options?: TargetOptions<G>): ActionProps;
 }
-type CardVisibility<G, K extends string> =
-  | { readonly hidden: true; readonly view: null }
-  | { readonly hidden: false; readonly view: CardDataOf<G, K> };
+/** The id a seat knows a card by. */
+export type SeatCardId<G> = IdOf<G, "cardId"> | HiddenCardId;
+type HiddenCard<K extends HiddenCardId> = {
+  readonly hidden: true;
+  readonly id: K;
+  readonly view: null;
+  /** The URL of the card's back image, when it has one. */
+  readonly backImage: string | null;
+};
+/** A hidden id is hidden; any other id is visible, or either when it is `string`. */
+type CardVisibility<G, K extends string> = K extends HiddenCardId
+  ? HiddenCard<K>
+  : | (HiddenCardId extends K ? HiddenCard<HiddenCardId> : never)
+    | {
+        readonly hidden: false;
+        readonly id: K;
+        readonly view: CardDataOf<G, K>;
+      };
 export type CardBase<
   G,
-  K extends IdOf<G, "cardId"> = IdOf<G, "cardId">,
-> = CardEntity<G, K> & CardVisibility<G, K>;
+  K extends SeatCardId<G> = SeatCardId<G>,
+> = CardEntity<G> & CardVisibility<G, K>;
 export type Card<
   G,
   F extends Features,
-  K extends IdOf<G, "cardId"> = IdOf<G, "cardId">,
-> = Omit<CardEntity<G, K>, "getInteractions" | "game"> &
+  K extends SeatCardId<G> = SeatCardId<G>,
+> = Omit<CardEntity<G>, "getInteractions" | "game"> &
   CardVisibility<G, K> &
   Hook<F, "card"> & {
     readonly game: GameInstance<G, F>;
@@ -456,8 +472,8 @@ export type Zone<
     getCards(options?: {
       sort?: (a: Card<G, F>, b: Card<G, F>) => number;
     }): readonly Card<G, F>[];
-    getCard<K extends IdOf<G, "cardId">>(id: K): Card<G, F, K>;
-    findCard<K extends IdOf<G, "cardId">>(id: K): Card<G, F, K> | undefined;
+    getCard<K extends SeatCardId<G>>(id: K): Card<G, F, K>;
+    findCard<K extends SeatCardId<G>>(id: K): Card<G, F, K> | undefined;
   };
 export interface ReadModel<G, F extends Features = Record<never, never>> {
   readonly snapshot: SourceSnapshot | null;
@@ -503,8 +519,8 @@ export interface ReadModel<G, F extends Features = Record<never, never>> {
     getAll(): readonly Zone<G, F>[];
   };
   readonly cards: {
-    get<K extends IdOf<G, "cardId">>(id: K): Card<G, F, K>;
-    find<K extends IdOf<G, "cardId">>(id: K): Card<G, F, K> | undefined;
+    get<K extends SeatCardId<G>>(id: K): Card<G, F, K>;
+    find<K extends SeatCardId<G>>(id: K): Card<G, F, K> | undefined;
   };
   readonly events: { readonly recent: readonly GameEvent[] };
 }

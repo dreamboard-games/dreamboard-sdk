@@ -1,4 +1,5 @@
 import type { CollectorValueOf } from "./spec/inputs";
+import type { HiddenCardId } from "../../shared/domain/cards";
 import type { ViewData } from "./spec/views";
 import type { z } from "zod";
 import type { RuntimeTableRecord, SchemaLike, RuntimeRecord } from "./table";
@@ -547,6 +548,13 @@ type ParamsOfCollectors<Collectors> =
       }
     : never;
 
+/** A seat names the cards hidden from it by position. */
+type ClientValueOf<Collector> = Collector extends { readonly kind: "card" }
+  ? CollectorValueOf<Collector> extends readonly (infer CardId)[]
+    ? (CardId | HiddenCardId)[]
+    : CollectorValueOf<Collector> | HiddenCardId
+  : CollectorValueOf<Collector>;
+
 type ClientParamsOfCollectors<Collectors> =
   Collectors extends Record<string, InputCollector>
     ? {
@@ -556,7 +564,7 @@ type ClientParamsOfCollectors<Collectors> =
           }
             ? never
             : K
-        ]: CollectorValueOf<Collectors[K]>;
+        ]: ClientValueOf<Collectors[K]>;
       }
     : never;
 

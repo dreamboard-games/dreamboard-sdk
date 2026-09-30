@@ -233,14 +233,15 @@ To migrate an older manifest, replace each card's `type` with `id` and set
 
 `createReducerBundle(game)` returns exactly the contract version and four
 operations: `boardStatic()`, `initialize(input)`, `dispatch({ state, input })`,
-and `project({ state, playerIds })`. The runner contract is `0.7.0`; hosts must
+and `project({ state, playerIds })`. The runner contract is `0.8.0`; hosts must
 require that exact version. Dispatch includes validation, direct transaction mutations, and phase entry.
 Initialization returns
 `{ state, terminal?, events? }`, preserving outcomes and events from initial
 phase entry and returned transitions.
 
-Mutation callbacks use `tx.roll(dieId)`, `tx.shuffle({ zoneId, playerId? })`, and
-`tx.deal({ fromZoneId, toZoneId, playerId, count })` directly. Return
+Mutation callbacks use `tx.roll(dieId)`, `tx.shuffle({ zoneId, playerId? })`,
+`tx.deal({ fromZoneId, toZoneId, playerId, count })` and
+`tx.flipCard({ cardId, faceUp })` directly. Return
 `tx.transition(phaseName)` to enter a phase, including reentering the current
 phase. An unreturned outcome schedules no work. Entry chains are bounded to
 1,000 entries per dispatch. `tx.endGame(outcome, { transition })` enters the

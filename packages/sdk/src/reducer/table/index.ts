@@ -84,6 +84,7 @@ export {
   addCardToSharedZoneInPlace,
   dealCardsBetweenPlayerZonesInPlace,
   dealCardsFromDeckToHandInPlace,
+  flipCardInPlace,
   moveCardBetweenPlayerZonesInPlace,
   moveCardBetweenSharedZonesInPlace,
   moveCardFromPlayerZoneToSharedZoneInPlace,

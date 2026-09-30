@@ -5,7 +5,7 @@ import {
   type BoardDropOptions,
   type DragBinding,
 } from "./drag.js";
-import type { IdOf } from "../headless/model.js";
+import type { SeatCardId } from "../headless/model.js";
 import type { DropTarget, TargetOptions } from "../headless/targets.js";
 import {
   createContext,
@@ -147,7 +147,7 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
     }
 
     function useCardDrag(
-      cardId: IdOf<Game, "cardId">,
+      cardId: SeatCardId<Game>,
       options?: TargetOptions<Game>,
     ) {
       const game = useGame();

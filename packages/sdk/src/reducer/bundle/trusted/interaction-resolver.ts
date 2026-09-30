@@ -9,6 +9,7 @@ import {
   collectFirstCardZoneId,
   findCardInputKey,
   findCardInputKeyForZone,
+  interactionInputsOf,
 } from "./collector-introspection";
 import { parseInteractionParams } from "./collector-params";
 import { createInteractionAuthorization } from "./interaction-authorization";
@@ -16,9 +17,12 @@ import { createInteractionDecisionResolver } from "./interaction-decision";
 import {
   rejectResult,
   type TrustedInput,
+  type TrustedPhaseName,
+  type TrustedPlayerId,
   type TrustedRuntimeScope,
   type TrustedState,
 } from "./runtime-scope";
+import { evaluateStepPrefix } from "./step-prefix";
 import type { InteractionDiagnosticsMode } from "./interaction-types";
 
 export type { InteractionDescriptorShape } from "./interaction-types";
@@ -33,6 +37,7 @@ export function createInteractionResolver<
 ) {
   type State = TrustedState<Contract>;
   type ReducerInput = TrustedInput<Contract>;
+  type PhaseName = TrustedPhaseName<Contract, Definitions, View>;
 
   const authorization = createInteractionAuthorization(scope);
   const decisions = createInteractionDecisionResolver(
@@ -80,7 +85,47 @@ export function createInteractionResolver<
     return rejectResult(invalidValidation.errorCode, invalidValidation.message);
   }
 
+  /**
+   * The inputs of an interaction that name cards: its card inputs, or for
+   * steps, the card steps selected so far and the current one.
+   */
+  function cardInputKeys(
+    state: State,
+    playerId: TrustedPlayerId<Contract>,
+    interactionId: string,
+  ): ReadonlySet<string> {
+    const phaseName = state.flow.currentPhase as PhaseName;
+    const interaction = scope.findInteractionInPhase(phaseName, interactionId);
+    if (!interaction) return new Set();
+    const pending = state.runtime.pending[playerId];
+    const prefix = interaction.steps
+      ? evaluateStepPrefix(
+          interaction.steps,
+          scope.toDomainState(state),
+          playerId,
+          pending?.phaseName === phaseName &&
+            pending.interactionId === interactionId
+            ? pending.values
+            : [],
+        )
+      : undefined;
+    const collectors = prefix
+      ? {
+          ...prefix.collectors,
+          ...(prefix.current
+            ? { [prefix.current.key]: prefix.current.collector }
+            : {}),
+        }
+      : interactionInputsOf(interaction);
+    return new Set(
+      Object.entries(collectors)
+        .filter(([, collector]) => collector.kind === "card")
+        .map(([key]) => key),
+    );
+  }
+
   return {
+    cardInputKeys,
     currentClientParamSchema: decisions.currentClientParamSchema,
     collectFirstCardZoneId,
     enumerateInteractionParams: decisions.enumerateInteractionParams,
