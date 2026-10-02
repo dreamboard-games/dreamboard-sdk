@@ -221,7 +221,7 @@ export function DrawPile({
           type="button"
           className="db-draw-pile-card"
           aria-label={`${label} actions`}
-          aria-disabled={!available || undefined}
+          data-draw-available={available}
           aria-haspopup="dialog"
           aria-expanded={open}
           data-draw-pile={zoneId}
