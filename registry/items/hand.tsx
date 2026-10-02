@@ -350,6 +350,13 @@ const HandCard = memo(function HandCard({
           hidden={arrival.hidden}
           target={control}
           rotate={rotate}
+          back={
+            card.hidden
+              ? card.backImage
+              : typeof card.view.backImage === "string"
+                ? card.view.backImage
+                : null
+          }
           onComplete={finishArrival}
         >
           {renderCard(card, "idle")}

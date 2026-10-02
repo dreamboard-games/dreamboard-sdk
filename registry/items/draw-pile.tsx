@@ -34,6 +34,10 @@ export function DrawPile({
 }: DrawPileProps) {
   const draw = useGame((game) => game.interactions.find(key));
   const count = useGame((game) => game.zones.find(zoneId)?.count ?? 0);
+  const back = useGame((game) => {
+    const top = game.zones.find(zoneId)?.getCards()[0];
+    return top?.hidden ? top.backImage : null;
+  });
   const snapshot = useGame((game) => game.snapshot);
   const request = useGame((game) => game.request);
   const table = useCardMotion();
@@ -234,7 +238,7 @@ export function DrawPile({
             setOpen((current) => !current);
           }}
         >
-          <CardBack />
+          <CardBack image={back} />
         </button>
       </Pile>
       {open && (
@@ -322,7 +326,7 @@ export function DrawPile({
               if (returning) setGhost(null);
             }}
           >
-            <CardBack />
+            <CardBack image={back} />
           </motion.div>,
           document.body,
         )}

@@ -15,11 +15,14 @@ export function CardArrival({
   hidden,
   target,
   rotate,
+  back,
   children,
   onComplete,
 }: {
   origin: CardBox | null;
   hidden: boolean;
+  /** The card's back art, shown before it turns face up. */
+  back?: string | null;
   target: HTMLElement;
   rotate: number;
   children: ReactNode;
@@ -73,7 +76,7 @@ export function CardArrival({
         <div className="db-card-flip-face">{children}</div>
         {hidden && (
           <div className="db-card-flip-back">
-            <CardBack />
+            <CardBack image={back} />
           </div>
         )}
       </motion.div>
