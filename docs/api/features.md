@@ -103,7 +103,7 @@ classifies each press as a tap, hold, drag or browse using `GESTURE_THRESHOLDS`:
 a mouse drags after 8 px in any direction and inspects after resting 250 ms; a
 finger drags upward, browses sideways and inspects after holding 350 ms. Spread
 `CardGesture.props` on the card's own button after its selection props. The
-click that follows a hold or drag is swallowed; keyboard clicks never are.
+click that follows a hold, drag or browse is swallowed; keyboard clicks never are.
 
 `useDropArea` accepts a board `DropTarget` or `{ interaction, input? }` and
 returns `props`, `isEligible` and `isOver`. The browser's `elementsFromPoint`

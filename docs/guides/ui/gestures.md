@@ -46,7 +46,7 @@ Spread them after the card's selection props. A press becomes:
 
 Cards use `touch-action: pan-x`, so a sideways swipe scrolls a hand natively. A
 card drags only when it has somewhere to land; otherwise the press browses. The
-click the browser fires after a hold or a drag is not a selection. Keyboard
+click the browser fires after a hold, drag or browse is not a selection. Keyboard
 activation always clicks. `inspecting` and `data-inspecting` tell the game to
 show a preview; haptics and preview presentation are the game's choice.
 `GESTURE_THRESHOLDS` holds the timings, and `createGestureRecognizer` is the

@@ -121,6 +121,14 @@ export async function proveCardDrag(page: Page, touch: boolean) {
   await expect(drafts).toHaveText("{}");
 
   if (touch) {
+    // Below the browser's scroll threshold, browsing can still emit a click.
+    for (const distance of [9, 12]) {
+      await pointer.down(origin);
+      await pointer.move({ x: origin.x + distance, y: origin.y });
+      await expect(active).toHaveText("null");
+      await pointer.up();
+      await expect(drafts).toHaveText("{}");
+    }
     // A sideways finger browses instead of dragging.
     await pointer.down(origin);
     await pointer.move({ x: origin.x + 40, y: origin.y });
@@ -160,6 +168,8 @@ export async function proveCardDrag(page: Page, touch: boolean) {
   await page.keyboard.press("Enter");
   await expect(active).toHaveText("null");
   await expect(page.locator("[data-drag-overlay]")).toHaveCount(0);
+  // Keep the cancelled press down beyond the former click-suppression timeout.
+  await page.waitForTimeout(1500);
   await pointer.up();
   await expect(drafts).toHaveText("{}");
   await cdp?.detach();

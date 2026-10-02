@@ -126,7 +126,6 @@ export function createGestureSession(game: GestureGame) {
     null;
   let pointer: Point = { x: 0, y: 0 };
   let swallowing = false;
-  let swallowTimer: ReturnType<typeof setTimeout> | undefined;
   let guardingClicks = false;
   let disposed = false;
 
@@ -168,11 +167,9 @@ export function createGestureSession(game: GestureGame) {
   function newPress() {
     swallowing = false;
   }
-  /** The click the browser fires for a held or dragged press is not a selection. */
+  /** A non-tap stays suppressed until its click or a new press, even after cancellation. */
   function swallowNextClick() {
     swallowing = true;
-    clearTimeout(swallowTimer);
-    swallowTimer = setTimeout(newPress, 1000);
     if (guardingClicks) return;
     guardingClicks = true;
     addEventListener("click", swallow, true);
@@ -223,7 +220,7 @@ export function createGestureSession(game: GestureGame) {
         const dragging = press!.dragging;
         if (dragging) retarget(at);
         release();
-        if (kind === "hold" || kind === "drag") swallowNextClick();
+        if (kind !== "tap") swallowNextClick();
         if (kind === "hold") set({ inspect: null });
         if (!dragging) return;
         const before = game.request;
@@ -237,8 +234,8 @@ export function createGestureSession(game: GestureGame) {
       cancel(kind) {
         const dragging = press!.dragging;
         release();
-        // A cancelled drag or hold is still not a tap when the button lifts.
-        if (kind === "hold" || kind === "drag") swallowNextClick();
+        // Cancellation does not turn a non-tap into a selection on release.
+        if (kind !== "tap") swallowNextClick();
         if (kind === "hold") set({ inspect: null });
         if (dragging) {
           game.drag?.cancel();
@@ -355,7 +352,6 @@ export function createGestureSession(game: GestureGame) {
       clearHover();
       unsubscribe();
       followers.clear();
-      clearTimeout(swallowTimer);
       if (!guardingClicks) return;
       removeEventListener("click", swallow, true);
       removeEventListener("pointerdown", newPress, true);

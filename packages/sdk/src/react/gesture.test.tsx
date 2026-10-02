@@ -302,18 +302,39 @@ test("a drop outside every area changes nothing", async () => {
   expect(get("drafts")!.textContent).toBe("{}");
 });
 
-test("a new frame cancels the drag in progress, and its click is not a tap", async () => {
+test.each([0, 1500])(
+  "a cancelled drag's click is not a tap after %i ms",
+  async (delay) => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    const { get, source } = await mount();
+    hitTesting(() => get("discard"));
+    const at = (y: number) => ({ pointerType: "mouse", x: 10, y }) as const;
+    await down(get("red")!, at(200));
+    await move(at(150));
+    await act(async () => source.emit(snapshot(2)));
+    expect(get("overlay")).toBeNull();
+    await act(async () => vi.advanceTimersByTime(delay));
+    await up(at(40));
+    await click(get("red")!);
+    expect(source.submissions).toEqual([]);
+    expect(get("drafts")!.textContent).toBe("{}");
+  },
+);
+
+test.each([
+  { x: 109, y: 200 },
+  { x: 100, y: 209 },
+])("browsing to $x,$y does not select on release", async ({ x, y }) => {
   const { get, source } = await mount();
-  hitTesting(() => get("discard"));
-  const at = (y: number) => ({ pointerType: "mouse", x: 10, y }) as const;
-  await down(get("red")!, at(200));
-  await move(at(150));
-  await act(async () => source.emit(snapshot(2)));
+  await down(get("red")!, { pointerType: "touch", x: 100, y: 200 });
+  const moved = { pointerType: "touch", x, y } as const;
+  await move(moved);
   expect(get("overlay")).toBeNull();
-  await up(at(40));
+  await up(moved);
+  // A short browse can still produce a native click without pointercancel.
   await click(get("red")!);
-  expect(source.submissions).toEqual([]);
   expect(get("drafts")!.textContent).toBe("{}");
+  expect(source.submissions).toEqual([]);
 });
 
 test("a sideways finger browses and never drags", async () => {
