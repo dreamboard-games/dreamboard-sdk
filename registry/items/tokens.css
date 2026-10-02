@@ -313,6 +313,9 @@
     font-size: var(--text-display);
     font-weight: 800;
   }
+  .db-move-notice-toast {
+    width: 100%;
+  }
   .db-move-notice {
     width: fit-content;
     margin: 0 auto;

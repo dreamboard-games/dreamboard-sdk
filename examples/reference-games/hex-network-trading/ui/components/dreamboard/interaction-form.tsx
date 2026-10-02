@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { InputControl, RuntimeJson } from "@dreamboard-games/sdk";
 import { useGame } from "@game";
-import { useId, type ReactNode } from "react";
+import { useId, useRef, type ReactNode } from "react";
 import { Actions, type BoundInteraction, type InteractionKey } from "./actions";
 export interface InteractionFormProps {
   interaction: InteractionKey;
@@ -271,7 +271,12 @@ function Stepper({
   onChange(value: number | undefined): void;
 }) {
   const id = useId();
-  const clamp = (next: number) => Math.min(max, Math.max(min, next));
+  const input = useRef<HTMLInputElement>(null);
+  const changeStep = (direction: number) => {
+    const field = input.current!;
+    field.stepUp(direction);
+    onChange(field.valueAsNumber);
+  };
   return (
     <div className="db-stepper grid gap-1">
       <Label htmlFor={id}>{label}</Label>
@@ -282,11 +287,12 @@ function Stepper({
           type="button"
           aria-label={`Decrease ${label}`}
           disabled={disabled || (value ?? min) <= min}
-          onClick={() => onChange(clamp((value ?? min) - step))}
+          onClick={() => changeStep(-1)}
         >
           −
         </Button>
         <Input
+          ref={input}
           id={id}
           className="min-h-11 w-16 text-center tabular-nums"
           {...inputProps}
@@ -310,9 +316,7 @@ function Stepper({
           type="button"
           aria-label={`Increase ${label}`}
           disabled={disabled || (value !== undefined && value >= max)}
-          onClick={() =>
-            onChange(value === undefined ? min : clamp(value + step))
-          }
+          onClick={() => (value === undefined ? onChange(min) : changeStep(1))}
         >
           +
         </Button>

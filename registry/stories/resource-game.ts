@@ -14,6 +14,38 @@ const model = createGame({
   },
 });
 const play = model.phase("play");
+/** Steppers must respect the domain's increment, including an unaligned maximum. */
+export const numberStepGame = model.assemble({
+  initial: { public: () => ({ total: 0 }) },
+  initialPhase: "play",
+  phases: {
+    play: play.define({
+      kind: "player",
+      initialState: () => ({}),
+      enter({ tx, state }) {
+        tx.setActivePlayers([state.table.playerOrder[0]]);
+      },
+      interactions: {
+        pick: play.interaction({
+          inputs: {
+            count: play.inputs.form.number({ min: 0, max: 5, step: 2 }),
+            fraction: play.inputs.form.number({
+              min: 0.25,
+              max: 0.95,
+              step: 0.25,
+            }),
+          },
+          reduce({ tx, input }) {
+            tx.patchPublicState({
+              total: input.params.count + input.params.fraction,
+            });
+          },
+        }),
+      },
+    }),
+  },
+  view: model.view(({ state }) => ({ total: state.publicState.total })),
+});
 /** A real reducer fixture proves partially edited resource bags and final total rules. */
 export const resourceGame = model.assemble({
   initial: { public: () => ({ total: 0 }) },

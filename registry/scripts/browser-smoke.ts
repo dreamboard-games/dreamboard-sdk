@@ -71,6 +71,7 @@ try {
           "hex-setup-targets": "setupCamp",
           "hex-opening": "setupCamp",
           "resource-partial-draft": "play",
+          "number-steppers": "play",
           "many-value-editors": "play",
           "player-board-targets": "play",
           "generic-board-spaces": "play",
@@ -152,6 +153,12 @@ try {
         const notices = moves.locator(".db-move-notice");
         await expect(notices).toHaveText(["Lin played the 7 of clubs"]);
         await expect(notices.first()).toHaveAttribute("data-seat", "2");
+        await expect
+          .poll(async () => {
+            const box = (await notices.first().boundingBox())!;
+            return Math.abs(box.x + box.width / 2 - width / 2);
+          })
+          .toBeLessThan(1);
         await page.getByRole("button", { name: "Sam draws" }).click();
         await expect(notices).toHaveCount(2);
         // Notices leave by themselves.
@@ -285,6 +292,50 @@ try {
         const moved = await screen();
         expect(Math.abs(moved.x - anchored.x - 40)).toBeLessThan(1);
         expect(Math.abs(moved.y - anchored.y - 25)).toBeLessThan(1);
+      }
+      if (story.id.endsWith("number-steppers")) {
+        const count = page.getByRole("spinbutton", {
+          name: "Count",
+          exact: true,
+        });
+        const increaseCount = page.getByRole("button", {
+          name: "Increase Count",
+        });
+        const decreaseCount = page.getByRole("button", {
+          name: "Decrease Count",
+        });
+        const fraction = page.getByRole("spinbutton", {
+          name: "Fraction",
+          exact: true,
+        });
+        const increaseFraction = page.getByRole("button", {
+          name: "Increase Fraction",
+        });
+        const submit = page.locator('[data-action="submit"]');
+        await expect(decreaseCount).toBeDisabled();
+        for (const value of ["0", "2", "4", "4"]) {
+          await increaseCount.click();
+          await expect(count).toHaveValue(value);
+        }
+        for (const value of ["0.25", "0.5", "0.75", "0.75"]) {
+          await increaseFraction.click();
+          await expect(fraction).toHaveValue(value);
+        }
+        await fraction.fill("0.6");
+        await expect(submit).toBeDisabled();
+        await increaseFraction.click();
+        await expect(fraction).toHaveValue("0.75");
+        await page.getByRole("button", { name: "Decrease Fraction" }).click();
+        await expect(fraction).toHaveValue("0.5");
+        await count.fill("3");
+        await expect(submit).toBeDisabled();
+        await decreaseCount.click();
+        await expect(count).toHaveValue("2");
+        await expect(submit).toBeEnabled();
+        await submit.click();
+        await expect(page.getByTestId("scenario-view")).toContainText(
+          '"total":2.5',
+        );
       }
       if (story.id.endsWith("many-value-editors")) {
         await page

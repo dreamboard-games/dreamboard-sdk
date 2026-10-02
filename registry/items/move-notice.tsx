@@ -20,9 +20,12 @@ export function showMoveNotice(
   text: string,
   { seat }: { seat?: 1 | 2 | 3 | 4 | 5 | 6 } = {},
 ) {
-  toast.custom(() => (
-    <p className="db-move-notice" data-seat={seat}>
-      {text}
-    </p>
-  ));
+  toast.custom(
+    () => (
+      <p className="db-move-notice" data-seat={seat}>
+        {text}
+      </p>
+    ),
+    { className: "db-move-notice-toast" },
+  );
 }
