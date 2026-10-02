@@ -56,7 +56,8 @@ const handCard = (accepted: readonly string[]) =>
   });
 /**
  * A dealt hand where hearts only play, spades play or discard, clubs only
- * discard and diamonds do nothing: one card per action-menu case.
+ * discard and diamonds do nothing: one card per action-menu case. Ending the
+ * turn passes it to the other player.
  */
 export const handGame = model.assemble({
   initial: { public: () => ({}) },
@@ -119,8 +120,28 @@ export const handGame = model.assemble({
             });
           },
         }),
+        endTurn: play.interaction({
+          presentation: { label: "End turn" },
+          inputs: {},
+          reduce({ tx, input, q }) {
+            const order = q.player.order();
+            tx.setActivePlayers([
+              order[(order.indexOf(input.playerId) + 1) % order.length],
+            ]);
+          },
+        }),
       },
     }),
   },
-  view: model.view(() => ({})),
+  // Seats show how many cards each player holds.
+  view: model.view(({ q }) => ({
+    handCounts: Object.fromEntries(
+      q.player
+        .order()
+        .map((playerId) => [
+          playerId,
+          q.zone.playerCards(playerId, "hand").length,
+        ]),
+    ),
+  })),
 });

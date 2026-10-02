@@ -19,7 +19,7 @@ import { BoardTargets } from "../items/board-targets";
 import { InteractionForm } from "../items/interaction-form";
 import { playerBoardGame, genericBoardGame } from "./player-board-game";
 import { cardDropGame } from "./card-drop-game";
-import { resourceGame, manyValueGame } from "./resource-game";
+import { resourceGame, manyValueGame, numberStepGame } from "./resource-game";
 import { Inspector } from "../items/inspector";
 /** An area that runs `interaction` with whichever card is dropped on it. */
 function DropZone({ interaction }: { interaction: string }) {
@@ -111,6 +111,7 @@ const fixtures = {
     scenarioSource(hex, bandits, { at: "ready-to-move", as: "player-1" }),
   "hex-setup": () => localSource(hex, { players: 3, seed: 1 }),
   manyValues: () => localSource(manyValueGame, { players: 2, seed: 1 }),
+  numberSteps: () => localSource(numberStepGame, { players: 2, seed: 1 }),
   resources: () => localSource(resourceGame, { players: 2, seed: 1 }),
   HeartsOpening: () =>
     scenarioSource(hearts, heartsComplete, { at: "opening", as: "player-1" }),
@@ -215,6 +216,7 @@ export const HeartsPassing: Story = { args: { kind: "hearts" } };
 export const HexBanditsCheckpoint: Story = { args: { kind: "hex" } };
 
 export const ResourcePartialDraft: Story = { args: { kind: "resources" } };
+export const NumberSteppers: Story = { args: { kind: "numberSteps" } };
 
 export const HexSetupTargets: Story = { args: { kind: "hex-setup" } };
 

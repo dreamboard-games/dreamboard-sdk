@@ -1,13 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { InputControl } from "@dreamboard-games/sdk";
+import type { InputControl, RuntimeJson } from "@dreamboard-games/sdk";
 import { useGame } from "@game";
-import type { ReactNode } from "react";
+import { useId, useRef, type ReactNode } from "react";
 import { Actions, type BoundInteraction, type InteractionKey } from "./actions";
 export interface InteractionFormProps {
   interaction: InteractionKey;
   className?: string;
+  /** Field labels by input key. A key reads as words otherwise: `targetPlayerId` is "Target player". */
+  labels?: Readonly<Record<string, string>>;
   renderInput?(
     input: ReturnType<BoundInteraction["getInputs"]>[number],
   ): ReactNode | undefined;
@@ -15,42 +17,45 @@ export interface InteractionFormProps {
 /** Descriptor-driven current-step fields. Saved server selections are never replayed. */
 export function InteractionForm({
   interaction: key,
-  className,
+  className = "",
+  labels,
   renderInput,
 }: InteractionFormProps) {
   const interaction = useGame((game) => game.interactions.find(key));
   if (!interaction) return null;
   const step = interaction.getStep();
+  const label = (input: string) => labels?.[input] ?? readable(input);
   return (
     <section
-      className={`db-interaction-form ${className ?? ""}`}
+      className={`db-interaction-form grid gap-3 ${className}`}
       aria-label={interaction.label}
     >
       <h3>{interaction.label}</h3>
       {interaction.help && <p>{interaction.help}</p>}
       {step && (
         <>
-          <p>Step {step.index + 1}</p>
+          <p>
+            Step {step.index + 1} of {step.total}
+          </p>
           <dl aria-label="Saved choices">
-            {Object.entries(step.selected).map(([key, value]) => (
-              <div key={key}>
-                <dt>{key}</dt>
-                <dd>
-                  {typeof value === "object"
-                    ? JSON.stringify(value)
-                    : String(value)}
-                </dd>
+            {Object.entries(step.selected).map(([input, value]) => (
+              <div key={input} className="flex gap-2">
+                <dt>{label(input)}:</dt>
+                <dd className="m-0">{describe(value)}</dd>
               </div>
             ))}
           </dl>
         </>
       )}
-      {interaction.getInputs().map((typedInput) => {
-        const custom = renderInput?.(typedInput);
-        if (custom !== undefined)
-          return <div key={typedInput.key}>{custom}</div>;
+      {interaction.getInputs().map((input) => {
+        const custom = renderInput?.(input);
+        if (custom !== undefined) return <div key={input.key}>{custom}</div>;
         return (
-          <Control key={typedInput.key} control={typedInput.getControl()} />
+          <Control
+            key={input.key}
+            control={input.getControl()}
+            label={label(input.key)}
+          />
         );
       })}
       <Actions interaction={key} />
@@ -58,61 +63,73 @@ export function InteractionForm({
   );
 }
 
-function Control({ control }: { control: InputControl }) {
+/** `targetPlayerId` reads "Target player". */
+function readable(key: string) {
+  const words = key
+    .replace(/Ids?$/, "")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/[-_]+/g, " ")
+    .trim()
+    .toLowerCase();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+function describe(value: RuntimeJson): string {
+  if (value === null) return "None";
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (Array.isArray(value)) return value.map(describe).join(", ");
+  if (typeof value === "object")
+    return (
+      Object.entries(value)
+        .filter(([, amount]) => amount !== 0)
+        .map(
+          ([key, amount]) =>
+            `${describe(amount)} ${readable(key).toLowerCase()}`,
+        )
+        .join(", ") || "None"
+    );
+  return String(value);
+}
+
+const removable =
+  "min-h-11 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground";
+function Control({ control, label }: { control: InputControl; label: string }) {
   if (control.type === "boundedNumber") {
-    const attributes = {
-      type: "number",
-      min: control.domain.min,
-      max: control.domain.max,
-      step: control.domain.step ?? 1,
-    };
+    const { min, max, step = 1 } = control.domain;
     if (control.mode === "single")
       return (
-        <Label className="m-1 inline-flex flex-col items-start gap-1">
-          {control.key}
-          <Input
-            className="min-h-11 max-w-32"
-            {...control.props}
-            {...attributes}
-            value={control.value ?? ""}
-            onChange={(event) =>
-              control.setValue(
-                event.currentTarget.value === ""
-                  ? undefined
-                  : event.currentTarget.valueAsNumber,
-              )
-            }
-          />
-        </Label>
+        <Stepper
+          label={label}
+          value={control.value}
+          bounds={{ min, max, step }}
+          disabled={control.disabled}
+          inputProps={control.props}
+          onChange={control.setValue}
+        />
       );
     return (
-      <fieldset className="my-4" disabled={control.disabled}>
-        <legend>{control.key}</legend>
+      <fieldset className="grid gap-2" disabled={control.disabled}>
+        <legend>{label}</legend>
         {control.value.map((value, index) => (
-          <div key={index}>
-            <Label className="m-1 inline-flex flex-col items-start gap-1">
-              {control.key} {index + 1}
-              <Input
-                className="min-h-11 max-w-32"
-                {...control.props}
-                {...attributes}
-                value={value}
-                onChange={(event) =>
-                  control.setValue(
-                    event.currentTarget.value === ""
-                      ? control.value.filter((_, row) => row !== index)
-                      : control.value.map((previous, row) =>
-                          row === index
-                            ? event.currentTarget.valueAsNumber
-                            : previous,
-                        ),
-                  )
-                }
-              />
-            </Label>
+          <div key={index} className="flex flex-wrap items-end gap-2">
+            <Stepper
+              label={`${label} ${index + 1}`}
+              value={value}
+              bounds={{ min, max, step }}
+              disabled={control.disabled}
+              inputProps={control.props}
+              onChange={(next) =>
+                control.setValue(
+                  next === undefined
+                    ? control.value.filter((_, row) => row !== index)
+                    : control.value.map((previous, row) =>
+                        row === index ? next : previous,
+                      ),
+                )
+              }
+            />
             <Button
               variant="outline"
-              className="m-1 min-h-11 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
+              className={removable}
               type="button"
               onClick={() =>
                 control.setValue(
@@ -126,17 +143,10 @@ function Control({ control }: { control: InputControl }) {
         ))}
         <Button
           variant="outline"
-          className="m-1 min-h-11 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
+          className={`${removable} justify-self-start`}
           type="button"
-          disabled={
-            control.value.length >=
-            (control.domain.selection?.mode === "many"
-              ? (control.domain.selection.max ?? Infinity)
-              : Infinity)
-          }
-          onClick={() =>
-            control.setValue([...control.value, control.domain.min])
-          }
+          disabled={control.value.length >= manyLimit(control.domain)}
+          onClick={() => control.setValue([...control.value, min])}
         >
           Add value
         </Button>
@@ -150,46 +160,38 @@ function Control({ control }: { control: InputControl }) {
     const row = (
       value: Record<string, number>,
       change: (value: Record<string, number>) => void,
-    ) =>
-      control.domain.resources.map((resource) => (
-        <Label
-          className="m-1 inline-flex flex-col items-start gap-1"
-          key={resource.resourceId}
-        >
-          {resource.label ?? resource.resourceId}
-          <Input
-            className="min-h-11 max-w-32"
-            {...control.props}
-            type="number"
-            min={resource.min}
-            max={resource.max}
-            step={1}
+    ) => (
+      <div className="flex flex-wrap gap-3">
+        {control.domain.resources.map((resource) => (
+          <Stepper
+            key={resource.resourceId}
+            label={`${resource.icon ? `${resource.icon} ` : ""}${resource.label ?? readable(resource.resourceId)}`}
             value={value[resource.resourceId] ?? 0}
-            data-resource={resource.resourceId}
-            onChange={(event) =>
-              change({
-                ...value,
-                [resource.resourceId]:
-                  event.currentTarget.value === ""
-                    ? 0
-                    : event.currentTarget.valueAsNumber,
-              })
+            bounds={{ min: resource.min, max: resource.max, step: 1 }}
+            disabled={control.disabled}
+            inputProps={{
+              ...control.props,
+              "data-resource": resource.resourceId,
+            }}
+            onChange={(amount) =>
+              change({ ...value, [resource.resourceId]: amount ?? 0 })
             }
           />
-        </Label>
-      ));
+        ))}
+      </div>
+    );
     if (control.mode === "single")
       return (
-        <fieldset className="my-4" disabled={control.disabled}>
-          <legend>{control.key}</legend>
+        <fieldset className="grid gap-2" disabled={control.disabled}>
+          <legend>{label}</legend>
           {row(control.value ?? empty, control.setValue)}
         </fieldset>
       );
     return (
-      <fieldset className="my-4" disabled={control.disabled}>
-        <legend>{control.key}</legend>
+      <fieldset className="grid gap-2" disabled={control.disabled}>
+        <legend>{label}</legend>
         {control.value.map((value, index) => (
-          <fieldset className="my-4" key={index}>
+          <fieldset className="grid gap-2" key={index}>
             <legend>Allocation {index + 1}</legend>
             {row(value, (next) =>
               control.setValue(
@@ -200,7 +202,7 @@ function Control({ control }: { control: InputControl }) {
             )}
             <Button
               variant="outline"
-              className="m-1 min-h-11 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
+              className={`${removable} justify-self-start`}
               type="button"
               onClick={() =>
                 control.setValue(
@@ -214,14 +216,9 @@ function Control({ control }: { control: InputControl }) {
         ))}
         <Button
           variant="outline"
-          className="m-1 min-h-11 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
+          className={`${removable} justify-self-start`}
           type="button"
-          disabled={
-            control.value.length >=
-            (control.domain.selection?.mode === "many"
-              ? (control.domain.selection.max ?? Infinity)
-              : Infinity)
-          }
+          disabled={control.value.length >= manyLimit(control.domain)}
           onClick={() => control.setValue([...control.value, empty])}
         >
           Add allocation
@@ -230,20 +227,100 @@ function Control({ control }: { control: InputControl }) {
     );
   }
   return (
-    <fieldset className="my-4" disabled={control.disabled}>
-      <legend>{control.key}</legend>
-      {control.options.map((option, index) => (
-        <Button
-          variant="outline"
-          className="m-1 min-h-11 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
-          key={index}
-          {...option.props}
-          aria-pressed={option.selected}
-        >
-          {option.label}
-        </Button>
-      ))}
+    <fieldset className="grid gap-2" disabled={control.disabled}>
+      <legend>{label}</legend>
+      <div className="flex flex-wrap gap-2">
+        {control.options.map((option, index) => (
+          <Button
+            variant="outline"
+            className="min-h-11 rounded-full px-4 aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-foreground"
+            key={index}
+            {...option.props}
+            aria-pressed={option.selected}
+          >
+            {option.label}
+          </Button>
+        ))}
+      </div>
       {control.options.length === 0 && <p>No choices available</p>}
     </fieldset>
+  );
+}
+function manyLimit(domain: {
+  selection?: { mode: string; max?: number } | undefined;
+}) {
+  return domain.selection?.mode === "many"
+    ? (domain.selection.max ?? Infinity)
+    : Infinity;
+}
+
+/** − and + around the number, which can also be typed. */
+function Stepper({
+  label,
+  value,
+  bounds: { min, max, step },
+  disabled,
+  inputProps,
+  onChange,
+}: {
+  label: string;
+  value: number | undefined;
+  bounds: { min: number; max: number; step: number };
+  disabled: boolean;
+  inputProps: InputControl["props"];
+  onChange(value: number | undefined): void;
+}) {
+  const id = useId();
+  const input = useRef<HTMLInputElement>(null);
+  const changeStep = (direction: number) => {
+    const field = input.current!;
+    field.stepUp(direction);
+    onChange(field.valueAsNumber);
+  };
+  return (
+    <div className="db-stepper grid gap-1">
+      <Label htmlFor={id}>{label}</Label>
+      <div className="flex items-center gap-1">
+        <Button
+          variant="outline"
+          className="size-11 text-lg"
+          type="button"
+          aria-label={`Decrease ${label}`}
+          disabled={disabled || (value ?? min) <= min}
+          onClick={() => changeStep(-1)}
+        >
+          −
+        </Button>
+        <Input
+          ref={input}
+          id={id}
+          className="min-h-11 w-16 text-center tabular-nums"
+          {...inputProps}
+          type="number"
+          inputMode="numeric"
+          min={min}
+          max={max}
+          step={step}
+          value={value ?? ""}
+          onChange={(event) =>
+            onChange(
+              event.currentTarget.value === ""
+                ? undefined
+                : event.currentTarget.valueAsNumber,
+            )
+          }
+        />
+        <Button
+          variant="outline"
+          className="size-11 text-lg"
+          type="button"
+          aria-label={`Increase ${label}`}
+          disabled={disabled || (value !== undefined && value >= max)}
+          onClick={() => (value === undefined ? onChange(min) : changeStep(1))}
+        >
+          +
+        </Button>
+      </div>
+    </div>
   );
 }

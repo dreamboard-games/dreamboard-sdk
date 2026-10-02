@@ -4,7 +4,7 @@
 pnpm dlx shadcn@4.21.0 add @dreamboard/pile
 ```
 
-Pure, composable pile presentation. No SDK dependency.
+A stack of cards with edges by depth, a count badge and an empty outline. No SDK dependency.
 
 Pure display item; no SDK runtime or provider dependency.
 
@@ -15,4 +15,4 @@ are authoritative; there is no separate SDK component import.
 
 ## Props and behavior
 
-`Pile` takes `count`, `label` and optional top-card children. It shows an explicit empty state at zero and keeps the count in a figure caption.
+`Pile` takes `count`, `label` and the top card as children. Below the top card, one edge shows for every six cards, up to four, so a full deck looks thicker than a short one. A badge on the corner shows the count. An empty pile is a dashed outline the size of a card. The caption names the pile and tells screen readers how many cards it holds. Cards are sized with `--card-w-pile`. Add `data-zone` so cards drawn from the pile start there.

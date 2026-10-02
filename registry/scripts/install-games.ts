@@ -25,8 +25,8 @@ const namespace = `http://127.0.0.1:${address.port}/{name}.json`;
 const games = {
   hearts: [
     "playing-card",
-    "players",
-    "standings",
+    "seat",
+    "results",
     "hand",
     "hand-drawer",
     "actions",
@@ -38,7 +38,7 @@ const games = {
     "board-targets",
     "interaction-form",
     "resources",
-    "players",
+    "seat",
     "dice",
     "event-log",
     "standings",
