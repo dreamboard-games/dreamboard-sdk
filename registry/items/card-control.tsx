@@ -95,8 +95,6 @@ export function CardControl({
           card.select({ interaction: pick.key });
           return;
         }
-        if (!actions.length && !card.getInteractions().length && !choosing)
-          return;
         setOpen(actions.length ? !open : true);
         if (!actions.length) setShake((value) => value + 1);
       }}

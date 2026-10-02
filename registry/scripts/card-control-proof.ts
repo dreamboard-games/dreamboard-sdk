@@ -66,5 +66,12 @@ export async function proveCardControl(page: Page, touch: boolean) {
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await card.press("Enter");
   await page.getByRole("button", { name: "Flip", exact: true }).click();
-  await expect(table.locator('[data-value="hidden:table:0"]')).toBeVisible();
+  const hidden = table.locator('[data-value="hidden:table:0"]');
+  await expect(hidden).toBeVisible();
+  await page.getByRole("button", { name: "End turn", exact: true }).click();
+  await hidden.click();
+  await expect(page.getByRole("dialog").getByRole("status")).toBeVisible();
+  await expect(page.locator('[data-action="card-action"]')).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(hidden).toBeFocused();
 }
