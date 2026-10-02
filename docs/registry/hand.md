@@ -15,7 +15,7 @@ are authoritative; there is no separate SDK component import.
 
 ## Props and behavior
 
-`Hand` requires `zoneId` and `renderCard(card, state)`; `label`, `className`, `getCardLabel` and `sort` are optional. Enable `originsFeature` and `dragFeature` in the game binding. Wrap the table, including its hands and card destinations, in [CardTable](card-table.md) inside `GameProvider`.
+`Hand` requires `zoneId` and `renderCard(card, state)`; `label`, `className`, `getCardLabel` and `sort` are optional. Enable `originsFeature` and `dragFeature` in the game binding. Use the UI binding's [GameProvider](game-provider.md); it includes card motion and draw coordination automatically.
 
 - Cards sit on a `fanLayout` arc and move with Motion springs. The fan tightens to fit the hand and scrolls sideways when it cannot; a finger's sideways swipe browses it.
 - `renderCard` draws a card in the state the hand gives it: selected for the lifted card, eligible for playable cards, and dimmed for unplayable cards while another is playable. Keep it stable, at module scope or in `useCallback`, so a drag renders only the dragged card. Leave `layoutId` to the hand.

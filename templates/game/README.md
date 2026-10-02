@@ -67,6 +67,10 @@ To install source registry items, initialize shadcn with Base UI (`base-nova`) a
 `components.json` once that registry is deployed. The bound items import `@game`;
 this template maps it to `ui/game.tsx` in TypeScript and Vite. Export your binding's
 `useGame` there and enable each installed item's required features. For example,
-`board-targets` requires board, drag and pan/zoom features. The
+`board-targets` requires board, drag and pan/zoom features. For `hand` or
+`draw-pile`, export the SDK provider as `SDKGameProvider` and re-export
+`GameProvider` from the installed `components/dreamboard/game-provider` component.
+That provider includes card motion automatically; application code keeps its
+existing `GameProvider` wrapper. The
 [registry guide](https://github.com/dreamboard-games/dreamboard-sdk/blob/main/registry/README.md)
 describes local installation proof and deployment status.

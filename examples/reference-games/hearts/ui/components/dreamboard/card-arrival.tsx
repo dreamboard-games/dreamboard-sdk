@@ -7,7 +7,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { CardBack, cardSpring } from "./card";
-import type { CardBox } from "./card-table";
+import type { CardBox } from "./card-motion";
 
 /** A confirmed arrival flies outside the scrolling hand, then reveals its face. */
 export function CardArrival({

@@ -10,7 +10,7 @@ import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { CardBack, cardSpring } from "./card";
 import { Pile } from "./pile";
-import { useCardTable, type CardBox } from "./card-table";
+import { useCardMotion, type CardBox } from "./card-motion";
 import "./tokens.css";
 
 type Model = Parameters<Parameters<typeof useGame>[0]>[0];
@@ -36,7 +36,7 @@ export function DrawPile({
   const count = useGame((game) => game.zones.find(zoneId)?.count ?? 0);
   const snapshot = useGame((game) => game.snapshot);
   const request = useGame((game) => game.request);
-  const table = useCardTable();
+  const table = useCardMotion();
   const reduced = useReducedMotion();
   const control = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
@@ -65,7 +65,7 @@ export function DrawPile({
   function destination() {
     return (
       control.current
-        ?.closest("[data-card-table]")
+        ?.closest("[data-game-ui]")
         ?.querySelector<HTMLElement>(
           `.db-hand[data-zone="${CSS.escape(destinationZoneId)}"]`,
         ) ?? null

@@ -15,7 +15,7 @@ import { cardSpring, useMoving, type CardState } from "./card";
 import { CardActions, getCardActions } from "./card-actions";
 import { CardPreview } from "./card-preview";
 import { CardArrival } from "./card-arrival";
-import { useCardTable, type CardBox } from "./card-table";
+import { useCardMotion, type CardBox } from "./card-motion";
 import "./tokens.css";
 type Model = Parameters<Parameters<typeof useGame>[0]>[0];
 type ZoneId = Parameters<Model["zones"]["get"]>[0];
@@ -73,7 +73,7 @@ export function Hand({
   );
   const overlay = useDragOverlay();
   const [scroller, setScroller] = useState<HTMLElement | null>(null);
-  const table = useCardTable();
+  const table = useCardMotion();
   const drawTarget = table.drop?.zone === zoneId;
   const drawOver = drawTarget && table.drop?.over;
   const probe = useRef<HTMLDivElement>(null);
@@ -242,7 +242,7 @@ export function Hand({
 function entryFrom(
   card: Card | undefined,
   zoneId: ZoneId,
-  table: ReturnType<typeof useCardTable>,
+  table: ReturnType<typeof useCardMotion>,
 ): { box: CardBox | null; hidden: boolean } | null {
   const origin = card?.getOrigin();
   if (!origin) return null;
@@ -296,7 +296,7 @@ const HandCard = memo(function HandCard({
   const card = useGame((game) => game.cards.find(cardId));
   const gesture = useCardGesture(cardId);
   const [control, setControl] = useState<HTMLButtonElement | null>(null);
-  const table = useCardTable();
+  const table = useCardMotion();
   const [arrival, setArrival] = useState(() => entryFrom(card, zoneId, table));
   const finishArrival = useCallback(() => setArrival(null), []);
   const moving = useMoving();

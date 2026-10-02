@@ -9,7 +9,7 @@ import { createGameHook } from "@dreamboard-games/sdk/react";
 /** Test-owned all-features binding; installed items use the authored game's hook. */
 export const {
   useGame,
-  GameProvider,
+  GameProvider: SDKGameProvider,
   useCardGesture,
   useDropArea,
   useDragOverlay,
@@ -23,3 +23,4 @@ export const {
   }),
   debug: false,
 });
+export { GameProvider } from "../items/game-provider";

@@ -292,7 +292,7 @@
         "@dreamboard/card",
         "@dreamboard/card-actions",
         "@dreamboard/card-preview",
-        "@dreamboard/card-table"
+        "@dreamboard/game-provider"
       ],
       "dependencies": ["motion@13.5.0"]
     },
@@ -536,18 +536,23 @@
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",
-      "name": "card-table",
+      "name": "game-provider",
       "type": "registry:component",
-      "title": "Card Table",
-      "description": "One game card-motion boundary: reduced motion and confirmed draw origins.",
+      "title": "Game Provider",
+      "description": "The UI binding provider: SDK game lifetime with internal card motion and draw coordination.",
       "meta": {
         "binding": "workspace"
       },
       "files": [
         {
-          "path": "items/card-table.tsx",
+          "path": "items/game-provider.tsx",
           "type": "registry:component",
-          "target": "@components/dreamboard/card-table.tsx"
+          "target": "@components/dreamboard/game-provider.tsx"
+        },
+        {
+          "path": "items/card-motion.tsx",
+          "type": "registry:file",
+          "target": "@components/dreamboard/card-motion.tsx"
         }
       ],
       "registryDependencies": ["@dreamboard/tokens"],
@@ -572,7 +577,7 @@
       "registryDependencies": [
         "@dreamboard/pile",
         "@dreamboard/card",
-        "@dreamboard/card-table",
+        "@dreamboard/game-provider",
         "button"
       ],
       "dependencies": ["@base-ui/react@^1.8.0", "motion@13.5.0"]

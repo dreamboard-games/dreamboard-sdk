@@ -5,11 +5,11 @@ pnpm dlx shadcn@4.21.0 add @dreamboard/draw-pile @dreamboard/hand
 ```
 
 `DrawPile` adds a draw interaction to the existing stack presentation. Use it
-inside [CardTable](card-table.md). The game binding supplies `useGame`; the
+inside the UI binding's [GameProvider](game-provider.md). The binding supplies `useGame`; the
 destination hand also requires `originsFeature`.
 
 ```tsx
-<CardTable>
+<GameProvider source={source}>
   <DrawPile
     zoneId="deck"
     interaction="drawing.draw"
@@ -17,7 +17,7 @@ destination hand also requires `originsFeature`.
     label="Draw pile"
   />
   <Hand zoneId="hand" renderCard={renderCard} />
-</CardTable>
+</GameProvider>
 ```
 
 The bound interaction must be a no-input draw action that moves one card from the

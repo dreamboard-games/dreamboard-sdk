@@ -18,7 +18,7 @@ interface DrawOrigin {
   box: CardBox;
   snapshot: Model["snapshot"];
 }
-const CardTableContext = createContext<{
+const CardMotionContext = createContext<{
   stageDraw(from: ZoneId, to: ZoneId, box: CardBox): void;
   clearDraw(): void;
   getDrawOrigin(from: ZoneId, to: ZoneId): CardBox | null;
@@ -27,7 +27,7 @@ const CardTableContext = createContext<{
 } | null>(null);
 
 /** One game's card motion: reduced motion and a draw's release position, never hidden card identity. */
-export function CardTable({ children }: { children: ReactNode }) {
+export function CardMotionProvider({ children }: { children: ReactNode }) {
   const snapshot = useGame((game) => game.snapshot);
   const pending = useRef<DrawOrigin | null>(null);
   const [drop, setDrop] = useState<{ zone: ZoneId; over: boolean } | null>(
@@ -40,7 +40,7 @@ export function CardTable({ children }: { children: ReactNode }) {
   }, [snapshot]);
   return (
     <MotionConfig reducedMotion="user">
-      <CardTableContext.Provider
+      <CardMotionContext.Provider
         value={{
           stageDraw(from, to, box) {
             pending.current = { from, to, box, snapshot };
@@ -72,17 +72,17 @@ export function CardTable({ children }: { children: ReactNode }) {
           },
         }}
       >
-        <div data-card-table className="contents">
+        <div data-game-ui className="contents">
           {children}
         </div>
-      </CardTableContext.Provider>
+      </CardMotionContext.Provider>
     </MotionConfig>
   );
 }
 
-export function useCardTable() {
-  const table = useContext(CardTableContext);
+export function useCardMotion() {
+  const table = useContext(CardMotionContext);
   if (!table)
-    throw new Error("Hand and DrawPile require CardTable inside GameProvider.");
+    throw new Error("Hand and DrawPile require the UI binding's GameProvider.");
   return table;
 }

@@ -14,7 +14,6 @@ import { Hand } from "../items/hand";
 import { CardBack, type CardState } from "../items/card";
 import { PlayingCard } from "../items/playing-card";
 import { DrawPile } from "../items/draw-pile";
-import { CardTable } from "../items/card-table";
 import { DropArea } from "../items/drop-area";
 import { Seat, type SeatNumber } from "../items/seat";
 import { TurnBanner } from "../items/turn-banner";
@@ -171,25 +170,19 @@ function OwnedSource({
   const [seat, setSeat] = useState("player-1");
   return (
     <GameProvider source={source.value}>
-      <CardTable>
-        {manualDraw && (
-          <div className="flex gap-2">
-            <Button onClick={() => source.settleDraw(true)}>
-              Confirm draw
-            </Button>
-            <Button onClick={() => source.settleDraw(false)}>
-              Reject draw
-            </Button>
-          </div>
-        )}
-        <Table
-          onSwitchSeat={() => {
-            const next = seat === "player-1" ? "player-2" : "player-1";
-            source.value.switchSeat(next);
-            setSeat(next);
-          }}
-        />
-      </CardTable>
+      {manualDraw && (
+        <div className="flex gap-2">
+          <Button onClick={() => source.settleDraw(true)}>Confirm draw</Button>
+          <Button onClick={() => source.settleDraw(false)}>Reject draw</Button>
+        </div>
+      )}
+      <Table
+        onSwitchSeat={() => {
+          const next = seat === "player-1" ? "player-2" : "player-1";
+          source.value.switchSeat(next);
+          setSeat(next);
+        }}
+      />
     </GameProvider>
   );
 }

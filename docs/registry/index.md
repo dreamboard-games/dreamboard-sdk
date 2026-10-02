@@ -29,5 +29,5 @@ is separate from the locally verified installation workflow.
 - [scenario-controls](scenario-controls.md)
 - [browser-game](browser-game.md)
 
-- [Card table](card-table.md): shared reduced-motion handling and draw release hints.
+- [Game provider](game-provider.md): game lifetime with internal card motion and draw coordination.
 - [Draw pile](draw-pile.md): a reducer-bound draw action through a menu or drag.
