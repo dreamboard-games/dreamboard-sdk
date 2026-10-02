@@ -10,7 +10,7 @@
 
 ## Headless UI
 
-[Instance](guides/ui/instance.md) · [Turns](guides/ui/turns.md) · [Inputs](guides/ui/inputs.md) · [Zones](guides/ui/zones.md) · [Boards](guides/ui/boards.md) · [Controlled state](guides/ui/controlled-state.md) · [Sources](guides/ui/sources.md) · [Coverage](guides/ui/coverage.md) · [Styling](guides/ui/styling.md) · [Custom features](guides/ui/custom-features.md) · [Testing](guides/ui/testing.md)
+[Instance](guides/ui/instance.md) · [Turns](guides/ui/turns.md) · [Inputs](guides/ui/inputs.md) · [Zones](guides/ui/zones.md) · [Boards](guides/ui/boards.md) · [Gestures](guides/ui/gestures.md) · [Controlled state](guides/ui/controlled-state.md) · [Sources](guides/ui/sources.md) · [Coverage](guides/ui/coverage.md) · [Styling](guides/ui/styling.md) · [Custom features](guides/ui/custom-features.md) · [Testing](guides/ui/testing.md)
 
 ## Reference
 

@@ -86,19 +86,36 @@ const hooks = createGameHook<Game>()({
   features: (core, context) => ({ drag: dragFeature(core, context) }),
 });
 function useTypedDragProof() {
-  hooks.useCardDrag("card-1", {
+  hooks.useCardGesture("card-1", {
     interaction: "playerTurn.pick",
     input: "cardId",
   });
   // @ts-expect-error Unknown card identity.
-  hooks.useCardDrag("missing");
+  hooks.useCardGesture("missing");
   // @ts-expect-error Unknown interaction identity.
-  hooks.useCardDrag("card-1", { interaction: "unknown" });
-  hooks.useCardDrag("card-1", {
+  hooks.useCardGesture("card-1", { interaction: "unknown" });
+  hooks.useCardGesture("card-1", {
     interaction: "playerTurn.pick",
     // @ts-expect-error Input belongs to the selected interaction.
     input: "missing",
   });
-  hooks.useBoardDrop(null);
+  hooks.useDropArea(null);
+  hooks.useDropArea({ interaction: "playerTurn.pick" });
+  // @ts-expect-error An area names the interaction it runs.
+  hooks.useDropArea({});
+  // @ts-expect-error Unknown interaction identity.
+  hooks.useDropArea({ interaction: "unknown" });
+  const target = game.drag.getDropTargets()[0];
+  hooks.useDropArea(target);
+  if (target.kind === "interaction") {
+    const input: "cardId" = target.cardInputKey;
+    void input;
+  }
+  const overlay = hooks.useDragOverlay();
+  if (overlay) {
+    // @ts-expect-error The overlay names a model-bound card.
+    const id: "missing" = overlay.cardId;
+    void id;
+  }
 }
 void useTypedDragProof;

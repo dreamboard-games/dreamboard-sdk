@@ -60,8 +60,9 @@ try {
       export declare function useGame<Value>(select: (game: Model) => Value): Value;
       import { createGameHook } from "@dreamboard-games/sdk/react";
       type Hooks = ReturnType<ReturnType<typeof createGameHook<unknown>>>;
-      export declare const useCardDrag: Hooks["useCardDrag"];
-      export declare const useBoardDrop: Hooks["useBoardDrop"];`,
+      export declare const useCardGesture: Hooks["useCardGesture"];
+      export declare const useDropArea: Hooks["useDropArea"];
+      export declare const useDragOverlay: Hooks["useDragOverlay"];`,
     );
   }
   await writeFile(

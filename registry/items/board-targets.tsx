@@ -1,5 +1,5 @@
 import type { RuntimeBoardTarget } from "@dreamboard-games/sdk";
-import { useGame, useBoardDrop } from "@game";
+import { useGame, useDropArea } from "@game";
 import {
   useEffect,
   useRef,
@@ -13,7 +13,10 @@ type Board = NonNullable<ReturnType<Model["boards"]["get"]>>;
 type Layout = ReturnType<Board["getLayout"]>;
 type Space = ReturnType<Layout["getSpaces"]>[number];
 type Edge = ReturnType<Layout["getEdges"]>[number];
-type DropTarget = ReturnType<Model["drag"]["getDropTargets"]>[number];
+type DropTarget = Exclude<
+  ReturnType<Model["drag"]["getDropTargets"]>[number],
+  { kind: "interaction" }
+>;
 type DropRoute = Pick<
   DropTarget,
   "interactionKey" | "cardInputKey" | "inputKey"
@@ -47,7 +50,10 @@ export function BoardTargets({
   vertexProps,
 }: BoardTargetsProps) {
   const board = useGame((game) => game.boards.find(boardId));
-  const dropTargets = useGame((game) => game.drag.getDropTargets());
+  // Board destinations only; games without card-only interactions have no others.
+  const dropTargets = useGame((game) => game.drag.getDropTargets()).filter(
+    (target): target is DropTarget => "inputKey" in target,
+  );
   const viewport = useGame((game) => game.viewport);
   const surface = useRef<SVGSVGElement>(null);
   const [screenScale, setScreenScale] = useState(1);
@@ -266,40 +272,20 @@ export function BoardTargets({
   );
 }
 
-/** Platform SVG hit tests honor the rendered polygons/strokes and every ancestor transform. */
+/** The browser hit-tests the rendered polygons and strokes under every transform. */
 function DropControl({
   dropTarget,
   children,
+  style,
   ...props
 }: ComponentProps<"g"> & { dropTarget: DropTarget | null }) {
-  const element = useRef<SVGGElement | null>(null);
-  const drop = useBoardDrop(dropTarget, {
-    containsPoint(point) {
-      return [
-        ...(element.current?.querySelectorAll<SVGGeometryElement>(
-          "polygon, line, circle",
-        ) ?? []),
-      ].some((shape) => {
-        const matrix = shape.getScreenCTM();
-        if (!matrix) return false;
-        const local = new DOMPoint(point.x, point.y).matrixTransform(
-          matrix.inverse(),
-        );
-        return shape.tagName === "line"
-          ? shape.isPointInStroke(local)
-          : shape.isPointInFill(local);
-      });
-    },
-  });
+  const drop = useDropArea(dropTarget);
   return (
     <g
       {...props}
-      ref={(node) => {
-        element.current = node;
-        drop.ref(node);
-      }}
-      data-drop-target={dropTarget ? "true" : undefined}
-      data-drop-over={drop.isDropTarget || undefined}
+      {...drop.props}
+      // A destination stays hittable while a card is dragged over it.
+      style={dropTarget ? { ...style, pointerEvents: "auto" } : style}
     >
       {children}
     </g>

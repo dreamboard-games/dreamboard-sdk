@@ -1280,17 +1280,35 @@ class Controller {
     if (!interaction?.currentLifetime() || !interaction.getIsAvailable())
       return;
     const cardInput = interaction.findInput(target.cardInputKey);
-    const input = interaction.findInput(target.inputKey);
     if (
       !cardInput ||
       cardInput.descriptor.domain.type !== "cardTarget" ||
-      !cardInput.getIsEligible(cardId) ||
-      !input ||
-      !matchesBoardTarget(input.descriptor, target) ||
-      !input.getIsEligible(target.value)
+      !cardInput.getIsEligible(cardId)
+    )
+      return;
+    const input =
+      target.kind === "interaction"
+        ? undefined
+        : interaction.findInput(target.inputKey);
+    if (
+      target.kind !== "interaction" &&
+      (!input ||
+        !matchesBoardTarget(input.descriptor, target) ||
+        !input.getIsEligible(target.value))
     )
       return;
     let next: Record<string, unknown> = { ...this.drafts()[interaction.key] };
+    const chosen = next[cardInput.key];
+    // Dropping adds a card; it never toggles an already chosen card back out.
+    if (
+      !input &&
+      isManyInput(cardInput.descriptor) &&
+      Array.isArray(chosen) &&
+      chosen.includes(cardId)
+    ) {
+      this.activate(interaction.key);
+      return;
+    }
     routeCardInputIntent(
       {
         getDraft: () => next,
@@ -1305,7 +1323,10 @@ class Controller {
       {
         cardId,
         cardInputKey: cardInput.key,
-        dropTarget: { inputKey: input.key, value: target.value },
+        dropTarget:
+          input && target.kind !== "interaction"
+            ? { inputKey: input.key, value: target.value }
+            : undefined,
       },
     );
     this.writeDraft(interaction.key, next as Values);

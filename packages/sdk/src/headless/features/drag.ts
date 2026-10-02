@@ -5,7 +5,7 @@ import {
 import type { RuntimeDropTarget, RuntimeTargetOptions } from "../targets.js";
 import type { DropTarget, TargetOptions } from "../targets.js";
 export type { DropTarget } from "../targets.js";
-import { inputValueKey } from "../../shared/input-domain.js";
+import { isSameDropTarget } from "../drop-targets.js";
 import type { CoreInstance, FeatureContext, SeatCardId } from "../model.js";
 export interface DragState<G> {
   readonly cardId: SeatCardId<G>;
@@ -72,6 +72,15 @@ function createRuntimeDragFeature(context: RuntimeFeatureContext) {
             (!options?.input || input.key === options.input) &&
             input.getIsEligible(cardId),
         );
+        // Without a board input, the card lands on an area that runs the interaction.
+        if (!inputs.some((input) => input.getDomain().type === "boardTarget"))
+          return cardInputs.map((cardInput): RuntimeDropTarget =>
+            Object.freeze({
+              kind: "interaction",
+              interactionKey: candidate.key,
+              cardInputKey: cardInput.key,
+            }),
+          );
         return cardInputs.flatMap((cardInput) =>
           inputs.flatMap((input): RuntimeDropTarget[] => {
             const domain = input.getDomain();
@@ -109,18 +118,6 @@ function createRuntimeDragFeature(context: RuntimeFeatureContext) {
     );
     return resolved;
   }
-  function sameTarget(left: RuntimeDropTarget, right: RuntimeDropTarget) {
-    return (
-      left.kind === right.kind &&
-      left.valueKind === right.valueKind &&
-      inputValueKey(left.value) === inputValueKey(right.value) &&
-      (left.valueKind !== "board-id" ||
-        (right.valueKind === "board-id" && left.boardId === right.boardId)) &&
-      left.interactionKey === right.interactionKey &&
-      left.cardInputKey === right.cardInputKey &&
-      left.inputKey === right.inputKey
-    );
-  }
   function cancel() {
     if (active) update(null);
   }
@@ -142,7 +139,7 @@ function createRuntimeDragFeature(context: RuntimeFeatureContext) {
         if (!active || disposed) return;
         if (
           target &&
-          !targets().some((candidate) => sameTarget(candidate, target))
+          !targets().some((candidate) => isSameDropTarget(candidate, target))
         ) {
           update({ ...active, target: null });
           return;
@@ -153,7 +150,9 @@ function createRuntimeDragFeature(context: RuntimeFeatureContext) {
         const finished = active;
         const eligible =
           finished?.target &&
-          targets().some((target) => sameTarget(target, finished.target!));
+          targets().some((target) =>
+            isSameDropTarget(target, finished.target!),
+          );
         cancel();
         if (!disposed && finished?.target && eligible)
           context.routeCardDrop(finished.cardId, finished.target);
@@ -199,7 +198,11 @@ function createRuntimeDragFeature(context: RuntimeFeatureContext) {
   };
 }
 
-/** Semantic card/drop routing. Browser sensors and feedback belong to /react. */
+/**
+ * Semantic card/drop routing. A card lands on a board destination when its
+ * interaction has a board input, otherwise on an area that runs the
+ * interaction. Gestures, hit-testing and feedback belong to /react.
+ */
 export function dragFeature<G>(
   _game: CoreInstance<G>,
   context: FeatureContext<G>,

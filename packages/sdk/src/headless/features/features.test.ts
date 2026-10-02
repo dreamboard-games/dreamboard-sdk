@@ -17,6 +17,15 @@ import { boardFeature } from "./board.js";
 import { dragFeature } from "./drag.js";
 import { panZoomFeature } from "./pan-zoom.js";
 import type { PointerInput } from "./pointer-session.js";
+import type { BoardDropTarget, DropTarget } from "../targets.js";
+
+/** This fixture's interactions have board inputs, so every target is on the board. */
+function onBoard(targets: readonly DropTarget<unknown>[]) {
+  return targets.filter(
+    (target): target is BoardDropTarget<unknown> =>
+      target.kind !== "interaction",
+  );
+}
 
 function hexBoard(id = "island", playerId?: string): RuntimeHexBoardState {
   const spaces = [{ id: "center", q: 0, r: 0 }];
@@ -393,6 +402,10 @@ describe("headless features", () => {
     const { game } = setup();
     expect(game.drag.begin("red")).toBe(true);
     expect(game.state.drafts).toEqual({});
+    // An interaction with a board input lands only on the board.
+    expect(onBoard(game.drag.getDropTargets())).toEqual(
+      game.drag.getDropTargets(),
+    );
     const [target] = game.drag.getDropTargets();
     expect(target).toMatchObject({
       value: "center",
@@ -453,18 +466,18 @@ describe("headless features", () => {
     emit(["center"]);
     game.drag.begin("red");
     const old = game.getSnapshot().drag;
-    expect(old.getDropTargets().map((target) => target.value)).toEqual([
-      "center",
-    ]);
+    expect(onBoard(old.getDropTargets()).map((target) => target.value)).toEqual(
+      ["center"],
+    );
     emit(["other"]);
     expect(game.drag.active).toBeNull();
     game.drag.begin("red");
-    expect(game.drag.getDropTargets().map((target) => target.value)).toEqual([
-      "other",
-    ]);
-    expect(old.getDropTargets().map((target) => target.value)).toEqual([
-      "center",
-    ]);
+    expect(
+      onBoard(game.drag.getDropTargets()).map((target) => target.value),
+    ).toEqual(["other"]);
+    expect(onBoard(old.getDropTargets()).map((target) => target.value)).toEqual(
+      ["center"],
+    );
     game.dispose();
   });
 
@@ -523,7 +536,7 @@ describe("headless features", () => {
     game.drag.drop();
     expect(game.state.drafts).toEqual({});
     game.drag.begin("red");
-    const target = game.drag.getDropTargets()[0];
+    const [target] = onBoard(game.drag.getDropTargets());
     game.drag.setDropTarget(target);
     game.drag.setDropTarget({ ...target, inputKey: "missing" });
     expect(game.drag.active?.target).toBeNull();
@@ -591,7 +604,7 @@ it("retains both input keys when one interaction has multiple card and board inp
   expect(game.state.drafts["play.move"]).toEqual({ secondCard: "red" });
   game.interactions.get("play.move").reset();
   game.drag.begin("red", { interaction: "play.move", input: "secondCard" });
-  const targets = game.drag.getDropTargets();
+  const targets = onBoard(game.drag.getDropTargets());
   expect(
     targets.map(({ cardInputKey, inputKey }) => [cardInputKey, inputKey]),
   ).toEqual([

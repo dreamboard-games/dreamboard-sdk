@@ -1,15 +1,25 @@
 import {
-  GameDragProvider,
-  useCardDraggable,
-  useBoardDroppable,
-  type BoardDropOptions,
-  type DragBinding,
-} from "./drag.js";
+  createGestureSession,
+  resolveDropArea,
+  sameDropTarget,
+  GestureContext,
+  useGestureSession,
+  useGestureState,
+  type CardGestureProps,
+  type DropAreaInput,
+  type GestureGame,
+  type GestureSession,
+} from "./gesture.js";
 import type { SeatCardId } from "../headless/model.js";
-import type { DropTarget, TargetOptions } from "../headless/targets.js";
+import type {
+  DropTarget,
+  RuntimeTargetOptions,
+  TargetOptions,
+} from "../headless/targets.js";
 import {
   createContext,
   useContext,
+  useId,
   useLayoutEffect,
   useRef,
   useState,
@@ -29,6 +39,39 @@ import type {
 
 export interface SelectionOptions<Value> {
   readonly compare?: (previous: Value, next: Value) => boolean;
+}
+
+/** An area that runs this interaction with whichever card is dropped on it. */
+export type DropAreaBinding<G> = Exclude<
+  TargetOptions<G>,
+  { readonly interaction?: undefined }
+>;
+
+export interface CardGesture {
+  /** Spread on the card's own control, after the card's selection props. */
+  readonly props: CardGestureProps;
+  readonly canDrag: boolean;
+  readonly isDragging: boolean;
+  /** Held on touch, or rested on with a mouse. */
+  readonly inspecting: "hold" | "hover" | null;
+}
+
+export interface DropArea {
+  readonly props: {
+    readonly "data-drop-area": string;
+    readonly "data-drop-target"?: "true";
+    readonly "data-drop-over"?: true;
+  };
+  readonly isEligible: boolean;
+  readonly isOver: boolean;
+}
+
+export interface DragOverlay<G> {
+  readonly cardId: SeatCardId<G>;
+  /** Dropped and submitted; the authoritative frame has not arrived yet. */
+  readonly settling: boolean;
+  /** Attach to a fixed-position copy of the card; it follows the pointer. */
+  readonly ref: (element: HTMLElement | null) => (() => void) | undefined;
 }
 
 /** Bind erased game types and features; each provider owns its source lifetime. */
@@ -53,9 +96,13 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
 
     /** Owns the source. Do not share it between independently mounted providers. */
     function GameProvider({ children, ...overrides }: ProviderProps) {
-      const [instance, setInstance] = useState<Instance | null>(null);
+      const [owned, setOwned] = useState<{
+        instance: Instance;
+        session: GestureSession;
+      } | null>(null);
       const lifetime = useRef<{
         instance: Instance;
+        session: GestureSession;
         generation: number;
       } | null>(null);
       const options = {
@@ -65,12 +112,14 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
       useLayoutEffect(() => {
         let current = lifetime.current;
         if (!current) {
+          const instance = createGameInstance<Game>()(options);
           current = {
-            instance: createGameInstance<Game>()(options),
+            instance,
+            session: createGestureSession(instance),
             generation: 0,
           };
           lifetime.current = current;
-          setInstance(current.instance);
+          setOwned({ instance, session: current.session });
         }
         const owned = current;
         ++owned.generation;
@@ -78,6 +127,7 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
           const generation = ++owned.generation;
           queueMicrotask(() => {
             if (owned.generation !== generation) return;
+            owned.session.dispose();
             owned.instance.dispose();
             if (lifetime.current === owned) lifetime.current = null;
           });
@@ -89,15 +139,11 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
       useLayoutEffect(() => {
         lifetime.current?.instance.setOptions(options);
       });
-      return instance ? (
-        <Context.Provider value={instance}>
-          {"drag" in instance ? (
-            <GameDragProvider game={instance as DragBinding<Game>}>
-              {children}
-            </GameDragProvider>
-          ) : (
-            children
-          )}
+      return owned ? (
+        <Context.Provider value={owned.instance}>
+          <GestureContext.Provider value={owned.session}>
+            {children}
+          </GestureContext.Provider>
         </Context.Provider>
       ) : null;
     }
@@ -146,19 +192,92 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
       return children(useGame(selector, { compare }));
     }
 
-    function useCardDrag(
+    // Game-binding boundary: typed ids and routes cross into the erased session.
+    const dragOf = (snapshot: Snapshot) =>
+      (snapshot as Pick<GestureGame, "drag">).drag;
+
+    /** Tap, hold, drag and browse on one card; hover intent with a mouse. */
+    function useCardGesture(
       cardId: SeatCardId<Game>,
       options?: TargetOptions<Game>,
-    ) {
-      const game = useGame();
-      return useCardDraggable(game as DragBinding<Game>, cardId, options);
+    ): CardGesture {
+      const session = useGestureSession();
+      const routes = options as RuntimeTargetOptions | undefined;
+      const canDrag = useGame(
+        (snapshot) => dragOf(snapshot)?.getCanDrag(cardId, routes) ?? false,
+      );
+      const dragging = useGestureState(
+        session,
+        (state) => state.drag?.cardId === cardId,
+      );
+      const inspecting = useGestureState(session, (state) =>
+        state.inspect?.cardId === cardId ? state.inspect.via : null,
+      );
+      return {
+        props: session.cardProps(cardId, routes, { dragging, inspecting }),
+        canDrag,
+        isDragging: dragging,
+        inspecting,
+      };
     }
-    function useBoardDrop(
-      target: DropTarget<Game> | null,
-      options?: BoardDropOptions,
-    ) {
-      return useBoardDroppable(target, options);
+
+    /**
+     * Marks an element where a dragged card can land: a board destination,
+     * or an area that runs an interaction with the dropped card.
+     */
+    function useDropArea(
+      binding: DropTarget<Game> | DropAreaBinding<Game> | null,
+    ): DropArea {
+      const session = useGestureSession();
+      const id = `${session.id}${useId()}`;
+      const erased = binding as DropAreaInput;
+      const target = useGame(
+        (snapshot) => resolveDropArea(dragOf(snapshot), erased),
+        { compare: sameDropTarget },
+      );
+      const isOver = useGame((snapshot) => {
+        const active = dragOf(snapshot)?.active?.target;
+        return !!target && sameDropTarget(active ?? null, target);
+      });
+      const latest = useRef(erased);
+      useLayoutEffect(() => {
+        latest.current = erased;
+      });
+      useLayoutEffect(
+        () => session.registerArea(id, () => latest.current),
+        [session, id],
+      );
+      return {
+        props: {
+          "data-drop-area": id,
+          "data-drop-target": target ? "true" : undefined,
+          "data-drop-over": isOver || undefined,
+        },
+        isEligible: target !== null,
+        isOver,
+      };
     }
-    return { GameProvider, useGame, Subscribe, useCardDrag, useBoardDrop };
+
+    /** The card being dragged, and a ref that keeps its copy under the pointer. */
+    function useDragOverlay(): DragOverlay<Game> | null {
+      const session = useGestureSession();
+      const drag = useGestureState(session, (state) => state.drag);
+      return drag
+        ? {
+            cardId: drag.cardId as SeatCardId<Game>,
+            settling: drag.settling,
+            ref: session.overlayRef,
+          }
+        : null;
+    }
+
+    return {
+      GameProvider,
+      useGame,
+      Subscribe,
+      useCardGesture,
+      useDropArea,
+      useDragOverlay,
+    };
   };
 }
