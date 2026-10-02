@@ -8,7 +8,7 @@ import {
   type ComponentProps,
 } from "react";
 import "./tokens.css";
-type Model = Parameters<Parameters<typeof useGame>[0]>[0];
+import type { GameModel as Model } from "@game";
 type Board = NonNullable<ReturnType<Model["boards"]["get"]>>;
 type Layout = ReturnType<Board["getLayout"]>;
 type Space = ReturnType<Layout["getSpaces"]>[number];

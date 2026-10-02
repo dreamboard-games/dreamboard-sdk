@@ -188,7 +188,7 @@ export function createGestureSession(game: GestureGame) {
     event: globalThis.PointerEvent,
     cardId: string,
     element: Element,
-    options?: RuntimeTargetOptions,
+    options: false | RuntimeTargetOptions,
   ) {
     if (disposed || press || event.button !== 0) return;
     const recognizer = createGestureRecognizer(event, {
@@ -196,7 +196,8 @@ export function createGestureSession(game: GestureGame) {
         set({ inspect: { cardId, via: "hold" } });
       },
       dragStart(origin) {
-        if (!game.drag?.begin(cardId, options)) return false;
+        if (options === false || !game.drag?.begin(cardId, options))
+          return false;
         const box = element.getBoundingClientRect();
         clearHover();
         press!.dragging = true;
@@ -276,7 +277,7 @@ export function createGestureSession(game: GestureGame) {
 
   function cardProps(
     cardId: string,
-    options: RuntimeTargetOptions | undefined,
+    options: false | RuntimeTargetOptions,
     flags: { dragging: boolean; inspecting: "hold" | "hover" | null },
   ): CardGestureProps {
     return {

@@ -268,6 +268,28 @@
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "card-control",
+      "type": "registry:component",
+      "title": "Card Control",
+      "description": "Card actions and inspection with explicit drag support.",
+      "meta": {
+        "binding": "workspace"
+      },
+      "files": [
+        {
+          "path": "items/card-control.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/card-control.tsx"
+        }
+      ],
+      "registryDependencies": [
+        "@dreamboard/card",
+        "@dreamboard/card-actions",
+        "@dreamboard/card-preview"
+      ]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
       "name": "hand",
       "type": "registry:component",
       "title": "Hand",
@@ -290,9 +312,8 @@
       "registryDependencies": [
         "@dreamboard/tokens",
         "@dreamboard/card",
-        "@dreamboard/card-actions",
-        "@dreamboard/card-preview",
-        "@dreamboard/game-provider"
+        "@dreamboard/game-provider",
+        "@dreamboard/card-control"
       ],
       "dependencies": ["motion@13.5.0"]
     },

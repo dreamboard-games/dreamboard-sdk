@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useGame } from "@game";
 import "./tokens.css";
-type Model = Parameters<Parameters<typeof useGame>[0]>[0];
+import type { GameModel as Model } from "@game";
 export type BoundInteraction = NonNullable<
   ReturnType<Model["interactions"]["get"]>
 >;

@@ -74,9 +74,9 @@ const { GameProvider, useGame, useCardGesture, useDropArea, useDragOverlay } =
     features: (core, context) => ({ drag: dragFeature(core, context) }),
     debug: false,
   });
-function Card({ id }: { id: string }) {
+function Card({ id, draggable }: { id: string; draggable: boolean }) {
   const card = useGame((game) => game.cards.get(id));
-  const gesture = useCardGesture(id);
+  const gesture = useCardGesture(id, { drag: draggable ? {} : false });
   return (
     <button {...card.getProps()} {...gesture.props} data-testid={id}>
       {id}
@@ -108,7 +108,7 @@ function Drafts() {
   );
 }
 
-async function mount() {
+async function mount(draggable = true) {
   const source = createTestSource(snapshot());
   const host = document.createElement("div");
   document.body.append(host);
@@ -117,8 +117,8 @@ async function mount() {
   await act(async () =>
     root.render(
       <GameProvider source={source}>
-        <Card id="red" />
-        <Card id="blue" />
+        <Card id="red" draggable={draggable} />
+        <Card id="blue" draggable={draggable} />
         <Discard />
         <Overlay />
         <Drafts />
@@ -347,4 +347,31 @@ test("a sideways finger browses and never drags", async () => {
   await act(async () => {
     window.dispatchEvent(pointer("pointercancel", at(150)));
   });
+});
+
+test("inspection-only controls never start a drag even when the card has routes", async () => {
+  const { get } = await mount(false);
+  const mouse = { pointerType: "mouse", x: 10, y: 10 } as const;
+  await down(get("red")!, mouse);
+  await move({ ...mouse, x: 100 });
+  expect(get("overlay")).toBeNull();
+  expect(get("red")!.dataset.dragging).toBeUndefined();
+  await up({ ...mouse, x: 100 });
+  expect(get("drafts")!.textContent).toBe("{}");
+});
+
+test("inspection-only controls still inspect on hold and activate by keyboard", async () => {
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+  const { get } = await mount(false);
+  const touch = { pointerType: "touch", x: 10, y: 10 } as const;
+  await down(get("red")!, touch);
+  await act(async () => vi.advanceTimersByTime(GESTURE_THRESHOLDS.holdMs));
+  expect(get("red")!.dataset.inspecting).toBe("hold");
+  await up(touch);
+  await act(async () =>
+    get("red")!.dispatchEvent(
+      new MouseEvent("click", { bubbles: true, detail: 0 }),
+    ),
+  );
+  expect(get("drafts")!.textContent).toContain('"card":"red"');
 });

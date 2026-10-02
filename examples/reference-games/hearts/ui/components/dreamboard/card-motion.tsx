@@ -9,8 +9,8 @@ import {
 } from "react";
 import { useGame } from "@game";
 
-type Model = Parameters<Parameters<typeof useGame>[0]>[0];
-type ZoneId = Parameters<Model["zones"]["get"]>[0];
+import type { GameModel as Model } from "@game";
+import type { ZoneId } from "@game";
 export type CardBox = Pick<DOMRectReadOnly, "x" | "y" | "width" | "height">;
 interface DrawOrigin {
   from: ZoneId;

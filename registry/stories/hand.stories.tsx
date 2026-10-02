@@ -24,8 +24,7 @@ interface CreatedHandSource {
   adopted: boolean;
   settleDraw(accepted: boolean): void;
 }
-type Model = Parameters<Parameters<typeof useGame>[0]>[0];
-type GameCard = NonNullable<ReturnType<Model["cards"]["get"]>>;
+import type { GameCard } from "../typecheck/game";
 const face = z.object({
   suit: z.enum(["hearts", "diamonds", "clubs", "spades"]),
   rank: z.string(),

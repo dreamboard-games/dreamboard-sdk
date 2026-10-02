@@ -1,10 +1,15 @@
 import { fanLayout, liftFanCard } from "@dreamboard-games/sdk";
-import { useCardGesture, useDragOverlay, useGame } from "@game";
+import {
+  useDragOverlay,
+  useGame,
+  type GameCard as Card,
+  type CardId,
+  type ZoneId,
+} from "@game";
 import { motion } from "motion/react";
 import {
   memo,
   useCallback,
-  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -12,19 +17,10 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { backImageOf, cardSpring, useMoving, type CardState } from "./card";
-import { CardActions, getCardActions } from "./card-actions";
-import { CardPreview } from "./card-preview";
+import { CardControl } from "./card-control";
 import { CardArrival } from "./card-arrival";
 import { useCardMotion, type CardBox } from "./card-motion";
 import "./tokens.css";
-type Model = Parameters<Parameters<typeof useGame>[0]>[0];
-type ZoneId = Parameters<Model["zones"]["get"]>[0];
-type CardId = Parameters<Model["cards"]["get"]>[0];
-// From a zone's cards: the generic `cards.get` widens to `any` in a game
-// with no card types yet.
-type Card = ReturnType<
-  ReturnType<Model["zones"]["getAll"]>[number]["getCards"]
->[number];
 export interface HandProps {
   zoneId: ZoneId;
   label?: string;
@@ -82,12 +78,6 @@ export function Hand({
   const drawOver = drawTarget && table.drop?.over;
   const probe = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 0, card: 0, cardHeight: 0 });
-  const [menu, setMenu] = useState<{
-    cardId: CardId;
-    anchor: HTMLElement;
-    shake: number;
-  } | null>(null);
-
   useLayoutEffect(() => {
     if (!scroller) return;
     const measure = () => {
@@ -125,44 +115,6 @@ export function Hand({
   });
   const ready = size.width > 0 && size.card > 0;
 
-  const tap = useCallback(
-    (card: Card, anchor: HTMLElement) => {
-      const actions = getCardActions(card);
-      const pick = actions.length === 1 ? actions[0] : null;
-      if (
-        pick?.getInputs().some(
-          (input) =>
-            input.domainType === "cardTarget" &&
-            // Not `=== "many"`: a game without multi-card picks types
-            // every mode as "single", and that comparison fails to compile.
-            input.selectionMode !== "single",
-        )
-      ) {
-        card.select({ interaction: pick.key });
-        return;
-      }
-      // Say why only when the card could matter now; otherwise a tap does nothing.
-      if (!actions.length && !card.getInteractions().length && !choosing)
-        return;
-      setMenu((current) =>
-        current?.cardId === card.id && actions.length
-          ? null
-          : {
-              cardId: card.id,
-              anchor,
-              shake: actions.length ? 0 : (current?.shake ?? 0) + 1,
-            },
-      );
-    },
-    [choosing],
-  );
-  const close = useCallback(() => setMenu(null), []);
-  // A drag closes the menu for good, so a cancelled drag does not reopen it.
-  const dragging = overlay !== null;
-  useEffect(() => {
-    if (dragging) setMenu(null);
-  }, [dragging]);
-  const open = menu && !dragging && ids.includes(menu.cardId) ? menu : null;
   const dragged = overlay ? ids.indexOf(overlay.cardId) : -1;
 
   return (
@@ -197,11 +149,8 @@ export function Hand({
                 rotate={fan.cards[index].rotate}
                 lift={lift}
                 choosing={choosing}
-                open={open?.cardId === id}
-                shake={menu?.cardId === id ? menu.shake : 0}
                 renderCard={renderCard}
                 getCardLabel={getCardLabel}
-                onTap={tap}
               />
             ))}
           {ready && drawOver && (
@@ -218,14 +167,6 @@ export function Hand({
         </div>
         {ids.length === 0 && <p>No cards</p>}
       </section>
-      {open && (
-        <CardActions
-          key={open.cardId}
-          cardId={open.cardId}
-          anchor={open.anchor}
-          onClose={close}
-        />
-      )}
       {overlay &&
         dragged >= 0 &&
         createPortal(
@@ -276,11 +217,8 @@ interface HandCardProps {
   rotate: number;
   lift: number;
   choosing: boolean;
-  open: boolean;
-  shake: number;
   renderCard: HandProps["renderCard"];
   getCardLabel: HandProps["getCardLabel"];
-  onTap(card: Card, anchor: HTMLElement): void;
 }
 const HandCard = memo(function HandCard({
   cardId,
@@ -291,81 +229,56 @@ const HandCard = memo(function HandCard({
   rotate,
   lift,
   choosing,
-  open,
-  shake,
   renderCard,
   getCardLabel,
-  onTap,
 }: HandCardProps) {
   const card = useGame((game) => game.cards.find(cardId));
-  const gesture = useCardGesture(cardId);
-  const [control, setControl] = useState<HTMLButtonElement | null>(null);
   const table = useCardMotion();
   const [arrival, setArrival] = useState(() => entryFrom(card, zoneId, table));
   const finishArrival = useCallback(() => setArrival(null), []);
   const moving = useMoving();
   if (!card) return null;
-  const selected = card.getIsSelected();
-  // A dimmed card with its reason open shakes instead of lifting.
-  const raised = selected || (open && card.getIsEligible());
-  const state: CardState = raised
-    ? "selected"
-    : card.getIsEligible()
-      ? "eligible"
-      : choosing
-        ? "dimmed"
-        : "idle";
-  const place = raised ? liftFanCard({ x, y, rotate }, lift) : { x, y, rotate };
   return (
-    <motion.div
-      layoutId={arrival ? undefined : cardId}
-      className="db-hand-slot"
-      initial={false}
-      animate={{ ...place, scale: 1, rotateY: 0 }}
-      transition={cardSpring}
-      {...moving}
-      style={{ zIndex: index, transformPerspective: 600 }}
+    <CardControl
+      cardId={cardId}
+      drag={{}}
+      choosing={choosing}
+      disabled={!!arrival}
+      style={{ visibility: arrival ? "hidden" : undefined }}
+      renderCard={renderCard}
+      getCardLabel={getCardLabel}
     >
-      <button
-        ref={setControl}
-        {...card.getProps()}
-        {...gesture.props}
-        className="db-hand-card"
-        // Unplayable cards stay pressable, to inspect them and to say why.
-        disabled={!!arrival}
-        style={{
-          ...gesture.props.style,
-          visibility: arrival ? "hidden" : undefined,
-        }}
-        aria-disabled={!card.getCanSelect() || undefined}
-        aria-pressed={selected}
-        aria-label={
-          getCardLabel?.(card) ??
-          (card.hidden ? "Face-down card" : String(card.id))
-        }
-        data-shake={shake ? (shake % 2 ? "a" : "b") : undefined}
-        onClick={(event) => onTap(card, event.currentTarget)}
-      >
-        {renderCard(card, state)}
-      </button>
-      {arrival && control && (
-        <CardArrival
-          origin={arrival.box}
-          hidden={arrival.hidden}
-          target={control}
-          rotate={rotate}
-          back={backImageOf(card)}
-          onComplete={finishArrival}
-        >
-          {renderCard(card, "idle")}
-        </CardArrival>
-      )}
-      {gesture.inspecting && !card.hidden && (
-        <CardPreview via={gesture.inspecting} anchor={control}>
-          {renderCard(card, "idle")}
-        </CardPreview>
-      )}
-    </motion.div>
+      {({ raised, anchor, control }) => {
+        const place = raised
+          ? liftFanCard({ x, y, rotate }, lift)
+          : { x, y, rotate };
+        return (
+          <motion.div
+            layoutId={arrival ? undefined : cardId}
+            className="db-hand-slot"
+            initial={false}
+            animate={{ ...place, scale: 1, rotateY: 0 }}
+            transition={cardSpring}
+            {...moving}
+            style={{ zIndex: index, transformPerspective: 600 }}
+          >
+            {control}
+            {arrival && anchor && (
+              <CardArrival
+                origin={arrival.box}
+                hidden={arrival.hidden}
+                target={anchor}
+                rotate={rotate}
+                back={backImageOf(card)}
+                onComplete={finishArrival}
+              >
+                {renderCard(card, "idle")}
+              </CardArrival>
+            )}
+          </motion.div>
+        );
+      }}
+    </CardControl>
   );
 });
 

@@ -55,8 +55,15 @@ try {
     sdkArchive = path.join(project, `dreamboard-games-sdk-${pkg.version}.tgz`);
     await writeFile(
       path.join(project, "src/game.ts"),
-      `import type { GameSnapshot, boardFeature, handFeature, panZoomFeature, dragFeature, originsFeature } from "@dreamboard-games/sdk";
-      type Model = GameSnapshot<unknown, { board: ReturnType<typeof boardFeature<unknown>>; hand: ReturnType<typeof handFeature<unknown>>; drag: ReturnType<typeof dragFeature<unknown>>; origins: ReturnType<typeof originsFeature<unknown>>; panZoom: ReturnType<typeof panZoomFeature<unknown>> }>;
+      `import type { Card, SeatCardId, IdOf, InteractionKey as SDKInteractionKey, GameSnapshot, boardFeature, handFeature, panZoomFeature, dragFeature, originsFeature } from "@dreamboard-games/sdk";
+      type Features = { board: ReturnType<typeof boardFeature<unknown>>; hand: ReturnType<typeof handFeature<unknown>>; drag: ReturnType<typeof dragFeature<unknown>>; origins: ReturnType<typeof originsFeature<unknown>>; panZoom: ReturnType<typeof panZoomFeature<unknown>> };
+      export type GameModel = GameSnapshot<unknown, Features>;
+      export type GameCard = Card<unknown, Features>;
+      export type CardId = SeatCardId<unknown>;
+      export type ZoneId = IdOf<unknown, "zoneId">;
+      export type InteractionKey = SDKInteractionKey<unknown>;
+      export type CardDrag = import("@dreamboard-games/sdk/react").CardGestureOptions<unknown>["drag"];
+      type Model = GameModel;
       export declare function useGame<Value>(select: (game: Model) => Value, options?: { readonly compare?: (previous: Value, next: Value) => boolean }): Value;
       import { createGameHook } from "@dreamboard-games/sdk/react";
       type Hooks = ReturnType<ReturnType<typeof createGameHook<unknown>>>;

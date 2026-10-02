@@ -103,17 +103,23 @@ const hooks = createGameHook<Game>()({
 });
 function useTypedDragProof() {
   hooks.useCardGesture("card-1", {
-    interaction: "playerTurn.pick",
-    input: "cardId",
+    drag: { interaction: "playerTurn.pick", input: "cardId" },
   });
+  hooks.useCardGesture("card-1", { drag: false });
+  // @ts-expect-error Drag support must be explicit.
+  hooks.useCardGesture("card-1");
   // @ts-expect-error Unknown card identity.
-  hooks.useCardGesture("missing");
+  hooks.useCardGesture("missing", { drag: {} });
   // @ts-expect-error Unknown interaction identity.
-  hooks.useCardGesture("card-1", { interaction: "unknown" });
+  hooks.useCardGesture("card-1", { drag: { interaction: "unknown" } });
+  // @ts-expect-error The previous implicit-drag contract is removed.
+  hooks.useCardGesture("card-1", { interaction: "playerTurn.pick" });
   hooks.useCardGesture("card-1", {
-    interaction: "playerTurn.pick",
-    // @ts-expect-error Input belongs to the selected interaction.
-    input: "missing",
+    drag: {
+      interaction: "playerTurn.pick",
+      // @ts-expect-error Input belongs to the selected interaction.
+      input: "missing",
+    },
   });
   hooks.useDropArea(null);
   hooks.useDropArea({ interaction: "playerTurn.pick" });

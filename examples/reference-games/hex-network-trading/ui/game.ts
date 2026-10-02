@@ -2,16 +2,49 @@ import {
   boardFeature,
   dragFeature,
   panZoomFeature,
-  type ViewOf,
-  type InteractionKey,
 } from "@dreamboard-games/sdk";
+import type {
+  Card,
+  CoreInstance,
+  FeatureContext,
+  GameSnapshot,
+  IdOf,
+  InteractionKey as SDKInteractionKey,
+  Player,
+  SeatCardId,
+  ViewOf,
+} from "@dreamboard-games/sdk";
+import type { CardGestureOptions } from "@dreamboard-games/sdk/react";
 import { createGameHook } from "@dreamboard-games/sdk/react";
 import type game from "../app/game";
 import { StormtrailBoard } from "./App";
 import { Form } from "./interaction-routes";
 
 export type Game = typeof game;
-export type GameView = ViewOf<Game>;
+type Definition = typeof game;
+function features(
+  core: CoreInstance<Definition>,
+  context: FeatureContext<Definition>,
+) {
+  return {
+    board: boardFeature(core, context),
+    drag: dragFeature(core, context),
+    viewport: panZoomFeature(core, context, {
+      initial: { x: 0, y: 0, scale: 0.9 },
+      minScale: 0.65,
+      maxScale: 1.35,
+    }),
+  };
+}
+type EnabledFeatures = ReturnType<typeof features>;
+export type GameModel = GameSnapshot<Definition, EnabledFeatures>;
+export type GameCard = Card<Definition, EnabledFeatures>;
+export type CardId = SeatCardId<Definition>;
+export type ZoneId = IdOf<Definition, "zoneId">;
+export type GamePlayer = Player<Definition>;
+export type GameView = ViewOf<Definition>;
+export type InteractionKey = SDKInteractionKey<Definition>;
+export type CardDrag = CardGestureOptions<Definition>["drag"];
 export const coverage = {
   "setupCamp.placeStartingCamp": StormtrailBoard,
   "setupTrail.placeStartingTrail": StormtrailBoard,
@@ -26,7 +59,7 @@ export const coverage = {
   "pendingTrade.acceptTrade": Form,
   "pendingTrade.rejectTrade": Form,
 } satisfies Record<
-  InteractionKey<Game>,
+  SDKInteractionKey<Game>,
   | typeof StormtrailBoard
   | typeof Form
   | readonly (typeof StormtrailBoard | typeof Form)[]
@@ -40,13 +73,5 @@ export const {
   useDragOverlay,
 } = createGameHook<Game>()({
   coverage,
-  features: (core, context) => ({
-    board: boardFeature(core, context),
-    drag: dragFeature(core, context),
-    viewport: panZoomFeature(core, context, {
-      initial: { x: 0, y: 0, scale: 0.9 },
-      minScale: 0.65,
-      maxScale: 1.35,
-    }),
-  }),
+  features,
 });
