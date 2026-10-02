@@ -5,6 +5,8 @@ export function MoveNotices(props: ToasterProps) {
   return (
     <Toaster
       position="top-center"
+      // Listed rather than stacked, so an earlier move stays readable.
+      expand
       visibleToasts={3}
       duration={2500}
       gap={6}

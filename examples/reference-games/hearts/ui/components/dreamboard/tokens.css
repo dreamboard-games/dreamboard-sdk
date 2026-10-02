@@ -61,7 +61,14 @@
   [data-seat="6"] {
     --seat-color: var(--seat-6);
   }
+  /* Buttons on the table are ivory with dark text; outlined ones show the
+     table through an ivory border. */
   .db-table {
+    --background: var(--table);
+    --primary: var(--table-foreground);
+    --primary-foreground: #2a0e06;
+    --border: color-mix(in srgb, var(--table-foreground) 70%, transparent);
+    --ring: var(--table-foreground);
     background: var(--table);
     color: var(--table-foreground);
   }
@@ -247,7 +254,6 @@
   }
   .db-seat-you {
     font-weight: 400;
-    opacity: 0.85;
   }
   .db-seat-score {
     grid-area: score;
@@ -281,7 +287,6 @@
     margin: 0;
     overflow: hidden;
     font-size: var(--text-caption);
-    opacity: 0.85;
     text-overflow: ellipsis;
     white-space: nowrap;
     animation: db-fade-in var(--duration-base) var(--ease-out);
@@ -314,7 +319,7 @@
     padding: 0.5rem 0.875rem;
     border-left: 4px solid var(--seat-color, var(--brand));
     border-radius: 0.5rem;
-    background: #2a0e06e6;
+    background: #2a0e06;
     color: var(--table-foreground);
     box-shadow: var(--elevation-lift);
     font-size: var(--text-label);

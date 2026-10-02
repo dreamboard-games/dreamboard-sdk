@@ -319,7 +319,7 @@
     padding: 0.5rem 0.875rem;
     border-left: 4px solid var(--seat-color, var(--brand));
     border-radius: 0.5rem;
-    background: #2a0e06e6;
+    background: #2a0e06;
     color: var(--table-foreground);
     box-shadow: var(--elevation-lift);
     font-size: var(--text-label);
