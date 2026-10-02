@@ -19,13 +19,27 @@ const isHidden = (cardId: string) => cardId.startsWith("hidden:");
 const hiddenCount = (zones: Zones, zone: string) =>
   zones[zone]?.cardIds.filter(isHidden).length ?? 0;
 
+function singleOrigin(
+  departures: readonly { readonly zone: string; readonly hidden: boolean }[],
+  count: number,
+) {
+  const origin = departures[0];
+  return origin &&
+    departures.length >= count &&
+    departures.every(
+      (card) => card.zone === origin.zone && card.hidden === origin.hidden,
+    )
+    ? Object.freeze(origin)
+    : null;
+}
+
 /**
  * Visible ids are card identities, so a visible card is followed between
- * zones. Hidden ids are positions, so hidden cards are counted per zone. A
- * card that arrived otherwise takes a card that left, from its own zone first
- * (a flip), then from any zone (a draw, deal or reshuffle); a card shown now
- * must have been hidden. The rest came from the mover's private zones, which
- * the seat's frame does not list.
+ * zones. Hidden ids are positions, so only their net counts are compared.
+ * An inferred origin requires one compatible source with enough departures;
+ * existing hidden cards make the arriving positions ambiguous. Unexplained
+ * arrivals can come from the sole mover's private zones, which the seat's
+ * frame does not list. Ambiguous origins are omitted.
  */
 export function findCardOrigins(
   previous: Zones,
@@ -41,7 +55,7 @@ export function findCardOrigins(
       cardIds.filter((cardId) => !isHidden(cardId)),
     ),
   );
-  const left = Object.entries(previous).flatMap(([zone, { cardIds }]) => [
+  let left = Object.entries(previous).flatMap(([zone, { cardIds }]) => [
     ...cardIds
       .filter((cardId) => !isHidden(cardId) && !shownNow.has(cardId))
       .map(() => ({ zone, hidden: false })),
@@ -56,49 +70,77 @@ export function findCardOrigins(
     ),
   ]);
   const origins = new Map<string, RuntimeOrigin>();
-  const arrived = Object.entries(next).flatMap(([zone, { cardIds }]) => {
-    const hidden = cardIds.filter(isHidden);
-    return [
-      ...cardIds.filter(
-        (cardId) => !isHidden(cardId) && shownBefore.get(cardId) !== zone,
-      ),
-      ...hidden.slice(hiddenCount(previous, zone)),
-    ].map((cardId) => ({ cardId, zone }));
-  });
-  // Shown cards can only have been hidden, so they choose first.
-  arrived.sort(
-    (a, b) => Number(isHidden(a.cardId)) - Number(isHidden(b.cardId)),
-  );
-  for (const { cardId, zone } of arrived) {
-    const from = shownBefore.get(cardId);
-    if (from !== undefined) {
-      origins.set(cardId, Object.freeze({ zone: from, hidden: false }));
-      continue;
+  const shownArrivals: string[] = [];
+  const hiddenArrivals: (string | null)[] = [];
+  for (const [zone, { cardIds }] of Object.entries(next)) {
+    for (const cardId of cardIds) {
+      if (isHidden(cardId)) continue;
+      const from = shownBefore.get(cardId);
+      if (from === undefined) shownArrivals.push(cardId);
+      else if (from !== zone)
+        origins.set(cardId, Object.freeze({ zone: from, hidden: false }));
     }
-    const fits = (card: { hidden: boolean }) => card.hidden || isHidden(cardId);
-    const own = left.findIndex((card) => card.zone === zone && fits(card));
-    const index = own >= 0 ? own : left.findIndex(fits);
-    if (index >= 0)
-      origins.set(cardId, Object.freeze(left.splice(index, 1)[0]));
-    else if (mover !== null)
-      origins.set(cardId, Object.freeze({ player: mover, hidden: true }));
+    const hidden = cardIds.filter(isHidden);
+    const before = hiddenCount(previous, zone);
+    // Count ambiguous arrivals too, so another destination cannot claim their source.
+    hiddenArrivals.push(
+      ...Array.from(
+        { length: Math.max(0, hidden.length - before) },
+        (_, index) => (before === 0 ? hidden[index] : null),
+      ),
+    );
+  }
+  // Concealing a visible card can replace a hidden departure without changing
+  // the hidden count. Net counts cannot resolve those simultaneous movements.
+  if (
+    left.some(
+      (card) =>
+        !card.hidden &&
+        hiddenCount(previous, card.zone) > 0 &&
+        hiddenCount(next, card.zone) > 0,
+    )
+  )
+    return origins;
+  const hiddenLeft = left.filter((card) => card.hidden);
+  if (shownArrivals.length) {
+    const origin = singleOrigin(hiddenLeft, shownArrivals.length);
+    if (origin) {
+      for (const cardId of shownArrivals) origins.set(cardId, origin);
+      left = [
+        ...left.filter((card) => !card.hidden),
+        ...hiddenLeft.slice(shownArrivals.length),
+      ];
+    } else if (hiddenLeft.length) {
+      // Which departures the shown cards consumed is also ambiguous.
+      return origins;
+    } else if (mover !== null) {
+      const origin = Object.freeze({ player: mover, hidden: true as const });
+      for (const cardId of shownArrivals) origins.set(cardId, origin);
+    }
+  }
+  const hiddenOrigin =
+    singleOrigin(left, hiddenArrivals.length) ??
+    (left.length === 0 && mover !== null
+      ? Object.freeze({ player: mover, hidden: true as const })
+      : null);
+  if (hiddenOrigin) {
+    for (const cardId of hiddenArrivals)
+      if (cardId !== null) origins.set(cardId, hiddenOrigin);
   }
   return origins;
 }
 
-/** The one player other than the seat who could act on the previous frame. */
+/** The sole active player, when it is another seat. */
 function moverOf(snapshot: SourceSnapshot) {
-  const others = snapshot.frame.flow.activePlayers.filter(
-    (playerId) => playerId !== snapshot.me,
-  );
-  return others.length === 1 ? others[0] : null;
+  const active = snapshot.frame.flow.activePlayers;
+  return active.length === 1 && active[0] !== snapshot.me ? active[0] : null;
 }
 
 /**
  * Adds `card.getOrigin()`: where a card that arrived in its zone with the
  * current frame came from, or null. Origins last until the next frame and
- * reset when the seat or source changes. Several cards moving at once can be
- * misattributed between the zones they left.
+ * reset when the seat or source changes. Hidden origins are inferred from
+ * net counts; ambiguous sources and arriving positions return null.
  */
 export function originsFeature<G>(game: CoreInstance<G>) {
   type Origins = ReadonlyMap<SeatCardId<G>, CardOrigin<G>>;
@@ -120,7 +162,7 @@ export function originsFeature<G>(game: CoreInstance<G>) {
         ? (findCardOrigins(
             frame.frame.zones,
             next.frame.zones,
-            moverOf(frame),
+            next.version === frame.version + 1 ? moverOf(frame) : null,
           ) as Origins)
         : new Map();
     frame = next;

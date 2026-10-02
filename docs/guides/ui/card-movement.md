@@ -76,16 +76,26 @@ frame; otherwise `null`.
 - `{ zone, hidden }`: the card was in that zone. `hidden` says the seat saw only
   its back there, so a card drawn from a deck can flip on its way to the hand,
   and one that stayed in its zone and changed face can flip in place.
-- `{ player, hidden: true }`: the card came from the private zones of the one
-  player who could act, which the seat's frame does not list, as when an
+- `{ player, hidden: true }`: the card is inferred to have come from the private zones of the sole
+  player who could act on the immediately preceding frame, which the seat's frame does not list, as when an
   opponent plays a card to the table.
 
 Visible cards are followed by id. Hidden cards are counted per zone, because
-their ids are positions. A card that arrives face up was face down before, so
-it is matched to a face-down card that left; several cards leaving several
-zones at once can be attributed to the wrong one. Origins last until the next
-frame and start over when the seat or source changes. The first frame has
-none, so a game opens without dealing itself again.
+their ids name current positions, not persistent card identities. An inferred
+zone origin requires one compatible source with enough departures. Several
+possible sources, or an arrival among existing hidden cards, return `null`.
+Turning a visible card face down among existing hidden cards also returns
+`null`, so an unchanged card never receives its flip origin. Player origins
+require consecutive frames and one sole active player other than the seat.
+Origins last until the next frame and start over when the seat or source
+changes. The first frame has none, so a game opens without dealing itself again.
+
+These are animation hints inferred from observed changes, not an authoritative
+movement log. A shuffle or an exchange that preserves hidden counts has no
+observable identity history. Use a neutral animation when the origin is `null`.
+If a game needs exact hidden-card movement, the trusted reducer projection
+must provide explicit movement hints limited to what that seat may observe;
+do not give concealed cards persistent IDs to reconstruct their history.
 
 Read the origin when a card mounts and animate from the origin's element, such
 as the zone with that id or the player's seat:

@@ -127,8 +127,11 @@ until the renderer selects a route, instead of choosing the first input.
 `originsFeature(core)` adds `card.getOrigin()`, a `CardOrigin` for a card that
 arrived in its zone with the current frame: `{ zone, hidden }` for the zone it
 left, or `{ player, hidden: true }` for the one player who could act when the
-card came from zones the seat's frame does not list. It is `null` otherwise, on
-the first frame, and after a seat or source change. `fanLayout(FanOptions)`
+card came from zones the seat's frame does not list. Player origins require a
+consecutive frame and one sole active player other than the seat. Hidden zone
+origins are inferred from net counts; ambiguous sources or arriving positions
+return `null`. It is also `null` on the first frame and after a seat or source
+change. `fanLayout(FanOptions)`
 returns a `FanLayout`: a `FanCard` (`x`, `y`, `rotate`) per card on a circular
 arc, and the bounding `width` and `height`. `liftFanCard(card, distance)` moves
 a card along its own tilt. See [Fans and card movement](../guides/ui/card-movement.md).

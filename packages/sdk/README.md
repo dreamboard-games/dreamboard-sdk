@@ -221,7 +221,8 @@ cards: [
 ```
 
 These definitions create runtime IDs `ace-1`, `ace-2`, and `king`, all in the
-`ranked` category. When the card schema has `variants`, every `cardType` must
+`ranked` category. Card IDs cannot start with `hidden:`; that prefix is reserved
+for the positions a seat uses to address concealed cards. When the card schema has `variants`, every `cardType` must
 name one of them; `compileManifest` and `createGame` reject unknown categories.
 The inferred table narrows a card lookup by its runtime ID to that definition's
 card set, category, and properties. A variant property overrides a shared

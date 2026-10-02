@@ -481,6 +481,30 @@ test("validateManifestAuthoring rejects reserved record keys before generation",
   );
 });
 
+test.each([
+  ["hidden:table:0", 1],
+  ["hidden:deck", 2],
+] as const)("card id %s reserves the concealed-card namespace", (id, count) => {
+  const manifest: GameTopologyManifest = {
+    ...BASE_MANIFEST,
+    cardSets: [
+      {
+        id: "cards",
+        name: "Cards",
+        defaultHome: { type: "detached" },
+        cardSchema: { properties: {} },
+        cards: [{ id, name: id, cardType: "cards", count, properties: {} }],
+      },
+    ],
+  };
+  expect(validateManifestAuthoring(manifest).errors).toContain(
+    `manifest.cardSets[0].cards[0].id: The 'hidden:' prefix is reserved for concealed card positions.`,
+  );
+  expect(() => compileManifest(manifest)).toThrow(
+    "'hidden:' prefix is reserved",
+  );
+});
+
 test("distinct literal ids remain distinct when their old handles matched", () => {
   const manifest = {
     ...BASE_MANIFEST,

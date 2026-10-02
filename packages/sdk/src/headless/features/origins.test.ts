@@ -76,8 +76,8 @@ describe("findCardOrigins", () => {
   it("flips a card in place either way", () => {
     expect(
       origins(
-        { table: ["hidden:table:0", "two"], deck: hidden("deck", 1) },
-        { table: ["queen", "two"], deck: [] },
+        { table: ["hidden:table:0", "two"] },
+        { table: ["queen", "two"] },
       ),
     ).toEqual({ queen: { zone: "table", hidden: true } });
     expect(
@@ -146,6 +146,104 @@ describe("findCardOrigins", () => {
       king: { zone: "deck", hidden: true },
       "hidden:pile:0": { zone: "table", hidden: false },
     });
+  });
+
+  it("does not choose between hidden cards when one visible card is concealed", () => {
+    expect(
+      origins(
+        { table: ["queen", "hidden:table:1"] },
+        { table: hidden("table", 2) },
+      ),
+    ).toEqual({});
+  });
+
+  it("does not identify an arrival among existing hidden cards", () => {
+    expect(
+      origins(
+        { table: ["queen"], deck: hidden("deck", 2) },
+        { table: [], deck: hidden("deck", 3) },
+      ),
+    ).toEqual({});
+  });
+
+  it("does not pick the first zone among compatible departures", () => {
+    expect(
+      origins(
+        { deck: hidden("deck", 1), reserve: hidden("reserve", 1), hand: [] },
+        { deck: [], reserve: [], hand: ["king"] },
+        "bob",
+      ),
+    ).toEqual({});
+    expect(
+      origins(
+        { table: ["ace"], discard: ["king"], deck: [] },
+        { table: [], discard: [], deck: hidden("deck", 2) },
+      ),
+    ).toEqual({});
+  });
+
+  it("does not prefer a flip over another possible hidden source", () => {
+    expect(
+      origins(
+        { table: ["hidden:table:0", "two"], deck: hidden("deck", 1) },
+        { table: ["queen", "two"], deck: [] },
+      ),
+    ).toEqual({});
+  });
+
+  it("does not infer hidden destinations after an ambiguous reveal", () => {
+    expect(
+      origins(
+        {
+          deck: hidden("deck", 1),
+          reserve: hidden("reserve", 1),
+          hand: [],
+          pile: [],
+        },
+        { deck: [], reserve: [], hand: ["king"], pile: hidden("pile", 1) },
+      ),
+    ).toEqual({});
+  });
+
+  it("does not guess which cards came from a zone and which came from a player", () => {
+    expect(
+      origins(
+        { deck: hidden("deck", 1), hand: [] },
+        { deck: [], hand: ["ace", "king"] },
+        "bob",
+      ),
+    ).toEqual({});
+  });
+
+  it("still follows visible identities when other origins are ambiguous", () => {
+    expect(
+      origins(
+        {
+          hand: ["ace"],
+          deck: hidden("deck", 1),
+          reserve: hidden("reserve", 1),
+          table: [],
+        },
+        { hand: ["king"], deck: [], reserve: [], table: ["ace"] },
+      ),
+    ).toEqual({ ace: { zone: "hand", hidden: false } });
+  });
+
+  it("does not infer a reveal when another card may have been concealed in its place", () => {
+    expect(
+      origins(
+        { table: ["queen", "hidden:table:1"], deck: hidden("deck", 1) },
+        { table: ["hidden:table:0", "king"], deck: [] },
+        "bob",
+      ),
+    ).toEqual({});
+    expect(
+      origins(
+        { table: ["queen", "hidden:table:1"] },
+        { table: ["hidden:table:0", "king"] },
+        "bob",
+      ),
+    ).toEqual({});
   });
 });
 
@@ -217,6 +315,32 @@ describe("originsFeature", () => {
       ),
     });
     expect(game.cards.get("king").getOrigin()).toBeNull();
+    game.dispose();
+  });
+
+  it("does not infer a private origin while the seat can also act", () => {
+    const source = createTestSource(
+      snapshot(1, { trick: [] }, { active: ["alice", "bob"] }),
+    );
+    const game = createGameInstance()({
+      source,
+      features: (core) => ({ origins: originsFeature(core) }),
+    });
+    source.emit(snapshot(2, { trick: ["ace"] }));
+    expect(game.cards.get("ace").getOrigin()).toBeNull();
+    game.dispose();
+  });
+
+  it("does not infer a private origin across skipped frames", () => {
+    const source = createTestSource(
+      snapshot(1, { trick: [] }, { active: ["bob"] }),
+    );
+    const game = createGameInstance()({
+      source,
+      features: (core) => ({ origins: originsFeature(core) }),
+    });
+    source.emit(snapshot(3, { trick: ["ace"] }));
+    expect(game.cards.get("ace").getOrigin()).toBeNull();
     game.dispose();
   });
 });
