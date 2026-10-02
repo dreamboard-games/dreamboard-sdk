@@ -11,7 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-import { cardSpring, useMoving, type CardState } from "./card";
+import { backImageOf, cardSpring, useMoving, type CardState } from "./card";
 import { CardActions, getCardActions } from "./card-actions";
 import { CardPreview } from "./card-preview";
 import { CardArrival } from "./card-arrival";
@@ -20,7 +20,11 @@ import "./tokens.css";
 type Model = Parameters<Parameters<typeof useGame>[0]>[0];
 type ZoneId = Parameters<Model["zones"]["get"]>[0];
 type CardId = Parameters<Model["cards"]["get"]>[0];
-type Card = NonNullable<ReturnType<Model["cards"]["get"]>>;
+// From a zone's cards: the generic `cards.get` widens to `any` in a game
+// with no card types yet.
+type Card = ReturnType<
+  ReturnType<Model["zones"]["getAll"]>[number]["getCards"]
+>[number];
 export interface HandProps {
   zoneId: ZoneId;
   label?: string;
@@ -126,13 +130,13 @@ export function Hand({
       const actions = getCardActions(card);
       const pick = actions.length === 1 ? actions[0] : null;
       if (
-        pick
-          ?.getInputs()
-          .some(
-            (input) =>
-              input.domainType === "cardTarget" &&
-              input.selectionMode === "many",
-          )
+        pick?.getInputs().some(
+          (input) =>
+            input.domainType === "cardTarget" &&
+            // Not `=== "many"`: a game without multi-card picks types
+            // every mode as "single", and that comparison fails to compile.
+            input.selectionMode !== "single",
+        )
       ) {
         card.select({ interaction: pick.key });
         return;
@@ -350,13 +354,7 @@ const HandCard = memo(function HandCard({
           hidden={arrival.hidden}
           target={control}
           rotate={rotate}
-          back={
-            card.hidden
-              ? card.backImage
-              : typeof card.view.backImage === "string"
-                ? card.view.backImage
-                : null
-          }
+          back={backImageOf(card)}
           onComplete={finishArrival}
         >
           {renderCard(card, "idle")}

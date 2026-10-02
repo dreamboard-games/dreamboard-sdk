@@ -4,7 +4,11 @@ import { useGame } from "@game";
 import "./tokens.css";
 type Model = Parameters<Parameters<typeof useGame>[0]>[0];
 type CardId = Parameters<Model["cards"]["get"]>[0];
-type Card = NonNullable<ReturnType<Model["cards"]["get"]>>;
+// From a zone's cards: the generic `cards.get` widens to `any` in a game
+// with no card types yet.
+type Card = ReturnType<
+  ReturnType<Model["zones"]["getAll"]>[number]["getCards"]
+>[number];
 
 /** The interactions this card can start now, in the game's order. */
 export function getCardActions(card: Card) {

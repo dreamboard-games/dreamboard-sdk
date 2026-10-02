@@ -55,6 +55,19 @@ export function useMoving(onStart?: () => void, onComplete?: () => void) {
     },
   };
 }
+/** A card's back art: a visible card's from its view, a hidden card's own. */
+export function backImageOf(card: {
+  readonly view: unknown;
+  readonly backImage?: string | null;
+}) {
+  const { view } = card;
+  return view !== null &&
+    typeof view === "object" &&
+    "backImage" in view &&
+    typeof view.backImage === "string"
+    ? view.backImage
+    : (card.backImage ?? null);
+}
 /** A face-down card: the game's back art when `image` is given, a plain back otherwise. */
 export function CardBack({
   image,
