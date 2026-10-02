@@ -22,6 +22,11 @@ They add no DOM, React, CSS dependencies, or executable game imports.
   An interaction with a board input lands on the board; one without lands on an
   area that runs it. Gesture classification is `createGestureRecognizer`;
   browser listeners, hit-testing and the dragged copy belong to `/react`.
+- `originsFeature` adds `card.getOrigin()`: the zone a card that arrived with
+  the current frame left, or the one player who could act when it came from
+  zones the seat's frame does not list. Visible cards are followed by id and
+  hidden cards counted per zone. Pure fan geometry is `fanLayout` in
+  `../fan.ts`; neither touches the DOM.
 - `panZoomFeature` adds immutable `game.viewport` state and native pointer/wheel
   props. Apply `viewport.getTransform()` through `board.getLayout({ hexSize,
 viewport })` for transformed geometry and inverse `pointToSpace(x, y)`.
