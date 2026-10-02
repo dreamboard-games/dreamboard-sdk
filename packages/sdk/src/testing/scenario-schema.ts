@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import { manifestSchemaFamily } from "../reducer/model/manifest.js";
 
 export class ScenarioSchemaValueError extends Error {

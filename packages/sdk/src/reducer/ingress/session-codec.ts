@@ -1,5 +1,5 @@
 import { collectReducerDefinitionIndex } from "../definition-index";
-import { z } from "zod";
+import * as z from "zod";
 import * as ContractZod from "../../shared/runtime-schema";
 import { safeParseOrThrow } from "../parse-utils";
 import { runtimePayloadSchema } from "./runtime-payload";

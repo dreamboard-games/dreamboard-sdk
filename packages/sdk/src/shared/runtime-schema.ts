@@ -2,7 +2,7 @@ import {
   InteractionDescriptorSchema,
   ZoneInteractionRefsSchema,
 } from "./interaction-schema";
-import { z } from "zod";
+import * as z from "zod";
 import { RuntimeJsonSchema } from "./runtime-json.js";
 
 // Canonical wire schemas: no coercion, defaults, or game-authored refinements.

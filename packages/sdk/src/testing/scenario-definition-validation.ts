@@ -4,7 +4,7 @@ import type {
 } from "../reducer/model.js";
 import { collectReducerDefinitionIndex } from "../reducer/definition-index.js";
 import type { RuntimeJson } from "../shared/runtime-json.js";
-import { z } from "zod";
+import * as z from "zod";
 import { createClientParamSchemasByPhase } from "../reducer/client-param-schemas.js";
 import {
   appendScenarioPath,

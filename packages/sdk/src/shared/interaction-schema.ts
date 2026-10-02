@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import { PlayerBoardSpaceTargetSchema } from "./board-target.js";
 import { RuntimeJsonSchema } from "./runtime-json.js";
 

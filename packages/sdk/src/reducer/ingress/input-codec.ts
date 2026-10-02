@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import * as ContractZod from "../../shared/runtime-schema";
 import { safeParseOrThrow } from "../parse-utils";
 import type { RawRuntimeInput } from "./raw-types";

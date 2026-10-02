@@ -2,7 +2,7 @@ import type {
   CollectorValueOf,
   CollectorValueWitness,
 } from "../model/spec/inputs";
-import { z } from "zod";
+import * as z from "zod";
 import type {
   CollectorState,
   InputCollector,

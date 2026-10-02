@@ -1,5 +1,5 @@
 import type { ManifestCountValidation } from "./identity-types";
-import { z } from "zod";
+import * as z from "zod";
 import { buildTypedRecord } from "./generated-helpers.js";
 import { type GameTopologyManifest } from "../../shared/domain/manifest.js";
 import { analyzeManifest, materializeManifestTable } from "./materialize";

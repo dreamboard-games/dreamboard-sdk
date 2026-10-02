@@ -4,7 +4,7 @@ import type {
 } from "../../reducer/model.js";
 import { resolvePlayerRoster } from "../player-roster.js";
 import { createStore } from "@tanstack/store";
-import { z } from "zod";
+import * as z from "zod";
 import { createSourceLifecycle } from "../../headless/sources/lifecycle.js";
 import { immutableCopy } from "../../headless/sources/immutable.js";
 import type {

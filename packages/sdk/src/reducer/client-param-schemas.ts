@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import { collectReducerDefinitionIndex } from "./definition-index";
 import type {
   InputCollector,
