@@ -43,6 +43,11 @@ export interface GestureRecognizer {
   cancel(event?: Pick<GesturePointer, "pointerId">): void;
 }
 
+export interface GestureOptions {
+  /** Hands keep sideways scrolling; piles can be dragged toward any destination. */
+  readonly dragDirection?: "up" | "any";
+}
+
 /**
  * Classifies one press. A mouse drags in any direction and never holds. A
  * finger drags upward, browses sideways and holds when still, so cards can use
@@ -51,6 +56,7 @@ export interface GestureRecognizer {
 export function createGestureRecognizer(
   down: GesturePointer,
   callbacks: GestureCallbacks,
+  options: GestureOptions = {},
 ): GestureRecognizer {
   const origin = { x: down.clientX, y: down.clientY };
   const mouse = down.pointerType === "mouse";
@@ -81,7 +87,10 @@ export function createGestureRecognizer(
       if (kind !== "tap" || Math.hypot(dx, dy) < GESTURE_THRESHOLDS.slop)
         return;
       clearTimeout(holdTimer);
-      const lifts = mouse || -dy > GESTURE_THRESHOLDS.axisBias * Math.abs(dx);
+      const lifts =
+        mouse ||
+        options.dragDirection === "any" ||
+        -dy > GESTURE_THRESHOLDS.axisBias * Math.abs(dx);
       if (lifts && callbacks.dragStart(origin)) {
         kind = "drag";
         callbacks.dragMove(point(event));

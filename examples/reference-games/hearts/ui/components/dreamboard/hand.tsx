@@ -1,6 +1,6 @@
 import { fanLayout, liftFanCard } from "@dreamboard-games/sdk";
 import { useCardGesture, useDragOverlay, useGame } from "@game";
-import { MotionConfig, motion, type TargetAndTransition } from "motion/react";
+import { motion } from "motion/react";
 import {
   memo,
   useCallback,
@@ -14,6 +14,8 @@ import { createPortal } from "react-dom";
 import { cardSpring, useMoving, type CardState } from "./card";
 import { CardActions, getCardActions } from "./card-actions";
 import { CardPreview } from "./card-preview";
+import { CardArrival } from "./card-arrival";
+import { useCardMotion, type CardBox } from "./card-motion";
 import "./tokens.css";
 type Model = Parameters<Parameters<typeof useGame>[0]>[0];
 type ZoneId = Parameters<Model["zones"]["get"]>[0];
@@ -71,7 +73,9 @@ export function Hand({
   );
   const overlay = useDragOverlay();
   const [scroller, setScroller] = useState<HTMLElement | null>(null);
-  const [fanElement, setFanElement] = useState<HTMLElement | null>(null);
+  const table = useCardMotion();
+  const drawTarget = table.drop?.zone === zoneId;
+  const drawOver = drawTarget && table.drop?.over;
   const probe = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 0, card: 0, cardHeight: 0 });
   const [menu, setMenu] = useState<{
@@ -110,7 +114,7 @@ export function Hand({
   // Room for a lifted card above the fan and beside its end cards.
   const lift = size.cardHeight * 0.16;
   const fan = fanLayout({
-    count: ids.length,
+    count: ids.length + (drawOver ? 1 : 0),
     width: size.width - lift,
     cardWidth: size.card || 1,
     cardHeight: size.cardHeight || 1,
@@ -158,15 +162,16 @@ export function Hand({
   const dragged = overlay ? ids.indexOf(overlay.cardId) : -1;
 
   return (
-    <MotionConfig reducedMotion="user">
+    <>
       <section
         ref={setScroller}
         aria-label={label}
         data-zone={zoneId}
+        data-draw-target={drawTarget || undefined}
+        data-draw-over={drawOver || undefined}
         className={`db-hand ${className}`}
       >
         <div
-          ref={setFanElement}
           className="db-hand-fan"
           style={{ width: fan.width + lift, height: fan.height + lift }}
         >
@@ -190,12 +195,22 @@ export function Hand({
                 choosing={choosing}
                 open={open?.cardId === id}
                 shake={menu?.cardId === id ? menu.shake : 0}
-                fan={fanElement}
                 renderCard={renderCard}
                 getCardLabel={getCardLabel}
                 onTap={tap}
               />
             ))}
+          {ready && drawOver && (
+            <div
+              className="db-draw-insertion"
+              aria-hidden
+              style={{
+                width: size.card,
+                height: size.cardHeight,
+                transform: `translate(${fan.cards[ids.length].x + lift / 2}px, ${fan.cards[ids.length].y + lift}px) rotate(${fan.cards[ids.length].rotate}deg)`,
+              }}
+            />
+          )}
         </div>
         {ids.length === 0 && <p>No cards</p>}
       </section>
@@ -219,36 +234,33 @@ export function Hand({
           </div>,
           document.body,
         )}
-    </MotionConfig>
+    </>
   );
 }
 
 /** A card arriving from elsewhere starts there, turning face up if it was hidden. */
 function entryFrom(
   card: Card | undefined,
-  fan: HTMLElement | null,
   zoneId: ZoneId,
-): TargetAndTransition | false {
+  table: ReturnType<typeof useCardMotion>,
+): { box: CardBox | null; hidden: boolean } | null {
   const origin = card?.getOrigin();
-  if (!origin || !fan) return false;
-  const turn = origin.hidden ? { rotateY: 90 } : {};
-  if ("zone" in origin && origin.zone === zoneId) return turn;
+  if (!origin) return null;
+  if ("zone" in origin && origin.zone === zoneId)
+    return origin.hidden ? { box: null, hidden: true } : null;
+  const released =
+    "zone" in origin ? table.getDrawOrigin(origin.zone, zoneId) : null;
+  if (released) return { box: released, hidden: origin.hidden };
   const from = document.querySelector(
     "zone" in origin
       ? `[data-zone="${CSS.escape(origin.zone)}"]`
       : `[data-player="${CSS.escape(origin.player)}"]`,
   );
-  if (!from) return turn;
-  const source = from.getBoundingClientRect();
-  const target = fan.getBoundingClientRect();
-  const probe = fan.firstElementChild!.getBoundingClientRect();
-  return {
-    ...turn,
-    x: source.left + source.width / 2 - target.left - probe.width / 2,
-    y: source.top + source.height / 2 - target.top - probe.height / 2,
-    rotate: 0,
-    scale: 0.7,
-  };
+  return from
+    ? { box: from.getBoundingClientRect(), hidden: origin.hidden }
+    : origin.hidden
+      ? { box: null, hidden: true }
+      : null;
 }
 
 interface HandCardProps {
@@ -262,7 +274,6 @@ interface HandCardProps {
   choosing: boolean;
   open: boolean;
   shake: number;
-  fan: HTMLElement | null;
   renderCard: HandProps["renderCard"];
   getCardLabel: HandProps["getCardLabel"];
   onTap(card: Card, anchor: HTMLElement): void;
@@ -278,7 +289,6 @@ const HandCard = memo(function HandCard({
   choosing,
   open,
   shake,
-  fan,
   renderCard,
   getCardLabel,
   onTap,
@@ -286,7 +296,9 @@ const HandCard = memo(function HandCard({
   const card = useGame((game) => game.cards.find(cardId));
   const gesture = useCardGesture(cardId);
   const [control, setControl] = useState<HTMLButtonElement | null>(null);
-  const [initial] = useState(() => entryFrom(card, fan, zoneId));
+  const table = useCardMotion();
+  const [arrival, setArrival] = useState(() => entryFrom(card, zoneId, table));
+  const finishArrival = useCallback(() => setArrival(null), []);
   const moving = useMoving();
   if (!card) return null;
   const selected = card.getIsSelected();
@@ -302,9 +314,9 @@ const HandCard = memo(function HandCard({
   const place = raised ? liftFanCard({ x, y, rotate }, lift) : { x, y, rotate };
   return (
     <motion.div
-      layoutId={cardId}
+      layoutId={arrival ? undefined : cardId}
       className="db-hand-slot"
-      initial={initial}
+      initial={false}
       animate={{ ...place, scale: 1, rotateY: 0 }}
       transition={cardSpring}
       {...moving}
@@ -316,7 +328,11 @@ const HandCard = memo(function HandCard({
         {...gesture.props}
         className="db-hand-card"
         // Unplayable cards stay pressable, to inspect them and to say why.
-        disabled={false}
+        disabled={!!arrival}
+        style={{
+          ...gesture.props.style,
+          visibility: arrival ? "hidden" : undefined,
+        }}
         aria-disabled={!card.getCanSelect() || undefined}
         aria-pressed={selected}
         aria-label={
@@ -328,6 +344,17 @@ const HandCard = memo(function HandCard({
       >
         {renderCard(card, state)}
       </button>
+      {arrival && control && (
+        <CardArrival
+          origin={arrival.box}
+          hidden={arrival.hidden}
+          target={control}
+          rotate={rotate}
+          onComplete={finishArrival}
+        >
+          {renderCard(card, "idle")}
+        </CardArrival>
+      )}
       {gesture.inspecting && !card.hidden && (
         <CardPreview via={gesture.inspecting} anchor={control}>
           {renderCard(card, "idle")}
@@ -352,7 +379,7 @@ function DragCopy({
     <motion.div
       layoutId={cardId}
       initial={{ rotate }}
-      animate={{ rotate: 0 }}
+      animate={{ rotate: 0, scale: 1.06 }}
       transition={cardSpring}
     >
       {renderCard(card, "selected")}

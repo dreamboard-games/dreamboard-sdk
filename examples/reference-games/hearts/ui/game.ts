@@ -9,7 +9,7 @@ import { HandRow } from "./components/hand-row";
 
 export type Game = typeof game;
 export const {
-  GameProvider,
+  GameProvider: SDKGameProvider,
   useGame,
   Subscribe,
   useCardGesture,
@@ -23,3 +23,4 @@ export const {
     origins: originsFeature(core),
   }),
 });
+export { GameProvider } from "./components/dreamboard/game-provider";

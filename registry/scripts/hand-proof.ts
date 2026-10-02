@@ -111,31 +111,18 @@ export async function proveHand(page: Page, touch: boolean) {
   await page.keyboard.press("Enter");
   await expect.poll(async () => (await zones()).table).toEqual([heartId]);
 
-  // A drawn card starts at the deck: record where it first mounts.
-  const deck = await center(page.locator('[data-zone="deck"]'));
-  const arrival = hand.evaluate(
-    (element) =>
-      new Promise<Point>((resolve) => {
-        const observer = new MutationObserver((records) => {
-          const card = records
-            .flatMap((record) => [...record.addedNodes])
-            .filter((node) => node instanceof Element)
-            .map((node) => node.querySelector(".db-hand-card"))
-            .find((card) => card !== null);
-          if (!card) return;
-          observer.disconnect();
-          const box = card.getBoundingClientRect();
-          resolve({ x: box.x + box.width / 2, y: box.y + box.height / 2 });
-        });
-        observer.observe(element, { childList: true, subtree: true });
-      }),
-  );
-  await page.getByRole("button", { name: "Draw" }).click();
-  const start = await arrival;
-  expect(Math.hypot(start.x - deck.x, start.y - deck.y)).toBeLessThan(
-    Math.hypot(at.x - deck.x, at.y - deck.y) / 2,
-  );
+  // A menu draw renders its flight above the table, outside the clipped hand.
+  await page.getByRole("button", { name: "Deck actions" }).click();
+  await page.locator('[data-action="draw"]').click();
   await expect(cards).toHaveCount(8);
+  const arrival = page.locator("[data-card-arrival]");
+  await expect(arrival).toBeVisible();
+  expect(
+    await arrival.evaluate(
+      (element) => element.parentElement === document.body,
+    ),
+  ).toBe(true);
+  await expect(arrival).toHaveCount(0);
 
   // Dragging a card onto an area runs that area's interaction.
   const club = suit("clubs").first();

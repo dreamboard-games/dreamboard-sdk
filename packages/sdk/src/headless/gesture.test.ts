@@ -81,6 +81,25 @@ describe("gesture recognizer", () => {
     expect(log).toEqual(["end browse 100,120"]);
   });
 
+  it("lets a pile drag downward on touch without changing hand scrolling", () => {
+    const log: string[] = [];
+    const recognizer = createGestureRecognizer(
+      at("touch", 100, 100),
+      {
+        hold: () => log.push("hold"),
+        dragStart: () => true,
+        dragMove: () => log.push("move"),
+        end: (kind) => log.push(kind),
+        cancel: (kind) => log.push(`cancel ${kind}`),
+      },
+      { dragDirection: "any" },
+    );
+    recognizer.move(at("touch", 100, 120));
+    recognizer.up(at("touch", 100, 150));
+    vi.runAllTimers();
+    expect(log).toEqual(["move", "drag"]);
+  });
+
   it("drags a mouse in any direction and never holds", () => {
     const { log, recognizer } = press("mouse");
     vi.advanceTimersByTime(GESTURE_THRESHOLDS.holdMs * 3);

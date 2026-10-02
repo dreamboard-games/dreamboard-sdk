@@ -60,6 +60,8 @@ try {
       export declare function useGame<Value>(select: (game: Model) => Value, options?: { readonly compare?: (previous: Value, next: Value) => boolean }): Value;
       import { createGameHook } from "@dreamboard-games/sdk/react";
       type Hooks = ReturnType<ReturnType<typeof createGameHook<unknown>>>;
+      export declare const SDKGameProvider: Hooks["GameProvider"];
+      export { GameProvider } from "./components/dreamboard/game-provider";
       export declare const useCardGesture: Hooks["useCardGesture"];
       export declare const useDropArea: Hooks["useDropArea"];
       export declare const useDragOverlay: Hooks["useDragOverlay"];`,

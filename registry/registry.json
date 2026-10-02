@@ -280,13 +280,19 @@
           "path": "items/hand.tsx",
           "type": "registry:component",
           "target": "@components/dreamboard/hand.tsx"
+        },
+        {
+          "path": "items/card-arrival.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/card-arrival.tsx"
         }
       ],
       "registryDependencies": [
         "@dreamboard/tokens",
         "@dreamboard/card",
         "@dreamboard/card-actions",
-        "@dreamboard/card-preview"
+        "@dreamboard/card-preview",
+        "@dreamboard/game-provider"
       ],
       "dependencies": ["motion@13.5.0"]
     },
@@ -527,6 +533,54 @@
           "target": "test/helpers/browser-game.ts"
         }
       ]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "game-provider",
+      "type": "registry:component",
+      "title": "Game Provider",
+      "description": "The UI binding provider: SDK game lifetime with internal card motion and draw coordination.",
+      "meta": {
+        "binding": "workspace"
+      },
+      "files": [
+        {
+          "path": "items/game-provider.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/game-provider.tsx"
+        },
+        {
+          "path": "items/card-motion.tsx",
+          "type": "registry:file",
+          "target": "@components/dreamboard/card-motion.tsx"
+        }
+      ],
+      "registryDependencies": ["@dreamboard/tokens"],
+      "dependencies": ["motion@13.5.0"]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "draw-pile",
+      "type": "registry:component",
+      "title": "Draw Pile",
+      "description": "Tap a pile for its Draw action, or drag a face-down copy into the hand.",
+      "meta": {
+        "binding": "workspace"
+      },
+      "files": [
+        {
+          "path": "items/draw-pile.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/draw-pile.tsx"
+        }
+      ],
+      "registryDependencies": [
+        "@dreamboard/pile",
+        "@dreamboard/card",
+        "@dreamboard/game-provider",
+        "button"
+      ],
+      "dependencies": ["@base-ui/react@^1.8.0", "motion@13.5.0"]
     }
   ]
 }

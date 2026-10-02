@@ -529,3 +529,129 @@
     transition: none;
   }
 }
+
+@layer components {
+  .db-card-actions {
+    --background: var(--card-face);
+    --foreground: #192b35;
+    --primary: var(--card-back);
+    --primary-foreground: var(--card-face);
+    --border: color-mix(in srgb, var(--card-back) 25%, transparent);
+    --ring: var(--card-back);
+    --muted: color-mix(in srgb, var(--card-back) 8%, var(--card-face));
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    max-width: min(20rem, calc(100vw - 1rem));
+    padding: 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    background: var(--background);
+    color: var(--foreground);
+    box-shadow: 0 3px 12px #192b3526;
+    outline: none;
+  }
+  .db-card-action-arrow {
+    width: 12px;
+    height: 12px;
+    pointer-events: none;
+  }
+  .db-card-action-arrow::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: rotate(45deg);
+    background: var(--background);
+    border: 1px solid var(--border);
+  }
+  .db-card-action-arrow[data-side="top"] {
+    bottom: -6px;
+  }
+  .db-card-action-arrow[data-side="top"]::before {
+    border-top: 0;
+    border-left: 0;
+  }
+  .db-card-action-arrow[data-side="bottom"] {
+    top: -6px;
+  }
+  .db-card-action-arrow[data-side="bottom"]::before {
+    border-bottom: 0;
+    border-right: 0;
+  }
+  .db-card-action-arrow[data-side="left"] {
+    right: -6px;
+  }
+  .db-card-action-arrow[data-side="left"]::before {
+    border-bottom: 0;
+    border-left: 0;
+  }
+  .db-card-action-arrow[data-side="right"] {
+    left: -6px;
+  }
+  .db-card-action-arrow[data-side="right"]::before {
+    border-top: 0;
+    border-right: 0;
+  }
+  .db-card-arrival,
+  .db-draw-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 60;
+    pointer-events: none;
+    perspective: 600px;
+  }
+  .db-card-flip {
+    position: relative;
+    transform-style: preserve-3d;
+  }
+  .db-card-flip-face,
+  .db-card-flip-back {
+    backface-visibility: hidden;
+  }
+  .db-card-flip-back {
+    position: absolute;
+    inset: 0;
+    transform: rotateY(180deg);
+  }
+  .db-draw-overlay .db-card {
+    box-shadow: var(--elevation-drag);
+  }
+  .db-draw-pile-card {
+    display: block;
+    padding: 0;
+    border: 0;
+    border-radius: var(--card-radius);
+    background: none;
+    touch-action: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    cursor: grab;
+  }
+  .db-draw-pile-card[data-picked-up] {
+    opacity: 0.35;
+  }
+  .db-draw-pile-card:focus-visible {
+    outline: 3px solid var(--table-foreground);
+    outline-offset: 3px;
+  }
+  .db-hand[data-draw-target] {
+    outline: 2px dashed var(--table-foreground);
+    outline-offset: -2px;
+    border-radius: var(--card-radius);
+  }
+  .db-hand[data-draw-over] {
+    background: color-mix(in srgb, var(--table-foreground) 10%, transparent);
+  }
+  .db-draw-insertion {
+    position: absolute;
+    top: 0;
+    left: 0;
+    box-sizing: border-box;
+    border: 2px dashed var(--table-foreground);
+    border-radius: var(--card-radius);
+    background: color-mix(in srgb, var(--table-foreground) 15%, transparent);
+  }
+}
