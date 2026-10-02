@@ -10,6 +10,7 @@ export async function proveCardControl(page: Page, touch: boolean) {
   const table = page.getByRole("region", { name: "Table", exact: true });
   const card = table.locator("button[data-value]");
   await expect(card).toBeVisible();
+  await expect(card).toHaveCSS("touch-action", "manipulation");
   await expect(page.getByTestId("table-can-drag")).toHaveText("true");
   const before = await page.getByTestId("table-cards").textContent();
   const box = (await card.boundingBox())!;
@@ -55,6 +56,43 @@ export async function proveCardControl(page: Page, touch: boolean) {
     await expect(page.locator('[data-card-preview="hover"]')).toBeVisible();
     await page.mouse.move(1, 1);
     await expect(page.locator('[data-card-preview="hover"]')).toHaveCount(0);
+  }
+  if (touch) {
+    // A bounded table scrolls from the card itself, not just the gaps around it.
+    const previousStyle = await table.getAttribute("style");
+    await table.evaluate((element) =>
+      Object.assign((element as HTMLElement).style, {
+        height: "56px",
+        minHeight: "0",
+        overflowY: "auto",
+        display: "block",
+      }),
+    );
+    const clipped = (await card.boundingBox())!;
+    const start = { x: clipped.x + clipped.width / 2, y: clipped.y + 8 };
+    const scrolling = await page.context().newCDPSession(page);
+    await scrolling.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [{ ...start, id: 1 }],
+    });
+    for (let step = 1; step <= 6; step++)
+      await scrolling.send("Input.dispatchTouchEvent", {
+        type: "touchMove",
+        touchPoints: [{ x: start.x, y: start.y - step * 12, id: 1 }],
+      });
+    await scrolling.send("Input.dispatchTouchEvent", {
+      type: "touchEnd",
+      touchPoints: [],
+    });
+    await expect
+      .poll(() => table.evaluate((element) => element.scrollTop))
+      .toBeGreaterThan(0);
+    await scrolling.detach();
+    await table.evaluate((element, style) => {
+      if (style === null) element.removeAttribute("style");
+      else element.setAttribute("style", style);
+      element.scrollTop = 0;
+    }, previousStyle);
   }
   await card.focus();
   await page.keyboard.press("Enter");

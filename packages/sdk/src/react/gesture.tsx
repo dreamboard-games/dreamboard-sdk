@@ -69,6 +69,11 @@ const CARD_STYLE: CSSProperties = Object.freeze({
   WebkitUserSelect: "none",
   WebkitTouchCallout: "none",
 });
+const INSPECTION_STYLE: CSSProperties = Object.freeze({
+  ...CARD_STYLE,
+  // Inspection-only cards should not block their table's native scrolling.
+  touchAction: "manipulation",
+});
 const px = (value: number) => `${value}px`;
 
 /** A resolved board destination, or the interaction an area runs. */
@@ -306,7 +311,7 @@ export function createGestureSession(game: GestureGame) {
           event.preventDefault();
       },
       onDragStart: (event) => event.preventDefault(),
-      style: CARD_STYLE,
+      style: options === false ? INSPECTION_STYLE : CARD_STYLE,
       "data-dragging": flags.dragging || undefined,
       "data-inspecting": flags.inspecting ?? undefined,
     };

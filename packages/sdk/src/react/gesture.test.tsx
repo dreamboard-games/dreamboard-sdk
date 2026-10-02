@@ -351,6 +351,7 @@ test("a sideways finger browses and never drags", async () => {
 
 test("inspection-only controls never start a drag even when the card has routes", async () => {
   const { get } = await mount(false);
+  expect(get("red")!.style.touchAction).toBe("manipulation");
   const mouse = { pointerType: "mouse", x: 10, y: 10 } as const;
   await down(get("red")!, mouse);
   await move({ ...mouse, x: 100 });
