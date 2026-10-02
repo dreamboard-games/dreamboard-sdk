@@ -13,12 +13,18 @@ import { GameProvider, useGame } from "../typecheck/game";
 import { Hand } from "../items/hand";
 import { CardBack, type CardState } from "../items/card";
 import { PlayingCard } from "../items/playing-card";
-import { Pile } from "../items/pile";
+import { DrawPile } from "../items/draw-pile";
+import { CardTable } from "../items/card-table";
 import { DropArea } from "../items/drop-area";
 import { Seat, type SeatNumber } from "../items/seat";
 import { TurnBanner } from "../items/turn-banner";
 import { handGame } from "./hand-game";
 type HandSource = CommandSource & { switchSeat(playerId: string): void };
+interface CreatedHandSource {
+  value: HandSource;
+  adopted: boolean;
+  settleDraw(accepted: boolean): void;
+}
 type Model = Parameters<Parameters<typeof useGame>[0]>[0];
 type GameCard = NonNullable<ReturnType<Model["cards"]["get"]>>;
 const face = z.object({
@@ -97,8 +103,6 @@ function Area({
 }
 
 function Table({ onSwitchSeat }: { onSwitchSeat(): void }) {
-  const deck = useGame((game) => game.zones.find("deck")?.count ?? 0);
-  const draw = useGame((game) => game.interactions.find("play.draw"));
   const endTurn = useGame((game) => game.interactions.find("play.endTurn"));
   const zones = useGame((game) =>
     JSON.stringify(
@@ -130,14 +134,12 @@ function Table({ onSwitchSeat }: { onSwitchSeat(): void }) {
       </p>
       <div className="flex flex-wrap items-start justify-center gap-4">
         <div className="grid justify-items-center gap-2" style={tableCards}>
-          <Pile label="Deck" count={deck} data-zone="deck">
-            <CardBack />
-          </Pile>
-          {draw && (
-            <Button className="min-h-11" {...draw.getSubmitProps()}>
-              Draw
-            </Button>
-          )}
+          <DrawPile
+            zoneId="deck"
+            interaction="play.draw"
+            destinationZoneId="hand"
+            label="Deck"
+          />
         </div>
         <Area zoneId="table" label="Table" interaction="play.play" />
         <Area zoneId="discard" label="Discard" interaction="play.discard" top />
@@ -158,8 +160,10 @@ function Table({ onSwitchSeat }: { onSwitchSeat(): void }) {
 
 function OwnedSource({
   source,
+  manualDraw,
 }: {
-  source: { value: HandSource; adopted: boolean };
+  source: CreatedHandSource;
+  manualDraw: boolean;
 }) {
   useLayoutEffect(() => {
     source.adopted = true;
@@ -167,27 +171,70 @@ function OwnedSource({
   const [seat, setSeat] = useState("player-1");
   return (
     <GameProvider source={source.value}>
-      <Table
-        onSwitchSeat={() => {
-          const next = seat === "player-1" ? "player-2" : "player-1";
-          source.value.switchSeat(next);
-          setSeat(next);
-        }}
-      />
+      <CardTable>
+        {manualDraw && (
+          <div className="flex gap-2">
+            <Button onClick={() => source.settleDraw(true)}>
+              Confirm draw
+            </Button>
+            <Button onClick={() => source.settleDraw(false)}>
+              Reject draw
+            </Button>
+          </div>
+        )}
+        <Table
+          onSwitchSeat={() => {
+            const next = seat === "player-1" ? "player-2" : "player-1";
+            source.value.switchSeat(next);
+            setSeat(next);
+          }}
+        />
+      </CardTable>
     </GameProvider>
   );
 }
-function HandTable() {
-  const [source, setSource] = useState<{
-    value: HandSource;
-    adopted: boolean;
-  } | null>(null);
+function HandTable({ manualDraw = false }: { manualDraw?: boolean }) {
+  const [source, setSource] = useState<CreatedHandSource | null>(null);
   useEffect(() => {
     let active = true;
-    let created: { value: HandSource; adopted: boolean } | undefined;
+    let created: CreatedHandSource | undefined;
     void localSource(handGame, { players: 2, seed: 3 }).then((value) => {
       if (!active) return value.dispose();
-      created = { value, adopted: false };
+      let settle: ((accepted: boolean) => void) | null = null;
+      const wrapped: HandSource = {
+        store: value.store,
+        switchSeat(playerId) {
+          settle?.(false);
+          value.switchSeat(playerId);
+        },
+        cancel: (id) => value.cancel(id),
+        dispose() {
+          settle?.(false);
+          value.dispose();
+        },
+        async submit(id, params) {
+          if (manualDraw && id === "draw") {
+            const accepted = await new Promise<boolean>((resolve) => {
+              settle = resolve;
+            });
+            settle = null;
+            if (!accepted)
+              return {
+                accepted: false,
+                errorCode: "DRAW_REJECTED",
+                message: "The draw was rejected.",
+              };
+          }
+          return value.submit(id, params);
+        },
+      };
+      created = {
+        value: wrapped,
+        adopted: false,
+        settleDraw(accepted) {
+          settle?.(accepted);
+        },
+      };
       setSource(created);
     });
     return () => {
@@ -195,8 +242,12 @@ function HandTable() {
       // The provider owns the source once it commits.
       if (created && !created.adopted) created.value.dispose();
     };
-  }, []);
-  return source ? <OwnedSource source={source} /> : <p>Loading…</p>;
+  }, [manualDraw]);
+  return source ? (
+    <OwnedSource source={source} manualDraw={manualDraw} />
+  ) : (
+    <p>Loading…</p>
+  );
 }
 const meta = {
   title: "Game feel/Hand",
@@ -205,3 +256,7 @@ const meta = {
 } satisfies Meta<typeof HandTable>;
 export default meta;
 export const FannedHand: StoryObj<typeof meta> = {};
+
+export const PendingDraw: StoryObj<typeof meta> = {
+  args: { manualDraw: true },
+};

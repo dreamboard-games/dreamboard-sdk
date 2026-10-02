@@ -111,6 +111,14 @@ export const handGame = model.assemble({
         draw: play.interaction({
           presentation: { label: "Draw" },
           inputs: {},
+          rules: [
+            {
+              id: "deck-has-cards",
+              errorCode: "DECK_EMPTY",
+              message: "The draw pile is empty.",
+              available: ({ q }) => q.zone.sharedCards("deck").length > 0,
+            },
+          ],
           reduce({ tx, input }) {
             tx.deal({
               fromZoneId: "deck",

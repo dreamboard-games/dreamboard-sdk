@@ -1,10 +1,11 @@
+import { CardTable } from "./components/dreamboard/card-table";
 import { useGame } from "./game";
 import { HandRow } from "./components/hand-row";
 import { TrickArea } from "./components/trick-area";
 import { Results } from "./components/dreamboard/results";
 import { Seat, type SeatNumber } from "./components/dreamboard/seat";
 
-export default function App() {
+function HeartsTable() {
   const game = useGame();
   const { view, me, phase, turn, players } = game;
   if (!view || !me)
@@ -129,5 +130,13 @@ export default function App() {
         </section>
       </aside>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <CardTable>
+      <HeartsTable />
+    </CardTable>
   );
 }

@@ -328,3 +328,9 @@ sources publish the canonical seat view and keep command bases private.
 Card sets contain their authored `cards`, `cardSchema`, and `defaultHome` directly.
 Standard playing cards are game-owned definitions with ordinary suit/rank
 properties; the SDK does not synthesize inventories or assign built-in rules.
+
+The exported `createGestureRecognizer(down, callbacks, options)` defaults to
+upward touch dragging so hands retain sideways scrolling. Pile controls can use
+`{ dragDirection: "any" }` with `touch-action: none` to drag toward a hand below
+or beside them. This classifies pointer intent only; submit an authored interaction
+through the bound game to enforce its rules, without selecting a hidden card ID.

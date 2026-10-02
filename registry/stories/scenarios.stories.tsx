@@ -13,6 +13,7 @@ import hexComplete from "../../examples/reference-games/hex-network-trading/test
 import depot from "../../examples/reference-games/hex-network-trading/test/scenarios/depot-trades.scenario";
 import trade from "../../examples/reference-games/hex-network-trading/test/scenarios/bilateral-trade.scenario";
 import { GameProvider, useDropArea, useGame } from "../typecheck/game";
+import { CardTable } from "../items/card-table";
 import { Hand } from "../items/hand";
 import { Card, CardBack } from "../items/card";
 import { BoardTargets } from "../items/board-targets";
@@ -166,7 +167,9 @@ function OwnedScenario({
   }, [created]);
   return (
     <GameProvider source={created.source}>
-      <ScenarioModel compactBoards={compactBoards} dropZones={dropZones} />
+      <CardTable>
+        <ScenarioModel compactBoards={compactBoards} dropZones={dropZones} />
+      </CardTable>
     </GameProvider>
   );
 }

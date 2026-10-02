@@ -65,8 +65,9 @@ export function CardActions({ cardId, anchor, onClose }: CardActionsProps) {
           <Popover.Popup
             finalFocus={() => anchor}
             aria-label="Card actions"
-            className="flex max-w-[min(20rem,calc(100vw-1rem))] flex-wrap justify-center gap-2 rounded-xl bg-popover p-2 text-popover-foreground shadow-lg outline-none"
+            className="db-card-actions"
           >
+            <Popover.Arrow className="db-card-action-arrow" />
             {actions.length ? (
               actions.map((route, index) => (
                 <Button

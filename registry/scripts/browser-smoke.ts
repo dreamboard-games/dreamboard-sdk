@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { proveCardDrag } from "./card-drag-proof.ts";
+import { proveDraw, proveReducedCardMotion } from "./draw-proof.ts";
 import { proveHand } from "./hand-proof.ts";
 import { chromium, expect } from "@playwright/test";
 import { spawn } from "node:child_process";
@@ -231,8 +232,14 @@ try {
       // Gesture proofs run on a portrait phone and a desktop.
       if (story.id.endsWith("card-drag-drop") && name !== "landscape")
         await proveCardDrag(page, touch);
-      if (story.id.endsWith("fanned-hand") && name !== "landscape")
+      if (story.id.endsWith("fanned-hand") && name !== "landscape") {
         await proveHand(page, touch);
+        await page.reload();
+        await proveDraw(page, touch, false);
+        if (!touch) await proveReducedCardMotion(page);
+      }
+      if (story.id.endsWith("pending-draw") && name !== "landscape")
+        await proveDraw(page, touch, true);
       if (story.id.endsWith("hearts-passing")) {
         await expect(
           page.getByRole("heading", { name: "passing", exact: true }),

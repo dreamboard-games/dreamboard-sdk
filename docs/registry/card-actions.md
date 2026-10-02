@@ -4,7 +4,9 @@
 pnpm dlx shadcn@4.21.0 add @dreamboard/card-actions
 ```
 
-A menu of a card's available actions, the first primary, or why it has none.
+A compact ivory popover with a pointer to its card, showing available actions
+or why it has none. The first action is filled; others are outlined. The same
+presentation is used by [DrawPile](draw-pile.md), with generous touch targets.
 
 Workspace-bound headless UI; copied source owned by the game.
 

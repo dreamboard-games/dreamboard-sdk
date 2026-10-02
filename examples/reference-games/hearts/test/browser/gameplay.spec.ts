@@ -130,6 +130,16 @@ test("private seat changes and named checkpoints remain responsive and accessibl
   await expect(
     page.locator('button[data-action="select"][data-disabled="false"]'),
   ).toHaveCount(13);
+  // Restoring remounts the seat's action label; audit its finished fade-in.
+  await page
+    .locator(".db-seat-action")
+    .evaluateAll((labels) =>
+      Promise.all(
+        labels.flatMap((label) =>
+          label.getAnimations().map((animation) => animation.finished),
+        ),
+      ),
+    );
   await injectAxe(page);
   await checkA11y(page, undefined, {
     axeOptions: {
