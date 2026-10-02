@@ -87,8 +87,8 @@ function ScenarioModel({
           <Hand
             key={zone.id}
             zoneId={zone.id}
-            renderCard={(card) =>
-              card.hidden ? <CardBack /> : <Card>{card.id}</Card>
+            renderCard={(card, state) =>
+              card.hidden ? <CardBack /> : <Card state={state}>{card.id}</Card>
             }
           />
         ))}

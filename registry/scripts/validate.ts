@@ -39,10 +39,16 @@ for (const item of registry.items) {
       )
         continue;
       const name = node.moduleSpecifier.text;
+      const pkg = name.split("/").slice(0, name.startsWith("@") ? 2 : 1);
       if (
         name !== "react" &&
+        // Overlays and previews portal out of transformed or clipped layouts.
+        name !== "react-dom" &&
         !name.startsWith("./") &&
-        !(name === "cn" && item.dependencies?.includes("cn@^0.4.0")) &&
+        // An item imports only the npm packages it declares.
+        !item.dependencies?.some((dependency) =>
+          dependency.startsWith(`${pkg.join("/")}@`),
+        ) &&
         !(
           name.startsWith("@/components/ui/") &&
           item.registryDependencies?.includes(
@@ -50,13 +56,9 @@ for (const item of registry.items) {
           )
         ) &&
         !(item.meta?.binding === "workspace" && name === "@game") &&
-        // A dragged card's overlay portals out of transformed or clipped layouts.
-        !(item.meta?.binding === "workspace" && name === "react-dom") &&
-        // Workspace-bound renderers may share SDK types without a runtime import.
+        // A workspace game already depends on the SDK its binding comes from.
         !(
-          item.meta?.binding === "workspace" &&
-          node.importClause?.isTypeOnly &&
-          name === "@dreamboard-games/sdk"
+          item.meta?.binding === "workspace" && name === "@dreamboard-games/sdk"
         ) &&
         !(item.meta?.binding === "test" && name === "@playwright/test")
       )

@@ -1,6 +1,6 @@
 # Dreamboard source registry
 
-React building blocks copied into the game that owns them. Pure display items have no SDK imports and accept ordinary DOM props and children. Shared controls compose installed shadcn Base UI primitives; layout uses Tailwind utilities. Bound items read the workspace’s `@game` hook and delegate interactions to the headless SDK. Local scenario controls and a browser-test helper support development without adding hosted gameplay authority. Animation remains optional and app-owned.
+React building blocks copied into the game that owns them. Pure display items have no SDK imports and accept ordinary DOM props and children. Shared controls compose installed shadcn Base UI primitives; layout uses Tailwind utilities. Bound items read the workspace’s `@game` hook and delegate interactions to the headless SDK. Local scenario controls and a browser-test helper support development without adding hosted gameplay authority. Cards move with Motion: a card keeps one `layoutId` in every place it can be, and the hand springs its fan.
 
 ## Local proof
 
@@ -15,7 +15,7 @@ pnpm --dir registry browser:smoke
 
 `check` validates the source registry using the installed official shadcn schemas, checks pure imports, typechecks components and stories, and runs `shadcn build`. Built installable items are written to `registry/build/r/`. `smoke` serves that output on an ephemeral loopback port, installs every item with the real shadcn CLI into a disposable independent React project, typechecks the installed source, builds it with Tailwind and Vite, and verifies computed styles in Chrome/Chromium. It requires npm access and deletes the temporary project afterward.
 
-`storybook` starts the presentation catalog on port 6007. `browser:smoke` serves a previously built Storybook on port 6008, renders every story at 390px and 1280px, checks overflow and runtime errors, and verifies native keyboard selection. It uses installed Chrome locally and Playwright Chromium in CI. Screenshots are retained in ignored `registry/build/screenshots/`.
+`storybook` starts the presentation catalog on port 6007. `browser:smoke` serves a previously built Storybook on port 6008, renders every story on a 390 × 844 phone, an 844 × 390 landscape phone and a 1280 × 800 desktop, checks overflow and runtime errors, and verifies native keyboard selection. On the phone and the desktop it proves the hand's gestures with touch and mouse: the action menu, the dimmed card's reason, previews, drags and a card drawn from the deck. It uses installed Chrome locally and Playwright Chromium in CI. Screenshots are retained in ignored `registry/build/screenshots/`.
 
 ## Install into a game
 
@@ -54,20 +54,21 @@ import { Pile } from "@/components/dreamboard/pile";
 
 ## Component boundaries
 
-| Item           | Supplied data / composition                                                              |
-| -------------- | ---------------------------------------------------------------------------------------- |
-| `tokens`       | CSS variables and styles, including six `data-seat` colors                               |
-| `card`         | Children and `idle`, `eligible`, `selected`, `invalid` visual state; separate `CardBack` |
-| `playing-card` | Rank and suit, composed from `Card`                                                      |
-| `image-card`   | Face image URL and name, composed from `Card`; shows a card view or a hidden card's back |
-| `pile`         | Count, label and top-card children; explicit empty presentation                          |
-| `hex-grid`     | Precomputed polygon points, centers and labels; SVG overlay children                     |
-| `square-grid`  | Precomputed cell positions and size; SVG overlay children                                |
-| `players`      | Names, seats, status and optional detail                                                 |
-| `resources`    | Label, count and optional icon per resource                                              |
-| `dice`         | Supplied result values; never rolls or infers randomness                                 |
-| `event-log`    | Supplied event summaries/details; no automatic live announcements                        |
-| `standings`    | Supplied ordered ranks, names and scores; preserves ties                                 |
+| Item           | Supplied data / composition                                                                                                          |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `tokens`       | CSS variables and styles, including six `data-seat` colors                                                                           |
+| `card`         | Children, `idle`, `eligible`, `selected`, `dimmed` state, a `shake` counter and Motion props such as `layoutId`; separate `CardBack` |
+| `card-preview` | An inspected card enlarged beside it on hover or centred on hold, with haptics                                                       |
+| `playing-card` | Rank and suit, composed from `Card`                                                                                                  |
+| `image-card`   | Face image URL and name, composed from `Card`; shows a card view or a hidden card's back                                             |
+| `pile`         | Count, label and top-card children; explicit empty presentation                                                                      |
+| `hex-grid`     | Precomputed polygon points, centers and labels; SVG overlay children                                                                 |
+| `square-grid`  | Precomputed cell positions and size; SVG overlay children                                                                            |
+| `players`      | Names, seats, status and optional detail                                                                                             |
+| `resources`    | Label, count and optional icon per resource                                                                                          |
+| `dice`         | Supplied result values; never rolls or infers randomness                                                                             |
+| `event-log`    | Supplied event summaries/details; no automatic live announcements                                                                    |
+| `standings`    | Supplied ordered ranks, names and scores; preserves ties                                                                             |
 
 Board grids default to labelled static images. A later interactive board wrapper must deliberately own focus, roles and keyboard navigation; these grids do not claim to implement those behaviors. Seat color always supplements labels. Card visual state is exposed through `data-card-state`; when actionable, the owning button exposes `aria-pressed`, disabled state and its accessible name.
 
@@ -79,8 +80,9 @@ Registry metadata follows the official [registry.json](https://ui.shadcn.com/doc
 
 ## Workspace-bound items
 
-`hand`, `hand-drawer`, `board-targets`, `interaction-form`, `actions` and
-`inspector` import the consuming game's `useGame` from `@game`. Map `@game` directly to `ui/game.ts` in TypeScript and Vite, retain `@/*` for other UI imports, and export `useGame`, `useCardGesture`, `useDropArea` and `useDragOverlay` from your `createGameHook` binding there. Enable `dragFeature` for `board-targets` and card dragging; `hand` keeps tap selection and hold inspection when no card/drop route is available. Items provide behavior and pieces, never a table layout: each game arranges its own hands, piles and boards. The dedicated binding alias survives shadcn import rewriting without modifying installed source. These items are copied source,
+`hand`, `hand-drawer`, `card-actions`, `drop-area`, `board-targets`,
+`interaction-form`, `actions` and `inspector` import the consuming game's
+`useGame` from `@game`. Map `@game` directly to `ui/game.ts` in TypeScript and Vite, retain `@/*` for other UI imports, and export `useGame`, `useCardGesture`, `useDropArea` and `useDragOverlay` from your `createGameHook` binding there. Enable `dragFeature` for `board-targets` and card dragging, and `originsFeature` for `hand`; a hand still taps and previews when no card can drag. Items provide behavior and pieces, never a table layout: each game arranges its own hands, piles and boards. The dedicated binding alias survives shadcn import rewriting without modifying installed source. These items are copied source,
 not a styled SDK package. `board-targets` requires the board, drag, and pan/zoom features;
 install only the items supported by the game's binding. It installs a native
 non-passive wheel listener with cleanup, and uses canonical board geometry and
@@ -89,7 +91,7 @@ handlers. App slots own terrain, pieces and optional animation.
 `InteractionForm` renders only current-step inputs and shows server-saved choices
 separately. Its `renderInput` slot lets a game replace board fields with a board
 hint. Cancel clears the authoritative server prefix; reset clears local choices.
-`Hand` accepts a card renderer, accessible label callback and optional comparator.
+`Hand` fans the zone's cards and draws each with `renderCard(card, state)`; a tap opens `CardActions`, a hold or hover opens `CardPreview`, and a drag lands on a `DropArea`.
 `Inspector` displays only selected-seat data. `scenario-controls` belongs only in
 the local development entry, with roster and checkpoint/restore callbacks from a
 testing source. Hosted entry points never import executable games or scenarios.
@@ -131,8 +133,8 @@ Button, Input, Label, NativeSelect and Table. Keep the SDK-provided handlers,
 disabled state and `data-*` props on those controls. Choice buttons remain SDK-owned
 selection actions; adding a second selection store would desynchronize drafts.
 
-Tailwind owns ordinary flex/grid layouts, spacing and typography in the hand,
-players, resources and event log. Copied game CSS retains card faces and backs,
+Tailwind owns ordinary flex/grid layouts, spacing and typography in the card
+actions, players, resources and event log. The hand positions cards itself. Copied game CSS retains card faces and backs,
 dice, piles, SVG geometry, board focus/drop feedback and seat/state tokens. Native
 card buttons and inline `details` disclosures retain their existing interactions.
 Customize semantic theme variables instead of styling every descendant button;

@@ -1,28 +1,46 @@
 @layer theme, base, components, utilities;
 
+/* Game tokens. The table palette, card sizes, elevation, motion and type
+   scale are variables, so a game restyles every piece from one place. */
 :root {
-  --table: #164d50;
-  --table-foreground: #f3fbfb;
-  --card-w: 6.5rem;
+  --table: #a34f36;
+  --table-foreground: #fffaf5;
+  --brand: #b85f43;
+  /* One card width per place; each place sets --card-w for its cards.
+     Widths follow the shorter side, so a landscape phone keeps its table. */
+  --card-w-hand: clamp(4rem, min(19vw, 22dvh), 6.5rem);
+  --card-w-table: clamp(3.5rem, min(15vw, 18dvh), 5.5rem);
+  --card-w-opponent: clamp(2.25rem, min(9vw, 11dvh), 3.5rem);
+  --card-w-pile: var(--card-w-table);
+  --card-w-preview: min(64vw, 15rem, calc(60dvh * 5 / 7));
+  --card-w: var(--card-w-table);
   --card-aspect: 5 / 7;
   --card-radius: 0.55rem;
   --card-face: #fffefb;
   --card-back: #23576a;
-  --card-lift: -0.5rem;
-  --eligible: #23794e;
-  --selected: #136fb0;
-  --invalid: #b32b37;
-  --seat-1: #1765a1;
-  --seat-2: #b23f4c;
-  --seat-3: #28734e;
-  --seat-4: #85622b;
-  --seat-5: #7552a2;
-  --seat-6: #237b80;
-}
-.dark {
-  --eligible: #71cda0;
-  --selected: #79bdf0;
-  --invalid: #ff97a0;
+  --playable: #fff1c7;
+  --selected: #ffd36b;
+  --dimmed: brightness(0.62) saturate(0.7);
+  --elevation-rest: 0 1px 2px #2a0e0633, 0 2px 4px #2a0e0626;
+  --elevation-lift: 0 6px 16px #2a0e064d;
+  --elevation-drag: 0 18px 36px #2a0e0666;
+  /* CSS timings; card.tsx holds the matching Motion spring. */
+  --duration-quick: 120ms;
+  --duration-base: 220ms;
+  --duration-shake: 360ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --text-caption: 0.75rem;
+  --text-label: 0.875rem;
+  --text-body: 1rem;
+  --text-title: 1.25rem;
+  --text-display: clamp(1.5rem, 5vw, 2rem);
+  /* Each seat colour reaches 3:1 against the table. */
+  --seat-1: #8ecbff;
+  --seat-2: #ffd166;
+  --seat-3: #9be39b;
+  --seat-4: #d6b8ff;
+  --seat-5: #7fe0e0;
+  --seat-6: #ffb3d1;
 }
 @layer components {
   [data-seat="1"] {
@@ -43,6 +61,10 @@
   [data-seat="6"] {
     --seat-color: var(--seat-6);
   }
+  .db-table {
+    background: var(--table);
+    color: var(--table-foreground);
+  }
   .db-card {
     position: relative;
     box-sizing: border-box;
@@ -52,30 +74,58 @@
     border-radius: var(--card-radius);
     background: var(--card-face);
     color: #192b35;
-    box-shadow: 0 2px 3px #00182326;
+    box-shadow: var(--elevation-rest);
     display: grid;
     place-items: center;
     font-family: Georgia, "Times New Roman", serif;
     flex: none;
+    transition:
+      box-shadow var(--duration-base) var(--ease-out),
+      filter var(--duration-base) var(--ease-out);
   }
   .db-card[data-card-state="eligible"] {
-    outline: 2px dashed var(--eligible);
-    outline-offset: 3px;
+    box-shadow:
+      0 0 0 2px var(--playable),
+      var(--elevation-rest);
   }
   .db-card[data-card-state="selected"] {
-    outline: 3px solid var(--selected);
-    outline-offset: 3px;
-    transform: translateY(var(--card-lift));
+    box-shadow:
+      0 0 0 3px var(--selected),
+      0 0 18px 2px color-mix(in srgb, var(--selected) 60%, transparent),
+      var(--elevation-lift);
   }
-  .db-card[data-card-state="invalid"] {
-    outline: 3px double var(--invalid);
-    outline-offset: 3px;
+  /* A card Motion is carrying between places flies above the others. */
+  .db-card[data-moving],
+  .db-hand-slot[data-moving] {
+    z-index: 40 !important;
+  }
+  .db-card[data-card-state="dimmed"] {
+    filter: var(--dimmed);
+  }
+  /* Alternating names restart the animation each time the shake changes. */
+  [data-shake="a"] {
+    animation: db-shake-a var(--duration-shake) var(--ease-out);
+  }
+  [data-shake="b"] {
+    animation: db-shake-b var(--duration-shake) var(--ease-out);
   }
   .db-card-back {
     background:
       repeating-linear-gradient(45deg, transparent 0 5px, #ffffff22 5px 6px),
       var(--card-back);
     border: 5px solid var(--card-face);
+  }
+  .db-image-card {
+    aspect-ratio: auto;
+    border: 0;
+    background: none;
+    box-shadow: none;
+  }
+  .db-image-card > img {
+    display: block;
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 2px 3px #00182326);
   }
   .db-card[data-suit="hearts"],
   .db-card[data-suit="diamonds"] {
@@ -166,5 +216,119 @@
   }
   .db-grid [data-drop-over="true"] {
     outline: 3px solid var(--ring);
+  }
+}
+
+@layer components {
+  /* A hand scrolls sideways when its fan is wider than the hand. */
+  .db-hand {
+    --card-w: var(--card-w-hand);
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .db-hand-fan {
+    position: relative;
+    margin-inline: auto;
+  }
+  .db-hand-slot {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  .db-hand-card {
+    display: block;
+    padding: 0;
+    border: 0;
+    border-radius: var(--card-radius);
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+  .db-hand-card[aria-disabled="true"] {
+    cursor: default;
+  }
+  .db-hand-card:focus-visible {
+    outline: 3px solid var(--table-foreground);
+    outline-offset: 3px;
+  }
+  .db-drag-overlay {
+    --card-w: var(--card-w-hand);
+    z-index: 50;
+    display: grid;
+    place-items: center;
+  }
+  .db-drag-overlay .db-card {
+    box-shadow: var(--elevation-drag);
+  }
+  .db-drop-area {
+    border: 2px dashed transparent;
+    border-radius: calc(var(--card-radius) * 2);
+    transition:
+      border-color var(--duration-quick) var(--ease-out),
+      background-color var(--duration-quick) var(--ease-out),
+      scale var(--duration-quick) var(--ease-out);
+  }
+  .db-drop-area[data-drop-target="true"] {
+    border-color: color-mix(in srgb, var(--table-foreground) 70%, transparent);
+    background: color-mix(in srgb, var(--table-foreground) 8%, transparent);
+  }
+  .db-drop-area[data-drop-over] {
+    border-style: solid;
+    border-color: var(--table-foreground);
+    background: color-mix(in srgb, var(--table-foreground) 18%, transparent);
+    scale: 1.02;
+  }
+  .db-card-preview {
+    --card-w: var(--card-w-preview);
+    pointer-events: none;
+  }
+  .db-card-preview-hold {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: grid;
+    place-items: center;
+    background: #1a0a0599;
+  }
+}
+
+@keyframes db-shake-a {
+  20% {
+    translate: -6px 0;
+  }
+  40% {
+    translate: 6px 0;
+  }
+  60% {
+    translate: -4px 0;
+  }
+  80% {
+    translate: 3px 0;
+  }
+}
+@keyframes db-shake-b {
+  20% {
+    translate: -6px 0;
+  }
+  40% {
+    translate: 6px 0;
+  }
+  60% {
+    translate: -4px 0;
+  }
+  80% {
+    translate: 3px 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-shake] {
+    animation: none;
+  }
+  .db-card,
+  .db-drop-area {
+    transition: none;
   }
 }

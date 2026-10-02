@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { proveCardDrag } from "./card-drag-proof.ts";
+import { proveHand } from "./hand-proof.ts";
 import { chromium, expect } from "@playwright/test";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -41,11 +42,15 @@ try {
     (entry) => entry.type === "story",
   );
   await mkdir(`${root}/build/screenshots`, { recursive: true });
-  for (const width of [390, 1280]) {
+  for (const { name, width, height, touch } of [
+    { name: "phone", width: 390, height: 844, touch: true },
+    { name: "landscape", width: 844, height: 390, touch: true },
+    { name: "desktop", width: 1280, height: 800, touch: false },
+  ]) {
     const page = await browser.newPage({
-      viewport: { width, height: 850 },
-      hasTouch: width === 390,
-      isMobile: width === 390,
+      viewport: { width, height },
+      hasTouch: touch,
+      isMobile: touch,
     });
     page.on("pageerror", (error) => errors.push(error.message));
     for (const story of stories) {
@@ -177,8 +182,11 @@ try {
           '"selected":[{"boardId":"mat","playerId":"player-1","spaceId":"slot"},{"boardId":"mat","playerId":"player-2","spaceId":"slot"}]',
         );
       }
-      if (story.id.endsWith("card-drag-drop"))
-        await proveCardDrag(page, width === 390);
+      // Gesture proofs run on a portrait phone and a desktop.
+      if (story.id.endsWith("card-drag-drop") && name !== "landscape")
+        await proveCardDrag(page, touch);
+      if (story.id.endsWith("fanned-hand") && name !== "landscape")
+        await proveHand(page, touch);
       if (story.id.endsWith("hearts-passing")) {
         await expect(
           page.getByRole("heading", { name: "passing", exact: true }),
@@ -319,7 +327,7 @@ try {
           .textContent();
         const x = box.x + box.width / 2 + Math.min(10, box.width / 2 - 1);
         const y = box.y + box.height / 2;
-        if (width === 390) await page.touchscreen.tap(x, y);
+        if (touch) await page.touchscreen.tap(x, y);
         else await page.mouse.click(x, y);
         await expect(page.getByRole("heading", { level: 2 })).not.toHaveText(
           before!,
@@ -328,10 +336,9 @@ try {
       const fits = await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,
       );
-      if (!fits)
-        throw new Error(`Horizontal overflow: ${story.id} at ${width}px`);
+      if (!fits) throw new Error(`Horizontal overflow: ${story.id} at ${name}`);
       await page.screenshot({
-        path: `${root}/build/screenshots/${story.id}-${width}.png`,
+        path: `${root}/build/screenshots/${story.id}-${name}.png`,
         fullPage: true,
       });
     }
@@ -339,7 +346,7 @@ try {
   }
   expect(errors).toEqual([]);
   console.log(
-    `Rendered ${stories.length} stories at desktop/mobile widths; keyboard composition and overflow checks passed.`,
+    `Rendered ${stories.length} stories on a phone, a landscape phone and a desktop; gesture, keyboard and overflow checks passed.`,
   );
 } finally {
   await browser?.close();

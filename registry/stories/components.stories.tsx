@@ -38,7 +38,7 @@ export const Cards: Story = {
       <Card>Voyager</Card>
       <Card state="eligible">Eligible</Card>
       <Card state="selected">Selected</Card>
-      <Card state="invalid">Invalid</Card>
+      <Card state="dimmed">Dimmed</Card>
       <CardBack />
     </div>
   ),
