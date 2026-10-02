@@ -177,10 +177,11 @@ export async function proveDraw(page: Page, touch: boolean, manual: boolean) {
 
   // Turn rules disable both paths; visual pickup cannot bypass the reducer.
   await page.getByRole("button", { name: "End turn", exact: true }).click();
-  await expect(pile).toHaveAttribute("aria-disabled", "true");
-  const unavailable = await center(pile);
-  if (touch) await page.touchscreen.tap(unavailable.x, unavailable.y);
-  else await page.mouse.click(unavailable.x, unavailable.y);
+  await expect(pile).toHaveAttribute("data-draw-available", "false");
+  // The menu opener stays enabled to explain the unavailable draw.
+  await expect(pile).toBeEnabled();
+  if (touch) await pile.tap();
+  else await pile.click();
   await expect(menu).toBeDisabled();
   await page.keyboard.press("Escape");
 }

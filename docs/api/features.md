@@ -105,7 +105,7 @@ board identity discriminated by `valueKind`. A `"board-id"` target has scalar
 `{ boardId, playerId, spaceId }` tuple in `value`. Its board ID is the base manifest
 ID; no duplicate outer board ID is needed. Pass a resolved target through unchanged.
 
-The React binding returns `useCardGesture(cardId, { interaction?, input? })`,
+The React binding returns `useCardGesture(cardId, { drag: false | { interaction?, input? } })`,
 `useDropArea(binding)` and `useDragOverlay()`. `createGestureRecognizer`
 classifies each press as a tap, hold, drag or browse using `GESTURE_THRESHOLDS`:
 a mouse drags after 8 px in any direction and inspects after resting 250 ms; a
@@ -146,3 +146,5 @@ atomic card-drop routing and invalidate. Keep domain legality at its canonical
 owner. Local feature state resets across source/seat lifetimes; final dispose
 releases subscriptions and browser gestures. Rendering, wheel listener options, coordinate
 conversion and optional animation belong to the caller.
+
+Use `{ drag: false }` for inspection-only controls such as table cards. Use `{ drag: {} }` to discover eligible drop routes, or put `interaction` and `input` inside `drag` to restrict them. Drag support is explicit; hover and hold inspection remain available when dragging is disabled.

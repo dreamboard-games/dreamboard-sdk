@@ -108,6 +108,16 @@ export const handGame = model.assemble({
             });
           },
         }),
+        flip: play.interaction({
+          presentation: { label: "Flip" },
+          inputs: { card: play.inputs.card({ from: ["table"] }) },
+          reduce({ tx, input, q }) {
+            tx.flipCard({
+              cardId: input.params.card,
+              faceUp: !q.card.visibility(input.params.card)?.faceUp,
+            });
+          },
+        }),
         draw: play.interaction({
           presentation: { label: "Draw" },
           inputs: {},

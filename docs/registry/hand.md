@@ -24,4 +24,4 @@ are authoritative; there is no separate SDK component import.
 - A card with somewhere to land drags. Its copy under the pointer shares the card's `layoutId`, so it lifts out of the fan without a jump, settles where it lands once the move is confirmed, and glides back otherwise.
 - A card arriving with an origin starts at the element marked `data-zone` or `data-player` for it, travels in a portal outside the hand's clipped scroll container, and flips from back to face after settling when it was hidden there. The hand marks itself with its own `data-zone`.
 
-Cards stay pressable when unplayable, marked `aria-disabled`, so they can be inspected and explain themselves.
+Cards stay pressable when unplayable so they can be inspected and explain themselves. The shared [CardControl](card-control.md) owns the action menu and inspection; its opener stays enabled while the selected action decides whether the card can be played.

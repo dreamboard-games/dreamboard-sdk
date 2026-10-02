@@ -13,9 +13,8 @@ import { Pile } from "./pile";
 import { useCardMotion, type CardBox } from "./card-motion";
 import "./tokens.css";
 
-type Model = Parameters<Parameters<typeof useGame>[0]>[0];
-type ZoneId = Parameters<Model["zones"]["get"]>[0];
-type InteractionKey = Parameters<Model["interactions"]["get"]>[0];
+import type { GameModel as Model, ZoneId } from "@game";
+import type { InteractionKey } from "@game";
 export interface DrawPileProps {
   zoneId: ZoneId;
   interaction: InteractionKey;
@@ -222,7 +221,7 @@ export function DrawPile({
           type="button"
           className="db-draw-pile-card"
           aria-label={`${label} actions`}
-          aria-disabled={!available || undefined}
+          data-draw-available={available}
           aria-haspopup="dialog"
           aria-expanded={open}
           data-draw-pile={zoneId}

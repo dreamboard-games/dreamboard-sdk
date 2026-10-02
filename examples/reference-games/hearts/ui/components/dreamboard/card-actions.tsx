@@ -1,14 +1,7 @@
 import { Popover } from "@base-ui/react/popover";
 import { Button } from "@/components/ui/button";
-import { useGame } from "@game";
+import { useGame, type GameCard as Card, type CardId } from "@game";
 import "./tokens.css";
-type Model = Parameters<Parameters<typeof useGame>[0]>[0];
-type CardId = Parameters<Model["cards"]["get"]>[0];
-// From a zone's cards: the generic `cards.get` widens to `any` in a game
-// with no card types yet.
-type Card = ReturnType<
-  ReturnType<Model["zones"]["getAll"]>[number]["getCards"]
->[number];
 
 /** The interactions this card can start now, in the game's order. */
 export function getCardActions(card: Card) {

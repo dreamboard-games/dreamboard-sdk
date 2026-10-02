@@ -6,7 +6,7 @@ import { useCardGesture, useDragOverlay, useDropArea, useGame } from "./game";
 
 function HandCard({ cardId }: { cardId: string }) {
   const card = useGame((game) => game.cards.get(cardId));
-  const gesture = useCardGesture(cardId);
+  const gesture = useCardGesture(cardId, { drag: {} });
   return (
     <button {...card.getProps()} {...gesture.props}>
       {cardId}
@@ -34,7 +34,7 @@ without it.
 
 ## One press, four outcomes
 
-`useCardGesture(cardId, options?)` returns `props` for the card's own control.
+`useCardGesture(cardId, { drag })` returns `props` for the card's own control.
 Spread them after the card's selection props. A press becomes:
 
 | Outcome | Mouse                                            | Touch or pen                               |
@@ -83,3 +83,5 @@ original card carries `data-dragging` meanwhile.
 Keyboard players do not drag. They select the card and then its destination,
 through the card's own button, the interaction form or the board's target
 buttons.
+
+Use `{ drag: false }` for inspection-only controls such as table cards. Use `{ drag: {} }` to discover eligible drop routes, or put `interaction` and `input` inside `drag` to restrict them. Drag support is explicit; hover and hold inspection remain available when dragging is disabled.

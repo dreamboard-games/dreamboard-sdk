@@ -59,7 +59,7 @@ export async function proveHand(page: Page, touch: boolean) {
 
   // A dimmed card shakes and says why; it has no actions.
   const diamond = suit("diamonds").first();
-  await expect(diamond).toHaveAttribute("aria-disabled", "true");
+  await expect(diamond).toBeEnabled();
   await activate(diamond);
   await expect(diamond).toHaveAttribute("data-shake", "a");
   await expect(page.getByRole("dialog").getByRole("status")).toHaveText(

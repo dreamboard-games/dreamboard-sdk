@@ -69,6 +69,11 @@ const CARD_STYLE: CSSProperties = Object.freeze({
   WebkitUserSelect: "none",
   WebkitTouchCallout: "none",
 });
+const INSPECTION_STYLE: CSSProperties = Object.freeze({
+  ...CARD_STYLE,
+  // Inspection-only cards should not block their table's native scrolling.
+  touchAction: "manipulation",
+});
 const px = (value: number) => `${value}px`;
 
 /** A resolved board destination, or the interaction an area runs. */
@@ -188,7 +193,7 @@ export function createGestureSession(game: GestureGame) {
     event: globalThis.PointerEvent,
     cardId: string,
     element: Element,
-    options?: RuntimeTargetOptions,
+    options: false | RuntimeTargetOptions,
   ) {
     if (disposed || press || event.button !== 0) return;
     const recognizer = createGestureRecognizer(event, {
@@ -196,7 +201,8 @@ export function createGestureSession(game: GestureGame) {
         set({ inspect: { cardId, via: "hold" } });
       },
       dragStart(origin) {
-        if (!game.drag?.begin(cardId, options)) return false;
+        if (options === false || !game.drag?.begin(cardId, options))
+          return false;
         const box = element.getBoundingClientRect();
         clearHover();
         press!.dragging = true;
@@ -276,7 +282,7 @@ export function createGestureSession(game: GestureGame) {
 
   function cardProps(
     cardId: string,
-    options: RuntimeTargetOptions | undefined,
+    options: false | RuntimeTargetOptions,
     flags: { dragging: boolean; inspecting: "hold" | "hover" | null },
   ): CardGestureProps {
     return {
@@ -305,7 +311,7 @@ export function createGestureSession(game: GestureGame) {
           event.preventDefault();
       },
       onDragStart: (event) => event.preventDefault(),
-      style: CARD_STYLE,
+      style: options === false ? INSPECTION_STYLE : CARD_STYLE,
       "data-dragging": flags.dragging || undefined,
       "data-inspecting": flags.inspecting ?? undefined,
     };

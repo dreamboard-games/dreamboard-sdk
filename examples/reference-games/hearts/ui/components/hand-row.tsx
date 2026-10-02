@@ -5,8 +5,7 @@ import { CardBack, type CardState } from "./dreamboard/card";
 import { Actions } from "./dreamboard/actions";
 import { comparePlayingCards } from "./cards";
 
-type Model = Parameters<Parameters<typeof useGame>[0]>[0];
-type HandCard = NonNullable<ReturnType<Model["cards"]["get"]>>;
+import type { GameCard as HandCard } from "../game";
 // Module scope keeps the fanned cards memoized through a drag.
 const sortCards = (left: HandCard, right: HandCard) =>
   comparePlayingCards(left.view ?? {}, right.view ?? {});

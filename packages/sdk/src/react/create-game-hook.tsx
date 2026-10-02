@@ -41,6 +41,11 @@ export interface SelectionOptions<Value> {
   readonly compare?: (previous: Value, next: Value) => boolean;
 }
 
+/** Inspection stays enabled when this control does not support dragging. */
+export interface CardGestureOptions<Game> {
+  readonly drag: false | TargetOptions<Game>;
+}
+
 /** An area that runs this interaction with whichever card is dropped on it. */
 export type DropAreaBinding<G> = Exclude<
   TargetOptions<G>,
@@ -199,12 +204,14 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
     /** Tap, hold, drag and browse on one card; hover intent with a mouse. */
     function useCardGesture(
       cardId: SeatCardId<Game>,
-      options?: TargetOptions<Game>,
+      options: CardGestureOptions<Game>,
     ): CardGesture {
       const session = useGestureSession();
-      const routes = options as RuntimeTargetOptions | undefined;
+      const routes = options.drag as false | RuntimeTargetOptions;
       const canDrag = useGame(
-        (snapshot) => dragOf(snapshot)?.getCanDrag(cardId, routes) ?? false,
+        (snapshot) =>
+          routes !== false &&
+          (dragOf(snapshot)?.getCanDrag(cardId, routes) ?? false),
       );
       const dragging = useGestureState(
         session,
