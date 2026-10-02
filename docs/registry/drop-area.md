@@ -1,0 +1,20 @@
+# drop-area
+
+```sh
+pnpm dlx shadcn@4.21.0 add @dreamboard/drop-area
+```
+
+Where a dragged card can land, with eligible and over states.
+
+Workspace-bound headless UI; copied source owned by the game.
+
+Hosted-safe control; the game binding imports reducer types only.
+
+Follow [registry installation](../../registry/README.md) first. Installation copies
+source into your workspace; read its exported props and compose normal DOM props
+and slots there. Styling uses copied tokens. The source file and registry metadata
+are authoritative; there is no separate SDK component import.
+
+## Props and behavior
+
+`DropArea` takes a `binding` for `useDropArea` and a `label`, plus section props and children. Bind it to a board target or to an interaction, such as `{ interaction: "play.discard" }`, and a card dropped on it runs that interaction. While a drag can land on it, it outlines itself; while the card is over it, it fills and grows slightly. Add `data-zone` so cards that arrive there from elsewhere, or leave it for a hand, know where it is. Keyboard players reach the same interactions through [card actions](card-actions.md).

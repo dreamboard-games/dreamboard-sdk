@@ -4,8 +4,11 @@ import { completeGamePath } from "../scenario-paths";
 import { gameDriver } from "../helpers/browser-game";
 
 async function activate(locator: Locator, touch: boolean) {
-  if (touch) await locator.tap();
-  else {
+  if (touch) {
+    // A fanned card always shows at least its left quarter.
+    const box = (await locator.boundingBox())!;
+    await locator.tap({ position: { x: box.width * 0.2, y: box.height / 2 } });
+  } else {
     await locator.focus();
     await locator.press("Enter");
   }
@@ -39,16 +42,20 @@ test("a complete hand uses real selected-seat commands, sealed passes and legal 
       if (index < 3) {
         await expect(page.getByRole("status")).toContainText("sealed");
         await expect(
-          page.locator('button[data-action="select"]:enabled'),
+          page.locator('button[data-action="select"][data-disabled="false"]'),
         ).toHaveCount(0);
       }
     } else {
-      await expect(card(command.params.cardId)).toBeEnabled();
+      await expect(card(command.params.cardId)).toHaveAttribute(
+        "data-disabled",
+        "false",
+      );
       if (index === 4)
         await expect(
-          page.locator('button[data-action="select"]:enabled'),
+          page.locator('button[data-action="select"][data-disabled="false"]'),
         ).toHaveCount(1);
       await activate(card(command.params.cardId), isMobile);
+      await activate(driver.cardAction("playing.playCard"), isMobile);
       await expect(card(command.params.cardId)).toHaveCount(0);
     }
   }
@@ -121,7 +128,7 @@ test("private seat changes and named checkpoints remain responsive and accessibl
   );
   await expect(page.getByRole("status")).toContainText("Select three cards");
   await expect(
-    page.locator('button[data-action="select"]:enabled'),
+    page.locator('button[data-action="select"][data-disabled="false"]'),
   ).toHaveCount(13);
   await injectAxe(page);
   await checkA11y(page, undefined, {
@@ -137,7 +144,7 @@ test("private seat changes and named checkpoints remain responsive and accessibl
   await page.goto("/?scenario=complete&at=sealed-pass&as=player-1");
   await expect(page.getByRole("status")).toContainText("sealed");
   await expect(
-    page.locator('button[data-action="select"]:enabled'),
+    page.locator('button[data-action="select"][data-disabled="false"]'),
   ).toHaveCount(0);
   await page.goto("/?scenario=complete&at=mid-hand&as=player-1");
   await expect(page.getByText("7/13 tricks", { exact: true })).toBeVisible();

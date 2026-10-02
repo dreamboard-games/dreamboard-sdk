@@ -12,6 +12,10 @@ export function gameDriver(page: Page) {
     card(cardId: string) {
       return target({ action: "select", value: cardId });
     },
+    /** An action in the open card menu. */
+    cardAction(interaction: string) {
+      return target({ action: "card-action", interaction });
+    },
     input(interaction: string, input: string) {
       return target({ interaction, input });
     },

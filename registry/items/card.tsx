@@ -1,24 +1,66 @@
 import "./tokens.css";
-import type { ComponentProps } from "react";
+import { motion, type HTMLMotionProps } from "motion/react";
+import { useState } from "react";
 
-export type CardProps = ComponentProps<"div"> & {
-  state?: "idle" | "eligible" | "selected" | "invalid";
+/** The spring every card movement uses, matching the tokens' timings. */
+export const cardSpring = {
+  type: "spring",
+  visualDuration: 0.3,
+  bounce: 0.15,
+} as const;
+
+export type CardState = "idle" | "eligible" | "selected" | "dimmed";
+export type CardProps = HTMLMotionProps<"div"> & {
+  state?: CardState;
+  /** Change it to shake the card, as when a dimmed card is tapped. */
+  shake?: number;
 };
-/** A visual card face. Compose inside a button when the card is actionable. */
-export function Card({ state = "idle", className = "", ...props }: CardProps) {
+/**
+ * A visual card face. Compose inside a button when the card is actionable.
+ * Give the same `layoutId` to a card in each place it can be, and Motion
+ * moves it between them.
+ */
+export function Card({
+  state = "idle",
+  shake = 0,
+  className = "",
+  onLayoutAnimationStart,
+  onLayoutAnimationComplete,
+  ...props
+}: CardProps) {
+  const moving = useMoving(onLayoutAnimationStart, onLayoutAnimationComplete);
   return (
-    <div
+    <motion.div
+      transition={cardSpring}
       {...props}
+      {...moving}
       data-card-state={state}
+      data-shake={shake ? (shake % 2 ? "a" : "b") : undefined}
       className={`db-card ${className}`}
     />
   );
 }
-export function CardBack({ className = "", ...props }: ComponentProps<"div">) {
+/** Marks an element `data-moving` while Motion carries it between places, so it can fly above the rest. */
+export function useMoving(onStart?: () => void, onComplete?: () => void) {
+  const [moving, setMoving] = useState(false);
+  return {
+    "data-moving": moving || undefined,
+    onLayoutAnimationStart() {
+      setMoving(true);
+      onStart?.();
+    },
+    onLayoutAnimationComplete() {
+      setMoving(false);
+      onComplete?.();
+    },
+  };
+}
+export function CardBack({ className = "", ...props }: HTMLMotionProps<"div">) {
   return (
-    <div
+    <motion.div
       role="img"
       aria-label="Face-down card"
+      transition={cardSpring}
       {...props}
       className={`db-card db-card-back ${className}`}
     />

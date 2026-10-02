@@ -4,7 +4,7 @@
 pnpm dlx shadcn@4.21.0 add @dreamboard/card
 ```
 
-Pure, composable card presentation. No SDK dependency.
+Pure card presentation with states, a shake and a Motion layoutId. No SDK dependency.
 
 Pure display item; no SDK runtime or provider dependency.
 
@@ -15,4 +15,4 @@ are authoritative; there is no separate SDK component import.
 
 ## Props and behavior
 
-`Card` accepts div props and `state: idle | eligible | selected | invalid`. `CardBack` labels a face-down card. Compose a Card inside a native button for actions; the visual face itself is not a button.
+`Card` is a Motion `div` with `state: idle | eligible | selected | dimmed` and a `shake` counter: change the number to shake the card, as when a dimmed card is tapped. Give the same `layoutId` to a card in each place it can be, and Motion carries it between them; a card in flight is marked `data-moving` and drawn above the others. `CardBack` labels a face-down card. Compose a Card inside a native button for actions; the visual face itself is not a button. `cardSpring` is the spring every card movement uses.

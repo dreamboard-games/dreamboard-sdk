@@ -43,7 +43,9 @@ function Hand({ width }: { width: number }) {
 ```
 
 The SDK computes positions and origins; the game decides how cards look and
-animate, with Motion or anything else.
+animate, with Motion or anything else. The registry's [hand](../../registry/hand.md)
+puts them together with Motion: a fanned hand whose cards keep one `layoutId`
+between places and arrive from their origin.
 
 ## Fans
 

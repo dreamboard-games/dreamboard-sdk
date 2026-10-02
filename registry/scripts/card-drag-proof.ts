@@ -142,8 +142,9 @@ export async function proveCardDrag(page: Page, touch: boolean) {
     await expect(card).not.toHaveAttribute("data-inspecting", "hold");
     await expect(drafts).toHaveText("{}");
   } else {
-    // A resting mouse inspects until it leaves.
-    await page.mouse.move(origin.x, origin.y);
+    // A resting mouse inspects until it leaves. Hovering waits for the
+    // released card to glide back; a card arriving under a still pointer is not entered.
+    await card.hover();
     await expect(card).toHaveAttribute("data-inspecting", "hover");
     await page.mouse.move(4, 4);
     await expect(card).not.toHaveAttribute("data-inspecting", "hover");

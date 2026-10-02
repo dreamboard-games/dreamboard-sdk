@@ -88,7 +88,7 @@
       "name": "card",
       "type": "registry:component",
       "title": "Card",
-      "description": "Pure, composable card presentation. No SDK dependency.",
+      "description": "Pure card presentation with states, a shake and a Motion layoutId. No SDK dependency.",
       "files": [
         {
           "path": "items/card.tsx",
@@ -96,7 +96,8 @@
           "target": "@components/dreamboard/card.tsx"
         }
       ],
-      "registryDependencies": ["@dreamboard/tokens"]
+      "registryDependencies": ["@dreamboard/tokens"],
+      "dependencies": ["motion@13.5.0"]
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",
@@ -256,7 +257,7 @@
       "name": "hand",
       "type": "registry:component",
       "title": "Hand",
-      "description": "Workspace-bound headless UI; copied source owned by the game.",
+      "description": "A fanned hand: tap for actions, hold or hover to preview, drag to a drop area.",
       "meta": {
         "binding": "workspace"
       },
@@ -267,7 +268,69 @@
           "target": "@components/dreamboard/hand.tsx"
         }
       ],
-      "registryDependencies": ["@dreamboard/tokens"]
+      "registryDependencies": [
+        "@dreamboard/tokens",
+        "@dreamboard/card",
+        "@dreamboard/card-actions",
+        "@dreamboard/card-preview"
+      ],
+      "dependencies": ["motion@13.5.0"]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "card-preview",
+      "type": "registry:component",
+      "title": "Card Preview",
+      "description": "An enlarged inspected card: beside it on hover, centred over the table on hold. No SDK dependency.",
+      "dependencies": ["@base-ui/react@^1.8.0", "motion@13.5.0"],
+      "registryDependencies": ["@dreamboard/tokens", "@dreamboard/card"],
+      "files": [
+        {
+          "path": "items/card-preview.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/card-preview.tsx"
+        }
+      ]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "card-actions",
+      "type": "registry:component",
+      "title": "Card Actions",
+      "description": "A menu of a card's available actions, the first primary, or why it has none.",
+      "dependencies": [
+        "@base-ui/react@^1.8.0",
+        "class-variance-authority@^0.7.1"
+      ],
+      "registryDependencies": ["@dreamboard/tokens", "button"],
+      "meta": {
+        "binding": "workspace"
+      },
+      "files": [
+        {
+          "path": "items/card-actions.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/card-actions.tsx"
+        }
+      ]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "drop-area",
+      "type": "registry:component",
+      "title": "Drop Area",
+      "description": "Where a dragged card can land, with eligible and over states.",
+      "registryDependencies": ["@dreamboard/tokens"],
+      "meta": {
+        "binding": "workspace"
+      },
+      "files": [
+        {
+          "path": "items/drop-area.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/drop-area.tsx"
+        }
+      ]
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",
