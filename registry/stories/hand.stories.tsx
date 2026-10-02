@@ -10,6 +10,7 @@ import { localSource } from "@dreamboard-games/sdk/testing";
 import type { CommandSource } from "@dreamboard-games/sdk";
 import { Button } from "@/components/ui/button";
 import { GameProvider, useGame } from "../typecheck/game";
+import { CardControl } from "../items/card-control";
 import { Hand } from "../items/hand";
 import { CardBack, type CardState } from "../items/card";
 import { PlayingCard } from "../items/playing-card";
@@ -78,6 +79,13 @@ function Area({
 }) {
   const cards = useGame((game) => game.zones.find(zoneId)?.getCards() ?? []);
   const shown = top ? cards.slice(-1) : cards;
+  const canDrag = useGame(
+    (game) =>
+      game.zones
+        .find(zoneId)
+        ?.getCards()
+        .some((card) => game.drag.getCanDrag(card.id)) ?? false,
+  );
   return (
     <DropArea
       binding={{ interaction }}
@@ -85,13 +93,19 @@ function Area({
       data-zone={zoneId}
       className="grid min-h-36 min-w-28 content-center justify-items-center gap-2 p-3"
     >
+      <output hidden data-testid={`${zoneId}-can-drag`}>
+        {String(canDrag)}
+      </output>
       <div className="flex flex-wrap justify-center gap-2" style={tableCards}>
-        {shown.map((card) => {
-          const shownFace = faceOf(card);
-          return shownFace ? (
-            <PlayingCard key={card.id} layoutId={card.id} {...shownFace} />
-          ) : null;
-        })}
+        {shown.map((card) => (
+          <CardControl
+            key={card.id}
+            cardId={card.id}
+            drag={false}
+            renderCard={renderCard}
+            getCardLabel={cardLabel}
+          />
+        ))}
       </div>
       <span className="text-sm">
         {label} · {cards.length}

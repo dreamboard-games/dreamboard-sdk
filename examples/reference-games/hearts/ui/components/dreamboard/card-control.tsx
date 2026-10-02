@@ -68,8 +68,12 @@ export function CardControl({
       className={className}
       disabled={disabled}
       style={{ ...gesture.props.style, ...style }}
+      data-value={card.id}
       data-card={card.id}
       data-action="select"
+      data-disabled={String(!card.getCanSelect())}
+      aria-haspopup="dialog"
+      aria-expanded={open}
       aria-pressed={selected}
       aria-label={
         getCardLabel?.(card) ??

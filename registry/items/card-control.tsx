@@ -71,7 +71,9 @@ export function CardControl({
       data-value={card.id}
       data-card={card.id}
       data-action="select"
-      aria-expanded={open} 
+      data-disabled={String(!card.getCanSelect())}
+      aria-haspopup="dialog"
+      aria-expanded={open}
       aria-pressed={selected}
       aria-label={
         getCardLabel?.(card) ??
