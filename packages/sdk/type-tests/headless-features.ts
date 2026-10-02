@@ -2,11 +2,15 @@ import type { z } from "zod";
 import type { definition } from "./authoring-model-types.js";
 import { createGameInstance } from "../src/headless/instance.js";
 import type { CommandSource } from "../src/headless/sources/types.js";
-import type { HiddenCardId } from "../src/headless/model.js";
+import type { HiddenCardId, IdOf } from "../src/headless/model.js";
 import { boardFeature } from "../src/headless/features/board.js";
 import { dragFeature } from "../src/headless/features/drag.js";
 import { handFeature } from "../src/headless/features/hand.js";
 import { panZoomFeature } from "../src/headless/features/pan-zoom.js";
+import {
+  originsFeature,
+  type CardOrigin,
+} from "../src/headless/features/origins.js";
 // Extend the checked authoring fixture with one board identity for composition proof.
 type Definition = typeof definition;
 type Game = Omit<Definition, "contract"> & {
@@ -27,6 +31,7 @@ const game = createGameInstance<Game>()({
     hand: handFeature(core),
     drag: dragFeature(core, context),
     viewport: panZoomFeature(core, context),
+    origins: originsFeature(core),
     custom: {
       board: {
         getLabel() {
@@ -49,6 +54,17 @@ board.game.boards.get("island").getLabel();
 const card = game.zones.get("hand").getCards()[0];
 game.drag.begin(card.id, { interaction: "playerTurn.pick" });
 card.getBadge();
+const origin = card.getOrigin();
+if (origin && "zone" in origin) {
+  const zone: IdOf<Game, "zoneId"> = origin.zone;
+  const hidden: boolean = origin.hidden;
+} else if (origin) {
+  const player: IdOf<Game, "playerId"> = origin.player;
+}
+// @ts-expect-error Origins name the game's own zones.
+const unknownZone: CardOrigin<Game> = { zone: "nowhere", hidden: false };
+// @ts-expect-error Disabled origin API is absent.
+bare.zones.get("hand").getCards()[0].getOrigin;
 const selected: readonly ("card-1" | "card-2" | HiddenCardId)[] = game.zones
   .get("hand")
   .getSelectedCardIds();

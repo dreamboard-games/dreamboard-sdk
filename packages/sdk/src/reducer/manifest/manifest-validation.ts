@@ -974,6 +974,10 @@ export function validateManifestAuthoring(
       const path = `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}]`;
       if (typeof card.id !== "string" || card.id.length === 0) {
         errors.push(`${path}.id: Card definition id is required.`);
+      } else if (card.id.startsWith("hidden:")) {
+        errors.push(
+          `${path}.id: The 'hidden:' prefix is reserved for concealed card positions.`,
+        );
       }
       if (typeof card.cardType !== "string" || card.cardType.length === 0) {
         errors.push(`${path}.cardType: Card category is required.`);

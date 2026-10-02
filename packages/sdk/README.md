@@ -221,7 +221,8 @@ cards: [
 ```
 
 These definitions create runtime IDs `ace-1`, `ace-2`, and `king`, all in the
-`ranked` category. When the card schema has `variants`, every `cardType` must
+`ranked` category. Card IDs cannot start with `hidden:`; that prefix is reserved
+for the positions a seat uses to address concealed cards. When the card schema has `variants`, every `cardType` must
 name one of them; `compileManifest` and `createGame` reject unknown categories.
 The inferred table narrows a card lookup by its runtime ID to that definition's
 card set, category, and properties. A variant property overrides a shared
@@ -301,7 +302,9 @@ the application bundler resolves its supported React subscription dependencies.
 `dragFeature`, export `useCardGesture`, `useDropArea` and `useDragOverlay` from the
 binding, and use the copied Hand and BoardTargets components or your own renderer.
 The SDK prescribes no layout. Headless `game.drag` remains browser-free and handles
-atomic domain routing.
+atomic domain routing. `fanLayout` computes arc positions for a hand, and
+`originsFeature` adds `card.getOrigin()` so a newly shown card can animate from
+the zone or player it came from.
 
 ## Local development and tests
 

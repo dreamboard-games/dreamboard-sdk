@@ -4,6 +4,7 @@
 <!-- api: root boardFeature -->
 <!-- api: root dragFeature -->
 <!-- api: root panZoomFeature -->
+<!-- api: root originsFeature -->
 <!-- api: root Feature -->
 <!-- api: root FeatureContext -->
 <!-- api: root Board -->
@@ -21,6 +22,12 @@
 <!-- api: root GesturePointer -->
 <!-- api: root GestureKind -->
 <!-- api: root GestureRecognizer -->
+<!-- api: root CardOrigin -->
+<!-- api: root fanLayout -->
+<!-- api: root liftFanCard -->
+<!-- api: root FanOptions -->
+<!-- api: root FanCard -->
+<!-- api: root FanLayout -->
 <!-- api: react CardGesture -->
 <!-- api: react CardGestureProps -->
 <!-- api: react DropArea -->
@@ -71,13 +78,14 @@ Target handlers accept correlated `interaction` and `input` options to resolve a
 All boards expose `board.spaces.get/find/getAll` with typed data and selection handlers.
 Generic boards reject spatial layout requests; square and hex layouts reuse the semantic controls.
 
-## Hand, drag and viewport
+## Hand, drag, origins and viewport
 
-| Object                | Data                      | Getters                                                          | Handlers                                                     |
-| --------------------- | ------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------ |
-| Zone with handFeature | Existing zone data        | `getSortedCardIds`, `getSelectedCardIds`, `getSelectableCardIds` | Canonical card selection                                     |
-| `game.drag`           | `active` (cardId, target) | `getCanDrag(cardId, options?)`, `getDropTargets()`               | `begin(cardId, options?)`, `setDropTarget`, `drop`, `cancel` |
-| `game.viewport`       | `transform` (x, y, scale) | `getTransform`, `getProps`                                       | `setTransform`, `reset`; pointer and wheel props             |
+| Object                   | Data                      | Getters                                                          | Handlers                                                     |
+| ------------------------ | ------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------ |
+| Zone with handFeature    | Existing zone data        | `getSortedCardIds`, `getSelectedCardIds`, `getSelectableCardIds` | Canonical card selection                                     |
+| `game.drag`              | `active` (cardId, target) | `getCanDrag(cardId, options?)`, `getDropTargets()`               | `begin(cardId, options?)`, `setDropTarget`, `drop`, `cancel` |
+| `game.viewport`          | `transform` (x, y, scale) | `getTransform`, `getProps`                                       | `setTransform`, `reset`; pointer and wheel props             |
+| Card with originsFeature | Existing card data        | `getOrigin()`                                                    | —                                                            |
 
 `handFeature(core, { sort? })` sorts projected card objects only.
 `dragFeature(core, context)` owns semantic drag state and atomically routes card
@@ -115,6 +123,18 @@ submitted drop awaits its frame. See [Gestures](../guides/ui/gestures.md).
 The copied `BoardTargets` accepts `dropRoute` with all three route keys when a
 visual destination could serve multiple inputs. It disables ambiguous drops
 until the renderer selects a route, instead of choosing the first input.
+
+`originsFeature(core)` adds `card.getOrigin()`, a `CardOrigin` for a card that
+arrived in its zone with the current frame: `{ zone, hidden }` for the zone it
+left, or `{ player, hidden: true }` for the one player who could act when the
+card came from zones the seat's frame does not list. Player origins require a
+consecutive frame and one sole active player other than the seat. Hidden zone
+origins are inferred from net counts; ambiguous sources or arriving positions
+return `null`. It is also `null` on the first frame and after a seat or source
+change. `fanLayout(FanOptions)`
+returns a `FanLayout`: a `FanCard` (`x`, `y`, `rotate`) per card on a circular
+arc, and the bounding `width` and `height`. `liftFanCard(card, distance)` moves
+a card along its own tilt. See [Fans and card movement](../guides/ui/card-movement.md).
 
 `panZoomFeature(core, context, { initial?, minScale?, maxScale? })` owns the viewport.
 Native wheel listeners must be non-passive. SVG rendering must convert client
