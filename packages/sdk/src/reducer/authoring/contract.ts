@@ -1,5 +1,5 @@
 import type { RuntimeRecord } from "../model/table";
-import { z } from "zod";
+import * as z from "zod";
 import { createManifestStringLiteralSchema } from "../model/manifest";
 import type {
   ReducerGameContract,

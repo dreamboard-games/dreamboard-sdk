@@ -1,7 +1,7 @@
 import { RuntimeJsonSchema } from "../../shared/runtime-json";
 import type { RuntimeRecord } from "./table";
 import * as ContractZod from "../../shared/runtime-schema";
-import { z } from "zod";
+import * as z from "zod";
 import type {
   AnySchema,
   RuntimeHandVisibilityMode,

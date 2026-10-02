@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import type { CollectorState, InputCollector } from "../model/spec";
 import type { TableQueriesOfState } from "../model/queries";
 import type { PlayerIdOfState } from "../model/extract";

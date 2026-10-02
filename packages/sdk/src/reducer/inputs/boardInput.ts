@@ -1,5 +1,5 @@
 import type { PlayerIdOfState, TableQueriesOfState } from "../model";
-import { z } from "zod";
+import * as z from "zod";
 import type {
   BoardTargetDomainDescriptor,
   CollectorState,

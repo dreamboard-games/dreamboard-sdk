@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 
 /** A space on one player's board; boardId is the base manifest board ID. */
 export type PlayerBoardSpaceTarget<

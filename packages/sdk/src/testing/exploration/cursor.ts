@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import { digestPluginRuntimeJson } from "../../shared/protocol/digest.js";
 import type {
   PerspectiveRef,

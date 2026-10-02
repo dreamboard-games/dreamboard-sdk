@@ -1,5 +1,5 @@
 import { createStore } from "@tanstack/store";
-import { z } from "zod";
+import * as z from "zod";
 import type { ViewCard } from "../../shared/domain/cards.js";
 import {
   PluginGameplayFrameSchema,

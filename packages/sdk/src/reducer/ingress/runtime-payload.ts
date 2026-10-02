@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import { assertJsonWithinLimits } from "../../runtime-json";
 import { RuntimeJsonSchema } from "../../shared/runtime-json.js";
 import type { RuntimePayload } from "../model";

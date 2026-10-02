@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import type * as Wire from "./runtime-types.js";
 
 /** Exact worker ABI version; hosts must reject mismatched bundles. */

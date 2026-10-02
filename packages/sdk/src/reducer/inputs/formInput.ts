@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import type { SchemaLike } from "../model/table";
 import type { ManifestIdSchema } from "../model/manifest";
 import type {

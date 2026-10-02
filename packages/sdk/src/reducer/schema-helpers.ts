@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import type { SchemaLike } from "./model";
 
 export type SparseMap<Key extends string, Value> = Partial<Record<Key, Value>>;

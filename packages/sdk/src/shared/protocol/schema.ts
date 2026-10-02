@@ -1,5 +1,5 @@
 import * as ReducerWireZod from "../runtime-schema";
-import { z } from "zod";
+import * as z from "zod";
 import {
   DREAMBOARD_PLUGIN_PROTOCOL,
   DREAMBOARD_PLUGIN_PROTOCOL_VERSION,
