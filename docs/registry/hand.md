@@ -15,4 +15,4 @@ are authoritative; there is no separate SDK component import.
 
 ## Props and behavior
 
-`Hand` requires zoneId and renderCard; label, className, getCardLabel and sort are optional. The caller's renderCard renders each visible card view and a back when card.hidden is true. Card selection uses canonical headless props and accessible native buttons.
+`Hand` requires zoneId and renderCard; label, className, getCardLabel and sort are optional. The caller's renderCard renders each visible card view and a back when card.hidden is true. Card selection uses canonical headless props and accessible native buttons. Each card takes `useCardGesture`: a tap selects, a hold or resting mouse sets `data-inspecting`, and a card with a drop target drags itself, with its copy portalled under the pointer through `useDragOverlay`.

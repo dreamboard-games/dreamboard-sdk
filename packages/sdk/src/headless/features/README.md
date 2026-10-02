@@ -19,7 +19,9 @@ They add no DOM, React, CSS dependencies, or executable game imports.
   An accepted drop routes card and destination atomically through the core.
   Invalid destinations and cancellation perform no selection. New frames,
   source/seat changes, connection loss, and disposal cancel the operation.
-  Browser gestures, keyboard access, and feedback are owned by dnd-kit in `/react`.
+  An interaction with a board input lands on the board; one without lands on an
+  area that runs it. Gesture classification is `createGestureRecognizer`;
+  browser listeners, hit-testing and the dragged copy belong to `/react`.
 - `panZoomFeature` adds immutable `game.viewport` state and native pointer/wheel
   props. Apply `viewport.getTransform()` through `board.getLayout({ hexSize,
 viewport })` for transformed geometry and inverse `pointToSpace(x, y)`.

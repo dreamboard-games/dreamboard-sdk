@@ -267,11 +267,7 @@
           "target": "@components/dreamboard/hand.tsx"
         }
       ],
-      "registryDependencies": ["@dreamboard/tokens", "button"],
-      "dependencies": [
-        "@base-ui/react@^1.8.0",
-        "class-variance-authority@^0.7.1"
-      ]
+      "registryDependencies": ["@dreamboard/tokens"]
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",

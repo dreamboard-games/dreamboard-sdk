@@ -16,6 +16,7 @@ export * from "./headless/features/hand.js";
 export * from "./headless/features/board.js";
 export * from "./headless/features/drag.js";
 export * from "./headless/features/pan-zoom.js";
+export * from "./headless/gesture.js";
 
 export type {
   ActionInteractionDescriptor,

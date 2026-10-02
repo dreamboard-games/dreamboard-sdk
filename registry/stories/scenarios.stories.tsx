@@ -12,7 +12,7 @@ import production from "../../examples/reference-games/hex-network-trading/test/
 import hexComplete from "../../examples/reference-games/hex-network-trading/test/scenarios/complete-game.scenario";
 import depot from "../../examples/reference-games/hex-network-trading/test/scenarios/depot-trades.scenario";
 import trade from "../../examples/reference-games/hex-network-trading/test/scenarios/bilateral-trade.scenario";
-import { GameProvider, useGame } from "../typecheck/game";
+import { GameProvider, useDropArea, useGame } from "../typecheck/game";
 import { Hand } from "../items/hand";
 import { Card, CardBack } from "../items/card";
 import { BoardTargets } from "../items/board-targets";
@@ -21,7 +21,26 @@ import { playerBoardGame, genericBoardGame } from "./player-board-game";
 import { cardDropGame } from "./card-drop-game";
 import { resourceGame, manyValueGame } from "./resource-game";
 import { Inspector } from "../items/inspector";
-function ScenarioModel({ compactBoards = false }: { compactBoards?: boolean }) {
+/** An area that runs `interaction` with whichever card is dropped on it. */
+function DropZone({ interaction }: { interaction: string }) {
+  const area = useDropArea({ interaction });
+  return (
+    <section
+      {...area.props}
+      aria-label={`Drop for ${interaction}`}
+      className="my-3 grid min-h-24 place-items-center rounded-xl border-2 border-dashed data-drop-over:bg-muted data-[drop-target=true]:border-solid"
+    >
+      Drop a card: {interaction}
+    </section>
+  );
+}
+function ScenarioModel({
+  compactBoards = false,
+  dropZones = [],
+}: {
+  compactBoards?: boolean;
+  dropZones?: readonly string[];
+}) {
   const model = useGame((game) => game);
   return (
     <main style={{ width: "min(900px, 90vw)" }}>
@@ -58,6 +77,9 @@ function ScenarioModel({ compactBoards = false }: { compactBoards?: boolean }) {
           </div>
         ),
       )}
+      {dropZones.map((interaction) => (
+        <DropZone key={interaction} interaction={interaction} />
+      ))}
       {model.zones
         .getAll()
         .filter((zone) => !zone.getIsEmpty())
@@ -132,16 +154,18 @@ interface CreatedSource {
 function OwnedScenario({
   created,
   compactBoards,
+  dropZones,
 }: {
   created: CreatedSource;
   compactBoards: boolean;
+  dropZones: readonly string[];
 }) {
   useLayoutEffect(() => {
     created.adopted = true;
   }, [created]);
   return (
     <GameProvider source={created.source}>
-      <ScenarioModel compactBoards={compactBoards} />
+      <ScenarioModel compactBoards={compactBoards} dropZones={dropZones} />
     </GameProvider>
   );
 }
@@ -170,7 +194,11 @@ function ScenarioLoader({ kind }: { kind: keyof typeof fixtures }) {
   }, [kind]);
   if (error) return <p role="alert">{error}</p>;
   return source ? (
-    <OwnedScenario created={source} compactBoards={kind === "cardDrop"} />
+    <OwnedScenario
+      created={source}
+      compactBoards={kind === "cardDrop"}
+      dropZones={kind === "cardDrop" ? ["play.discard"] : []}
+    />
   ) : (
     <p>Loading scenario…</p>
   );

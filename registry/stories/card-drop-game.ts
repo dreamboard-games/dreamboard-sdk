@@ -46,14 +46,17 @@ const model = createGame({
   },
   phases: { play: z.object({}) },
   state: {
-    public: z.object({ placed: target.nullable() }),
+    public: z.object({
+      placed: target.nullable(),
+      discarded: z.string().nullable(),
+    }),
     private: z.object({}),
     hidden: z.object({}),
   },
 });
 const play = model.phase("play");
 export const cardDropGame = model.assemble({
-  initial: { public: () => ({ placed: null }) },
+  initial: { public: () => ({ placed: null, discarded: null }) },
   initialPhase: "play",
   phases: {
     play: play.define({
@@ -73,9 +76,19 @@ export const cardDropGame = model.assemble({
             tx.patchPublicState({ placed: input.params.space });
           },
         }),
+        // Card-only: a dragged card lands on an area that runs it.
+        discard: play.interaction({
+          inputs: { card: play.inputs.card({ from: ["table"] }) },
+          reduce({ tx, input }) {
+            tx.patchPublicState({ discarded: input.params.card });
+          },
+        }),
         refresh: play.interaction({ inputs: {}, reduce() {} }),
       },
     }),
   },
-  view: model.view(({ state }) => ({ placed: state.publicState.placed })),
+  view: model.view(({ state }) => ({
+    placed: state.publicState.placed,
+    discarded: state.publicState.discarded,
+  })),
 });

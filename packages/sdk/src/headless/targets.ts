@@ -33,11 +33,18 @@ export type RuntimeSelectionTarget =
 export type RuntimeTargetOptions =
   | { readonly interaction?: undefined; readonly input?: never }
   | { readonly interaction: string; readonly input?: string };
-export type RuntimeDropTarget = RuntimeBoardTarget & {
+export type RuntimeBoardDropTarget = RuntimeBoardTarget & {
   readonly interactionKey: string;
   readonly cardInputKey: string;
   readonly inputKey: string;
 };
+export interface RuntimeInteractionDropTarget {
+  readonly kind: "interaction";
+  readonly interactionKey: string;
+  readonly cardInputKey: string;
+}
+export type RuntimeDropTarget =
+  RuntimeBoardDropTarget | RuntimeInteractionDropTarget;
 type TargetOnBoard<Table, B extends BoardIdOfTable<Table>> =
   | ({ readonly valueKind: "board-id"; readonly boardId: B } & (
       | { readonly kind: "space"; readonly value: SpaceIdOfTable<Table, B> }
@@ -97,7 +104,7 @@ type KeysOfKind<
       [N in InputKey<G, K>]: InputKind<G, K, N> extends Kind ? N : never;
     }[InputKey<G, K>];
 /** A resolved atomic card/drop route retains both input identities. */
-export type DropTarget<G> = BoardTarget<G> &
+export type BoardDropTarget<G> = BoardTarget<G> &
   {
     [K in InteractionKey<G>]: {
       readonly interactionKey: K;
@@ -109,3 +116,14 @@ export type DropTarget<G> = BoardTarget<G> &
       >;
     };
   }[InteractionKey<G>];
+/** An area that runs an interaction without a board input on the dropped card. */
+export type InteractionDropTarget<G> = {
+  [K in InteractionKey<G>]: [KeysOfKind<G, K, "card">] extends [never]
+    ? never
+    : {
+        readonly kind: "interaction";
+        readonly interactionKey: K;
+        readonly cardInputKey: KeysOfKind<G, K, "card">;
+      };
+}[InteractionKey<G>];
+export type DropTarget<G> = BoardDropTarget<G> | InteractionDropTarget<G>;

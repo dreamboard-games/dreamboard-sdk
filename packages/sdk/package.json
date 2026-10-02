@@ -41,9 +41,6 @@
     "test": "vitest run src"
   },
   "dependencies": {
-    "@dnd-kit/collision": "0.5.0",
-    "@dnd-kit/dom": "0.5.0",
-    "@dnd-kit/react": "0.5.0",
     "@noble/hashes": "catalog:",
     "@tanstack/store": "catalog:",
     "honeycomb-grid": "catalog:"

@@ -50,6 +50,8 @@ for (const item of registry.items) {
           )
         ) &&
         !(item.meta?.binding === "workspace" && name === "@game") &&
+        // A dragged card's overlay portals out of transformed or clipped layouts.
+        !(item.meta?.binding === "workspace" && name === "react-dom") &&
         // Workspace-bound renderers may share SDK types without a runtime import.
         !(
           item.meta?.binding === "workspace" &&

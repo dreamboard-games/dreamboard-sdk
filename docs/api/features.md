@@ -11,9 +11,21 @@
 <!-- api: root BoardLayoutOptions -->
 <!-- api: root HandOptions -->
 <!-- api: root DropTarget -->
+<!-- api: root BoardDropTarget -->
+<!-- api: root InteractionDropTarget -->
 <!-- api: root DragState -->
 <!-- api: root DragController -->
-<!-- api: react BoardDropOptions -->
+<!-- api: root createGestureRecognizer -->
+<!-- api: root GESTURE_THRESHOLDS -->
+<!-- api: root GestureCallbacks -->
+<!-- api: root GesturePointer -->
+<!-- api: root GestureKind -->
+<!-- api: root GestureRecognizer -->
+<!-- api: react CardGesture -->
+<!-- api: react CardGestureProps -->
+<!-- api: react DropArea -->
+<!-- api: react DropAreaBinding -->
+<!-- api: react DragOverlay -->
 <!-- api: root ViewportTransform -->
 <!-- api: root PanZoomOptions -->
 
@@ -73,27 +85,32 @@ and destination into canonical drafts. Beginning or hovering never selects a car
 A drop without a valid destination and cancellation leave drafts untouched.
 Frame, source, seat, or connection changes cancel the active drag.
 
-`DropTarget<Game>` carries `interactionKey`, `cardInputKey`, `inputKey`, and a
+`DropTarget<Game>` is a `BoardDropTarget` or an `InteractionDropTarget`. An
+interaction with a board input yields board targets; one without yields a single
+`{ kind: "interaction", interactionKey, cardInputKey }` target per card input,
+for an area that runs the interaction with the dropped card. Dropping on an area
+adds the card and never toggles a many-card choice back out.
+
+A `BoardDropTarget` carries `interactionKey`, `cardInputKey`, `inputKey`, and a
 board identity discriminated by `valueKind`. A `"board-id"` target has scalar
 `value` and runtime `boardId`. A `"player-board-space"` target has a complete
 `{ boardId, playerId, spaceId }` tuple in `value`. Its board ID is the base manifest
 ID; no duplicate outer board ID is needed. Pass a resolved target through unchanged.
 
-The React binding returns `useCardDrag(cardId, { interaction?, input? })` and
-`useBoardDrop(targetOrNull, { containsPoint? })`. `GameProvider` installs dnd-kit
-when `dragFeature` is enabled. The SDK includes dnd-kit; consumers do not configure
-another drag provider. Its pointer sensor has a five-pixel activation distance,
-and its keyboard sensor uses Space/Enter to pick up or drop, arrow keys to move
-(Shift moves faster), and Escape to cancel. The library owns feedback, focus,
-announcements, and browser cleanup. The headless root imports no browser code.
+The React binding returns `useCardGesture(cardId, { interaction?, input? })`,
+`useDropArea(binding)` and `useDragOverlay()`. `createGestureRecognizer`
+classifies each press as a tap, hold, drag or browse using `GESTURE_THRESHOLDS`:
+a mouse drags after 8 px in any direction and inspects after resting 250 ms; a
+finger drags upward, browses sideways and inspects after holding 350 ms. Spread
+`CardGesture.props` on the card's own button after its selection props. The
+click that follows a hold or drag is swallowed; keyboard clicks never are.
 
-Use `useCardDrag`'s `ref` on the card wrapper and `handleRef` plus `handleProps` on
-a dedicated drag button. Keep the normal card button's selection props. The hook
-returns `canDrag` and `isDragging`; omit the handle when no card/drop route exists.
-`useBoardDrop` returns `ref` and `isDropTarget`. Pass `null` until an eligible route
-exists. `containsPoint` optionally refines rectangle hit testing with client-pixel
-geometry. The registry uses SVG fill/stroke tests through the inverse screen CTM,
-so zoom, pan, edges, and hexagonal corners retain their actual hit areas.
+`useDropArea` accepts a board `DropTarget` or `{ interaction, input? }` and
+returns `props`, `isEligible` and `isOver`. The browser's `elementsFromPoint`
+finds the area under the pointer, so SVG, transformed and rotated areas need
+no geometry. `useDragOverlay` returns the dragged card, a `ref` that keeps a
+fixed copy under the pointer without rendering per move, and `settling` while a
+submitted drop awaits its frame. See [Gestures](../guides/ui/gestures.md).
 
 The copied `BoardTargets` accepts `dropRoute` with all three route keys when a
 visual destination could serve multiple inputs. It disables ambiguous drops
