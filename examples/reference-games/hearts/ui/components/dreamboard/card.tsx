@@ -55,14 +55,34 @@ export function useMoving(onStart?: () => void, onComplete?: () => void) {
     },
   };
 }
-export function CardBack({ className = "", ...props }: HTMLMotionProps<"div">) {
+/** A card's back art: a visible card's from its view, a hidden card's own. */
+export function backImageOf(card: {
+  readonly view: unknown;
+  readonly backImage?: string | null;
+}) {
+  const { view } = card;
+  return view !== null &&
+    typeof view === "object" &&
+    "backImage" in view &&
+    typeof view.backImage === "string"
+    ? view.backImage
+    : (card.backImage ?? null);
+}
+/** A face-down card: the game's back art when `image` is given, a plain back otherwise. */
+export function CardBack({
+  image,
+  className = "",
+  ...props
+}: HTMLMotionProps<"div"> & { image?: string | null }) {
   return (
     <motion.div
       role="img"
       aria-label="Face-down card"
       transition={cardSpring}
       {...props}
-      className={`db-card db-card-back ${className}`}
-    />
+      className={`db-card ${image ? "db-image-card" : "db-card-back"} ${className}`}
+    >
+      {image && <img src={image} alt="" draggable={false} />}
+    </motion.div>
   );
 }

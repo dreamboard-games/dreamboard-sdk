@@ -8,7 +8,7 @@ import { motion, useMotionValue, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
-import { CardBack, cardSpring } from "./card";
+import { backImageOf, CardBack, cardSpring } from "./card";
 import { Pile } from "./pile";
 import { useCardMotion, type CardBox } from "./card-motion";
 import "./tokens.css";
@@ -34,6 +34,10 @@ export function DrawPile({
 }: DrawPileProps) {
   const draw = useGame((game) => game.interactions.find(key));
   const count = useGame((game) => game.zones.find(zoneId)?.count ?? 0);
+  const back = useGame((game) => {
+    const top = game.zones.find(zoneId)?.getCards()[0];
+    return top ? backImageOf(top) : null;
+  });
   const snapshot = useGame((game) => game.snapshot);
   const request = useGame((game) => game.request);
   const table = useCardMotion();
@@ -234,7 +238,7 @@ export function DrawPile({
             setOpen((current) => !current);
           }}
         >
-          <CardBack />
+          <CardBack image={back} />
         </button>
       </Pile>
       {open && (
@@ -322,7 +326,7 @@ export function DrawPile({
               if (returning) setGhost(null);
             }}
           >
-            <CardBack />
+            <CardBack image={back} />
           </motion.div>,
           document.body,
         )}

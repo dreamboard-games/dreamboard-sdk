@@ -131,6 +131,13 @@ try {
           "44px",
         );
       }
+      if (story.id.endsWith("--image-cards")) {
+        // A back with the game's art draws the image, not the plain pattern.
+        const back = page.getByTestId("back-art");
+        await expect(back).toHaveAccessibleName("Face-down card");
+        await expect(back.locator("img")).toBeVisible();
+        await expect(back).not.toHaveClass(/db-card-back/);
+      }
       if (story.id.endsWith("--seats")) {
         const ada = page.getByRole("region", { name: "Ada Lovelace (you)" });
         await expect(ada).toHaveAttribute("data-active", "true");

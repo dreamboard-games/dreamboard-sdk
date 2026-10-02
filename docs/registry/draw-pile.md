@@ -53,6 +53,7 @@ Bind this phase's interaction key (for example, `play.draw`) to `DrawPile`.
 Free play can use the same UI with broader reducer permissions.
 
 Tap, click or Enter opens the action menu. Escape closes it and returns focus.
+The pile and its lifted copy show the top card's back art when the game has one.
 A pointer drag lifts a slightly enlarged back with a stronger shadow, highlights
 the hand and opens an insertion gap when over it. Drop elsewhere or press Escape
 to glide back. Availability and submission failures use the game's reason.

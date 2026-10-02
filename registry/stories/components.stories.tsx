@@ -67,7 +67,7 @@ export const ImageCards: Story = {
         alt="Knight"
         state="selected"
       />
-      <ImageCard src={face("#192b35", "")} alt="Face-down card" />
+      <CardBack image={face("#192b35", "Back")} data-testid="back-art" />
     </div>
   ),
 };
