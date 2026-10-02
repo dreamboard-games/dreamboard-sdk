@@ -129,6 +129,45 @@ try {
           "44px",
         );
       }
+      if (story.id.endsWith("--seats")) {
+        const ada = page.getByRole("region", { name: "Ada Lovelace (you)" });
+        await expect(ada).toHaveAttribute("data-active", "true");
+        await expect(ada).toContainText("your turn");
+        await expect(ada.locator(".db-seat-avatar")).toHaveText("AL");
+        await expect(
+          page.getByRole("region", { name: "Lin", exact: true }),
+        ).toContainText("7 cards");
+        await expect(page.locator("[data-player=sam]")).toContainText("1 card");
+      }
+      if (story.id.endsWith("--piles")) {
+        const draw = page.getByRole("figure", { name: "Draw pile 18 cards" });
+        await expect(draw.locator(".db-pile-edge")).toHaveCount(3);
+        await expect(draw.locator(".db-pile-count")).toHaveText("18");
+        const empty = page.getByRole("figure", { name: "Tricks empty" });
+        await expect(empty).toHaveAttribute("data-empty", "true");
+        await expect(empty.locator(".db-pile-count")).toHaveCount(0);
+      }
+      if (story.id.endsWith("--move-notice")) {
+        const moves = page.getByRole("region", { name: "Moves" });
+        const notices = moves.locator(".db-move-notice");
+        await expect(notices).toHaveText(["Lin played the 7 of clubs"]);
+        await expect(notices.first()).toHaveAttribute("data-seat", "2");
+        await page.getByRole("button", { name: "Sam draws" }).click();
+        await expect(notices).toHaveCount(2);
+        // Notices leave by themselves.
+        await expect(notices).toHaveCount(0, { timeout: 6000 });
+      }
+      if (story.id.endsWith("--game-results")) {
+        await expect(
+          page.getByRole("heading", { name: "Ada and Lin tie" }),
+        ).toBeVisible();
+        await expect(
+          page.getByRole("table", { name: "Final standings" }),
+        ).toBeVisible();
+        await expect(
+          page.getByRole("button", { name: "Play again" }),
+        ).toBeVisible();
+      }
       if (story.id.endsWith("composed-selection")) {
         const button = page.getByRole("button", {
           name: "Select ace of hearts",
@@ -251,22 +290,22 @@ try {
         await page
           .getByRole("button", { name: "Add value", exact: true })
           .click();
-        await page.getByLabel("counts 1", { exact: true }).fill("2");
+        await page.getByLabel("Counts 1", { exact: true }).fill("2");
         await page
           .getByRole("button", { name: "Add value", exact: true })
           .click();
-        await page.getByLabel("counts 2", { exact: true }).fill("4");
-        await page.getByLabel("counts 1", { exact: true }).fill("");
+        await page.getByLabel("Counts 2", { exact: true }).fill("4");
+        await page.getByLabel("Counts 1", { exact: true }).fill("");
         await expect(page.getByTestId("scenario-drafts")).toHaveText(
           JSON.stringify({ "play.batch": { counts: [4] } }),
         );
-        await expect(page.getByLabel("counts 2", { exact: true })).toHaveCount(
+        await expect(page.getByLabel("Counts 2", { exact: true })).toHaveCount(
           0,
         );
-        await expect(page.getByLabel("counts 1", { exact: true })).toHaveValue(
+        await expect(page.getByLabel("Counts 1", { exact: true })).toHaveValue(
           "4",
         );
-        await page.getByLabel("counts 1", { exact: true }).fill("2");
+        await page.getByLabel("Counts 1", { exact: true }).fill("2");
         await page
           .getByRole("button", { name: "Add allocation", exact: true })
           .click();
@@ -298,7 +337,10 @@ try {
           '[data-action="submit"][data-interaction="play.pay"]',
         );
         await expect(wood).toBeVisible();
-        await wood.fill("1");
+        await expect(
+          page.getByRole("button", { name: "Decrease Wood" }),
+        ).toBeDisabled();
+        await page.getByRole("button", { name: "Increase Wood" }).click();
         await expect(wood).toHaveValue("1");
         await expect(stone).toHaveValue("0");
         await expect(submit).toBeDisabled();

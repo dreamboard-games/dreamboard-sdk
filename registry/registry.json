@@ -134,7 +134,7 @@
       "name": "pile",
       "type": "registry:component",
       "title": "Pile",
-      "description": "Pure, composable pile presentation. No SDK dependency.",
+      "description": "A stack of cards with edges by depth, a count badge and an empty outline. No SDK dependency.",
       "files": [
         {
           "path": "items/pile.tsx",
@@ -176,19 +176,18 @@
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",
-      "name": "players",
+      "name": "seat",
       "type": "registry:component",
-      "title": "Players",
-      "description": "Pure, composable players presentation. No SDK dependency.",
+      "title": "Seat",
+      "description": "One player at the table: avatar, name, held cards, score, turn ring and last action. No SDK dependency.",
       "files": [
         {
-          "path": "items/players.tsx",
+          "path": "items/seat.tsx",
           "type": "registry:component",
-          "target": "@components/dreamboard/players.tsx"
+          "target": "@components/dreamboard/seat.tsx"
         }
       ],
-      "registryDependencies": ["@dreamboard/tokens"],
-      "dependencies": ["cn@^0.4.0"]
+      "registryDependencies": ["@dreamboard/tokens"]
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",
@@ -251,6 +250,21 @@
         }
       ],
       "registryDependencies": ["@dreamboard/tokens", "table"]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "results",
+      "type": "registry:component",
+      "title": "Results",
+      "description": "The winner, every rank with ties, and a slot for Play again. No SDK dependency.",
+      "files": [
+        {
+          "path": "items/results.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/results.tsx"
+        }
+      ],
+      "registryDependencies": ["@dreamboard/tokens", "@dreamboard/standings"]
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",
@@ -334,6 +348,41 @@
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "turn-banner",
+      "type": "registry:component",
+      "title": "Turn Banner",
+      "description": "Announces \"Your turn\" briefly each time the selected seat can act again.",
+      "files": [
+        {
+          "path": "items/turn-banner.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/turn-banner.tsx"
+        }
+      ],
+      "registryDependencies": ["@dreamboard/tokens"],
+      "dependencies": ["motion@13.5.0"],
+      "meta": {
+        "binding": "workspace"
+      }
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "move-notice",
+      "type": "registry:component",
+      "title": "Move Notice",
+      "description": "Short notices of other players' moves, marked with their seat colour. No SDK dependency.",
+      "files": [
+        {
+          "path": "items/move-notice.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/move-notice.tsx"
+        }
+      ],
+      "registryDependencies": ["@dreamboard/tokens"],
+      "dependencies": ["sonner@^2.0.8"]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
       "name": "hand-drawer",
       "type": "registry:component",
       "title": "Hand Drawer",
@@ -373,7 +422,7 @@
       "name": "interaction-form",
       "type": "registry:component",
       "title": "Interaction Form",
-      "description": "Workspace-bound headless UI; copied source owned by the game.",
+      "description": "An interaction's current step with readable labels, steppers and choice chips.",
       "meta": {
         "binding": "workspace"
       },

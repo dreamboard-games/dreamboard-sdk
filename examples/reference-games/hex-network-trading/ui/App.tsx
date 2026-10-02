@@ -1,6 +1,6 @@
 import { useGame, type GameView } from "./game";
 import { Resources } from "./components/dreamboard/resources";
-import { Players } from "./components/dreamboard/players";
+import { Seat } from "./components/dreamboard/seat";
 import { Standings } from "./components/dreamboard/standings";
 import { BoardTargets } from "./components/dreamboard/board-targets";
 import { StormtrailInteractionRoutes } from "./interaction-routes";
@@ -191,17 +191,24 @@ function Supplies({ view }: { view: GameView }) {
 function Roster({ view }: { view: GameView }) {
   const players = useGame((game) => game.players.getAll());
   return (
-    <Players
+    <div
+      role="group"
       aria-label="Expedition crews"
-      className="stormtrail-players"
-      players={players.map((player, index) => ({
-        id: player.id,
-        name: `${PLAYER_STYLE[player.id].label}${view.playerId === player.id ? " · you" : ""}`,
-        seat: index === 0 ? 1 : index === 1 ? 2 : 3,
-        status: view.activePlayerId === player.id ? "Active" : "Waiting",
-        detail: `${view.supplyCountByPlayerId[player.id]} supplies · ${4 - view.remainingCampsByPlayerId[player.id]}/4 camps · ${10 - view.remainingTrailsByPlayerId[player.id]}/10 trails`,
-      }))}
-    />
+      className="stormtrail-players grid gap-3"
+    >
+      {players.map((player, index) => (
+        <Seat
+          key={player.id}
+          playerId={player.id}
+          name={PLAYER_STYLE[player.id].label}
+          seat={index === 0 ? 1 : index === 1 ? 2 : 3}
+          you={view.playerId === player.id}
+          active={view.activePlayerId === player.id}
+          cards={view.supplyCountByPlayerId[player.id]}
+          lastAction={`${4 - view.remainingCampsByPlayerId[player.id]}/4 camps · ${10 - view.remainingTrailsByPlayerId[player.id]}/10 trails`}
+        />
+      ))}
+    </div>
   );
 }
 

@@ -131,4 +131,10 @@
   .stormtrail-players [data-seat="3"] {
     --seat-color: #ca8a04;
   }
+  /* Strong crew colours ring a pale avatar, so its initial stays readable. */
+  .stormtrail-players .db-seat-avatar {
+    background: #fffaf0;
+    color: #292524;
+    box-shadow: inset 0 0 0 3px var(--seat-color);
+  }
 }

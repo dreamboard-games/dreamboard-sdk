@@ -1,8 +1,8 @@
 import { useGame } from "./game";
 import { HandRow } from "./components/hand-row";
 import { TrickArea } from "./components/trick-area";
-import { Players } from "./components/dreamboard/players";
-import { Standings } from "./components/dreamboard/standings";
+import { Results } from "./components/dreamboard/results";
+import { Seat, type SeatNumber } from "./components/dreamboard/seat";
 
 export default function App() {
   const game = useGame();
@@ -50,8 +50,7 @@ export default function App() {
         {phase.is("playing") ? (
           <TrickArea trick={view.currentTrick} />
         ) : view.outcome ? (
-          <Standings
-            caption="Final standings"
+          <Results
             scoreLabel="Penalty points"
             standings={view.outcome.standings.map((standing) => ({
               id: standing.playerId,
@@ -72,30 +71,42 @@ export default function App() {
       <aside className="grid content-start gap-4">
         <section className="rounded-2xl border border-slate-300 bg-white p-3">
           <h2 className="text-lg font-bold">Table</h2>
-          <Players
-            players={players.getAll().map((player) => ({
-              id: player.id,
-              name: `${player.name}${player.isMe ? " (you)" : ""}`,
-              seat: (player.index + 1) as 1 | 2 | 3 | 4,
-              status: phase.is("passing")
-                ? turn.activePlayerIds.includes(player.id)
-                  ? "choosing pass"
-                  : "pass sealed"
-                : `${view.tricksWonByPlayer[player.id]} tricks`,
-              detail: (
-                <span>
-                  {view.handCountByPlayer[player.id]} cards ·{" "}
-                  {view.completed
-                    ? view.pointsByPlayer[player.id]
-                    : (view.capturedHeartsByPlayer[player.id] ?? 0) +
-                      (view.queenOfSpadesCapturedBy === player.id
-                        ? 13
-                        : 0)}{" "}
-                  pts
-                </span>
-              ),
-            }))}
-          />
+          <div className="grid gap-3">
+            {players.getAll().map((player) => {
+              const active = turn.activePlayerIds.includes(player.id);
+              const played = view.currentTrickPlays.findIndex(
+                (play) => play.playerId === player.id,
+              );
+              return (
+                <Seat
+                  key={player.id}
+                  playerId={player.id}
+                  name={player.name}
+                  seat={(player.index + 1) as SeatNumber}
+                  you={player.isMe}
+                  active={active}
+                  cards={
+                    player.isMe ? undefined : view.handCountByPlayer[player.id]
+                  }
+                  score={`${
+                    view.completed
+                      ? view.pointsByPlayer[player.id]
+                      : (view.capturedHeartsByPlayer[player.id] ?? 0) +
+                        (view.queenOfSpadesCapturedBy === player.id ? 13 : 0)
+                  } pts`}
+                  lastAction={
+                    phase.is("passing")
+                      ? active
+                        ? "Choosing a pass"
+                        : "Pass sealed"
+                      : played >= 0
+                        ? `Played ${view.currentTrick[played].name}`
+                        : `${view.tricksWonByPlayer[player.id]} tricks won`
+                  }
+                />
+              );
+            })}
+          </div>
         </section>
         <section className="rounded-2xl border border-slate-300 bg-white p-3">
           <h2 className="text-lg font-bold">Recent tricks</h2>

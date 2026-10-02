@@ -80,7 +80,7 @@ test("Bandits saved step cancels and completes explicit no-victim choice", async
     ),
   ).toBeVisible();
   await choose(page.locator(`${key}[data-action="cancel"]`), isMobile);
-  await expect(page.getByText("Step 1", { exact: true })).toBeVisible();
+  await expect(page.getByText("Step 1 of 2", { exact: true })).toBeVisible();
   await choose(page.locator('svg [data-value="southWestClay"]'), isMobile);
   await choose(
     page.locator(`${key}[data-input="targetPlayerId"][data-value="null"]`),

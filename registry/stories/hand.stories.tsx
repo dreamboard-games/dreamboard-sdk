@@ -15,7 +15,10 @@ import { CardBack, type CardState } from "../items/card";
 import { PlayingCard } from "../items/playing-card";
 import { Pile } from "../items/pile";
 import { DropArea } from "../items/drop-area";
+import { Seat, type SeatNumber } from "../items/seat";
+import { TurnBanner } from "../items/turn-banner";
 import { handGame } from "./hand-game";
+type HandSource = CommandSource & { switchSeat(playerId: string): void };
 type Model = Parameters<Parameters<typeof useGame>[0]>[0];
 type GameCard = NonNullable<ReturnType<Model["cards"]["get"]>>;
 const face = z.object({
@@ -34,6 +37,28 @@ function cardLabel(card: GameCard) {
   return shown ? `${shown.rank} of ${shown.suit}` : "Face-down card";
 }
 const tableCards = { "--card-w": "var(--card-w-table)" } as CSSProperties;
+const handCounts = z.object({ handCounts: z.record(z.string(), z.number()) });
+
+function Seats({ mine }: { mine: boolean }) {
+  const players = useGame((game) => game.players.getAll());
+  const active = useGame((game) => game.turn.activePlayerIds);
+  const view = useGame((game) => game.view);
+  const counts = handCounts.safeParse(view).data?.handCounts ?? {};
+  return players
+    .filter((player) => player.isMe === mine)
+    .map((player) => (
+      <Seat
+        key={player.id}
+        playerId={player.id}
+        name={player.name}
+        seat={(player.index + 1) as SeatNumber}
+        you={player.isMe}
+        active={active.includes(player.id)}
+        cards={player.isMe ? undefined : counts[player.id]}
+        className="min-w-36"
+      />
+    ));
+}
 
 /** Cards on the table share their hand slot's `layoutId`, so Motion carries them across. */
 function Area({
@@ -71,9 +96,10 @@ function Area({
   );
 }
 
-function Table() {
+function Table({ onSwitchSeat }: { onSwitchSeat(): void }) {
   const deck = useGame((game) => game.zones.find("deck")?.count ?? 0);
   const draw = useGame((game) => game.interactions.find("play.draw"));
+  const endTurn = useGame((game) => game.interactions.find("play.endTurn"));
   const zones = useGame((game) =>
     JSON.stringify(
       game.zones
@@ -86,6 +112,19 @@ function Table() {
       <output data-testid="table-cards" hidden>
         {zones}
       </output>
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <Seats mine={false} />
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" className="min-h-11" onClick={onSwitchSeat}>
+            Switch seat
+          </Button>
+          {endTurn && (
+            <Button className="min-h-11" {...endTurn.getSubmitProps()}>
+              End turn
+            </Button>
+          )}
+        </div>
+      </header>
       <p className="m-0 text-sm">
         Tap a card for its actions, hold or hover to look closer, or drag it up.
       </p>
@@ -103,12 +142,16 @@ function Table() {
         <Area zoneId="table" label="Table" interaction="play.play" />
         <Area zoneId="discard" label="Discard" interaction="play.discard" top />
       </div>
-      <Hand
-        zoneId="hand"
-        label="Your hand"
-        renderCard={renderCard}
-        getCardLabel={cardLabel}
-      />
+      <div className="grid gap-2">
+        <Seats mine />
+        <Hand
+          zoneId="hand"
+          label="Your hand"
+          renderCard={renderCard}
+          getCardLabel={cardLabel}
+        />
+      </div>
+      <TurnBanner />
     </main>
   );
 }
@@ -116,25 +159,32 @@ function Table() {
 function OwnedSource({
   source,
 }: {
-  source: { value: CommandSource; adopted: boolean };
+  source: { value: HandSource; adopted: boolean };
 }) {
   useLayoutEffect(() => {
     source.adopted = true;
   }, [source]);
+  const [seat, setSeat] = useState("player-1");
   return (
     <GameProvider source={source.value}>
-      <Table />
+      <Table
+        onSwitchSeat={() => {
+          const next = seat === "player-1" ? "player-2" : "player-1";
+          source.value.switchSeat(next);
+          setSeat(next);
+        }}
+      />
     </GameProvider>
   );
 }
 function HandTable() {
   const [source, setSource] = useState<{
-    value: CommandSource;
+    value: HandSource;
     adopted: boolean;
   } | null>(null);
   useEffect(() => {
     let active = true;
-    let created: { value: CommandSource; adopted: boolean } | undefined;
+    let created: { value: HandSource; adopted: boolean } | undefined;
     void localSource(handGame, { players: 2, seed: 3 }).then((value) => {
       if (!active) return value.dispose();
       created = { value, adopted: false };

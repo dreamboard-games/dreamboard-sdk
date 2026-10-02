@@ -17,7 +17,7 @@ are authoritative; there is no separate SDK component import.
 
 The stylesheet defines the game's visual tokens and scoped `db-*` classes; components import it where needed. Override the variables in your application stylesheet:
 
-- Table: `--table` (terracotta `#a34f36`), `--table-foreground` (ivory, 5.4:1 on the table) and `--brand` for accents. `.db-table` paints a surface with them.
+- Table: `--table` (terracotta `#a34f36`), `--table-foreground` (ivory, 5.4:1 on the table) and `--brand` for accents. `.db-table` paints a surface with them, and its buttons turn ivory with dark text, or ivory-outlined.
 - Cards: one width per place, `--card-w-hand`, `--card-w-table`, `--card-w-opponent`, `--card-w-pile` and `--card-w-preview`, sized by the viewport's shorter side. Each place sets `--card-w` for the cards inside it. `--card-aspect` matches your card art.
 - States: `--playable`, `--selected` and the `--dimmed` filter.
 - Elevation: `--elevation-rest`, `--elevation-lift` and `--elevation-drag`.

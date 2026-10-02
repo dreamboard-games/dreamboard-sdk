@@ -61,14 +61,16 @@ import { Pile } from "@/components/dreamboard/pile";
 | `card-preview` | An inspected card enlarged beside it on hover or centred on hold, with haptics                                                       |
 | `playing-card` | Rank and suit, composed from `Card`                                                                                                  |
 | `image-card`   | Face image URL and name, composed from `Card`; shows a card view or a hidden card's back                                             |
-| `pile`         | Count, label and top-card children; explicit empty presentation                                                                      |
+| `pile`         | Count, label and top-card children; edges by depth, a count badge and an empty outline                                               |
 | `hex-grid`     | Precomputed polygon points, centers and labels; SVG overlay children                                                                 |
 | `square-grid`  | Precomputed cell positions and size; SVG overlay children                                                                            |
-| `players`      | Names, seats, status and optional detail                                                                                             |
+| `seat`         | One player's name, seat colour, held-card count, score, turn and last action; marks `data-player`                                    |
 | `resources`    | Label, count and optional icon per resource                                                                                          |
 | `dice`         | Supplied result values; never rolls or infers randomness                                                                             |
 | `event-log`    | Supplied event summaries/details; no automatic live announcements                                                                    |
 | `standings`    | Supplied ordered ranks, names and scores; preserves ties                                                                             |
+| `results`      | Standings under a heading naming the winner or the tie, with a Play again slot                                                       |
+| `move-notice`  | Notices the game raises for other players' moves, in their seat colour                                                               |
 
 Board grids default to labelled static images. A later interactive board wrapper must deliberately own focus, roles and keyboard navigation; these grids do not claim to implement those behaviors. Seat color always supplements labels. Card visual state is exposed through `data-card-state`; when actionable, the owning button exposes `aria-pressed`, disabled state and its accessible name.
 
@@ -80,16 +82,16 @@ Registry metadata follows the official [registry.json](https://ui.shadcn.com/doc
 
 ## Workspace-bound items
 
-`hand`, `hand-drawer`, `card-actions`, `drop-area`, `board-targets`,
-`interaction-form`, `actions` and `inspector` import the consuming game's
+`hand`, `hand-drawer`, `card-actions`, `drop-area`, `turn-banner`,
+`board-targets`, `interaction-form`, `actions` and `inspector` import the consuming game's
 `useGame` from `@game`. Map `@game` directly to `ui/game.ts` in TypeScript and Vite, retain `@/*` for other UI imports, and export `useGame`, `useCardGesture`, `useDropArea` and `useDragOverlay` from your `createGameHook` binding there. Enable `dragFeature` for `board-targets` and card dragging, and `originsFeature` for `hand`; a hand still taps and previews when no card can drag. Items provide behavior and pieces, never a table layout: each game arranges its own hands, piles and boards. The dedicated binding alias survives shadcn import rewriting without modifying installed source. These items are copied source,
 not a styled SDK package. `board-targets` requires the board, drag, and pan/zoom features;
 install only the items supported by the game's binding. It installs a native
 non-passive wheel listener with cleanup, and uses canonical board geometry and
 handlers. App slots own terrain, pieces and optional animation.
 
-`InteractionForm` renders only current-step inputs and shows server-saved choices
-separately. Its `renderInput` slot lets a game replace board fields with a board
+`InteractionForm` renders only current-step inputs, with readable labels,
+steppers and choice chips, and shows server-saved choices separately. Its `renderInput` slot lets a game replace board fields with a board
 hint. Cancel clears the authoritative server prefix; reset clears local choices.
 `Hand` fans the zone's cards and draws each with `renderCard(card, state)`; a tap opens `CardActions`, a hold or hover opens `CardPreview`, and a drag lands on a `DropArea`.
 `Inspector` displays only selected-seat data. `scenario-controls` belongs only in
@@ -134,8 +136,9 @@ disabled state and `data-*` props on those controls. Choice buttons remain SDK-o
 selection actions; adding a second selection store would desynchronize drafts.
 
 Tailwind owns ordinary flex/grid layouts, spacing and typography in the card
-actions, players, resources and event log. The hand positions cards itself. Copied game CSS retains card faces and backs,
-dice, piles, SVG geometry, board focus/drop feedback and seat/state tokens. Native
+actions, resources and event log. The hand positions cards itself. Copied game CSS retains card faces and backs,
+dice, piles, seats, banners, notices, SVG geometry, board focus/drop feedback
+and seat/state tokens. Inside `.db-table`, shadcn buttons turn ivory with dark text. Native
 card buttons and inline `details` disclosures retain their existing interactions.
 Customize semantic theme variables instead of styling every descendant button;
 for per-seat branding override `--seat-color` on the relevant `data-seat` element.

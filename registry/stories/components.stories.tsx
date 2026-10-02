@@ -1,16 +1,18 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Card, CardBack } from "../items/card";
 import { PlayingCard } from "../items/playing-card";
 import { ImageCard } from "../items/image-card";
 import { Pile } from "../items/pile";
 import { HexGrid } from "../items/hex-grid";
 import { SquareGrid } from "../items/square-grid";
-import { Players } from "../items/players";
+import { Seat } from "../items/seat";
 import { Resources } from "../items/resources";
 import { Dice } from "../items/dice";
 import { EventLog } from "../items/event-log";
-import { Standings } from "../items/standings";
+import { Results } from "../items/results";
+import { MoveNotices, showMoveNotice } from "../items/move-notice";
 
 const meta = {
   title: "Pure components",
@@ -159,37 +161,47 @@ export const SquareBoard: Story = {
     </div>
   ),
 };
-export const PlayerList: Story = {
+export const Seats: Story = {
   render: () => (
-    <div className="story-panel">
-      <Players
-        players={[
-          {
-            id: "ada",
-            name: "Ada",
-            seat: 1,
-            status: "Your turn",
-            detail: "12 points",
-          },
-          {
-            id: "lin",
-            name: "Lin",
-            seat: 2,
-            status: "Waiting",
-            detail: "9 points",
-          },
-          {
-            id: "sam",
-            name: "Sam",
-            seat: 3,
-            status: "Ready",
-            detail: "9 points",
-          },
-        ]}
+    <div className="story-panel story-table grid gap-4">
+      <Seat
+        playerId="ada"
+        name="Ada Lovelace"
+        seat={1}
+        you
+        active
+        score="12 pts"
+        lastAction="Played the queen of hearts"
       />
+      <Seat
+        playerId="lin"
+        name="Lin"
+        seat={2}
+        cards={7}
+        score="9 pts"
+        lastAction="Drew a card"
+      />
+      <Seat playerId="sam" name="Sam" seat={3} cards={1} score="9 pts" />
     </div>
   ),
 };
+function NoticeExample() {
+  useEffect(() => {
+    showMoveNotice("Lin played the 7 of clubs", { seat: 2 });
+  }, []);
+  return (
+    <div className="story-panel story-table">
+      <MoveNotices />
+      <Button
+        className="min-h-11"
+        onClick={() => showMoveNotice("Sam drew a card", { seat: 3 })}
+      >
+        Sam draws
+      </Button>
+    </div>
+  );
+}
+export const MoveNotice: Story = { render: () => <NoticeExample /> };
 export const ResourceCounts: Story = {
   render: () => (
     <div className="story-panel">
@@ -231,17 +243,19 @@ export const History: Story = {
     </div>
   ),
 };
-export const Results: Story = {
+export const GameResults: Story = {
   render: () => (
     <div className="story-panel">
-      <Standings
-        caption="Final standings"
+      <Results
+        scoreLabel="Points"
         standings={[
           { id: "ada", rank: 1, name: "Ada", score: 24 },
-          { id: "lin", rank: 2, name: "Lin", score: 18 },
-          { id: "sam", rank: 2, name: "Sam", score: 18 },
+          { id: "lin", rank: 1, name: "Lin", score: 24 },
+          { id: "sam", rank: 3, name: "Sam", score: 18 },
         ]}
-      />
+      >
+        <Button className="min-h-11">Play again</Button>
+      </Results>
     </div>
   ),
 };

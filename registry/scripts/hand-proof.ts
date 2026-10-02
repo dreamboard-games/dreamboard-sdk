@@ -62,7 +62,7 @@ export async function proveHand(page: Page, touch: boolean) {
   await expect(diamond).toHaveAttribute("aria-disabled", "true");
   await activate(diamond);
   await expect(diamond).toHaveAttribute("data-shake", "a");
-  await expect(page.getByRole("status")).toHaveText(
+  await expect(page.getByRole("dialog").getByRole("status")).toHaveText(
     "You can't play this card now.",
   );
   await expect(actions).toHaveCount(0);
@@ -170,4 +170,25 @@ export async function proveHand(page: Page, touch: boolean) {
     .poll(async () => (await zones()).discard)
     .toEqual([spadeId, clubId]);
   await expect(page.locator("[data-drag-overlay]")).toHaveCount(0);
+
+  // Seats show whose turn it is and the cards an opponent holds.
+  const seat = (name: string) =>
+    page.getByRole("region", { name, exact: true });
+  const banner = page.locator(".db-turn-banner p");
+  await expect(seat("player-1 (you)")).toHaveAttribute("data-active", "true");
+  await expect(seat("player-2")).not.toHaveAttribute("data-active");
+  await expect(seat("player-2")).toContainText("3 cards");
+  await expect(banner).toHaveCount(0);
+  // Ending the turn moves the ring, and the next player sees the banner.
+  await page.getByRole("button", { name: "End turn" }).click();
+  await expect(seat("player-2")).toHaveAttribute("data-active", "true");
+  await expect(seat("player-1 (you)")).not.toHaveAttribute("data-active");
+  await page.getByRole("button", { name: "Switch seat" }).click();
+  await expect(banner).toHaveText("Your turn");
+  await expect(
+    page.getByRole("status").filter({ hasText: "Your turn" }),
+  ).toHaveCount(1);
+  await expect(seat("player-2 (you)")).toHaveAttribute("data-active", "true");
+  await expect(cards).toHaveCount(3);
+  await expect(banner).toHaveCount(0);
 }
