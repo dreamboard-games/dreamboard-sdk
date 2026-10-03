@@ -408,7 +408,9 @@ describe("headless instance", () => {
       zones: {
         hand: {
           cardIds: ["ace", "hidden"],
-          cardViewsById: { ace: JSON.stringify({ rank: "A" }) },
+          cardViewsById: {
+            ace: { id: "ace", cardType: "ranked", properties: { rank: "A" } },
+          },
           cardBacksById: {},
           playableByCardId: {
             ace: [
@@ -427,6 +429,37 @@ describe("headless instance", () => {
     expect(() => game.cards.get("ace").select()).toThrow(AmbiguousTargetError);
     game.cards.get("ace").select({ interaction: "play.other" });
     expect(game.state.drafts["play.other"]).toEqual({ card: "ace" });
+    game.dispose();
+  });
+  it("card views reuse deeply immutable source data", () => {
+    const x = setup();
+    const card = {
+      id: "ace",
+      cardType: "ranked",
+      properties: { ranks: ["A"], details: { suit: "spades" } },
+    };
+    x.emit(2, undefined, {
+      zones: {
+        hand: {
+          cardIds: ["ace"],
+          cardViewsById: { ace: card },
+          cardBacksById: {},
+          playableByCardId: {},
+        },
+      },
+    });
+    const game = createGameInstance()({ source: x.source });
+    const view = game.cards.get("ace").view!;
+    expect(view).toBe(
+      x.source.store.get().snapshot!.frame.zones.hand.cardViewsById.ace,
+    );
+    expect(Object.isFrozen(view)).toBe(true);
+    expect(Object.isFrozen(view.properties)).toBe(true);
+    expect(Object.isFrozen(view.properties.ranks)).toBe(true);
+    expect(Object.isFrozen(view.properties.details)).toBe(true);
+    expect(Reflect.set(view.properties, "ranks", [])).toBe(false);
+    card.properties.ranks.push("Q");
+    expect(view.properties.ranks).toEqual(["A"]);
     game.dispose();
   });
   it("source replacement isolates stale responses and captured handlers", async () => {
@@ -782,7 +815,9 @@ it("per-card descriptor identity resolves against the latest frame and drop writ
     zones: {
       hand: {
         cardIds: ["ace"],
-        cardViewsById: { ace: JSON.stringify({ rank: "A" }) },
+        cardViewsById: {
+          ace: { id: "ace", cardType: "ranked", properties: { rank: "A" } },
+        },
         cardBacksById: {},
         playableByCardId: { ace: [route] },
       },
@@ -920,7 +955,7 @@ it("reconciles with the selected card's narrow domain, not the broad global desc
   const zones = (route: InteractionDescriptor) => ({
     hand: {
       cardIds: ["ace"],
-      cardViewsById: { ace: "{}" },
+      cardViewsById: { ace: { id: "ace", cardType: "ranked", properties: {} } },
       cardBacksById: {},
       playableByCardId: { ace: [route] },
     },

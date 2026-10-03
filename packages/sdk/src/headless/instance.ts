@@ -1,3 +1,4 @@
+import type { ViewCard } from "../shared/domain/cards.js";
 import {
   runtimeFeatures,
   type RuntimeFeatureContext,
@@ -385,7 +386,7 @@ class InputObject {
 class CardObject {
   readonly epoch: number;
   readonly seat: number;
-  readonly view: Readonly<Record<string, RuntimeJson>> | null;
+  readonly view: ReadonlyData<ViewCard> | null;
   readonly hidden: boolean;
   readonly backImage: string | null;
   constructor(
@@ -393,7 +394,7 @@ class CardObject {
     readonly id: string,
     readonly zone: string,
     readonly index: number,
-    encoded: string | undefined,
+    view: ReadonlyData<ViewCard> | undefined,
     backImage: string | undefined,
     readonly routes: readonly InteractionObject[],
   ) {
@@ -402,9 +403,7 @@ class CardObject {
       owner.sourceState.snapshot?.players.findIndex(
         (player) => player.playerId === owner.sourceState.snapshot?.me,
       ) ?? -1;
-    this.view = encoded
-      ? immutableCopy(JSON.parse(encoded) as Record<string, RuntimeJson>)
-      : null;
+    this.view = view ?? null;
     this.hidden = this.view === null;
     this.backImage = backImage ?? null;
   }

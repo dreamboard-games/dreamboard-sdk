@@ -1,3 +1,4 @@
+import type { ViewCard } from "../../../shared/domain/cards.js";
 import { createTableQueries } from "../../table-queries";
 import type { RuntimeTableRecord } from "../../model";
 import type { RuntimeJson } from "../../../shared/runtime-json";
@@ -140,7 +141,7 @@ export function createProjectionBuilder<
       string,
       {
         cardIds: string[];
-        cardViewsById: Record<string, string>;
+        cardViewsById: Record<string, ViewCard>;
         cardBacksById: Record<string, string>;
         playableByCardId: Record<string, string[]>;
       }
@@ -153,7 +154,7 @@ export function createProjectionBuilder<
         )
         .map(([interactionId]) => interactionId);
       const cardIds: string[] = [];
-      const cardViewsById: Record<string, string> = {};
+      const cardViewsById: Record<string, ViewCard> = {};
       const cardBacksById: Record<string, string> = {};
       const playableByCardId: Record<string, string[]> = {};
       for (const cardId of zoneCardIds) {
@@ -161,7 +162,7 @@ export function createProjectionBuilder<
         cardIds.push(seatCardId);
         const card = q.card.get(cardId);
         if (!concealment.isHidden(cardId)) {
-          cardViewsById[cardId] = JSON.stringify(card);
+          cardViewsById[cardId] = card;
         } else if (card.backImage !== undefined) {
           cardBacksById[seatCardId] = card.backImage;
         }

@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { z } from "zod";
+import * as z from "zod";
 import { createGame } from "../reducer.js";
 import { createReducerBundle } from "./bundle/create-reducer-bundle.js";
 import { createGameInstance } from "../headless/instance.js";
@@ -23,7 +23,9 @@ function faceDownGame() {
         {
           id: "cards",
           name: "Cards",
-          cardSchema: { properties: {} },
+          cardSchema: {
+            properties: { note: { type: "string", optional: true } },
+          },
           defaultHome: { type: "zone", zoneId: "deck" },
           cards: [card("ace"), card("king")],
         },
@@ -118,6 +120,13 @@ test("seats see hidden and face-down cards only by position and their backs", as
       .toBe(false);
     const [revealed] = instance.zones.get("table").getCards();
     const name = revealed.hidden ? null : revealed.view.id;
+    expect(source.inspect().frame.zones.deck.cardViewsById).toEqual({});
+    expect(revealed.view).toMatchObject({
+      id: name,
+      cardType: "cards",
+      properties: {},
+    });
+    expect(revealed.view?.properties).not.toHaveProperty("note");
     expect(["ace", "king"]).toContain(name);
 
     // Face down, neither seat sees it; the next flip turns it back up.

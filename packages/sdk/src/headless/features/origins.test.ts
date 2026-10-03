@@ -36,7 +36,10 @@ function snapshot(
             cardViewsById: Object.fromEntries(
               cardIds
                 .filter((cardId) => !cardId.startsWith("hidden:"))
-                .map((cardId) => [cardId, JSON.stringify({})]),
+                .map((cardId) => [
+                  cardId,
+                  { id: cardId, cardType: "ranked", properties: {} },
+                ]),
             ),
             cardBacksById: {},
             playableByCardId: {},

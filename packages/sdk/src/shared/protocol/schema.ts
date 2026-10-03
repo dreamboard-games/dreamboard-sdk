@@ -1,3 +1,4 @@
+import { ViewCardSchema } from "../domain/cards.js";
 import * as ReducerWireZod from "../runtime-schema";
 import * as z from "zod";
 import {
@@ -59,7 +60,7 @@ import { InteractionDescriptorSchema } from "../interaction-schema.js";
 export const ZoneHandlesSnapshotSchema = z
   .object({
     cardIds: z.array(z.string()),
-    cardViewsById: z.record(z.string(), z.string()),
+    cardViewsById: z.record(z.string(), ViewCardSchema),
     cardBacksById: z.record(z.string(), z.string()),
     playableByCardId: z.record(
       z.string(),

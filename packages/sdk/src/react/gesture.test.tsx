@@ -60,7 +60,10 @@ function snapshot(version = 1): SourceSnapshot {
       zones: {
         hand: {
           cardIds: ["red", "blue"],
-          cardViewsById: { red: "{}", blue: "{}" },
+          cardViewsById: {
+            red: { id: "red", cardType: "ranked", properties: {} },
+            blue: { id: "blue", cardType: "ranked", properties: {} },
+          },
           cardBacksById: {},
           playableByCardId: { red: [discard], blue: [discard] },
         },

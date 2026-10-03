@@ -1,3 +1,4 @@
+import type { ViewCard } from "../domain/cards.js";
 import type { GameEvent } from "../domain/results.js";
 import type * as Wire from "../runtime-types.js";
 
@@ -45,8 +46,8 @@ export type ActionInteractionDescriptor<Interaction extends string = string> =
 
 export interface ZoneHandlesSnapshot<Interaction extends string = string> {
   readonly cardIds: readonly string[];
-  /** Encoded views of the cards the seat can see, by card id. */
-  readonly cardViewsById: Readonly<Record<string, string>>;
+  /** Complete views of the cards the seat can see, by card id. */
+  readonly cardViewsById: ReadonlyProjection<Record<string, ViewCard>>;
   /** Back image paths of the cards hidden from the seat, by positional id. */
   readonly cardBacksById: Readonly<Record<string, string>>;
   readonly playableByCardId: Readonly<
