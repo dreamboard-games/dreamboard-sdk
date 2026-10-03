@@ -135,16 +135,8 @@ function source(board: RuntimeBoardState = hexBoard()) {
         hand: {
           cardIds: ["red", "blue", "hidden"],
           cardViewsById: {
-            red: JSON.stringify({
-              id: "red",
-              cardType: "ranked",
-              properties: { rank: 2 },
-            }),
-            blue: JSON.stringify({
-              id: "blue",
-              cardType: "ranked",
-              properties: { rank: 1 },
-            }),
+            red: JSON.stringify({ rank: 2 }),
+            blue: JSON.stringify({ rank: 1 }),
           },
           cardBacksById: {},
           playableByCardId: { red: [action], blue: [action] },
@@ -164,8 +156,7 @@ function setup(board?: RuntimeBoardState) {
     features: (core, context) => ({
       hand: handFeature(core, {
         sort: (a, b) =>
-          Number(a.view?.properties.rank ?? Infinity) -
-          Number(b.view?.properties.rank ?? Infinity),
+          Number(a.view?.rank ?? Infinity) - Number(b.view?.rank ?? Infinity),
       }),
       board: boardFeature(core, context),
       drag: dragFeature(core, context),

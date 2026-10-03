@@ -22,11 +22,7 @@ import type {
   PluginPlayerSummary,
 } from "../shared/protocol/frame.js";
 import type { GameEvent } from "../shared/domain/results.js";
-import type {
-  HiddenCardId,
-  ViewCard,
-  ViewCardOfTable,
-} from "../shared/domain/cards.js";
+import type { HiddenCardId, ViewCardOfTable } from "../shared/domain/cards.js";
 export type { HiddenCardId } from "../shared/domain/cards.js";
 import type { RuntimeJson } from "../shared/runtime-json.js";
 import type {
@@ -407,7 +403,7 @@ export type ReadonlyData<T> = T extends readonly (infer Item)[]
     ? { readonly [K in keyof T]: ReadonlyData<T[K]> }
     : T;
 export type CardDataOf<G, K extends string> = [TableOfGame<G>] extends [never]
-  ? ReadonlyData<ViewCard<K>>
+  ? Readonly<Record<string, RuntimeJson>>
   : TableOfGame<G> extends {
         cards: Record<
           string,
