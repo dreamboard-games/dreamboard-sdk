@@ -1,5 +1,8 @@
 import type { BoundBoardQueries } from "../table/board-queries";
-import type { CardCollection, ViewCard } from "../../shared/domain/cards.js";
+import type {
+  CardCollection,
+  ViewCardOfTable,
+} from "../../shared/domain/cards.js";
 import type { ViewSlotOccupant } from "../../shared/domain/slots.js";
 import type {
   BoardContainerIdOfTable,
@@ -37,18 +40,6 @@ type TiledBoardRecord<
   Table extends RuntimeTableRecord,
   BoardId extends TiledBoardIdOfTable<Table>,
 > = Extract<BoardRecord<Table, BoardId>, { layout: "hex" | "square" }>;
-
-type ViewCardOfTable<
-  Table extends RuntimeTableRecord,
-  CardId extends CardIdOfTable<Table>,
-> =
-  CardId extends CardIdOfTable<Table>
-    ? ViewCard<
-        CardId & string,
-        Table["cards"][CardId]["cardType"] & string,
-        Extract<Table["cards"][CardId]["properties"], Record<string, unknown>>
-      >
-    : never;
 
 type CardsByIdOfTable<
   Table extends RuntimeTableRecord,

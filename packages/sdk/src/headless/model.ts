@@ -22,7 +22,11 @@ import type {
   PluginPlayerSummary,
 } from "../shared/protocol/frame.js";
 import type { GameEvent } from "../shared/domain/results.js";
-import type { HiddenCardId } from "../shared/domain/cards.js";
+import type {
+  HiddenCardId,
+  ViewCard,
+  ViewCardOfTable,
+} from "../shared/domain/cards.js";
 export type { HiddenCardId } from "../shared/domain/cards.js";
 import type { RuntimeJson } from "../shared/runtime-json.js";
 import type {
@@ -402,15 +406,19 @@ export type ReadonlyData<T> = T extends readonly (infer Item)[]
   : T extends object
     ? { readonly [K in keyof T]: ReadonlyData<T[K]> }
     : T;
-export type CardDataOf<G, K extends string> = G extends {
-  contract: { manifest: { tableSchema: infer Schema extends z.ZodType } };
-}
-  ? z.output<Schema> extends { cards: infer Cards }
-    ? K extends keyof Cards
-      ? ReadonlyData<Cards[K]> & { readonly id: K }
+export type CardDataOf<G, K extends string> = [TableOfGame<G>] extends [never]
+  ? ReadonlyData<ViewCard<K>>
+  : TableOfGame<G> extends {
+        cards: Record<
+          string,
+          { cardType: string; properties: Record<string, unknown> }
+        >;
+      }
+    ? K extends keyof TableOfGame<G>["cards"]
+      ? ReadonlyData<ViewCardOfTable<TableOfGame<G>, K>>
       : never
-    : never
-  : Readonly<Record<string, RuntimeJson>>;
+    : never;
+
 interface CardEntity<G> {
   readonly zone: IdOf<G, "zoneId">;
   readonly index: number;
