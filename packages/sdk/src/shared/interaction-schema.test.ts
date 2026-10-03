@@ -81,7 +81,9 @@ describe("canonical interaction admission", () => {
           zones: {
             hand: {
               cardIds: ["c1"],
-              cardViewsById: { c1: "{}" },
+              cardViewsById: {
+                c1: { id: "c1", cardType: "ranked", properties: {} },
+              },
               cardBacksById: {},
               playableByCardId: { c1: ["pick"] },
             },
