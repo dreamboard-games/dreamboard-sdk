@@ -91,6 +91,7 @@ exports[`public export surface > root export names are stable 1`] = `
   "SimultaneousPhaseSnapshotSchema",
   "SubmitInteractionCommandSchema",
   "SystemActionEventSchema",
+  "ViewCardSchema",
   "ZoneHandlesSnapshotSchema",
   "boardFeature",
   "canonicalizePluginRuntimeJson",

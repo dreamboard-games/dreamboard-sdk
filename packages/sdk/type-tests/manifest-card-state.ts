@@ -209,3 +209,40 @@ const aceCategory: "SPADES_A" =
 // @ts-expect-error Playing-card IDs come only from the authored inventory.
 playingCards.createInitialTable().cards.CLUBS_2;
 void aceCategory;
+
+// Headless views preserve card inference while exposing only display fields.
+import type { CardDataOf } from "../src/headless/model.js";
+import { getCard } from "../src/reducer/table/zone-queries.js";
+
+type Game = { contract: { manifest: typeof compiled } };
+declare const strikeView: CardDataOf<Game, "strike-1">;
+const visibleId: "strike-1" = strikeView.id;
+const visibleType: "attack" = strikeView.cardType;
+const visibleDamage: number = strikeView.properties.damage;
+const visibleName: string | undefined = strikeView.name;
+// @ts-expect-error Card-set membership is table metadata, not display data.
+strikeView.cardSetId;
+// @ts-expect-error Component type is table metadata, not display data.
+strikeView.componentType;
+// @ts-expect-error Headless display properties are immutable.
+strikeView.properties.damage = 3;
+
+declare const visibleCard: CardDataOf<Game, "strike-1" | "block">;
+if (visibleCard.cardType === "attack") {
+  const attackId: "strike-1" = visibleCard.id;
+  const attackDamage: number = visibleCard.properties.damage;
+  // @ts-expect-error Category narrowing excludes defense properties.
+  visibleCard.properties.shield;
+  void [attackId, attackDamage];
+} else {
+  const defenseId: "block" = visibleCard.id;
+  const defenseShield: boolean = visibleCard.properties.shield;
+  void [defenseId, defenseShield];
+}
+
+const reducerView = getCard(table, "strike-1");
+const reducerDamage: number = reducerView.properties.damage;
+// @ts-expect-error Reducer display views also exclude table metadata.
+reducerView.cardSetId;
+
+void [visibleId, visibleType, visibleDamage, visibleName, reducerDamage];
