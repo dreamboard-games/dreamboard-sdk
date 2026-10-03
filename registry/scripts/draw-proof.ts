@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type JSHandle, type Page } from "@playwright/test";
 import { z } from "zod";
 
 type Point = { x: number; y: number };
@@ -8,6 +8,15 @@ const sampleSchema = z.object({
   clipped: z.boolean(),
   turn: z.number(),
 });
+
+async function readSample<T>(watch: JSHandle<{ sample: T | null }>) {
+  await expect
+    .poll(() => watch.evaluate((value) => value.sample))
+    .not.toBeNull();
+  const sample = await watch.evaluate((value) => value.sample);
+  await watch.dispose();
+  return sample!;
+}
 
 /** Real reducer draws through menus and pile gestures, including delayed receipts. */
 export async function proveDraw(
@@ -28,6 +37,7 @@ export async function proveDraw(
     return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
   };
   const activate = async () => {
+    await expect(pile).toHaveAttribute("aria-expanded", "false");
     if (touch) await pile.tap();
     else {
       await pile.focus();
@@ -95,60 +105,60 @@ export async function proveDraw(
   await expect(overlay.locator(".db-card")).not.toHaveCSS("box-shadow", "none");
   await expect(pile).toHaveCSS("opacity", "0");
   const released = await center(overlay);
-  const returning = page.evaluate(
-    (released) =>
-      new Promise<number>((resolve) => {
-        const observer = new MutationObserver(() => {
-          const element = document.querySelector(
-            '[data-draw-overlay="return"]',
-          );
-          if (!element) return;
-          observer.disconnect();
-          const box = element.getBoundingClientRect();
-          resolve(
-            Math.hypot(
-              box.x + box.width / 2 - released.x,
-              box.y + box.height / 2 - released.y,
-            ),
-          );
-        });
-        observer.observe(document.body, { attributes: true, subtree: true });
-      }),
-    released,
-  );
+  const returning = await page.evaluateHandle((released) => {
+    const watch = { sample: null as number | null };
+    const observer = new MutationObserver(() => {
+      const element = document.querySelector('[data-draw-overlay="return"]');
+      if (!element) return;
+      observer.disconnect();
+      const box = element.getBoundingClientRect();
+      watch.sample = Math.hypot(
+        box.x + box.width / 2 - released.x,
+        box.y + box.height / 2 - released.y,
+      );
+    });
+    observer.observe(document.body, { attributes: true, subtree: true });
+    return watch;
+  }, released);
   await end();
-  expect(await returning).toBeLessThan(2);
+  expect(await readSample(returning)).toBeLessThan(2);
   await expect(overlay).toHaveCount(0);
   await expect(pile).toHaveCSS("opacity", "1");
   await expect(menu).toHaveCount(0);
   await expect(cards).toHaveCount(initialCount);
 
   // Capture the actual portal's first frame, rather than a clipped card's rectangle.
-  const watchArrival = async () =>
-    page.evaluate(
-      () =>
-        new Promise<unknown>((resolve) => {
-          const observer = new MutationObserver(() => {
-            const element = document.querySelector<HTMLElement>(
-              "[data-card-arrival]",
-            );
-            if (!element) return;
-            observer.disconnect();
-            const box = element.getBoundingClientRect();
-            const flip = element.querySelector<HTMLElement>(".db-card-flip")!;
-            resolve({
-              x: box.x + box.width / 2,
-              y: box.y + box.height / 2,
-              clipped: element.closest(".db-hand") !== null,
-              turn: new DOMMatrix(getComputedStyle(flip).transform).m11,
-            });
-          });
-          observer.observe(document.body, { childList: true, subtree: true });
-        }),
-    );
+  const watchArrival = () =>
+    page.evaluateHandle(() => {
+      const watch = {
+        sample: null as {
+          x: number;
+          y: number;
+          clipped: boolean;
+          turn: number;
+        } | null,
+      };
+      const observer = new MutationObserver(() => {
+        const element = document.querySelector<HTMLElement>(
+          "[data-card-arrival]",
+        );
+        if (!element) return;
+        observer.disconnect();
+        const box = element.getBoundingClientRect();
+        const flip = element.querySelector<HTMLElement>(".db-card-flip")!;
+        watch.sample = {
+          x: box.x + box.width / 2,
+          y: box.y + box.height / 2,
+          clipped: element.closest(".db-hand") !== null,
+          turn: new DOMMatrix(getComputedStyle(flip).transform).m11,
+        };
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+      return watch;
+    });
 
   await activate();
-  const menuArrival = watchArrival();
+  const menuArrival = await watchArrival();
   let menuOrigin = from;
   await menu.click();
   if (manual) {
@@ -166,7 +176,7 @@ export async function proveDraw(
     menuOrigin = await center(overlay);
     await page.getByRole("button", { name: "Confirm draw" }).click();
   }
-  const menuStart = sampleSchema.parse(await menuArrival);
+  const menuStart = sampleSchema.parse(await readSample(menuArrival));
   expect(menuStart.clipped).toBe(false);
   expect(menuStart.turn).toBeCloseTo(-1, 1);
   if (manual)
@@ -193,7 +203,7 @@ export async function proveDraw(
   expect((await hand.boundingBox())!.height).toBeCloseTo(handBefore.height, 0);
   const landing = await center(hand.locator(".db-draw-insertion"));
   let dragOrigin = await center(overlay);
-  const dragArrival = watchArrival();
+  const dragArrival = await watchArrival();
   await end();
   if (manual) {
     await expect(overlay).toHaveAttribute("data-draw-overlay", "pending");
@@ -209,7 +219,7 @@ export async function proveDraw(
     dragOrigin = await center(overlay);
     await page.getByRole("button", { name: "Confirm draw" }).click();
   }
-  const dragStart = sampleSchema.parse(await dragArrival);
+  const dragStart = sampleSchema.parse(await readSample(dragArrival));
   if (manual)
     expect(
       Math.hypot(dragStart.x - dragOrigin.x, dragStart.y - dragOrigin.y),
