@@ -20,7 +20,7 @@
         "hand": {
           "cardIds": ["c1"],
           "cardViewsById": {
-            "c1": "{}"
+            "c1": { "id": "c1", "cardType": "ranked", "properties": {} }
           },
           "cardBacksById": {},
           "playableByCardId": {

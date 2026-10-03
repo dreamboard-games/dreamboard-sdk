@@ -1,4 +1,3 @@
-import { z } from "zod";
 import type { SourceCommand } from "./types.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createSourceLifecycle } from "./lifecycle.js";
@@ -161,27 +160,20 @@ describe("source request lifecycle", () => {
         hand: {
           cardIds: ["card-1", "card-2", "hidden:hand:2"],
           cardViewsById: {
-            "card-1": JSON.stringify(card),
-            "card-2": JSON.stringify({ rank: "A" }),
+            "card-1": card,
+            "card-2": {
+              id: "card-2",
+              cardType: "ranked",
+              properties: { rank: "A" },
+            },
           },
           cardBacksById: { "hidden:hand:2": "assets/cards/spell.webp" },
           playableByCardId: {},
         },
       },
     });
-    const view = z
-      .object({
-        frontImage: z.string(),
-        backImage: z.string(),
-        properties: z.unknown(),
-      })
-      .parse(
-        JSON.parse(
-          x.source.store.get().snapshot!.frame.zones.hand.cardViewsById[
-            "card-1"
-          ],
-        ),
-      );
+    const view =
+      x.source.store.get().snapshot!.frame.zones.hand.cardViewsById["card-1"];
     expect(view.frontImage).toMatch(/^blob:/);
     expect(view.backImage).toBe("assets/cards/missing.webp");
     expect(
@@ -191,42 +183,50 @@ describe("source request lifecycle", () => {
     ).toBe(view.frontImage);
     expect(view.properties).toEqual({ power: 7 });
     expect(
-      JSON.parse(
-        x.source.store.get().snapshot!.frame.zones.hand.cardViewsById["card-2"],
-      ),
-    ).toEqual({ rank: "A" });
+      x.source.store.get().snapshot!.frame.zones.hand.cardViewsById["card-2"],
+    ).toEqual({ id: "card-2", cardType: "ranked", properties: { rank: "A" } });
+    expect(card.frontImage).toBe("assets/cards/spell.webp");
+    expect(Object.isFrozen(view)).toBe(true);
+    expect(Object.isFrozen(view.properties)).toBe(true);
     const revoke = vi.spyOn(URL, "revokeObjectURL");
     x.source.dispose();
     expect(revoke).toHaveBeenCalledExactlyOnceWith(view.frontImage);
     revoke.mockRestore();
   });
-  it("rejects malformed image fields in encoded card views", () => {
-    const x = createSourceLifecycle({
-      send: vi.fn(),
-      recover: vi.fn(),
-      close: vi.fn(),
-    });
-    x.session({
-      ...session,
-      assets: { "assets/cards/spell.webp": new Blob(["front"]) },
-    });
-    expect(() =>
-      x.frame({
-        ...frame(),
-        zones: {
-          hand: {
-            cardIds: ["card-1"],
-            cardViewsById: {
-              "card-1": JSON.stringify({ frontImage: 42 }),
+  it.each([undefined, {}, { "assets/cards/spell.webp": new Blob(["front"]) }])(
+    "rejects malformed complete card views with assets %j",
+    (assets) => {
+      const x = createSourceLifecycle({
+        send: vi.fn(),
+        recover: vi.fn(),
+        close: vi.fn(),
+      });
+      x.session({
+        ...session,
+        assets,
+      });
+      for (const card of [
+        { frontImage: "assets/cards/spell.webp" },
+        JSON.stringify({ frontImage: "assets/cards/spell.webp" }),
+        { id: "card-1", cardType: "spell", properties: {}, frontImage: 42 },
+      ]) {
+        expect(() =>
+          x.frame({
+            ...frame(),
+            zones: {
+              hand: {
+                cardIds: ["card-1"],
+                cardViewsById: { "card-1": card },
+                cardBacksById: {},
+                playableByCardId: {},
+              },
             },
-            cardBacksById: {},
-            playableByCardId: {},
-          },
-        },
-      }),
-    ).toThrow(/frontImage/);
-    x.source.dispose();
-  });
+          }),
+        ).toThrow();
+      }
+      x.source.dispose();
+    },
+  );
   it("static source is immutable and connection updates reuse frame", () => {
     const original = frame();
     const source = staticSource({

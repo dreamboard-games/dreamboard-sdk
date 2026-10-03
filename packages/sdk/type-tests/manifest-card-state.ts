@@ -211,7 +211,8 @@ playingCards.createInitialTable().cards.CLUBS_2;
 void aceCategory;
 
 // Headless views preserve card inference while exposing only display fields.
-import type { CardDataOf } from "../src/headless/model.js";
+import type { CardDataOf, ReadonlyData } from "../src/headless/model.js";
+import type { ViewCard } from "../src/shared/domain/cards.js";
 import { getCard } from "../src/reducer/table/zone-queries.js";
 
 type Game = { contract: { manifest: typeof compiled } };
@@ -245,4 +246,17 @@ const reducerDamage: number = reducerView.properties.damage;
 // @ts-expect-error Reducer display views also exclude table metadata.
 reducerView.cardSetId;
 
-void [visibleId, visibleType, visibleDamage, visibleName, reducerDamage];
+declare const fallbackView: CardDataOf<unknown, "visible">;
+const fallbackId: "visible" = fallbackView.id;
+const canonical: ReadonlyData<ViewCard> = fallbackView;
+// @ts-expect-error The fallback view has the same complete display shape.
+fallbackView.componentType;
+void [
+  visibleId,
+  visibleType,
+  visibleDamage,
+  visibleName,
+  reducerDamage,
+  fallbackId,
+  canonical,
+];

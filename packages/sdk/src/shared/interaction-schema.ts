@@ -1,3 +1,4 @@
+import { ViewCardSchema } from "./domain/cards.js";
 import * as z from "zod";
 import { PlayerBoardSpaceTargetSchema } from "./board-target.js";
 import { RuntimeJsonSchema } from "./runtime-json.js";
@@ -169,7 +170,7 @@ export const InteractionDescriptorSchema = InteractionBaseSchema.extend({
 
 export const ZoneInteractionRefsSchema = z.strictObject({
   cardIds: z.array(z.string()),
-  cardViewsById: z.record(z.string(), z.string()),
+  cardViewsById: z.record(z.string(), ViewCardSchema),
   cardBacksById: z.record(z.string(), z.string()),
   playableByCardId: z.record(z.string(), z.array(z.string())),
 });

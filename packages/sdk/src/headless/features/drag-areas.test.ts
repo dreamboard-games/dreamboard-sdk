@@ -56,9 +56,9 @@ function setup() {
         hand: {
           cardIds: ["red", "blue", "green"],
           cardViewsById: {
-            red: JSON.stringify({}),
-            blue: JSON.stringify({}),
-            green: JSON.stringify({}),
+            red: { id: "red", cardType: "ranked", properties: {} },
+            blue: { id: "blue", cardType: "ranked", properties: {} },
+            green: { id: "green", cardType: "ranked", properties: {} },
           },
           cardBacksById: {},
           playableByCardId: {

@@ -1,6 +1,4 @@
 import { createStore } from "@tanstack/store";
-import * as z from "zod";
-import type { ViewCard } from "../../shared/domain/cards.js";
 import {
   PluginGameplayFrameSchema,
   PluginSessionDescriptorSchema,
@@ -27,11 +25,6 @@ interface Pending {
   readonly reject: (error: Error) => void;
   accepted: boolean;
 }
-
-const CardImageViewSchema = z.looseObject({
-  frontImage: z.string().optional(),
-  backImage: z.string().optional(),
-}) satisfies z.ZodType<Pick<ViewCard, "frontImage" | "backImage">>;
 
 /** Adapter-private lifecycle. Transport callbacks must belong to this lifetime. */
 export function createSourceLifecycle(options: {
@@ -308,15 +301,6 @@ function withCardImageUrls(
   urls: Readonly<Record<string, string>> | null,
 ): PluginGameplayFrame {
   if (urls === null || Object.keys(urls).length === 0) return frame;
-  const resolve = (encoded: string) => {
-    const card = CardImageViewSchema.parse(JSON.parse(encoded) as unknown);
-    for (const key of ["frontImage", "backImage"] as const) {
-      const path = card[key];
-      const url = path === undefined ? undefined : urls[path];
-      if (url !== undefined) card[key] = url;
-    }
-    return JSON.stringify(card);
-  };
   return {
     ...frame,
     zones: Object.fromEntries(
@@ -325,9 +309,19 @@ function withCardImageUrls(
         {
           ...zone,
           cardViewsById: Object.fromEntries(
-            Object.entries(zone.cardViewsById).map(([cardId, encoded]) => [
+            Object.entries(zone.cardViewsById).map(([cardId, card]) => [
               cardId,
-              resolve(encoded),
+              {
+                ...card,
+                frontImage:
+                  card.frontImage === undefined
+                    ? undefined
+                    : (urls[card.frontImage] ?? card.frontImage),
+                backImage:
+                  card.backImage === undefined
+                    ? undefined
+                    : (urls[card.backImage] ?? card.backImage),
+              },
             ]),
           ),
           cardBacksById: Object.fromEntries(

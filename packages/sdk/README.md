@@ -234,7 +234,7 @@ To migrate an older manifest, replace each card's `type` with `id` and set
 
 `createReducerBundle(game)` returns exactly the contract version and four
 operations: `boardStatic()`, `initialize(input)`, `dispatch({ state, input })`,
-and `project({ state, playerIds })`. The runner contract is `0.8.0`; hosts must
+and `project({ state, playerIds })`. The runner contract is `0.9.0`; hosts must
 require that exact version. Dispatch includes validation, direct transaction mutations, and phase entry.
 Initialization returns
 `{ state, terminal?, events? }`, preserving outcomes and events from initial
@@ -324,6 +324,15 @@ Hosts import `assertReducerBundleContract`, `REDUCER_CONTRACT_VERSION`,
 and gameplay websocket schemas plus `materializePluginGameplayFrame` live at the
 root. Materialize the seat projection with static board data before publishing it;
 sources publish the canonical seat view and keep command bases private.
+
+Visible cards share one complete `ViewCard` shape: `id`, `cardType`, and JSON
+`properties`, plus optional `name`, `text`, `frontImage`, and `backImage`.
+`ViewCardSchema` validates this shape. Reducer and gameplay `cardViewsById` maps
+contain these objects directly. Headless `card.view` preserves the manifest's
+card identity, category, and property inference and is deeply readonly; table-only
+`cardSetId` and `componentType` are absent. Concealed cards have a positional
+`hidden:<zone>:<index>` identity, no view, and an optional separate `cardBacksById` entry.
+This wire format requires plugin protocol version 8 and reducer contract `0.9.0`.
 
 Card sets contain their authored `cards`, `cardSchema`, and `defaultHome` directly.
 Standard playing cards are game-owned definitions with ordinary suit/rank

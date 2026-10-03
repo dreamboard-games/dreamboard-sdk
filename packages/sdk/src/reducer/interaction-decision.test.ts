@@ -972,7 +972,7 @@ describe("trusted interaction decision pipeline", () => {
     });
     const playZone = projection.seats["player-1"]?.zones?.playZone;
     expect(playZone?.cardIds).toEqual(["card-a", "card-b"]);
-    expect(JSON.parse(playZone?.cardViewsById["card-a"] ?? "null")).toEqual({
+    expect(playZone?.cardViewsById["card-a"]).toEqual({
       id: "card-a",
       name: "A",
       cardType: "spell",

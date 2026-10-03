@@ -65,7 +65,11 @@ function baseFrame() {
       hand: {
         cardIds: ["card-1"],
         cardViewsById: {
-          "card-1": '{"rank":"A"}',
+          "card-1": {
+            id: "card-1",
+            cardType: "ranked",
+            properties: { rank: "A" },
+          },
         },
         cardBacksById: {},
         playableByCardId: {
@@ -77,7 +81,51 @@ function baseFrame() {
 }
 
 describe("shared plugin runtime contract", () => {
-  test("strict frame and protocol schemas accept version 7 gameplay frames", () => {
+  test("materialization omits unset optional display properties recursively", () => {
+    const frame = PluginGameplayFrameSchema.parse(
+      Reflect.apply(materializePluginGameplayFrame, undefined, [
+        {
+          currentPhase: "play",
+          activePlayers: ["player-1"],
+          perspectivePlayerId: "player-1",
+          version: 1,
+          actionSetVersion: "actions",
+          dynamicProjection: {
+            events: [],
+            interactionsByRef: {},
+            seats: {
+              "player-1": {
+                zones: {
+                  hand: {
+                    cardIds: ["card-1"],
+                    cardViewsById: {
+                      "card-1": {
+                        id: "card-1",
+                        cardType: "ranked",
+                        name: undefined,
+                        properties: {
+                          label: undefined,
+                          nested: { optional: undefined, value: 2 },
+                        },
+                      },
+                    },
+                    cardBacksById: {},
+                    playableByCardId: {},
+                  },
+                },
+              },
+            },
+          },
+        },
+      ]),
+    );
+    expect(frame.zones.hand.cardViewsById["card-1"]).toEqual({
+      id: "card-1",
+      cardType: "ranked",
+      properties: { nested: { value: 2 } },
+    });
+  });
+  test("strict frame and protocol schemas accept version 8 gameplay frames", () => {
     const frame = PluginGameplayFrameSchema.parse(baseFrame());
     expect(frame.basis.version).toBe(42);
 
@@ -92,7 +140,7 @@ describe("shared plugin runtime contract", () => {
       },
     } satisfies PluginProtocolEnvelope<unknown>);
 
-    expect(envelope.version).toBe(7);
+    expect(envelope.version).toBe(8);
     expect(() =>
       PluginGameplayFrameSchema.parse({ ...baseFrame(), syncId: 9 }),
     ).toThrow();
@@ -178,7 +226,11 @@ describe("shared plugin runtime contract", () => {
               hand: {
                 cardIds: ["card-1"],
                 cardViewsById: {
-                  "card-1": '{"rank":"A"}',
+                  "card-1": {
+                    id: "card-1",
+                    cardType: "ranked",
+                    properties: { rank: "A" },
+                  },
                 },
                 cardBacksById: {},
                 playableByCardId: {
