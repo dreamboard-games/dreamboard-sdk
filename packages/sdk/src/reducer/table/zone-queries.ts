@@ -1,5 +1,8 @@
 import { requireLookup } from "../../shared/lookup.js";
-import type { CardCollection, ViewCard } from "../../shared/domain/cards.js";
+import type {
+  CardCollection,
+  ViewCardOfTable,
+} from "../../shared/domain/cards.js";
 import type { ViewSlotOccupant } from "../../shared/domain/slots.js";
 import type {
   CardIdOfTable,
@@ -21,18 +24,6 @@ import {
   ensureArray,
   orderedComponentIdsForLocation,
 } from "./internal";
-
-type ViewCardForTable<
-  Table extends RuntimeTableRecord,
-  CardId extends CardIdOfTable<Table>,
-> =
-  CardId extends CardIdOfTable<Table>
-    ? ViewCard<
-        CardId & string,
-        Table["cards"][CardId]["cardType"] & string,
-        Extract<Table["cards"][CardId]["properties"], Record<string, unknown>>
-      >
-    : never;
 
 type ViewSlotOccupantForTable<Table extends RuntimeTableRecord> =
   ViewSlotOccupant<
@@ -198,7 +189,7 @@ export function getAllPlayerZoneCards<
 export function getCard<
   Table extends RuntimeTableRecord,
   CardId extends CardIdOfTable<NoInfer<Table>>,
->(table: Table, cardId: CardId): ViewCardForTable<Table, CardId> {
+>(table: Table, cardId: CardId): ViewCardOfTable<Table, CardId> {
   const card = requireLookup(
     table.cards[cardId],
     "Card",
@@ -213,7 +204,7 @@ export function getCard<
     frontImage: card.frontImage,
     backImage: card.backImage,
     properties: card.properties,
-  } as ViewCardForTable<Table, CardId>;
+  } as ViewCardOfTable<Table, CardId>;
 }
 
 export function getCardsById<
@@ -223,7 +214,7 @@ export function getCardsById<
   table: Table,
   cardIds: CardIds,
 ): Readonly<{
-  [Id in CardIds[number]]: ViewCardForTable<Table, Id>;
+  [Id in CardIds[number]]: ViewCardOfTable<Table, Id>;
 }> {
   return Object.fromEntries(
     cardIds.map((cardId) => [cardId, getCard(table, cardId)]),
@@ -238,7 +229,7 @@ export function getSharedZoneCardCollection<
   zoneId: ZoneId,
 ): CardCollection<
   CardIdOfTable<Table> & string,
-  ViewCardForTable<Table, CardIdOfTable<Table>>
+  ViewCardOfTable<Table, CardIdOfTable<Table>>
 > {
   const cardIds = getSharedZoneCards(table, zoneId);
 
@@ -258,7 +249,7 @@ export function getPlayerZoneCardCollection<
   zoneId: ZoneId,
 ): CardCollection<
   CardIdOfTable<Table> & string,
-  ViewCardForTable<Table, CardIdOfTable<Table>>
+  ViewCardOfTable<Table, CardIdOfTable<Table>>
 > {
   const cardIds = getPlayerZoneCards(table, playerId, zoneId);
 
