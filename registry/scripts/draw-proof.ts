@@ -97,27 +97,27 @@ export async function proveDraw(
   const released = await center(overlay);
   const returning = page.evaluate(
     (released) =>
-      new Promise<number[]>((resolve) => {
-        const distances: number[] = [];
-        function frame() {
-          const element = document.querySelector("[data-draw-overlay]");
-          if (!element) return resolve(distances);
+      new Promise<number>((resolve) => {
+        const observer = new MutationObserver(() => {
+          const element = document.querySelector(
+            '[data-draw-overlay="return"]',
+          );
+          if (!element) return;
+          observer.disconnect();
           const box = element.getBoundingClientRect();
-          distances.push(
+          resolve(
             Math.hypot(
               box.x + box.width / 2 - released.x,
               box.y + box.height / 2 - released.y,
             ),
           );
-          requestAnimationFrame(frame);
-        }
-        requestAnimationFrame(frame);
+        });
+        observer.observe(document.body, { attributes: true, subtree: true });
       }),
     released,
   );
   await end();
-  const returnDistances = await returning;
-  expect(returnDistances[0]).toBeLessThan(15);
+  expect(await returning).toBeLessThan(2);
   await expect(overlay).toHaveCount(0);
   await expect(pile).toHaveCSS("opacity", "1");
   await expect(menu).toHaveCount(0);
@@ -216,6 +216,8 @@ export async function proveDraw(
     ).toBeLessThan(2);
   await expect(arrival).toHaveCount(0);
   await expect(cards).toHaveCount(initialCount + 2);
+  await expect(overlay).toHaveCount(0);
+  await expect(pile).toHaveCSS("opacity", "1");
   // The revealed card is already in the previewed slot; there is no second centering.
   const settled = await center(cards.last());
   expect(Math.hypot(settled.x - landing.x, settled.y - landing.y)).toBeLessThan(

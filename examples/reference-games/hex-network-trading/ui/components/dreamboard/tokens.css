@@ -539,11 +539,6 @@
     animation: none;
   }
   .db-card,
-  @media (pointer: coarse) {
-    .db-drag-overlay .db-card {
-      translate: 0 -30%;
-    }
-  }
   .db-drop-area {
     transition: none;
   }
