@@ -19,7 +19,8 @@ import { createPortal } from "react-dom";
 import { backImageOf, cardSpring, useMoving, type CardState } from "./card";
 import { CardControl } from "./card-control";
 import { CardArrival } from "./card-arrival";
-import { useCardMotion, type CardBox } from "./card-motion";
+import { useCardMotion, type CardPlacement } from "./card-motion";
+import { cardDragScale, cardPickup } from "./card";
 import "./tokens.css";
 export interface HandProps {
   zoneId: ZoneId;
@@ -74,8 +75,10 @@ export function Hand({
   const overlay = useDragOverlay();
   const [scroller, setScroller] = useState<HTMLElement | null>(null);
   const table = useCardMotion();
+  const snapshot = useGame((game) => game.snapshot);
   const drawTarget = table.drop?.zone === zoneId;
-  const drawOver = drawTarget && table.drop?.over;
+  const drawOver =
+    drawTarget && table.drop?.over && table.drop.snapshot === snapshot;
   const probe = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 0, card: 0, cardHeight: 0 });
   useLayoutEffect(() => {
@@ -114,6 +117,36 @@ export function Hand({
     cardHeight: size.cardHeight || 1,
   });
   const ready = size.width > 0 && size.card > 0;
+  const nextFan = fanLayout({
+    count: ids.length + 1,
+    width: size.width - lift,
+    cardWidth: size.card || 1,
+    cardHeight: size.cardHeight || 1,
+  });
+  // Reserve the same vertical space before pickup, during preview and on arrival.
+  const height = size.cardHeight * 1.75 + lift;
+  function placement(index: number, layout = fan): CardPlacement {
+    const box = scroller!.getBoundingClientRect();
+    const style = getComputedStyle(scroller!);
+    const card = layout.cards[index];
+    return {
+      x:
+        box.x +
+        parseFloat(style.paddingLeft) +
+        Math.max(0, (size.width - layout.width - lift) / 2) -
+        scroller!.scrollLeft +
+        card.x +
+        lift / 2,
+      y: box.y + parseFloat(style.paddingTop) + card.y + lift,
+      width: size.card,
+      height: size.cardHeight,
+      rotate: card.rotate,
+    };
+  }
+  useLayoutEffect(() => {
+    if (!ready) return;
+    return table.registerHand(zoneId, () => placement(ids.length, nextFan));
+  });
 
   const dragged = overlay ? ids.indexOf(overlay.cardId) : -1;
 
@@ -129,7 +162,7 @@ export function Hand({
       >
         <div
           className="db-hand-fan"
-          style={{ width: fan.width + lift, height: fan.height + lift }}
+          style={{ width: fan.width + lift, height }}
         >
           <div
             ref={probe}
@@ -151,6 +184,7 @@ export function Hand({
                 choosing={choosing}
                 renderCard={renderCard}
                 getCardLabel={getCardLabel}
+                destination={() => placement(index)}
               />
             ))}
           {ready && drawOver && (
@@ -165,7 +199,7 @@ export function Hand({
             />
           )}
         </div>
-        {ids.length === 0 && <p>No cards</p>}
+        {ids.length === 0 && <p className="db-hand-empty">No cards</p>}
       </section>
       {overlay &&
         dragged >= 0 &&
@@ -188,24 +222,33 @@ function entryFrom(
   card: Card | undefined,
   zoneId: ZoneId,
   table: ReturnType<typeof useCardMotion>,
-): { box: CardBox | null; hidden: boolean } | null {
+): {
+  box: CardPlacement | null;
+  hidden: boolean;
+  destination?: CardPlacement;
+} | null {
   const origin = card?.getOrigin();
   if (!origin) return null;
   if ("zone" in origin && origin.zone === zoneId)
     return origin.hidden ? { box: null, hidden: true } : null;
   const released =
     "zone" in origin ? table.getDrawOrigin(origin.zone, zoneId) : null;
-  if (released) return { box: released, hidden: origin.hidden };
+  if (released)
+    return {
+      box: released.from,
+      destination: released.to,
+      hidden: origin.hidden,
+    };
   const from = document.querySelector(
     "zone" in origin
       ? `[data-zone="${CSS.escape(origin.zone)}"]`
       : `[data-player="${CSS.escape(origin.player)}"]`,
   );
-  return from
-    ? { box: from.getBoundingClientRect(), hidden: origin.hidden }
-    : origin.hidden
-      ? { box: null, hidden: true }
-      : null;
+  if (from) {
+    const { x, y, width, height } = from.getBoundingClientRect();
+    return { box: { x, y, width, height, rotate: 0 }, hidden: origin.hidden };
+  }
+  return origin.hidden ? { box: null, hidden: true } : null;
 }
 
 interface HandCardProps {
@@ -219,6 +262,7 @@ interface HandCardProps {
   choosing: boolean;
   renderCard: HandProps["renderCard"];
   getCardLabel: HandProps["getCardLabel"];
+  destination(): CardPlacement;
 }
 const HandCard = memo(function HandCard({
   cardId,
@@ -231,6 +275,7 @@ const HandCard = memo(function HandCard({
   choosing,
   renderCard,
   getCardLabel,
+  destination,
 }: HandCardProps) {
   const card = useGame((game) => game.cards.find(cardId));
   const table = useCardMotion();
@@ -268,6 +313,7 @@ const HandCard = memo(function HandCard({
                 origin={arrival.box}
                 hidden={arrival.hidden}
                 target={anchor}
+                destination={arrival.destination ?? destination()}
                 rotate={rotate}
                 back={backImageOf(card)}
                 onComplete={finishArrival}
@@ -297,8 +343,8 @@ function DragCopy({
     <motion.div
       layoutId={cardId}
       initial={{ rotate }}
-      animate={{ rotate: 0, scale: 1.06 }}
-      transition={cardSpring}
+      animate={{ rotate: 0, scale: cardDragScale }}
+      transition={cardPickup}
     >
       {renderCard(card, "selected")}
     </motion.div>

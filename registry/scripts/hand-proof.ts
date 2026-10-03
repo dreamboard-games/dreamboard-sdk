@@ -129,6 +129,21 @@ export async function proveHand(page: Page, touch: boolean) {
   const clubId = (await club.getAttribute("data-value"))!;
   const from = await grip(club);
   const discard = await center(page.getByRole("region", { name: "Discard" }));
+  const assertPickup = async () => {
+    await expect(club).toHaveCSS("visibility", "hidden");
+    const lifted = page.locator(".db-drag-overlay > div");
+    await expect
+      .poll(async () =>
+        lifted.evaluate(
+          (element) => new DOMMatrix(getComputedStyle(element).transform).a,
+        ),
+      )
+      .toBeGreaterThan(1.15);
+    await expect(lifted.locator(".db-card")).not.toHaveCSS(
+      "box-shadow",
+      "none",
+    );
+  };
   if (touch) {
     const cdp = await page.context().newCDPSession(page);
     const send = (
@@ -145,12 +160,14 @@ export async function proveHand(page: Page, touch: boolean) {
         x: from.x + ((discard.x - from.x) * step) / 8,
         y: from.y + ((discard.y - from.y) * step) / 8,
       });
+    await assertPickup();
     await send("touchEnd");
     await cdp.detach();
   } else {
     await page.mouse.move(from.x, from.y);
     await page.mouse.down();
     await page.mouse.move(discard.x, discard.y, { steps: 8 });
+    await assertPickup();
     await page.mouse.up();
   }
   await expect

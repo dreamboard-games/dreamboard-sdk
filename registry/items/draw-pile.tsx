@@ -4,13 +4,31 @@ import {
   type GestureRecognizer,
 } from "@dreamboard-games/sdk";
 import { useGame } from "@game";
-import { motion, useMotionValue, useReducedMotion } from "motion/react";
-import { useEffect, useRef, useState, type PointerEvent } from "react";
+import {
+  animate,
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  type MotionStyle,
+} from "motion/react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type PointerEvent,
+} from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
-import { backImageOf, CardBack, cardSpring } from "./card";
+import {
+  backImageOf,
+  CardBack,
+  cardDragScale,
+  cardPickup,
+  cardSettle,
+} from "./card";
 import { Pile } from "./pile";
-import { useCardMotion, type CardBox } from "./card-motion";
+import { useCardMotion, type CardBox, type CardPlacement } from "./card-motion";
 import "./tokens.css";
 
 import type { GameModel as Model, ZoneId } from "@game";
@@ -56,6 +74,8 @@ export function DrawPile({
   const suppressClick = useRef(false);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
+  const scale = useMotionValue(1);
+  const rotate = useMotionValue(0);
   const available = count > 0 && !!draw && !draw.getSubmitProps().disabled;
   const latest = useRef({ draw, available, snapshot, table });
   latest.current = { draw, available, snapshot, table };
@@ -87,6 +107,37 @@ export function DrawPile({
   function returnToPile() {
     clearTarget();
     setGhost((current) => (current ? { ...current, phase: "return" } : null));
+    const home = control.current!.getBoundingClientRect();
+    void moveTo(
+      {
+        x: home.x,
+        y: home.y,
+        width: home.width,
+        height: home.height,
+        rotate: 0,
+      },
+      home,
+    ).then(() => setGhost(null));
+  }
+  function moveTo(target: CardPlacement, source: CardBox) {
+    const transition = reduced ? { duration: 0 } : cardSettle;
+    return Promise.all([
+      animate(x, target.x + (target.width - source.width) / 2, transition),
+      animate(y, target.y + (target.height - source.height) / 2, transition),
+      animate(scale, target.width / source.width, transition),
+      animate(rotate, target.rotate, transition),
+    ]);
+  }
+  function placement(box: CardBox): CardPlacement {
+    const width = box.width * scale.get();
+    const height = box.height * scale.get();
+    return {
+      x: x.get() + (box.width - width) / 2,
+      y: y.get() + (box.height - height) / 2,
+      width,
+      height,
+      rotate: rotate.get(),
+    };
   }
   async function submit(box: CardBox) {
     const current = latest.current;
@@ -96,8 +147,16 @@ export function DrawPile({
     }
     setOpen(false);
     setError(null);
-    current.table.stageDraw(zoneId, destinationZoneId, box);
+    const target = current.table.getDrawTarget(destinationZoneId);
+    current.table.stageDraw(
+      zoneId,
+      destinationZoneId,
+      () => placement(box),
+      target,
+    );
+    current.table.setDrop(destinationZoneId, true);
     setGhost({ box, phase: "pending", snapshot: current.snapshot });
+    void moveTo(target, box);
     try {
       const result = await current.draw.submit();
       if (!result.accepted) {
@@ -112,14 +171,19 @@ export function DrawPile({
     }
   }
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (
       ghost?.phase === "pending" &&
       snapshot !== ghost.snapshot &&
       request === null
-    )
+    ) {
+      x.stop();
+      y.stop();
+      scale.stop();
+      rotate.stop();
       setGhost(null);
-  }, [snapshot, request, ghost?.phase, ghost?.snapshot]);
+    }
+  }, [snapshot, request, ghost?.phase, ghost?.snapshot, x, y, scale, rotate]);
   useEffect(() => {
     press.current?.recognizer.cancel();
   }, [snapshot, request]);
@@ -127,6 +191,10 @@ export function DrawPile({
     () => () => {
       press.current?.detach();
       latest.current.table.setDrop(null);
+      x.stop();
+      y.stop();
+      scale.stop();
+      rotate.stop();
     },
     [],
   );
@@ -136,7 +204,13 @@ export function DrawPile({
     suppressClick.current = false;
     if (press.current || ghost || !available) return;
     const box = event.currentTarget.getBoundingClientRect();
-    const grab = { x: event.clientX - box.x, y: event.clientY - box.y };
+    const grab = {
+      x: event.clientX - box.x,
+      y:
+        event.clientY -
+        box.y +
+        (event.pointerType === "touch" ? box.height * 0.3 : 0),
+    };
     const recognizer = createGestureRecognizer(
       event.nativeEvent,
       {
@@ -146,6 +220,13 @@ export function DrawPile({
           setOpen(false);
           x.set(box.x);
           y.set(box.y);
+          scale.set(1);
+          rotate.set(0);
+          void animate(
+            scale,
+            reduced ? 1 : cardDragScale,
+            reduced ? { duration: 0 } : cardPickup,
+          );
           setGhost({ box, phase: "drag", snapshot });
           highlighted.current = destination();
           latest.current.table.setDrop(destinationZoneId);
@@ -161,8 +242,10 @@ export function DrawPile({
           press.current?.detach();
           press.current = null;
           suppressClick.current = kind !== "tap";
-          clearTarget();
-          if (kind !== "drag") return;
+          if (kind !== "drag") {
+            clearTarget();
+            return;
+          }
           if (over)
             void submit({
               x: x.get(),
@@ -207,7 +290,6 @@ export function DrawPile({
     };
   }
 
-  const returning = ghost?.phase === "return";
   return (
     <>
       <Pile
@@ -225,7 +307,7 @@ export function DrawPile({
           aria-haspopup="dialog"
           aria-expanded={open}
           data-draw-pile={zoneId}
-          data-picked-up={ghost?.phase === "drag" || undefined}
+          data-picked-up={ghost !== null || undefined}
           onPointerDown={start}
           onDragStart={(event) => event.preventDefault()}
           onContextMenu={(event) => event.preventDefault()}
@@ -279,6 +361,8 @@ export function DrawPile({
                     const box = control.current!.getBoundingClientRect();
                     x.set(box.x);
                     y.set(box.y);
+                    scale.set(1);
+                    rotate.set(0);
                     void submit(box);
                   }}
                 >
@@ -303,27 +387,15 @@ export function DrawPile({
             className="db-draw-overlay"
             style={
               {
-                x: returning ? undefined : x,
-                y: returning ? undefined : y,
+                x,
+                y,
+                scale,
+                rotate,
                 width: ghost.box.width,
                 height: ghost.box.height,
                 "--card-w": `${ghost.box.width}px`,
-              } as React.CSSProperties
+              } as MotionStyle
             }
-            initial={returning ? { x: x.get(), y: y.get() } : { scale: 1 }}
-            animate={
-              returning
-                ? {
-                    x: control.current?.getBoundingClientRect().x,
-                    y: control.current?.getBoundingClientRect().y,
-                    scale: 1,
-                  }
-                : { scale: ghost.phase === "drag" && !reduced ? 1.06 : 1 }
-            }
-            transition={reduced ? { duration: 0 } : cardSpring}
-            onAnimationComplete={() => {
-              if (returning) setGhost(null);
-            }}
           >
             <CardBack image={back} />
           </motion.div>,

@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type JSHandle, type Page } from "@playwright/test";
 import { z } from "zod";
 
 type Point = { x: number; y: number };
@@ -9,31 +9,100 @@ const sampleSchema = z.object({
   turn: z.number(),
 });
 
+async function readSample<T>(watch: JSHandle<{ sample: T | null }>) {
+  await expect
+    .poll(() => watch.evaluate((value) => value.sample))
+    .not.toBeNull();
+  const sample = await watch.evaluate((value) => value.sample);
+  await watch.dispose();
+  return sample!;
+}
+
 /** Real reducer draws through menus and pile gestures, including delayed receipts. */
-export async function proveDraw(page: Page, touch: boolean, manual: boolean) {
+export async function proveDraw(
+  page: Page,
+  touch: boolean,
+  manual: boolean,
+  initialCount = 9,
+) {
   const cards = page.locator(".db-hand-card");
   const pile = page.getByRole("button", { name: "Deck actions" });
   const hand = page.getByRole("region", { name: "Your hand" });
   const arrival = page.locator("[data-card-arrival]");
   const overlay = page.locator("[data-draw-overlay]");
   const menu = page.locator('[data-action="draw"]');
-  await expect(cards).toHaveCount(9);
+  await expect(cards).toHaveCount(initialCount);
   const center = async (selector: typeof pile): Promise<Point> => {
     const box = (await selector.boundingBox())!;
     return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
   };
   const activate = async () => {
-    if (touch) await pile.tap();
-    else {
-      await pile.focus();
-      await page.keyboard.press("Enter");
+    await expect(pile).toHaveAttribute("aria-expanded", "false");
+    const watch = await pile.evaluateHandle((element) => {
+      const events: unknown[] = [];
+      const record = (event: Event) =>
+        events.push({
+          type: event.type,
+          at: performance.now(),
+          detail: event instanceof MouseEvent ? event.detail : null,
+          target:
+            event.target instanceof Element
+              ? event.target.outerHTML.slice(0, 160)
+              : null,
+        });
+      const observer = new MutationObserver(() =>
+        events.push({
+          type: "expanded",
+          at: performance.now(),
+          value: element.getAttribute("aria-expanded"),
+        }),
+      );
+      observer.observe(element, {
+        attributes: true,
+        attributeFilter: ["aria-expanded"],
+      });
+      const types = [
+        "pointerdown",
+        "pointerup",
+        "pointercancel",
+        "click",
+        "focusin",
+      ];
+      for (const type of types) document.addEventListener(type, record, true);
+      return {
+        events,
+        stop() {
+          observer.disconnect();
+          for (const type of types)
+            document.removeEventListener(type, record, true);
+        },
+      };
+    });
+    try {
+      if (touch) await pile.tap();
+      else {
+        await pile.focus();
+        await page.keyboard.press("Enter");
+      }
+      await expect(menu).toBeFocused();
+    } catch (error) {
+      console.error("Draw menu activation", {
+        touch,
+        manual,
+        initialCount,
+        events: await watch.evaluate((value) => value.events),
+        pile: await pile.evaluate((element) => element.outerHTML),
+      });
+      throw error;
+    } finally {
+      await watch.evaluate((value) => value.stop());
+      await watch.dispose();
     }
-    await expect(menu).toBeFocused();
     await expect(page.locator(".db-card-action-arrow")).toBeVisible();
     expect((await menu.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   };
   await activate();
-  await expect(cards).toHaveCount(9);
+  await expect(cards).toHaveCount(initialCount);
   if (touch) await pile.tap();
   else await pile.click();
   await expect(menu).toHaveCount(0);
@@ -86,58 +155,96 @@ export async function proveDraw(page: Page, touch: boolean, manual: boolean) {
         (element) => new DOMMatrix(getComputedStyle(element).transform).a,
       ),
     )
-    .toBeGreaterThan(1.04);
-  await expect(overlay.locator(".db-card")).toHaveCSS("box-shadow", /.+/);
+    .toBeGreaterThan(1.15);
+  await expect(overlay.locator(".db-card")).not.toHaveCSS("box-shadow", "none");
+  await expect(pile).toHaveCSS("opacity", "0");
+  const released = await center(overlay);
+  const returning = await page.evaluateHandle((released) => {
+    const watch = { sample: null as number | null };
+    const observer = new MutationObserver(() => {
+      const element = document.querySelector('[data-draw-overlay="return"]');
+      if (!element) return;
+      observer.disconnect();
+      const box = element.getBoundingClientRect();
+      watch.sample = Math.hypot(
+        box.x + box.width / 2 - released.x,
+        box.y + box.height / 2 - released.y,
+      );
+    });
+    observer.observe(document.body, { attributes: true, subtree: true });
+    return watch;
+  }, released);
   await end();
+  expect(await readSample(returning)).toBeLessThan(2);
   await expect(overlay).toHaveCount(0);
+  await expect(pile).toHaveCSS("opacity", "1");
   await expect(menu).toHaveCount(0);
-  await expect(cards).toHaveCount(9);
+  await expect(cards).toHaveCount(initialCount);
 
   // Capture the actual portal's first frame, rather than a clipped card's rectangle.
-  const watchArrival = async () =>
-    page.evaluate(
-      () =>
-        new Promise<unknown>((resolve) => {
-          const observer = new MutationObserver(() => {
-            const element = document.querySelector<HTMLElement>(
-              "[data-card-arrival]",
-            );
-            if (!element) return;
-            observer.disconnect();
-            const box = element.getBoundingClientRect();
-            const flip = element.querySelector<HTMLElement>(".db-card-flip")!;
-            resolve({
-              x: box.x + box.width / 2,
-              y: box.y + box.height / 2,
-              clipped: element.closest(".db-hand") !== null,
-              turn: new DOMMatrix(getComputedStyle(flip).transform).m11,
-            });
-          });
-          observer.observe(document.body, { childList: true, subtree: true });
-        }),
-    );
+  const watchArrival = () =>
+    page.evaluateHandle(() => {
+      const watch = {
+        sample: null as {
+          x: number;
+          y: number;
+          clipped: boolean;
+          turn: number;
+        } | null,
+      };
+      const observer = new MutationObserver(() => {
+        const element = document.querySelector<HTMLElement>(
+          "[data-card-arrival]",
+        );
+        if (!element) return;
+        observer.disconnect();
+        const box = element.getBoundingClientRect();
+        const flip = element.querySelector<HTMLElement>(".db-card-flip")!;
+        watch.sample = {
+          x: box.x + box.width / 2,
+          y: box.y + box.height / 2,
+          clipped: element.closest(".db-hand") !== null,
+          turn: new DOMMatrix(getComputedStyle(flip).transform).m11,
+        };
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+      return watch;
+    });
 
   await activate();
-  const menuArrival = watchArrival();
+  const menuArrival = await watchArrival();
+  let menuOrigin = from;
   await menu.click();
   if (manual) {
     await expect(overlay).toHaveAttribute("data-draw-overlay", "pending");
     await expect(overlay.locator(".db-card-back")).toHaveCount(1);
-    await expect(cards).toHaveCount(9);
+    await expect(cards).toHaveCount(initialCount);
     await expect(arrival).toHaveCount(0);
+    await expect
+      .poll(async () => {
+        const to = await center(hand.locator(".db-draw-insertion"));
+        const at = await center(overlay);
+        return Math.hypot(at.x - to.x, at.y - to.y);
+      })
+      .toBeLessThan(2);
+    menuOrigin = await center(overlay);
     await page.getByRole("button", { name: "Confirm draw" }).click();
   }
-  const menuStart = sampleSchema.parse(await menuArrival);
+  const menuStart = sampleSchema.parse(await readSample(menuArrival));
   expect(menuStart.clipped).toBe(false);
   expect(menuStart.turn).toBeCloseTo(-1, 1);
-  expect(Math.hypot(menuStart.x - from.x, menuStart.y - from.y)).toBeLessThan(
-    20,
-  );
+  if (manual)
+    expect(
+      Math.hypot(menuStart.x - menuOrigin.x, menuStart.y - menuOrigin.y),
+    ).toBeLessThan(2);
   await expect(arrival).toHaveAttribute("data-card-arrival", "flip");
   await expect(arrival).toHaveCount(0);
   await expect(overlay).toHaveCount(0);
-  await expect(cards).toHaveCount(10);
+  await expect(cards).toHaveCount(initialCount + 1);
 
+  // Preview and pending flight leave the deck and the hand's outer height unchanged.
+  const pileBefore = (await pile.boundingBox())!;
+  const handBefore = (await hand.boundingBox())!;
   // A downward touch drag opens a hand slot and starts the arrival at release.
   await start();
   await move({ x: from.x, y: from.y + 20 });
@@ -146,18 +253,40 @@ export async function proveDraw(page: Page, touch: boolean, manual: boolean) {
   await move(to);
   await expect(hand).toHaveAttribute("data-draw-over", "true");
   await expect(hand.locator(".db-draw-insertion")).toHaveCount(1);
-  const dragArrival = watchArrival();
+  expect((await pile.boundingBox())!.y).toBeCloseTo(pileBefore.y, 0);
+  expect((await hand.boundingBox())!.height).toBeCloseTo(handBefore.height, 0);
+  const landing = await center(hand.locator(".db-draw-insertion"));
+  let dragOrigin = await center(overlay);
+  const dragArrival = await watchArrival();
   await end();
   if (manual) {
     await expect(overlay).toHaveAttribute("data-draw-overlay", "pending");
-    await expect(cards).toHaveCount(10);
+    await expect(cards).toHaveCount(initialCount + 1);
     await expect(arrival).toHaveCount(0);
+    await expect
+      .poll(async () => {
+        const at = await center(overlay);
+        return Math.hypot(at.x - landing.x, at.y - landing.y);
+      })
+      .toBeLessThan(2);
+    expect((await pile.boundingBox())!.y).toBeCloseTo(pileBefore.y, 0);
+    dragOrigin = await center(overlay);
     await page.getByRole("button", { name: "Confirm draw" }).click();
   }
-  const dragStart = sampleSchema.parse(await dragArrival);
-  expect(Math.hypot(dragStart.x - to.x, dragStart.y - to.y)).toBeLessThan(20);
+  const dragStart = sampleSchema.parse(await readSample(dragArrival));
+  if (manual)
+    expect(
+      Math.hypot(dragStart.x - dragOrigin.x, dragStart.y - dragOrigin.y),
+    ).toBeLessThan(2);
   await expect(arrival).toHaveCount(0);
-  await expect(cards).toHaveCount(11);
+  await expect(cards).toHaveCount(initialCount + 2);
+  await expect(overlay).toHaveCount(0);
+  await expect(pile).toHaveCSS("opacity", "1");
+  // The revealed card is already in the previewed slot; there is no second centering.
+  const settled = await center(cards.last());
+  expect(Math.hypot(settled.x - landing.x, settled.y - landing.y)).toBeLessThan(
+    2,
+  );
   await expect(menu).toHaveCount(0);
   await expect(hand.locator(".db-draw-insertion")).toHaveCount(0);
 
@@ -170,7 +299,7 @@ export async function proveDraw(page: Page, touch: boolean, manual: boolean) {
       page.getByText("The draw was rejected.", { exact: true }),
     ).toBeVisible();
     await expect(overlay).toHaveCount(0);
-    await expect(cards).toHaveCount(11);
+    await expect(cards).toHaveCount(initialCount + 2);
     await expect(arrival).toHaveCount(0);
   }
   await cdp?.detach();
