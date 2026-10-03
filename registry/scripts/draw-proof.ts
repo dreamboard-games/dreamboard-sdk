@@ -38,12 +38,66 @@ export async function proveDraw(
   };
   const activate = async () => {
     await expect(pile).toHaveAttribute("aria-expanded", "false");
-    if (touch) await pile.tap();
-    else {
-      await pile.focus();
-      await page.keyboard.press("Enter");
+    const watch = await pile.evaluateHandle((element) => {
+      const events: unknown[] = [];
+      const record = (event: Event) =>
+        events.push({
+          type: event.type,
+          at: performance.now(),
+          detail: event instanceof MouseEvent ? event.detail : null,
+          target:
+            event.target instanceof Element
+              ? event.target.outerHTML.slice(0, 160)
+              : null,
+        });
+      const observer = new MutationObserver(() =>
+        events.push({
+          type: "expanded",
+          at: performance.now(),
+          value: element.getAttribute("aria-expanded"),
+        }),
+      );
+      observer.observe(element, {
+        attributes: true,
+        attributeFilter: ["aria-expanded"],
+      });
+      const types = [
+        "pointerdown",
+        "pointerup",
+        "pointercancel",
+        "click",
+        "focusin",
+      ];
+      for (const type of types) document.addEventListener(type, record, true);
+      return {
+        events,
+        stop() {
+          observer.disconnect();
+          for (const type of types)
+            document.removeEventListener(type, record, true);
+        },
+      };
+    });
+    try {
+      if (touch) await pile.tap();
+      else {
+        await pile.focus();
+        await page.keyboard.press("Enter");
+      }
+      await expect(menu).toBeFocused();
+    } catch (error) {
+      console.error("Draw menu activation", {
+        touch,
+        manual,
+        initialCount,
+        events: await watch.evaluate((value) => value.events),
+        pile: await pile.evaluate((element) => element.outerHTML),
+      });
+      throw error;
+    } finally {
+      await watch.evaluate((value) => value.stop());
+      await watch.dispose();
     }
-    await expect(menu).toBeFocused();
     await expect(page.locator(".db-card-action-arrow")).toBeVisible();
     expect((await menu.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   };
