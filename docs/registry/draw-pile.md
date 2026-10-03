@@ -54,11 +54,15 @@ Free play can use the same UI with broader reducer permissions.
 
 Tap, click or Enter opens the action menu. Escape closes it and returns focus.
 The pile and its lifted copy show the top card's back art when the game has one.
-A pointer drag lifts a slightly enlarged back with a stronger shadow, highlights
-the hand and opens an insertion gap when over it. Drop elsewhere or press Escape
+A pointer drag lifts the back to 120% size with a stronger shadow, highlights
+the hand and opens an insertion gap when over it. The original card is hidden
+while lifted. Touch drags hold the card above the finger. The hand reserves its
+height even when empty, so previewing a slot never moves the table or pile. Drop elsewhere or press Escape
 to glide back. Availability and submission failures use the game's reason.
 
-Pending draws stay face down. A confirmed menu draw flies from the pile; a
-confirmed drag settles from the release position. The card travels outside the
-clipped hand, settles into its slot, then flips from back to face. A rejected draw
+Menu draws start flying from the pile immediately; hand drops start settling
+from their current position on release. Pending draws stay face down in the
+previewed slot until the authoritative frame arrives. The confirmed card continues
+from its current flight position, outside the clipped hand, then flips from back
+to face in that same slot without a second centering movement. A rejected draw
 returns to the pile. Reduced motion skips enlargement, travel and flipping.

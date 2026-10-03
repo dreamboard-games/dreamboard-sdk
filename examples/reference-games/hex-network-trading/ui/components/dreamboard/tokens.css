@@ -396,6 +396,7 @@
 @layer components {
   /* A hand scrolls sideways when its fan is wider than the hand. */
   .db-hand {
+    position: relative;
     --card-w: var(--card-w-hand);
     overflow-x: auto;
     overflow-y: hidden;
@@ -405,6 +406,14 @@
   .db-hand-fan {
     position: relative;
     margin-inline: auto;
+  }
+  .db-hand-empty {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    margin: 0;
+    pointer-events: none;
   }
   .db-hand-slot {
     position: absolute;
@@ -436,6 +445,11 @@
   }
   .db-drag-overlay .db-card {
     box-shadow: var(--elevation-drag);
+  }
+  @media (pointer: coarse) {
+    .db-drag-overlay .db-card {
+      translate: 0 -30%;
+    }
   }
   .db-drop-area {
     border: 2px dashed transparent;
@@ -525,6 +539,11 @@
     animation: none;
   }
   .db-card,
+  @media (pointer: coarse) {
+    .db-drag-overlay .db-card {
+      translate: 0 -30%;
+    }
+  }
   .db-drop-area {
     transition: none;
   }

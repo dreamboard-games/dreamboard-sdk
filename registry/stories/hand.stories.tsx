@@ -18,7 +18,7 @@ import { DrawPile } from "../items/draw-pile";
 import { DropArea } from "../items/drop-area";
 import { Seat, type SeatNumber } from "../items/seat";
 import { TurnBanner } from "../items/turn-banner";
-import { handGame } from "./hand-game";
+import { handGame, createHandGame } from "./hand-game";
 type HandSource = CommandSource & { switchSeat(playerId: string): void };
 interface CreatedHandSource {
   value: HandSource;
@@ -199,12 +199,21 @@ function OwnedSource({
     </GameProvider>
   );
 }
-function HandTable({ manualDraw = false }: { manualDraw?: boolean }) {
+function HandTable({
+  manualDraw = false,
+  emptyHand = false,
+}: {
+  manualDraw?: boolean;
+  emptyHand?: boolean;
+}) {
   const [source, setSource] = useState<CreatedHandSource | null>(null);
   useEffect(() => {
     let active = true;
     let created: CreatedHandSource | undefined;
-    void localSource(handGame, { players: 2, seed: 3 }).then((value) => {
+    void localSource(emptyHand ? createHandGame(0) : handGame, {
+      players: 2,
+      seed: 3,
+    }).then((value) => {
       if (!active) return value.dispose();
       let settle: ((accepted: boolean) => void) | null = null;
       const wrapped: HandSource = {
@@ -248,7 +257,7 @@ function HandTable({ manualDraw = false }: { manualDraw?: boolean }) {
       // The provider owns the source once it commits.
       if (created && !created.adopted) created.value.dispose();
     };
-  }, [manualDraw]);
+  }, [manualDraw, emptyHand]);
   return source ? (
     <OwnedSource source={source} manualDraw={manualDraw} />
   ) : (
@@ -265,4 +274,7 @@ export const FannedHand: StoryObj<typeof meta> = {};
 
 export const PendingDraw: StoryObj<typeof meta> = {
   args: { manualDraw: true },
+};
+export const EmptyHand: StoryObj<typeof meta> = {
+  args: { emptyHand: true, manualDraw: true },
 };

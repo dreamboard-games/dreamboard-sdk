@@ -9,6 +9,11 @@ export const cardSpring = {
   bounce: 0.15,
 } as const;
 
+/** A direct release settles promptly, without a second spring or overshoot. */
+export const cardSettle = { duration: 0.22, ease: [0.2, 0.8, 0.2, 1] } as const;
+export const cardPickup = { duration: 0.1, ease: "easeOut" } as const;
+export const cardDragScale = 1.2;
+
 export type CardState = "idle" | "eligible" | "selected" | "dimmed";
 export type CardProps = HTMLMotionProps<"div"> & {
   state?: CardState;

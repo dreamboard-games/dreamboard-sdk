@@ -67,7 +67,11 @@ export function CardControl({
       type="button"
       className={className}
       disabled={disabled}
-      style={{ ...gesture.props.style, ...style }}
+      style={{
+        ...gesture.props.style,
+        ...style,
+        ...(overlay?.cardId === cardId ? { visibility: "hidden" } : {}),
+      }}
       data-value={card.id}
       data-card={card.id}
       data-action="select"

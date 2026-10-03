@@ -250,6 +250,8 @@ try {
       }
       if (story.id.endsWith("pending-draw") && name !== "landscape")
         await proveDraw(page, touch, true);
+      if (story.id.endsWith("empty-hand") && name !== "landscape")
+        await proveDraw(page, touch, true, 0);
       if (story.id.endsWith("hearts-passing")) {
         await expect(
           page.getByRole("heading", { name: "passing", exact: true }),

@@ -6,24 +6,26 @@ import {
   type CSSProperties,
 } from "react";
 import { createPortal } from "react-dom";
-import { CardBack, cardSpring } from "./card";
-import type { CardBox } from "./card-motion";
+import { CardBack, cardSettle } from "./card";
+import type { CardPlacement } from "./card-motion";
 
 /** A confirmed arrival flies outside the scrolling hand, then reveals its face. */
 export function CardArrival({
   origin,
   hidden,
   target,
+  destination,
   rotate,
   back,
   children,
   onComplete,
 }: {
-  origin: CardBox | null;
+  origin: CardPlacement | null;
   hidden: boolean;
   /** The card's back art, shown before it turns face up. */
   back?: string | null;
   target: HTMLElement;
+  destination: CardPlacement;
   rotate: number;
   children: ReactNode;
   onComplete(): void;
@@ -32,7 +34,7 @@ export function CardArrival({
   const [phase, setPhase] = useState<"flight" | "flip">(
     origin ? "flight" : "flip",
   );
-  const [box] = useState(() => target.getBoundingClientRect());
+  const [box] = useState(destination);
   const from = origin ?? box;
   const width = target.offsetWidth;
   const height = target.offsetHeight;
@@ -50,7 +52,7 @@ export function CardArrival({
         x: from.x + from.width / 2 - width / 2,
         y: from.y + from.height / 2 - height / 2,
         scale: origin ? origin.width / width : 1,
-        rotate: origin ? 0 : rotate,
+        rotate: from.rotate,
       }}
       animate={{
         x: box.x + box.width / 2 - width / 2,
@@ -58,7 +60,7 @@ export function CardArrival({
         scale: 1,
         rotate,
       }}
-      transition={cardSpring}
+      transition={cardSettle}
       onAnimationComplete={() => {
         if (hidden) setPhase("flip");
         else onComplete();

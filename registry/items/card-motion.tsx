@@ -12,17 +12,29 @@ import { useGame } from "@game";
 import type { GameModel as Model } from "@game";
 import type { ZoneId } from "@game";
 export type CardBox = Pick<DOMRectReadOnly, "x" | "y" | "width" | "height">;
+export type CardPlacement = CardBox & { rotate: number };
 interface DrawOrigin {
   from: ZoneId;
   to: ZoneId;
-  box: CardBox;
+  placement(): CardPlacement;
+  target: CardPlacement;
   snapshot: Model["snapshot"];
 }
 const CardMotionContext = createContext<{
-  stageDraw(from: ZoneId, to: ZoneId, box: CardBox): void;
+  stageDraw(
+    from: ZoneId,
+    to: ZoneId,
+    placement: () => CardPlacement,
+    target: CardPlacement,
+  ): void;
   clearDraw(): void;
-  getDrawOrigin(from: ZoneId, to: ZoneId): CardBox | null;
-  drop: { zone: ZoneId; over: boolean } | null;
+  getDrawOrigin(
+    from: ZoneId,
+    to: ZoneId,
+  ): { from: CardPlacement; to: CardPlacement } | null;
+  registerHand(zone: ZoneId, target: () => CardPlacement): () => void;
+  getDrawTarget(zone: ZoneId): CardPlacement;
+  drop: { zone: ZoneId; over: boolean; snapshot: Model["snapshot"] } | null;
   setDrop(zone: ZoneId | null, over?: boolean): void;
 } | null>(null);
 
@@ -30,23 +42,39 @@ const CardMotionContext = createContext<{
 export function CardMotionProvider({ children }: { children: ReactNode }) {
   const snapshot = useGame((game) => game.snapshot);
   const pending = useRef<DrawOrigin | null>(null);
-  const [drop, setDrop] = useState<{ zone: ZoneId; over: boolean } | null>(
-    null,
-  );
+  const hands = useRef(new Map<ZoneId, () => CardPlacement>());
+  const [drop, setDrop] = useState<{
+    zone: ZoneId;
+    over: boolean;
+    snapshot: Model["snapshot"];
+  } | null>(null);
   // Children consume the origin when the authoritative frame mounts the new card.
   // Clear unused hints after that commit, including seat changes and restores.
   useEffect(() => {
     pending.current = null;
+    setDrop(null);
   }, [snapshot]);
   return (
     <MotionConfig reducedMotion="user">
       <CardMotionContext.Provider
         value={{
-          stageDraw(from, to, box) {
-            pending.current = { from, to, box, snapshot };
+          stageDraw(from, to, placement, target) {
+            pending.current = { from, to, placement, target, snapshot };
           },
           clearDraw() {
             pending.current = null;
+          },
+          registerHand(zone, target) {
+            hands.current.set(zone, target);
+            return () => {
+              hands.current.delete(zone);
+            };
+          },
+          getDrawTarget(zone) {
+            const target = hands.current.get(zone);
+            if (!target)
+              throw new Error(`DrawPile requires a mounted Hand for ${zone}.`);
+            return target();
           },
           drop,
           setDrop(zone, over = false) {
@@ -55,7 +83,7 @@ export function CardMotionProvider({ children }: { children: ReactNode }) {
                 ? null
                 : current?.zone === zone && current.over === over
                   ? current
-                  : { zone, over },
+                  : { zone, over, snapshot },
             );
           },
           getDrawOrigin(from, to) {
@@ -68,7 +96,7 @@ export function CardMotionProvider({ children }: { children: ReactNode }) {
               origin.snapshot === snapshot
             )
               return null;
-            return origin.box;
+            return { from: origin.placement(), to: origin.target };
           },
         }}
       >
