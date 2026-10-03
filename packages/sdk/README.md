@@ -331,7 +331,7 @@ Visible cards share one complete `ViewCard` shape: `id`, `cardType`, and JSON
 contain these objects directly. Headless `card.view` preserves the manifest's
 card identity, category, and property inference and is deeply readonly; table-only
 `cardSetId` and `componentType` are absent. Concealed cards have a positional
-`hidden:<zone>:<index>` identity, no view, and a separate `cardBacksById` entry.
+`hidden:<zone>:<index>` identity, no view, and an optional separate `cardBacksById` entry.
 This wire format requires plugin protocol version 8 and reducer contract `0.9.0`.
 
 Card sets contain their authored `cards`, `cardSchema`, and `defaultHome` directly.

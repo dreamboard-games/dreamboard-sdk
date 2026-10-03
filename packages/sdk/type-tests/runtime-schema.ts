@@ -36,4 +36,5 @@ declare const propertyArray: Extract<
   readonly unknown[]
 >;
 // @ts-expect-error Nested property arrays are immutable in source snapshots.
-propertyArray.push("replacement");
+const mutableProperties: unknown[] = propertyArray;
+void mutableProperties;

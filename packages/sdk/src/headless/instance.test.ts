@@ -449,7 +449,7 @@ describe("headless instance", () => {
       },
     });
     const game = createGameInstance()({ source: x.source });
-    const view = game.cards.get("ace").view!;
+    const view = game.cards.get("ace").view;
     expect(view).toBe(
       x.source.store.get().snapshot!.frame.zones.hand.cardViewsById.ace,
     );
