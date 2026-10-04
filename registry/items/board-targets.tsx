@@ -218,16 +218,7 @@ export function BoardTargets({
             data-target-kind="edge"
           >
             {edge.getIsSelectable() && (
-              <line
-                data-hit-area="edge"
-                x1={edge.line[0].x}
-                y1={edge.line[0].y}
-                x2={edge.line[1].x}
-                y2={edge.line[1].y}
-                stroke="transparent"
-                strokeWidth={hitSize(edge)}
-                strokeLinecap="round"
-              />
+              <EdgeHitArea edge={edge} size={hitSize(edge)} />
             )}
             <line
               x1={edge.line[0].x}
@@ -272,7 +263,26 @@ export function BoardTargets({
   );
 }
 
-/** The browser hit-tests the rendered polygons and strokes under every transform. */
+function EdgeHitArea({ edge, size }: { edge: Edge; size: number }) {
+  const [start, end] = edge.line;
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  // A filled capsule retains real bounds even for horizontal or vertical edges.
+  return (
+    <rect
+      data-hit-area="edge"
+      x={-size / 2}
+      y={-size / 2}
+      width={Math.hypot(dx, dy) + size}
+      height={size}
+      rx={size / 2}
+      transform={`translate(${start.x} ${start.y}) rotate(${(Math.atan2(dy, dx) * 180) / Math.PI})`}
+      fill="transparent"
+    />
+  );
+}
+
+/** The browser hit-tests the rendered shapes under every transform. */
 function DropControl({
   dropTarget,
   children,
