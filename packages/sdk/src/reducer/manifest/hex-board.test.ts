@@ -412,3 +412,33 @@ it("snapshots board identity instead of retaining mutable input metadata", () =>
   expect(() => topology.neighbors("missing")).toThrow("board 'original'");
   expect(topology.edges[0].id.startsWith("original:edge:")).toBe(true);
 });
+
+it("rejects lattice coordinates whose adjacent cube coordinates overflow", () => {
+  for (const space of [
+    { q: Number.MAX_SAFE_INTEGER, r: 0 },
+    { q: Number.MIN_SAFE_INTEGER, r: 0 },
+    { q: 0, r: Number.MAX_SAFE_INTEGER },
+    { q: Number.MAX_SAFE_INTEGER - 1, r: 1 },
+  ])
+    expect(() =>
+      createHexTopology({ id: "overflow", spaces: [{ id: "a", ...space }] }),
+    ).toThrow("safe one-step neighbours");
+});
+
+it("keeps cube distance exact across the supported coordinate bounds", () => {
+  const limit = Math.floor(Number.MAX_SAFE_INTEGER / 4);
+  const topology = createHexTopology({
+    id: "bounds",
+    spaces: [
+      { id: "a", q: -limit, r: -limit },
+      { id: "b", q: limit, r: limit },
+    ],
+  });
+  expect(topology.gridDistance("a", "b")).toBe(4 * limit);
+  expect(() =>
+    createHexTopology({
+      id: "bounds",
+      spaces: [{ id: "a", q: limit + 1, r: 0 }],
+    }),
+  ).toThrow("exact cube arithmetic");
+});

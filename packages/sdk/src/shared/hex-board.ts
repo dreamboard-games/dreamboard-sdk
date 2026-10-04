@@ -40,6 +40,8 @@ export type HexBoardOrientation = HexOrientation;
 export type HexBoardSpace<Id extends string = string> = AxialCoordinate & {
   id: Id;
 };
+// Cube-coordinate sums and pairwise differences remain exact in this domain.
+const maximumCoordinate = Math.floor(Number.MAX_SAFE_INTEGER / 4);
 const coordinateKey = ({ q, r }: AxialCoordinate) => `${q},${r}`;
 const directions: readonly AxialCoordinate[] = [
   { q: 1, r: 0 },
@@ -161,6 +163,13 @@ export function createHexTopology<
   for (const space of spaces) {
     if (!Number.isSafeInteger(space.q) || !Number.isSafeInteger(space.r))
       throw new Error("Hex coordinates must be safe integers.");
+    if (
+      Math.abs(space.q) > maximumCoordinate ||
+      Math.abs(space.r) > maximumCoordinate
+    )
+      throw new Error(
+        `Hex coordinates must be within +/-${maximumCoordinate} for exact cube arithmetic and safe one-step neighbours.`,
+      );
   }
   const orientation = board.orientation ?? "pointy";
   const grid = new Grid(hexClass(orientation), spaces);
@@ -224,23 +233,28 @@ export function createHexTopology<
         if (!vertex.edgeIds.includes(edgeId)) vertex.edgeIds.push(edgeId);
     });
   }
-  const edges = [...edgesById.values()].sort((a, b) => compare(a.id, b.id));
-  const vertices = [...verticesById.values()].sort((a, b) =>
-    compare(a.id, b.id),
+  const edges = Object.freeze(
+    [...edgesById.values()]
+      .sort((a, b) => compare(a.id, b.id))
+      .map((edge) =>
+        Object.freeze({
+          ...edge,
+          spaceIds: Object.freeze(edge.spaceIds),
+          vertexIds: Object.freeze(edge.vertexIds),
+        }),
+      ),
   );
-  for (const edge of edges) {
-    Object.freeze(edge.spaceIds);
-    Object.freeze(edge.vertexIds);
-    Object.freeze(edge);
-  }
-  for (const vertex of vertices) {
-    vertex.edgeIds.sort(compare);
-    Object.freeze(vertex.spaceIds);
-    Object.freeze(vertex.edgeIds);
-    Object.freeze(vertex);
-  }
-  Object.freeze(edges);
-  Object.freeze(vertices);
+  const vertices = Object.freeze(
+    [...verticesById.values()]
+      .sort((a, b) => compare(a.id, b.id))
+      .map((vertex) =>
+        Object.freeze({
+          ...vertex,
+          spaceIds: Object.freeze(vertex.spaceIds),
+          edgeIds: Object.freeze(vertex.edgeIds.sort(compare)),
+        }),
+      ),
+  );
   const requireSpace = (id: SpaceId) => {
     const space = spacesById.get(id);
     if (!space) throw new Error(`Unknown space '${id}' on board '${boardId}'.`);
@@ -252,24 +266,8 @@ export function createHexTopology<
       return space ? [space.id] : [];
     });
   const topology = {
-    edges: Object.freeze(
-      edges.map((edge) =>
-        Object.freeze({
-          ...edge,
-          spaceIds: Object.freeze(edge.spaceIds),
-          vertexIds: Object.freeze(edge.vertexIds),
-        }),
-      ),
-    ),
-    vertices: Object.freeze(
-      vertices.map((vertex) =>
-        Object.freeze({
-          ...vertex,
-          spaceIds: Object.freeze(vertex.spaceIds),
-          edgeIds: Object.freeze(vertex.edgeIds),
-        }),
-      ),
-    ),
+    edges,
+    vertices,
     neighbors(id: SpaceId) {
       const space = requireSpace(id);
       return directions.flatMap((direction) => {

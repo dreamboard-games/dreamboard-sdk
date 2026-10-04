@@ -78,3 +78,8 @@ Topology caching stores geometry only and compares current board coordinates on
 each lookup. Component state, authored metadata and interaction decoration remain
 owned by the current frame or table. Layout caching retains only the latest size
 and origin; board mutation therefore cannot reuse stale geometry.
+
+Axial coordinates must be safe integers within
+`±Math.floor(Number.MAX_SAFE_INTEGER / 4)`. This conservative bound keeps
+neighbour offsets, cube-coordinate sums and pairwise differences exact;
+unsupported extreme coordinates are rejected before building topology.
