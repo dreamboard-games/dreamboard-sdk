@@ -91,13 +91,14 @@ Evidence is at the baseline commit.
 | Geometry      | Keep `hex`, `square`, `generic`. Every layout gets relations and attached zones.                                                                                                                                                                                       |
 | Topology      | The manifest declares tile types and seeds. Component locations own placement; session state owns relations. Topology is derived. A fixed board starts with placed tile instances. No `fixed`/`assembled` discriminator.                                               |
 | Identity      | Hex edges and vertices are named by grid coordinates, independent of neighbours. Per-player instances use one runtime string codec.                                                                                                                                    |
-| Inventory     | Piece and die seeds accept `scope: "perPlayer"`; IDs come from the roster. Ownership follows scope. Manifests never name players.                                                                                                                                      |
+| Inventory     | Piece and die seeds accept `scope: "perPlayer"`; IDs come from the roster. Replication initializes ownership; later containment and ownership are independent. Manifests never name players.                                                                           |
 | Honeycomb     | Honeycomb owns shape traversal, pixels, grid distance, rings, lines and hit testing. The SDK owns rotation, edge/vertex identity, neighbours, placement and tile outlines.                                                                                             |
 | Backend       | The backend types only `manifest.players` and stores the rest as SDK-owned JSON. The compiler uses the SDK as the manifest validator.                                                                                                                                  |
 
 ## Execution order
 
-Ten SDK PRs, then two internal PRs. The planning PR is separate. Original numbered
+Ten SDK architecture PRs and two internal PRs. The planning PR and the small
+touch-activation prerequisite are separate. Internal A can proceed in parallel. Original numbered
 filenames remain source material; this table owns execution order and
 [private tiles](private-tiles.md) owns the revised modelling boundary.
 
@@ -121,6 +122,24 @@ actual seat delivery. See [09](09-internal-adoption.md).
 Private configurations fail explicitly until PR 8 supplies the complete boundary;
 no intermediate layer may accept them and expose their contents. The first five
 SDK layers remain a coherent stopping point.
+
+## Current review state
+
+The following are drafts, not landed changes:
+
+- [SDK #104](https://github.com/dreamboard-games/dreamboard-sdk/pull/104):
+  portable field schemas, independently reviewed and browser-free checks passed.
+- [SDK #105](https://github.com/dreamboard-games/dreamboard-sdk/pull/105):
+  geometry foundation; desktop and touch checks exposed an edge hit-area issue,
+  now corrected. Full UI acceptance also depends on the touch-activation fix.
+- [Internal #668](https://github.com/dreamboard-games/dreamboard-internal/pull/668):
+  opaque manifest ownership, generated transport and compiler boundary.
+- [Internal #669](https://github.com/dreamboard-games/dreamboard-internal/pull/669):
+  controller-based hosted seat delivery. Published SDK repin, new projection
+  adoption and the final real-browser proof remain outstanding.
+
+PR descriptions own current verification receipts. No SDK has been published
+for this redesign; downstream adoption is not complete.
 
 ## Independent review
 
@@ -159,7 +178,7 @@ no-restricted-syntax -- reason` convention and state the invariant.
 
 ## Publication
 
-Publish one SDK alpha after layer 08 through the reviewed release workflow
+Publish one SDK alpha after execution layer 10 (tile layout) through the reviewed release workflow
 ([alpha-publish.md](../../docs/alpha-publish.md)). If dynamic boards are
 deferred, publish after layer 05 instead. Internal adoption pins the exact
 published version.
