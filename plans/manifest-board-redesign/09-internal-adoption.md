@@ -118,9 +118,18 @@ Then fix consumers of the changed SDK surfaces:
 | Seat zones keyed by host (03)                         | Browser runtime and host UI zone readers                                                                                                                                                                        |
 | Board target value kinds (05)                         | Host runtime parsing of board targets                                                                                                                                                                           |
 
-The `game_sessions.board_static` column and its plumbing stay; only the
-payload shape changes. Sessions started on older bundles keep their stored
-state and bundle, so no data migration is needed.
+Shared static delivery may contain only explicitly public definitions/shells.
+Seat boards and audience-filtered events must pass through gameplay workers,
+hosted frames, browser gameplay and screenshots consistently. Inspect actual
+hosted payloads and UI messages with the private-tile fixture.
+
+Hard cut: old running games and checkpoints need not remain usable. Do not add
+compatibility readers, migrations or a parallel legacy runtime. Rebuild reference
+and demo artifacts and start fresh sessions with coordinated adoption.
+
+Check public artifacts for private runtime assignments/setup state. Reusable tile
+definitions remain public game rules. Local gameplay owns full state on the user's
+machine; hosted multiplayer delivers only the authorized seat frame.
 
 ### Verify
 

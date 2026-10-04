@@ -1,5 +1,9 @@
 # 03 — One zone location
 
+Location, ownership and visibility remain independent. The later attached-zone layer derives access from current host state. Event delivery is part of the private-tile boundary.
+
+See [private tiles and authority](private-tiles.md).
+
 Branch: `sdk/zone-locations` (on `sdk/hex-lattice`). Size: L.
 Read first: [table.ts](../../packages/sdk/src/reducer/model/table.ts),
 [transaction-mutations.ts](../../packages/sdk/src/reducer/transaction-mutations.ts),

@@ -1,5 +1,9 @@
 # 01 — Zod field schemas
 
+Enforce unsupported-check rejection before conversion. Reference validation has manifest, session and current-topology stages; fixed enums cannot cover future runtime identities.
+
+See [private tiles and authority](private-tiles.md).
+
 Branch: `sdk/field-schemas` (bottom of the stack, based on `main`). Size: L.
 Read first: [00 — experiment](00-field-schema-experiment.md).
 

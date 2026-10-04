@@ -1,5 +1,9 @@
 # 06 — Tile catalog and placement state
 
+This is execution PR 7. The catalog/placement code below is historical design material: replace it with game-owned tile types/instances and canonical component locations from private-tiles.md. Do not persist a second placement store or globally disclose placements.
+
+See [private tiles and authority](private-tiles.md).
+
 Branch: `sdk/tile-catalog` (on `sdk/per-player-inventory`). Size: L.
 Read first: [02 — hex lattice](02-hex-lattice.md),
 [materialize.ts board section](../../packages/sdk/src/reducer/manifest/materialize.ts#L1769),

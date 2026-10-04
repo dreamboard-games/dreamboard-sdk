@@ -1,5 +1,9 @@
 # 04 — Attached zones replace containers and slots
 
+This is execution PR 5, after roster identity. Reject containment cycles; derive access on current ownership; topology removal rejects nonempty attached zones.
+
+See [private tiles and authority](private-tiles.md).
+
 Branch: `sdk/attached-zones` (on `sdk/zone-locations`). Size: M.
 Read first: [03 — one zone location](03-zone-locations.md),
 [contracts.ts](../../packages/sdk/src/shared/domain/contracts.ts) (`ZoneSpec`,

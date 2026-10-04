@@ -1,5 +1,9 @@
 # 08 — Tile layouts and board rendering
 
+This is execution PR 10. Render projected seat topology only, including deliberately public concealed footprints; never read authoritative catalog/placements in client layout.
+
+See [private tiles and authority](private-tiles.md).
+
 Branch: `sdk/tile-layout` (on `sdk/place-tiles`). Size: M.
 Read first: [headless board feature](../../packages/sdk/src/headless/features/board.ts),
 [board-targets.tsx](../../registry/items/board-targets.tsx),

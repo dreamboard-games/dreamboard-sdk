@@ -215,7 +215,8 @@ Resolving markers at validation time is also where roster-derived IDs
 - **Refinements are not representable.** `z.toJSONSchema` drops `.refine()`
   checks and `unrepresentable: "throw"` does not catch them. Validate authored
   values with the JSON-derived validator (never the original Zod object) so
-  authoring and runtime always agree, and document that field schemas are data.
+  authoring and runtime agree. Also reject unsupported refinements before
+  conversion; silently discarded constraints are not acceptable.
 - **Type-check cost was not measured** by decision. Layer 01 records both
   reference games' instantiation counts using the method in
   [manifest-types.md](../../docs/benchmarks/manifest-types.md) and investigates

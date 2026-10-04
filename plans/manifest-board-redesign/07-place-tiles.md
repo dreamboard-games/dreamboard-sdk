@@ -1,5 +1,9 @@
 # 07 — Placing tiles at runtime
 
+This is execution PR 9, after complete private projection. Mutate canonical tile locations, not an independent board placement map. private-tiles.md owns dependency, identity and disclosure rules.
+
+See [private tiles and authority](private-tiles.md).
+
 Branch: `sdk/place-tiles` (on `sdk/tile-catalog`). Size: M.
 Read first: [06 — tile catalog](06-tile-catalog.md),
 [transaction.ts](../../packages/sdk/src/reducer/transaction.ts),

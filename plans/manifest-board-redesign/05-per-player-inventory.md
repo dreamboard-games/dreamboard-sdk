@@ -1,5 +1,9 @@
 # 05 — Per-player inventory and one per-player identity
 
+This is execution PR 4, before attached zones. The illustrated lastIndexOf codec is insufficient without an enforced collision-free grammar or known instance metadata. Validate roster membership separately.
+
+See [private tiles and authority](private-tiles.md).
+
 Branch: `sdk/per-player-inventory` (on `sdk/attached-zones`). Size: M.
 Read first: [pieces.ts](../../examples/reference-games/hex-network-trading/manifest/pieces.ts),
 [board-target.ts](../../packages/sdk/src/shared/board-target.ts),

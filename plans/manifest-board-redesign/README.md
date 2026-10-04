@@ -1,16 +1,18 @@
 # Manifest and board redesign
 
-Status: planned. Baseline: SDK `origin/main` at `274468b` (after #81).
-Owner: root orchestrator; layers are delegated one branch at a time.
+Status: implementing. Original evidence baseline: `274468b`; implementation
+baseline: `463ba58` (after #102). GPT-6.1 Sol agents implement bounded layers;
+the root reviewer independently reads source and verifies every accepted layer.
 
 This plan replaces overlapping manifest concepts with fewer ones, moves board
 placement into session state, and fixes the board geometry integration. It is
 a hard cut: one supported authoring path, no aliases or compatibility readers.
-Sessions keep running on the bundle they started with, so persisted state does
-not need migration.
+Old running games and checkpoints need not remain compatible. Rebuild artifacts
+and start fresh sessions; no migrations, dual readers or legacy wire support.
 
 Read this file, then the [field-schema experiment](00-field-schema-experiment.md),
-then the layer you own.
+then [private tiles and authority](private-tiles.md), then the layer you own.
+That contract supersedes the old board-owned catalog/global projection sketches.
 
 ## Problems
 
@@ -87,7 +89,7 @@ Evidence is at the baseline commit.
 | Field schemas | Authors write Zod object schemas imported from `@dreamboard-games/sdk/reducer`. ID references use marker schemas (`ref.pieceId()`). The manifest module exports JSON Schema. See [the experiment](00-field-schema-experiment.md).                                      |
 | Holding areas | Every place that holds components is a zone. A zone has a `scope` (`shared`, `perPlayer`) or is `attachedTo` a board, board space, piece type or die type. One `InZone { zoneId, hostId }` location. Occupying a space, edge or vertex stays a separate location kind. |
 | Geometry      | Keep `hex`, `square`, `generic`. Every layout gets relations and attached zones.                                                                                                                                                                                       |
-| Topology      | The manifest declares a tile catalog. Session state holds only placements and relations. Topology is computed from both. A fixed board is its default placements. No `fixed`/`assembled` discriminator.                                                                |
+| Topology      | The manifest declares tile types and seeds. Component locations own placement; session state owns relations. Topology is derived. A fixed board starts with placed tile instances. No `fixed`/`assembled` discriminator.                                               |
 | Identity      | Hex edges and vertices are named by grid coordinates, independent of neighbours. Per-player instances use one runtime string codec.                                                                                                                                    |
 | Inventory     | Piece and die seeds accept `scope: "perPlayer"`; IDs come from the roster. Ownership follows scope. Manifests never name players.                                                                                                                                      |
 | Honeycomb     | Honeycomb owns shape traversal, pixels, grid distance, rings, lines and hit testing. The SDK owns rotation, edge/vertex identity, neighbours, placement and tile outlines.                                                                                             |
@@ -95,32 +97,39 @@ Evidence is at the baseline commit.
 
 ## Execution order
 
-One SDK stack rooted on `main`, then one internal stack after an SDK alpha.
+Ten SDK PRs, then two internal PRs. The planning PR is separate. Original numbered
+filenames remain source material; this table owns execution order and
+[private tiles](private-tiles.md) owns the revised modelling boundary.
 
-| Layer                               | Branch                     | Scope                                                                                            | Size |
-| ----------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------ | ---- |
-| [00](00-field-schema-experiment.md) | —                          | Experiment receipt (no code lands)                                                               | —    |
-| [01](01-field-schemas.md)           | `sdk/field-schemas`        | Zod field schemas and `ref.*` markers replace the property-schema language                       | L    |
-| [02](02-hex-lattice.md)             | `sdk/hex-lattice`          | Coordinate-based hex IDs, axial sides, indexed and cached geometry, `distance` vs `gridDistance` | M    |
-| [03](03-zone-locations.md)          | `sdk/zone-locations`       | One `InZone` location for table and player zones; delete duplicate stores                        | L    |
-| [04](04-attached-zones.md)          | `sdk/attached-zones`       | Zones attached to boards, spaces and components replace containers and slots                     | M    |
-| [05](05-per-player-inventory.md)    | `sdk/per-player-inventory` | Roster-derived inventory, no player literals, one per-player identity                            | M    |
-| [06](06-tile-catalog.md)            | `sdk/tile-catalog`         | Tile catalog, placements and relations in state, `table.boards` deleted                          | L    |
-| [07](07-place-tiles.md)             | `sdk/place-tiles`          | `tx.placeTile`, relations, `tx.random`, multi-hex tiles and rotation                             | M    |
-| [08](08-tile-layout.md)             | `sdk/tile-layout`          | Tile outlines and rotation in layouts; `BoardTargets` tiles; delete `HexGrid`                    | M    |
-| [09](09-internal-adoption.md)       | internal repo, 2 PRs       | Backend and compiler stop modelling the manifest; repin and adopt                                | M    |
+| PR  | Branch                          | Scope                                                       | Source                            |
+| --- | ------------------------------- | ----------------------------------------------------------- | --------------------------------- |
+| 1   | `codex/manifest-field-schemas`  | Portable Zod subset, staged refs and exact public inference | [01](01-field-schemas.md)         |
+| 2   | `codex/hex-lattice`             | Stable identities, indexed geometry, distance and caching   | [02](02-hex-lattice.md)           |
+| 3   | `codex/zone-locations`          | One zone model, ordering owner and movement API             | [03](03-zone-locations.md)        |
+| 4   | `codex/per-player-inventory`    | Roster inventory and runtime identity/target codec          | [05](05-per-player-inventory.md)  |
+| 5   | `codex/attached-zones`          | Host lifecycle, containment invariants and access           | [04](04-attached-zones.md)        |
+| 6   | `codex/tile-inventory`          | Definitions, instances, seeds and canonical locations       | [Private tiles](private-tiles.md) |
+| 7   | `codex/board-topology`          | Derived topology, default placement and game migration      | [06](06-tile-catalog.md)          |
+| 8   | `codex/private-tile-projection` | Seat boards, event disclosure, refs and ingress             | [Private tiles](private-tiles.md) |
+| 9   | `codex/tile-transactions`       | Placement, draw/reveal, dependency rejection and seeded RNG | [07](07-place-tiles.md)           |
+| 10  | `codex/tile-layout`             | Headless/registry rendering and private-flow browser proof  | [08](08-tile-layout.md)           |
 
-Why this order:
+Internal A owns opaque manifest storage/validation and can proceed independently.
+Internal B repins the published SDK and adopts protocols, host consumers and
+actual seat delivery. See [09](09-internal-adoption.md).
 
-- Field schemas come first because layers 04–06 add schema-bearing data (zone
-  and tile fields). With Zod in place they are written once.
-- Coordinate IDs (02) land before placements can change (06–07).
-- Zones split into a runtime refactor (03) and the authoring change (04).
-- Tiles split into state model (06), runtime placement (07) and rendering (08).
-- Layers 01–05 are a coherent stopping point if dynamic boards are deferred.
+Private configurations fail explicitly until PR 8 supplies the complete boundary;
+no intermediate layer may accept them and expose their contents. The first five
+SDK layers remain a coherent stopping point.
 
-Internal PR A in [09](09-internal-adoption.md) does not depend on the SDK and may
-land at any time before PR B.
+## Independent review
+
+Agents work in isolated worktrees, except explicitly coordinated disjoint files.
+Their reports are evidence to inspect, not approval. The root reviews modelling,
+source, authoring inference, state mutation, projection, ingress and UI flow before
+acceptance. Reject duplicated state owners, unnecessary generic abstractions,
+unjustified casts and weakened public typing. Tests and migrations belong in the
+owning layer, not a trailing verification PR.
 
 ## Rules for every layer
 
@@ -155,12 +164,13 @@ Publish one SDK alpha after layer 08 through the reviewed release workflow
 deferred, publish after layer 05 instead. Internal adoption pins the exact
 published version.
 
-## Open questions
+## Settled decisions
 
-- **Tiles drawn from a stack.** Layer 06 models tiles as board catalog entries,
-  which fits games that place every tile during setup. Games that draw tiles
-  one at a time (Carcassonne) may be better served by tiles that are components
-  with an "on board at q, r, rotation" location. Decide before a game needs it;
-  layer 07's `placeTile` is the extension point.
-- **Reserved characters.** Layer 04 reserves `#` in authored IDs for the zone
-  host codec. Confirm no published game uses it.
+Tiles are components: definitions are reusable and runtime instances have one
+location. Bags/hands are zones; board placement derives topology. Public game
+definitions are distinct from private session assignments and state.
+
+Removal with dependencies is rejected. Same-board movement preserves tile-space
+identity; cross-board relocation with dependencies is rejected. One identity
+codec must enforce collision rules for authored and roster IDs; parsing never
+establishes ownership. Running games/checkpoints may be invalidated by adoption.
