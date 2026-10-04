@@ -6,6 +6,15 @@ const target = z.object({
   spaceId: z.string(),
 });
 function createPlayerBoardGame(layout: "square" | "generic") {
+  const geometry =
+    layout === "square"
+      ? ({
+          layout: "square",
+          spaces: [{ id: "slot", row: 0, col: 0 }],
+          edges: [],
+          vertices: [],
+        } as const)
+      : ({ layout: "generic", spaces: [{ id: "slot" }] } as const);
   const model = createGame({
     manifest: {
       players: { minPlayers: 2, maxPlayers: 2 },
@@ -16,10 +25,7 @@ function createPlayerBoardGame(layout: "square" | "generic") {
           id: "mat",
           name: "Mat",
           scope: "perPlayer",
-          layout,
-          spaces: [{ id: "slot", row: 0, col: 0 }],
-          edges: [],
-          vertices: [],
+          ...geometry,
           relations: [],
           containers: [],
         },
