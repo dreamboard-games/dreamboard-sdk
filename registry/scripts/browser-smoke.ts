@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { proveCardDrag } from "./card-drag-proof.ts";
-import { proveDraw, proveReducedCardMotion } from "./draw-proof.ts";
+import {
+  proveDraw,
+  proveDrawTouchActivation,
+  proveReducedCardMotion,
+} from "./draw-proof.ts";
 import { proveCardControl } from "./card-control-proof.ts";
 import { proveHand } from "./hand-proof.ts";
 import { chromium, expect } from "@playwright/test";
@@ -250,8 +254,10 @@ try {
       }
       if (story.id.endsWith("pending-draw") && name !== "landscape")
         await proveDraw(page, touch, true);
-      if (story.id.endsWith("empty-hand") && name !== "landscape")
+      if (story.id.endsWith("empty-hand") && name !== "landscape") {
+        if (touch) await proveDrawTouchActivation(page);
         await proveDraw(page, touch, true, 0);
+      }
       if (story.id.endsWith("hearts-passing")) {
         await expect(
           page.getByRole("heading", { name: "passing", exact: true }),

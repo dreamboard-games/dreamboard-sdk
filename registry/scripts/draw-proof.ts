@@ -18,6 +18,33 @@ async function readSample<T>(watch: JSHandle<{ sample: T | null }>) {
   return sample!;
 }
 
+/** A physical touch tap does not depend on a browser compatibility click. */
+export async function proveDrawTouchActivation(page: Page) {
+  const pile = page.getByRole("button", { name: "Deck actions" });
+  const menu = page.locator('[data-action="draw"]');
+  await expect(pile).toHaveAttribute("aria-expanded", "false");
+  // Simulate the missing compatibility click seen in CI while keeping the tap physical.
+  const blockedClick = await pile.evaluateHandle((element) => {
+    const block = (event: Event) => event.stopImmediatePropagation();
+    element.addEventListener("click", block, { capture: true, once: true });
+    return { stop: () => element.removeEventListener("click", block, true) };
+  });
+  try {
+    await pile.tap();
+    await expect(menu).toBeFocused();
+  } finally {
+    await blockedClick.evaluate((listener) => listener.stop());
+    await blockedClick.dispose();
+  }
+  await page.keyboard.press("Escape");
+  await expect(pile).toHaveAttribute("aria-expanded", "false");
+  await pile.focus();
+  await page.keyboard.press("Enter");
+  await expect(menu).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(menu).toHaveCount(0);
+}
+
 /** Real reducer draws through menus and pile gestures, including delayed receipts. */
 export async function proveDraw(
   page: Page,
