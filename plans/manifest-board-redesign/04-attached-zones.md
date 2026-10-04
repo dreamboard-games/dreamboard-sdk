@@ -4,7 +4,7 @@ This is execution PR 5, after roster identity. Reject containment cycles; derive
 
 See [private tiles and authority](private-tiles.md).
 
-Branch: `sdk/attached-zones` (on `sdk/zone-locations`). Size: M.
+Branch: `codex/attached-zones` (on `codex/per-player-inventory`). Size: M.
 Read first: [03 — one zone location](03-zone-locations.md),
 [contracts.ts](../../packages/sdk/src/shared/domain/contracts.ts) (`ZoneSpec`,
 `BoardContainerSpec`, `ComponentSlotSpec`, home specs).
@@ -65,28 +65,32 @@ that the referenced board, space, piece type or die type exists.
 
 ### Hosts
 
-One codec in `shared/domain/zone-hosts.ts`; nothing else builds host strings.
+Use the shared identity codec introduced by execution PR 4. Extend it with a
+tagged board-space tuple where a composite host identity is needed; nothing
+else builds host strings. Decoding proves syntax, never current membership.
 
-| Attachment                      | `hostId`                                              |
-| ------------------------------- | ----------------------------------------------------- |
-| `scope: "shared"`               | `"table"`                                             |
-| `scope: "perPlayer"`            | player ID                                             |
-| `{ board }`                     | runtime board ID (`frontier`, or `frontier:player-1`) |
-| `{ board, space }`              | `` `${runtimeBoardId}#${spaceId}` ``                  |
-| `{ pieceType }` / `{ dieType }` | component ID                                          |
+| Attachment                      | `hostId`                            |
+| ------------------------------- | ----------------------------------- |
+| `scope: "shared"`               | `"table"`                           |
+| `scope: "perPlayer"`            | player ID                           |
+| `{ board }`                     | canonical runtime board ID          |
+| `{ board, space }`              | canonical encoded board-space tuple |
+| `{ pieceType }` / `{ dieType }` | component ID                        |
 
 ```ts
 export const zoneHost = {
   table: "table" as const,
   player: (playerId: PlayerId) => playerId,
   board: (boardId: RuntimeBoardId) => boardId,
-  space: (boardId: RuntimeBoardId, spaceId: string) => `${boardId}#${spaceId}`,
+  space: (boardId: RuntimeBoardId, spaceId: string) =>
+    boardSpaceHostId(boardId, spaceId),
   component: (componentId: ComponentId) => componentId,
 };
 ```
 
-Reserve `#` in authored IDs (board, space, zone, piece, die, card) and reject
-it in manifest validation.
+Do not reserve arbitrary separators such as `#` or `:`. Keep the shared codec
+prefix reservation at authored identity admission; encoded tuple boundaries
+make arbitrary permitted authored and roster strings unambiguous.
 
 Type-level host IDs follow the attachment:
 
@@ -99,7 +103,7 @@ type HostIdOfZone<M, Z> =
       : ZoneSpecOf<M, Z> extends {
             attachedTo: { board: infer B; space: infer S };
           }
-        ? `${RuntimeBoardIdOf<M, B>}#${S & string}`
+        ? BoardSpaceHostId<RuntimeBoardIdOf<M, B>, S & string>
         : ZoneSpecOf<M, Z> extends { attachedTo: { board: infer B } }
           ? RuntimeBoardIdOf<M, B>
           : ZoneSpecOf<M, Z> extends { attachedTo: { pieceType: infer T } }
@@ -172,7 +176,8 @@ tx.moveComponentToZone({
   the owner; `ownerOnly` on a shared board is a validation error.
 - Homes: a piece homed into `cargo` with `component` lands in that ship's zone;
   a missing `component` for a component-attached zone is an error.
-- `#` in an authored ID is a validation error.
+- Composite host identities round-trip separator-containing board, space and
+  roster IDs without collisions; well-formed nonexistent hosts are rejected.
 - Type proofs: `hostId` for each attachment kind accepts the right IDs and
   rejects others (another board, a piece of another type).
 
