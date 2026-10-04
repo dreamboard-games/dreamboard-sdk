@@ -401,3 +401,14 @@ it("shares incidence across several lattice radii and orientations", () => {
     }
   }
 });
+
+it("snapshots board identity instead of retaining mutable input metadata", () => {
+  const board = {
+    id: "original",
+    spaces: [{ id: "a", q: -3, r: -7, metadata: { secret: "private" } }],
+  };
+  const topology = createHexTopology(board);
+  board.id = "changed";
+  expect(() => topology.neighbors("missing")).toThrow("board 'original'");
+  expect(topology.edges[0].id.startsWith("original:edge:")).toBe(true);
+});

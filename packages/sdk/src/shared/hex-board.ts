@@ -154,6 +154,7 @@ export function createHexTopology<
   orientation?: HexBoardOrientation;
   spaces: readonly HexBoardSpace<SpaceId>[];
 }) {
+  const boardId = board.id;
   const spaces = board.spaces
     .map(({ id, q, r }) => ({ id, q, r }))
     .sort((a, b) => compare(a.id, b.id));
@@ -166,7 +167,7 @@ export function createHexTopology<
   const spacesById = new Map(spaces.map((space) => [space.id, space]));
   if (spacesById.size !== spaces.length || grid.size !== spaces.length)
     throw new Error(
-      `Hex board '${board.id}' contains duplicate space IDs or coordinates.`,
+      `Hex board '${boardId}' contains duplicate space IDs or coordinates.`,
     );
   const spacesByCoordinate = new Map(
     spaces.map((space) => [coordinateKey(space), space]),
@@ -181,7 +182,7 @@ export function createHexTopology<
   const vertexPoints = new Map<HexVertexId<BoardId>, Point>();
   const Tile = hexClass(orientation);
   const cornerId = (space: AxialCoordinate, corner: number) =>
-    `${board.id}:vertex:${vertexKey(space, corner)}` as HexVertexId<BoardId>;
+    `${boardId}:vertex:${vertexKey(space, corner)}` as HexVertexId<BoardId>;
   for (const space of spaces) {
     const cornerIds = Array.from({ length: 6 }, (_, corner) =>
       cornerId(space, corner),
@@ -189,7 +190,7 @@ export function createHexTopology<
     cornersBySpace.set(space.id, cornerIds);
     const edgeIds = Array.from({ length: 6 }, (_, side) => {
       const id =
-        `${board.id}:edge:${edgeKey(space, side)}` as HexEdgeId<BoardId>;
+        `${boardId}:edge:${edgeKey(space, side)}` as HexEdgeId<BoardId>;
       let edge = edgesById.get(id);
       if (!edge) {
         edge = {
@@ -242,8 +243,7 @@ export function createHexTopology<
   Object.freeze(vertices);
   const requireSpace = (id: SpaceId) => {
     const space = spacesById.get(id);
-    if (!space)
-      throw new Error(`Unknown space '${id}' on board '${board.id}'.`);
+    if (!space) throw new Error(`Unknown space '${id}' on board '${boardId}'.`);
     return space;
   };
   const selectedIds = (coordinates: Iterable<AxialCoordinate>): SpaceId[] =>
