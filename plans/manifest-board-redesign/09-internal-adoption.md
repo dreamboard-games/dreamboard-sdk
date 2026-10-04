@@ -11,10 +11,14 @@ with the new SDK is uploaded.
 
 ### Why
 
-The backend reads only `manifest.players`
-(`apps/backend/src/main/kotlin/routes/sessions/GameSessionController.kt:71`,
-`apps/backend/src/main/kotlin/demo/DemoSessionService.kt:46`), yet the full
-manifest is modelled three times:
+The backend reads `manifest.players` for sessions and currently traverses
+`manifest.cardSets[].cards` in `PlayableRevisionService` to find image assets.
+The latter coupling must move to source-owned packaging: deliver admitted files
+under `assets/` plus `rule.md`, not a Kotlin interpretation of SDK components.
+This includes unused authored assets; a compiler-owned used-asset receipt can
+optimize that later if needed. Never include source code in the asset list.
+
+The full manifest is currently modelled three times:
 
 - Public OpenAPI: `packages/api-client/openapi/documentation.yaml`
   (`GameTopologyManifest` and its sub-schemas), generating HeyAPI types and Zod
@@ -52,7 +56,13 @@ Layer 01's JSON Schema field schemas would fail that check.
    (`tools/repo-scripts/src/contracts/generate.ts`) and confirm with
    `pnpm contracts:check`.
 
-2. **Backend storage.** Store the manifest as the JSON the compiler produced.
+2. **Backend storage.** Full manifest request/response values must also remain
+   opaque at the generated Kotlin boundary; changing storage alone would lose
+   unknown fields before persistence. Verify generator support rather than
+   assuming `additionalProperties` survives KotlinX serialization. A generated
+   typed player summary is validated at service ingress.
+
+   **Storage implementation.** Store the manifest as the JSON the compiler produced.
    A generated class with `additionalProperties` would silently drop fields on
    deserialization, so this is the justified exception to the
    "no `JsonObject` in Kotlin" rule: the platform must not model an SDK-owned
