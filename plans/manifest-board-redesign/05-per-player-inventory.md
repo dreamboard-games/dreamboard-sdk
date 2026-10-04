@@ -1,10 +1,11 @@
 # 05 — Per-player inventory and one per-player identity
 
-This is execution PR 4, before attached zones. The illustrated lastIndexOf codec is insufficient without an enforced collision-free grammar or known instance metadata. Validate roster membership separately.
+This is execution PR 4, after canonical zone locations and before attached zones.
+The codec identifies replication origins; session admission checks live membership.
 
 See [private tiles and authority](private-tiles.md).
 
-Branch: `sdk/per-player-inventory` (on `sdk/attached-zones`). Size: M.
+Branch: `codex/per-player-inventory` (on `codex/zone-locations`). Size: M.
 Read first: [pieces.ts](../../examples/reference-games/hex-network-trading/manifest/pieces.ts),
 [board-target.ts](../../packages/sdk/src/shared/board-target.ts),
 [boardTarget.ts](../../packages/sdk/src/reducer/inputs/boardTarget.ts).
@@ -13,9 +14,11 @@ Read first: [pieces.ts](../../examples/reference-games/hex-network-trading/manif
 
 - Piece seeds, die seeds and cards accept `scope: "perPlayer"`: one set per
   seated player, created from the real roster.
-- Ownership follows scope. Manifests never name players.
-- Per-player instances (boards, zones, inventory) use one identity: the runtime
-  string built by one codec.
+- Replication initializes ownership. Ownership may subsequently change without
+  changing identity. Manifests never name players.
+- Per-player boards, cards, pieces and dice use one runtime identity codec.
+  Shared identities remain authored literal IDs. Zones retain native zone IDs
+  and an explicit table or player host; they are not encoded inventory.
 
 ## Current state
 
@@ -31,13 +34,10 @@ Read first: [pieces.ts](../../examples/reference-games/hex-network-trading/manif
   ([per-player.ts:18](../../packages/sdk/src/reducer/per-player.ts#L18)).
 - `visibility.visibleTo` in authored component visibility also lists literal
   player IDs.
-- Per-player boards are identified two ways: the runtime string
-  `frontier:player-1` (tables, queries, `ids.boardId` as
-  `z.templateLiteral([id, ":", z.string().min(1)])` in
-  [compiler.ts:132](../../packages/sdk/src/reducer/manifest/compiler.ts#L132))
-  and `PlayerBoardSpaceTarget { boardId: base, playerId, spaceId }` for
-  input values. `BoardTargets` re-encodes the string by hand
-  ([board-targets.tsx:318](../../registry/items/board-targets.tsx#L318)).
+- Per-player boards currently duplicate identity between delimiter-joined runtime
+  IDs and `PlayerBoardSpaceTarget { boardId: base, playerId, spaceId }` inputs.
+  The compiler accepts string-template syntax and `BoardTargets` rebuilds IDs
+  manually. This layer replaces both paths with the canonical runtime board ID.
 
 ## Design
 
@@ -80,43 +80,60 @@ const trailId = q
 
 ### Runtime IDs and ownership
 
-- Runtime ID: `` `${seedRuntimeId}:${playerId}` `` where `seedRuntimeId` is the
-  existing count expansion (`trail-3`). Example: `trail-3:player-1`. This is
-  the per-player board pattern (`frontier:player-1`).
-- Type: `` `${RuntimeIds<Id, Count>}:${string}` ``. Roster membership is checked
-  at runtime, as for per-player boards.
-- ID schemas: `z.templateLiteral([seedRuntimeId, ":", z.string().min(1)])` per
-  per-player seed, unioned with the shared literals.
-- `ownerId` is the player for per-player components and `null` for shared
-  ones; reducers still reassign it with existing mutations.
+- Shared components and boards keep their authored IDs unchanged.
+- Generated per-player IDs begin with reserved `@db/`, followed by the canonical
+  JSON tuple `[family, expandedBaseId, replicationOriginSeat]`. For example,
+  `@db/["piece","trail-3","player-1"]`. Families are `board`, `card`, `piece`
+  and `die`; tile instances join the same owner when introduced in their layer.
+- The base is already expanded by the existing seed count rules. Do not encode
+  a second ordinal, type or set identity. Card, piece and die bases remain
+  globally unique because `componentLocations` has one component namespace.
+- Manifest identity admission rejects authored IDs beginning with `@db/`,
+  including expanded bases. This reserves generated identities without
+  restricting separators or Unicode in ordinary IDs or roster seat values.
+- The encoder validates nonempty base and seat strings and uses JSON escaping.
+  The decoder validates the exact tuple shape and family, then requires exact
+  equality with its canonical re-encoding. Alternate whitespace, escaping,
+  extra tuple elements and unknown tags are rejected.
+- `PerPlayerInstanceId<Family, ExpandedBaseId>` preserves exact family and base
+  inference. ID schemas validate the codec and declared base; string templates
+  and delimiter parsing cannot provide this witness.
+- Successful decoding proves syntax only. A canonical forged ID or a seat not
+  in the current roster is still rejected by session/table membership checks.
+  Authored static reference validation and live roster validation remain separate
+  stages; `maxPlayers` does not define a roster.
+- `ownerId` initially equals the replication-origin seat for per-player
+  components and is `null` for shared components. Reducers may reassign ownership
+  independently. Decoding an ID must never be used to infer the current owner.
 
 ### Home resolution
 
 | Seed scope  | Home target                                       | Result                                                              |
 | ----------- | ------------------------------------------------- | ------------------------------------------------------------------- |
-| `perPlayer` | per-player zone                                   | owner's zone instance                                               |
-| `perPlayer` | zone attached to a per-player board, or its space | owner's board instance                                              |
-| `perPlayer` | space on a per-player board                       | owner's board instance                                              |
+| `perPlayer` | per-player zone                                   | replication-origin seat's zone host                                 |
+| `perPlayer` | zone attached to a per-player board, or its space | replication-origin seat's board instance                            |
+| `perPlayer` | space on a per-player board                       | replication-origin seat's board instance                            |
 | `perPlayer` | shared zone, shared board, detached               | allowed; owner still set                                            |
 | `shared`    | any per-player target                             | validation error: "place it during reducer setup" (today's message) |
 
 ### One per-player identity
 
-Add `shared/domain/instance-ids.ts`, the only place that builds or parses
-per-player instance strings:
+Use `shared/domain/per-player-instance.ts` as the single encoder/decoder owner
+for per-player board IDs, `BoardCard` expansion and piece/die seed expansion.
+The shared owner accepts plain seat strings and does not import reducer `PlayerId`.
+Reducer callers supply validated roster seats.
 
 ```ts
-export const instanceId = {
-  of: <Base extends string>(base: Base, playerId: PlayerId) =>
-    `${base}:${playerId}` as const,
-  parse: (id: string): { base: string; playerId: PlayerId | null } => {
-    const at = id.lastIndexOf(":");
-    return at < 0
-      ? { base: id, playerId: null }
-      : { base: id.slice(0, at), playerId: id.slice(at + 1) as PlayerId };
-  },
-};
+const pieceId = perPlayerInstanceId("piece", "trail-3", playerId);
+const boardId = perPlayerInstanceId("board", "frontier", playerId);
+// Decoder returns family, expanded base and replication-origin seat, or null.
+const instance = parsePerPlayerInstanceId(pieceId);
+// A decoded instance still requires membership in the active table.
 ```
+
+Zones use `zoneId` plus explicit `hostId` in queries, mutations and locations.
+A per-player zone's host is the actual roster seat; no generated zone-instance
+ID is created. Replication home resolution supplies that seat explicitly.
 
 Board target values stop carrying a base board plus player:
 
@@ -144,9 +161,16 @@ directly. Delete `PlayerBoardSpaceTarget`, `PlayerBoardSpaceTargetSchema`,
 - A 3-player session creates 30 trails and 12 camps with correct owners and
   zone instances; a 4-player session of the same manifest creates 40 and 16.
 - Home resolution table above, one test per row.
-- Type proofs: per-player piece IDs accept `trail-3:${string}` and reject
-  `trail-11:player-1` and `trial-3:player-1`; manifests with `ownerId` or
-  `visibleTo` fail to compile.
+- Codec proofs cover separators, quotes, slashes, Unicode, arbitrary roster IDs,
+  empty values, malformed/noncanonical strings and canonical forged strings.
+  Canonical syntax alone never grants roster or component membership.
+- Type proofs preserve exact family and expanded base, reject a wrong family,
+  undeclared seed or out-of-range expanded ordinal, and keep shared literal IDs
+  exact. Manifests with `ownerId` or `visibleTo` fail to compile.
+- Manifest admission rejects reserved authored prefixes. Session admission
+  rejects unknown seats and absent generated IDs, including valid codec strings.
+- Reassigning ownership preserves the instance ID and replication origin.
+  Per-player zones continue to require explicit valid hosts without encoded IDs.
 - Board targets: a per-player board space target round-trips through the wire
   schema and `BoardTargets` matches it without string rebuilding.
 - Hex scenarios pass unchanged; `player-board-targets.test.ts` moves to the new
@@ -163,7 +187,10 @@ pnpm ui test
 ## Done when
 
 - No manifest or example names a player.
-- Per-player instance strings are built and parsed only in `instance-ids.ts`.
+- Per-player instance strings are built and parsed only in
+  `shared/domain/per-player-instance.ts`; no delimiter-based reconstruction remains.
+- Shared IDs stay literal, zone hosts stay explicit, and ownership is independent
+  of replication-origin identity.
 
 This layer completes the scope that can ship without dynamic boards. If boards
 are deferred, publish an alpha here (see the [README](README.md#publication)).
