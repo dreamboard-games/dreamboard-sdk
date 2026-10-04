@@ -727,7 +727,7 @@ test("setup action discovery follows seat order and adjacent trail domains", asy
         FRONTIER_GEOMETRY.edgeAt("northEastClay", 2),
         FRONTIER_GEOMETRY.edgeAt("northForest", 1),
         FRONTIER_GEOMETRY.edgeAt("northForest", 0),
-      ],
+      ].sort(),
     );
   }
 
@@ -845,7 +845,7 @@ test("setup rejects occupied camps and non-adjacent or occupied trails", async (
     replay: afterFirstPair,
     command: camp(
       1,
-      FRONTIER_GEOMETRY.vertexAt("northForest", 1),
+      FRONTIER_GEOMETRY.vertexAt("northForest", 0),
       "placeStartingCamp",
     ),
   });
@@ -1138,7 +1138,7 @@ test("camp targets require an owned trail, an empty vertex, and full atomic cost
   });
   const occupied = await probeScenarioCommand({
     replay: funded,
-    command: camp(1, FRONTIER_GEOMETRY.vertexAt("northForest", 1)),
+    command: camp(1, FRONTIER_GEOMETRY.vertexAt("northForest", 0)),
   });
   assert.equal(occupied.kind, "rejected");
   if (occupied.kind === "rejected") {
@@ -1146,7 +1146,7 @@ test("camp targets require an owned trail, an empty vertex, and full atomic cost
   }
   const disconnected = await probeScenarioCommand({
     replay: funded,
-    command: camp(1, FRONTIER_GEOMETRY.vertexAt("southForest", 2)),
+    command: camp(1, FRONTIER_GEOMETRY.vertexAt("southForest", 1)),
   });
   assert.equal(disconnected.kind, "rejected");
   if (disconnected.kind === "rejected") {
@@ -1154,7 +1154,7 @@ test("camp targets require an owned trail, an empty vertex, and full atomic cost
   }
   const insufficient = await probeScenarioCommand({
     replay,
-    command: camp(0, FRONTIER_GEOMETRY.vertexAt("northForest", 0)),
+    command: camp(0, FRONTIER_GEOMETRY.vertexAt("northForest", 5)),
   });
   assert.equal(insufficient.kind, "rejected");
   if (insufficient.kind === "rejected") {

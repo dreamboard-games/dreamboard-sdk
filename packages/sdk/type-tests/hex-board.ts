@@ -3,7 +3,7 @@ import {
   createTableQueries,
   fromCoordinates,
 } from "../src/reducer";
-import { createHexBoardGeometry } from "../src/shared/hex-board";
+import { createHexTopology } from "../src/shared/hex-board";
 const manifest = compileManifest({
   players: { minPlayers: 1, maxPlayers: 1 },
   cardSets: [],
@@ -31,11 +31,11 @@ q.board("island").neighbors("2,0");
 q.board("island").neighbors("0,0");
 // @ts-expect-error Unknown board.
 q.board("missing");
-const a = createHexBoardGeometry({
+const a = createHexTopology({
   id: "a",
   spaces: [{ id: "home", q: 0, r: 0 }],
 });
-const b = createHexBoardGeometry({
+const b = createHexTopology({
   id: "b",
   spaces: [{ id: "home", q: 0, r: 0 }],
 });
@@ -105,3 +105,14 @@ track.relatedSpaces("start", "route");
 track.relatedSpaces("start", "unknown");
 // @ts-expect-error Bound generic space kinds stay manifest scoped.
 track.spacesByType("unknown");
+
+q.board("island").gridDistance("home", "1,0");
+// @ts-expect-error gridDistance preserves the board's space vocabulary.
+q.board("island").gridDistance("home", "missing");
+
+// @ts-expect-error Cached topology collections are immutable.
+a.edges[0] = a.edges[1];
+// @ts-expect-error Cached incidence is immutable.
+a.edges[0].spaceIds[0] = "home";
+// @ts-expect-error Cached layout polygons are immutable.
+a.getLayout({ hexSize: 20 }).spaces[0].corners[0] = { x: 0, y: 0 };

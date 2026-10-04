@@ -11,7 +11,7 @@ import type {
   RuntimeBoardState,
   RuntimeHexBoardState,
 } from "../../reducer/model/table.js";
-import { createHexBoardGeometry } from "../../shared/hex-board.js";
+import { createHexTopology } from "../../shared/hex-board.js";
 import { handFeature } from "./hand.js";
 import { boardFeature } from "./board.js";
 import { dragFeature } from "./drag.js";
@@ -29,7 +29,7 @@ function onBoard(targets: readonly DropTarget<unknown>[]) {
 
 function hexBoard(id = "island", playerId?: string): RuntimeHexBoardState {
   const spaces = [{ id: "center", q: 0, r: 0 }];
-  const geometry = createHexBoardGeometry({ id: "island", spaces });
+  const geometry = createHexTopology({ id: "island", spaces });
   return {
     id,
     baseId: "island",

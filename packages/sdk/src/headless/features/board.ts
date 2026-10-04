@@ -23,7 +23,10 @@ import type {
 } from "../../reducer/model/table.js";
 import { requireLookup } from "../../shared/lookup.js";
 import { AmbiguousTargetError } from "../instance.js";
-import { createHexBoardGeometry } from "../../shared/hex-board.js";
+import {
+  createHexTopology,
+  createHexTopologyCache,
+} from "../../shared/hex-board.js";
 import type { Point } from "./pointer-session.js";
 import type { ViewportTransform } from "./pan-zoom.js";
 
@@ -132,13 +135,10 @@ function createRuntimeBoardFeature(context: RuntimeFeatureContext) {
     {
       model: RuntimeFeatureSnapshot;
       source: ReturnType<typeof game.getOptions>["source"];
-      geometry?: ReturnType<typeof createHexBoardGeometry>;
+      geometry?: ReturnType<typeof createHexTopology>;
     }
   >();
-  const geometries = new WeakMap<
-    object,
-    ReturnType<typeof createHexBoardGeometry>
-  >();
+  const cachedHexTopology = createHexTopologyCache();
   let cached:
     | {
         view: unknown;
@@ -159,15 +159,14 @@ function createRuntimeBoardFeature(context: RuntimeFeatureContext) {
       return cached.collection;
     const boards = Object.values(context.getBoards()).map((data) => {
       const board = context.createBoard(data);
-      let geometry = geometries.get(data);
-      if (!geometry && data.layout === "hex") {
-        geometry = createHexBoardGeometry({
-          id: data.baseId ?? data.id,
-          orientation: data.orientation,
-          spaces: Object.values(data.spaces),
-        });
-        geometries.set(data, geometry);
-      }
+      const geometry =
+        data.layout === "hex"
+          ? cachedHexTopology({
+              id: data.baseId ?? data.id,
+              orientation: data.orientation,
+              spaces: Object.values(data.spaces),
+            })
+          : undefined;
       captures.set(board, { model, source, geometry });
       return board;
     });

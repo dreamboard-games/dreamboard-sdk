@@ -62,9 +62,9 @@ export default defineScenario({
       },
     ]);
     expect(view({ seat: 0 }).campsByIntersectionId).toEqual({
-      [FRONTIER_GEOMETRY.vertexAt("northForest", 1)]: "player-1",
-      [FRONTIER_GEOMETRY.vertexAt("southEastFields", 3)]: "player-2",
-      [FRONTIER_GEOMETRY.vertexAt("southWestClay", 5)]: "player-3",
+      [FRONTIER_GEOMETRY.vertexAt("northForest", 0)]: "player-1",
+      [FRONTIER_GEOMETRY.vertexAt("southEastFields", 2)]: "player-2",
+      [FRONTIER_GEOMETRY.vertexAt("southWestClay", 4)]: "player-3",
     });
     expect(view({ seat: 0 }).mySupplies).toEqual({
       brick: 1,

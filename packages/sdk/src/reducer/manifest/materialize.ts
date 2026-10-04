@@ -29,10 +29,7 @@ import type {
 } from "../../shared/domain/contracts.js";
 import type { GameTopologyManifest } from "../../shared/domain/manifest.js";
 
-import {
-  createHexBoardGeometry,
-  resolveHexSpaces,
-} from "../../shared/hex-board.js";
+import { createHexTopology, resolveHexSpaces } from "../../shared/hex-board.js";
 
 import { assertValidManifest } from "./manifest-validation.js";
 
@@ -397,7 +394,7 @@ function geometryKeyFromSquareVertexRef(
 
 function resolveAuthoredHexEdges(
   board: HexBoardSpec,
-  geometry: ReturnType<typeof createHexBoardGeometry>,
+  geometry: ReturnType<typeof createHexTopology>,
 ): AnalyzedHexBoard["authoredEdges"] {
   return (board.edges ?? []).map((edge) => ({
     ...edge,
@@ -409,7 +406,7 @@ function resolveAuthoredHexEdges(
 }
 function resolveAuthoredHexVertices(
   board: HexBoardSpec,
-  geometry: ReturnType<typeof createHexBoardGeometry>,
+  geometry: ReturnType<typeof createHexTopology>,
 ): AnalyzedHexBoard["authoredVertices"] {
   return (board.vertices ?? []).map((vertex) => ({
     ...vertex,
@@ -607,7 +604,7 @@ function analyzeBoards(manifest: GameTopologyManifest, playerIds: string[]) {
 
     if (isHexBoardSpec(board)) {
       const spaces = resolveHexSpaces(board);
-      const geometry = createHexBoardGeometry({ ...board, spaces });
+      const geometry = createHexTopology({ ...board, spaces });
       const authoredEdges = resolveAuthoredHexEdges(board, geometry);
       const authoredVertices = resolveAuthoredHexVertices(board, geometry);
       return {
@@ -624,10 +621,14 @@ function analyzeBoards(manifest: GameTopologyManifest, playerIds: string[]) {
         authoredVertices,
         edges: geometry.edges.map((edge) => ({
           ...edge,
+          spaceIds: [...edge.spaceIds],
+          vertexIds: [...edge.vertexIds],
           ...authoredEdges.find((authored) => authored.id === edge.id),
         })),
         vertices: geometry.vertices.map((vertex) => ({
           ...vertex,
+          spaceIds: [...vertex.spaceIds],
+          edgeIds: [...vertex.edgeIds],
           ...authoredVertices.find((authored) => authored.id === vertex.id),
         })),
       };

@@ -97,11 +97,11 @@ export function reject(seat: number) {
 }
 
 export const STANDARD_SETUP_COMMANDS = [
-  camp(0, FRONTIER_GEOMETRY.vertexAt("northForest", 1), "placeStartingCamp"),
+  camp(0, FRONTIER_GEOMETRY.vertexAt("northForest", 0), "placeStartingCamp"),
   trail(0, FRONTIER_GEOMETRY.edgeAt("northForest", 0), "placeStartingTrail"),
   camp(
     1,
-    FRONTIER_GEOMETRY.vertexAt("southEastFields", 3),
+    FRONTIER_GEOMETRY.vertexAt("southEastFields", 2),
     "placeStartingCamp",
   ),
   trail(
@@ -109,14 +109,14 @@ export const STANDARD_SETUP_COMMANDS = [
     FRONTIER_GEOMETRY.edgeAt("southEastFields", 2),
     "placeStartingTrail",
   ),
-  camp(2, FRONTIER_GEOMETRY.vertexAt("southWestClay", 5), "placeStartingCamp"),
+  camp(2, FRONTIER_GEOMETRY.vertexAt("southWestClay", 4), "placeStartingCamp"),
   trail(2, FRONTIER_GEOMETRY.edgeAt("southWestClay", 4), "placeStartingTrail"),
 ] as const;
 
 export const MULTI_VICTIM_SETUP_COMMANDS = [
   camp(
     0,
-    FRONTIER_GEOMETRY.vertexAt("southEastFields", 3),
+    FRONTIER_GEOMETRY.vertexAt("southEastFields", 2),
     "placeStartingCamp",
   ),
   trail(
@@ -124,13 +124,13 @@ export const MULTI_VICTIM_SETUP_COMMANDS = [
     FRONTIER_GEOMETRY.edgeAt("southEastFields", 2),
     "placeStartingTrail",
   ),
-  camp(1, FRONTIER_GEOMETRY.vertexAt("northForest", 2), "placeStartingCamp"),
+  camp(1, FRONTIER_GEOMETRY.vertexAt("northForest", 1), "placeStartingCamp"),
   trail(
     1,
     FRONTIER_GEOMETRY.edgeAt("northWestFields", 0),
     "placeStartingTrail",
   ),
-  camp(2, FRONTIER_GEOMETRY.vertexAt("northForest", 1), "placeStartingCamp"),
+  camp(2, FRONTIER_GEOMETRY.vertexAt("northForest", 0), "placeStartingCamp"),
   trail(2, FRONTIER_GEOMETRY.edgeAt("northForest", 0), "placeStartingTrail"),
 ] as const;
 
@@ -146,12 +146,12 @@ export const COMPLETE_GAME_COMMANDS = [
   roll(1),
   offer(1, 0, { provisions: 1 }, { brick: 1 }),
   accept(0),
-  camp(1, FRONTIER_GEOMETRY.vertexAt("southEastFields", 2)),
+  camp(1, FRONTIER_GEOMETRY.vertexAt("southEastFields", 1)),
   end(1),
   roll(2),
   offer(2, 0, { provisions: 1 }, { timber: 1 }),
   accept(0),
-  camp(2, FRONTIER_GEOMETRY.vertexAt("southWestClay", 4)),
+  camp(2, FRONTIER_GEOMETRY.vertexAt("southWestClay", 3)),
   end(2),
   roll(0),
   end(0),
@@ -219,7 +219,7 @@ export const COMPLETE_GAME_COMMANDS = [
   roll(1),
   offer(1, 0, { provisions: 1 }, { brick: 1 }),
   accept(0),
-  camp(1, FRONTIER_GEOMETRY.vertexAt("southForest", 4)),
+  camp(1, FRONTIER_GEOMETRY.vertexAt("southForest", 3)),
   end(1),
   roll(2),
   end(2),
@@ -245,7 +245,7 @@ export const COMPLETE_GAME_COMMANDS = [
   offer(1, 0, { provisions: 1 }, { brick: 1 }),
   accept(0),
   depot(1, "provisions", "timber"),
-  camp(1, FRONTIER_GEOMETRY.vertexAt("southForest", 3)),
+  camp(1, FRONTIER_GEOMETRY.vertexAt("southForest", 2)),
 ] as const;
 
 /** Seed-1 legal replay ending immediately after turn 76 rolls a 7. */
@@ -657,10 +657,10 @@ export const NETWORK_EXHAUSTION_COMMANDS = [
 ] as const;
 
 export const INTERRUPTION_SETUP_COMMANDS = [
-  camp(0, FRONTIER_GEOMETRY.vertexAt("northForest", 1), "placeStartingCamp"),
+  camp(0, FRONTIER_GEOMETRY.vertexAt("northForest", 0), "placeStartingCamp"),
   trail(0, FRONTIER_GEOMETRY.edgeAt("northForest", 0), "placeStartingTrail"),
-  camp(1, FRONTIER_GEOMETRY.vertexAt("northForest", 0), "placeStartingCamp"),
+  camp(1, FRONTIER_GEOMETRY.vertexAt("northForest", 5), "placeStartingCamp"),
   trail(1, FRONTIER_GEOMETRY.edgeAt("northForest", 5), "placeStartingTrail"),
-  camp(2, FRONTIER_GEOMETRY.vertexAt("southWestClay", 5), "placeStartingCamp"),
+  camp(2, FRONTIER_GEOMETRY.vertexAt("southWestClay", 4), "placeStartingCamp"),
   trail(2, FRONTIER_GEOMETRY.edgeAt("southWestClay", 4), "placeStartingTrail"),
 ] as const;
