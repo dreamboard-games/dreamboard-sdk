@@ -29,7 +29,7 @@ const runtimeManifest = compileManifest({
       id: "main",
       name: "Main",
       defaultHome: { type: "zone", zoneId: "draw" },
-      cardSchema: { properties: {} },
+      cardSchema: z.object({}),
       cards: ["a", "b", "c"].map((id) => ({
         id,
         cardType: "card",

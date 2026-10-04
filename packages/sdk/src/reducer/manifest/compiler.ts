@@ -1,3 +1,6 @@
+import { parseTopologyManifestJson } from "./parse-json";
+import type { TypedTopologyManifest } from "./authoring";
+import { toManifestJson } from "./field-schemas";
 import type { ManifestCountValidation } from "./identity-types";
 import * as z from "zod";
 import { buildTypedRecord } from "./generated-helpers.js";
@@ -13,14 +16,26 @@ import {
   createManifestGameStateSchema,
 } from "../model/manifest";
 import type { ReducerManifestContract, RuntimeTableRecord } from "../model";
-import type { AuthoredManifest, CompiledManifest } from "./types";
+import type {
+  AuthoredManifest,
+  AuthoredOf,
+  ValidatedManifest,
+  CompiledManifest,
+} from "./types";
+
+export type ManifestInput<M> = M &
+  ManifestCountValidation<NoInfer<M>> &
+  (M extends AuthoredManifest
+    ? AuthoredManifest extends M
+      ? unknown
+      : TypedTopologyManifest<NoInfer<M>>
+    : unknown);
 
 /** Compile authored topology once, in memory, with the same validation used by initialization. */
-export function compileManifest<const M extends AuthoredManifest>(
-  manifest: M & ManifestCountValidation<NoInfer<M>>,
-): CompiledManifest<M> {
-  // eslint-disable-next-line no-restricted-syntax -- AuthoredManifest is the readonly topology shape; structuredClone produces the owned mutable copy consumed by analysis.
-  const source = structuredClone(manifest) as unknown as GameTopologyManifest;
+export function compileManifest<
+  const M extends AuthoredManifest | ValidatedManifest | GameTopologyManifest,
+>(manifest: ManifestInput<M>): CompiledManifest<AuthoredOf<M>> {
+  const source = parseTopologyManifestJson(toManifestJson(manifest));
   const analysis = analyzeManifest(source);
   const initial = materializeManifestTable({
     manifest: source,
@@ -214,12 +229,14 @@ export function compileManifest<const M extends AuthoredManifest>(
       createInitialTable,
     },
     createGameStateSchema: (
-      config: Parameters<CompiledManifest<M>["createGameStateSchema"]>[0],
+      config: Parameters<
+        CompiledManifest<AuthoredOf<M>>["createGameStateSchema"]
+      >[0],
     ) =>
       createManifestGameStateSchema({
         ...config,
         tableSchema,
         playerIdSchema: ids.playerId,
       }),
-  } as unknown as CompiledManifest<M>;
+  } as unknown as CompiledManifest<AuthoredOf<M>>;
 }

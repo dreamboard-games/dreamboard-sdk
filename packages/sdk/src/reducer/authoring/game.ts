@@ -1,8 +1,10 @@
-import type { ManifestCountValidation } from "../manifest/identity-types";
+import type { GameTopologyManifest } from "../../shared/domain/manifest";
 import type { RuntimeRecord } from "../model/table";
-import { compileManifest } from "../manifest/compiler";
+import { compileManifest, type ManifestInput } from "../manifest/compiler";
 import type {
   AuthoredManifest,
+  AuthoredOf,
+  ValidatedManifest,
   CompiledManifest,
   ManifestTable,
 } from "../manifest/types";
@@ -26,7 +28,8 @@ import {
  * parameter types are needed.
  */
 export function createGame<
-  const Manifest extends AuthoredManifest,
+  const Manifest extends
+    AuthoredManifest | ValidatedManifest | GameTopologyManifest,
   PublicSchema extends SchemaLike<object>,
   PrivateSchema extends SchemaLike<object>,
   HiddenSchema extends SchemaLike<object>,
@@ -36,15 +39,15 @@ export function createGame<
     Record<string, never>
   >,
 >(model: {
-  manifest: Manifest & ManifestCountValidation<NoInfer<Manifest>>;
+  manifest: ManifestInput<Manifest>;
   state: { public: PublicSchema; private: PrivateSchema; hidden: HiddenSchema };
   phases: Phases;
   errors?: Errors;
   options?: OptionsSchema;
 }): import("./contract-authoring").GameAuthoring<
   DefinedGameContract<
-    ManifestTable<Manifest>,
-    CompiledManifest<Manifest>,
+    ManifestTable<AuthoredOf<Manifest>>,
+    CompiledManifest<AuthoredOf<Manifest>>,
     PublicSchema,
     PrivateSchema,
     HiddenSchema,
@@ -115,7 +118,7 @@ export function createGame(
         SchemaLike<RuntimeRecord>
       >
     | {
-        manifest: AuthoredManifest;
+        manifest: AuthoredManifest | ValidatedManifest | GameTopologyManifest;
         state: {
           public: SchemaLike<object>;
           private: SchemaLike<object>;

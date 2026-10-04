@@ -8,12 +8,10 @@ const manifest = {
       id: "cards",
       name: "Cards",
       defaultHome: { type: "zone", zoneId: "draw" },
-      cardSchema: {
-        properties: {
-          points: { type: "integer" },
-          color: { type: "enum", enums: ["red", "blue"] },
-        },
-      },
+      cardSchema: z.object({
+        points: z.number().int(),
+        color: z.enum(["red", "blue"]),
+      }),
       cards: [
         {
           id: "ace",

@@ -1,11 +1,26 @@
 import * as z from "zod";
-import type {
-  ObjectSchema,
-  PropertySchema,
-} from "../../shared/domain/contracts.js";
+import type { FieldSchemaJson } from "../../shared/domain/contracts.js";
+import {
+  createFieldValidatorResolver,
+  schemaForCardType,
+} from "./field-schemas";
+import { fieldReferenceContext } from "./materialize";
 import type { ManifestIds } from "../model";
 
 import type { analyzeManifest } from "./materialize";
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+function property(value: unknown, key: string): unknown {
+  return isRecord(value) ? value[key] : undefined;
+}
+function recordEntries(value: unknown): [string, unknown][] {
+  return isRecord(value) ? Object.entries(value) : [];
+}
+function arrayEntries(value: unknown): IterableIterator<[number, unknown]> {
+  const values: readonly unknown[] = Array.isArray(value) ? value : [];
+  return values.entries();
+}
 type Analysis = ReturnType<typeof analyzeManifest>;
 export type RuntimeManifestIds = {
   [
@@ -15,58 +30,14 @@ export type RuntimeManifestIds = {
 type Ids = RuntimeManifestIds;
 export function createTableSchema(analysis: Analysis, ids: Ids) {
   const unknownRecordSchema = z.record(z.string(), z.unknown());
+  const resolveStatic = createFieldValidatorResolver((boardId) =>
+    fieldReferenceContext(analysis, "manifest", boardId),
+  );
   const objectSchema = (
-    schema: ObjectSchema | null | undefined,
-  ): z.ZodTypeAny =>
-    schema && Object.keys(schema.properties).length
-      ? z.object(
-          Object.fromEntries(
-            Object.entries(schema.properties).map(([key, value]) => [
-              key,
-              propertySchema(value),
-            ]),
-          ),
-        )
-      : unknownRecordSchema;
-  function propertySchema(schema: PropertySchema | undefined): z.ZodTypeAny {
-    if (!schema) return z.unknown();
-    let result: z.ZodTypeAny;
-    switch (schema.type) {
-      case "string":
-        result = z.string();
-        break;
-      case "integer":
-        result = z.number().int();
-        break;
-      case "number":
-        result = z.number();
-        break;
-      case "boolean":
-        result = z.boolean();
-        break;
-      case "enum":
-        result = schema.enums?.length
-          ? z.enum(schema.enums as [string, ...string[]])
-          : z.string();
-        break;
-      case "array":
-        result = z.array(propertySchema(schema.items));
-        break;
-      case "record":
-        result = z.record(z.string(), propertySchema(schema.values));
-        break;
-      case "object":
-        result = objectSchema({ properties: schema.properties ?? {} });
-        break;
-      default:
-        result = ids[schema.type];
-    }
-    if (schema.nullable) result = result.nullable();
-    if (schema.optional) result = result.optional();
-    if (Object.prototype.hasOwnProperty.call(schema, "default"))
-      result = result.default(schema.default);
-    return result;
-  }
+    schema: FieldSchemaJson | null | undefined,
+    boardId?: string,
+  ): z.ZodType =>
+    schema ? resolveStatic(schema, boardId) : unknownRecordSchema;
   const shape = <T>(
     items: readonly T[],
     getKey: (item: T) => string,
@@ -84,15 +55,7 @@ export function createTableSchema(analysis: Analysis, ids: Ids) {
       const schema = analysis.cardSets.find(
         (set) => set.id === setId,
       )!.cardSchema;
-      const properties =
-        schema && "variants" in schema
-          ? objectSchema({
-              properties: {
-                ...schema.shared,
-                ...schema.variants[type].properties,
-              },
-            })
-          : objectSchema(schema);
+      const properties = objectSchema(schemaForCardType(schema, type));
       return z.object({
         componentType: z.string().optional(),
         id: z.literal(id),
@@ -368,6 +331,9 @@ export function createTableSchema(analysis: Analysis, ids: Ids) {
   const squareBoardStateByIdSchema = boardCollection(
     boards.filter((board) => board.layout === "square"),
   );
+  let sessionKey = "";
+  let resolveSession:
+    ReturnType<typeof createFieldValidatorResolver> | undefined;
   return z
     .object({
       playerOrder: z.array(ids.playerId),
@@ -490,6 +456,150 @@ export function createTableSchema(analysis: Analysis, ids: Ids) {
             });
         }
       };
+      const playerIds = [...table.playerOrder];
+      const boardEntries = Object.entries(table.boards.byId).map(
+        ([id, board]) => [id, property(board, "baseId")] as const,
+      );
+      const boardIds = boardEntries.map(([id]) => id);
+      const baseById = new Map(boardEntries);
+      const referenceContext = fieldReferenceContext(analysis);
+      const fieldContext = {
+        ...referenceContext,
+        ids: {
+          ...referenceContext.ids,
+          playerId: playerIds,
+          boardId: boardIds,
+        },
+      };
+      const key = JSON.stringify([
+        playerIds,
+        [...boardEntries].sort(([a], [b]) => a.localeCompare(b)),
+      ]);
+      if (!resolveSession || key !== sessionKey) {
+        sessionKey = key;
+        resolveSession = createFieldValidatorResolver((boardId) => {
+          const baseId = boardId ? baseById.get(boardId) : undefined;
+          const scoped =
+            typeof baseId === "string"
+              ? fieldReferenceContext(analysis, "session", baseId)
+              : referenceContext;
+          return {
+            ...fieldContext,
+            ids: { ...scoped.ids, playerId: playerIds, boardId: boardIds },
+          };
+        });
+      }
+      const sessionResolver = resolveSession;
+      const validateFields = (
+        schema: FieldSchemaJson | null | undefined,
+        value: unknown,
+        path: PropertyKey[],
+        boardId?: string,
+      ) => {
+        if (!schema) return;
+        try {
+          const result = sessionResolver(schema, boardId).safeParse(value);
+          if (!result.success)
+            for (const issue of result.error.issues)
+              context.addIssue({
+                code: "custom",
+                path: [...path, ...issue.path],
+                message: issue.message,
+              });
+        } catch (error) {
+          context.addIssue({
+            code: "custom",
+            path,
+            message: error instanceof Error ? error.message : String(error),
+          });
+        }
+      };
+      for (const [id, card] of recordEntries(table.cards)) {
+        const set = analysis.cardSets.find(
+          (set) => set.id === analysis.cardSetIdByCardId.get(id),
+        );
+        if (set)
+          validateFields(
+            schemaForCardType(
+              set.cardSchema,
+              analysis.cardTypeByCardId.get(id)!,
+            ),
+            property(card, "properties"),
+            ["cards", id, "properties"],
+          );
+      }
+      for (const [id, piece] of recordEntries(table.pieces))
+        validateFields(
+          analysis.pieceTypeSchemasById.get(
+            analysis.pieceTypeIdByPieceId.get(id)!,
+          ),
+          property(piece, "properties"),
+          ["pieces", id, "properties"],
+        );
+      for (const [id, die] of recordEntries(table.dice))
+        validateFields(
+          analysis.dieTypeSchemasById.get(analysis.dieTypeIdByDieId.get(id)!),
+          property(die, "properties"),
+          ["dice", id, "properties"],
+        );
+      for (const [id, board] of recordEntries(table.boards.byId)) {
+        const definition = analysis.analyzedBoards.find(
+          (item) => item.board.id === property(board, "baseId"),
+        );
+        if (!definition) continue;
+        const path = ["boards", "byId", id];
+        validateFields(
+          definition.boardFieldsSchema,
+          property(board, "fields"),
+          [...path, "fields"],
+          id,
+        );
+        for (const [spaceId, space] of recordEntries(property(board, "spaces")))
+          validateFields(
+            definition.spaceFieldsSchema,
+            property(space, "fields"),
+            [...path, "spaces", spaceId, "fields"],
+            id,
+          );
+        if (definition.layout !== "hex") {
+          for (const [index, relation] of arrayEntries(
+            property(board, "relations"),
+          ))
+            validateFields(
+              definition.relationFieldsSchema,
+              property(relation, "fields"),
+              [...path, "relations", index, "fields"],
+              id,
+            );
+          for (const [containerId, container] of recordEntries(
+            property(board, "containers"),
+          ))
+            validateFields(
+              definition.containerFieldsSchema,
+              property(container, "fields"),
+              [...path, "containers", containerId, "fields"],
+              id,
+            );
+        }
+        if (definition.layout !== "generic") {
+          for (const [index, edge] of arrayEntries(property(board, "edges")))
+            validateFields(
+              definition.edgeFieldsSchema,
+              property(edge, "fields"),
+              [...path, "edges", index, "fields"],
+              id,
+            );
+          for (const [index, vertex] of arrayEntries(
+            property(board, "vertices"),
+          ))
+            validateFields(
+              definition.vertexFieldsSchema,
+              property(vertex, "fields"),
+              [...path, "vertices", index, "fields"],
+              id,
+            );
+        }
+      }
       checkPlayers(table.resources, ["resources"]);
       for (const [id, players] of Object.entries(
         table.hands as Record<string, Record<string, unknown>>,

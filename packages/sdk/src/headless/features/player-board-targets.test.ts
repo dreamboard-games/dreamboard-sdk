@@ -20,7 +20,7 @@ function authoredGame() {
         {
           id: "cards",
           name: "Cards",
-          cardSchema: { properties: {} },
+          cardSchema: z.object({}),
           cards: [
             {
               id: "card",

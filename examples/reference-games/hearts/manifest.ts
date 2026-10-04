@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { defineTopologyManifest } from "@dreamboard-games/sdk/reducer";
 
 const SUITS = ["clubs", "diamonds", "spades", "hearts"] as const;
@@ -38,12 +39,10 @@ export default defineTopologyManifest({
       id: "playing-cards",
       name: "Playing Cards",
       defaultHome: { type: "zone", zoneId: "draw-pile" },
-      cardSchema: {
-        properties: {
-          suit: { type: "enum", enums: [...SUITS] },
-          rank: { type: "enum", enums: [...RANKS] },
-        },
-      },
+      cardSchema: z.object({
+        suit: z.enum([...SUITS]),
+        rank: z.enum([...RANKS]),
+      }),
       cards,
     },
   ],

@@ -4,17 +4,13 @@ import type {
   HexVertexId,
 } from "../../shared/domain/board-identities.js";
 import type { GameTopologyManifest } from "../../shared/domain/manifest.js";
-import type {
-  ObjectSchema,
-  PropertySchema,
-} from "../../shared/domain/contracts.js";
+import type { FieldsOutput, FieldSchema, CardSchema } from "./field-schemas.js";
 import type { z } from "zod";
 import type {
   ManifestIdSchema,
   ReducerManifestContract,
   RuntimeTableRecord,
   RuntimeRecord,
-  RuntimePayload,
   RuntimeCardData,
   RuntimePieceData,
   RuntimeDieData,
@@ -27,18 +23,40 @@ import type {
 import type { PlayerId } from "../per-player";
 import type { RuntimeIdsFromCount } from "./identity-types.js";
 
-type ReadonlyValue<T> = T extends readonly (infer V)[]
-  ? readonly ReadonlyValue<V>[]
+export type SchemaAuthoring<T> = T extends readonly (infer V)[]
+  ? readonly SchemaAuthoring<V>[]
   : T extends object
-    ? { readonly [K in keyof T]: ReadonlyValue<T[K]> }
+    ? {
+        readonly [K in keyof T]: K extends "cardSchema"
+          ? CardSchema
+          : K extends
+                | "fieldsSchema"
+                | "boardFieldsSchema"
+                | "spaceFieldsSchema"
+                | "relationFieldsSchema"
+                | "containerFieldsSchema"
+                | "edgeFieldsSchema"
+                | "vertexFieldsSchema"
+            ? FieldSchema
+            : SchemaAuthoring<T[K]>;
+      }
     : T;
 declare const validatedManifest: unique symbol;
-/** Authored topology that passed the SDK's semantic validation. */
-export type ValidatedManifest<M extends AuthoredManifest = AuthoredManifest> =
-  ReadonlyValue<M> & { readonly [validatedManifest]: true };
-
+export type SchemaJson<T> = T extends z.ZodType
+  ? import("../../shared/domain/contracts.js").FieldSchemaJson
+  : T extends readonly (infer V)[]
+    ? readonly SchemaJson<V>[]
+    : T extends object
+      ? { readonly [K in keyof T]: SchemaJson<T[K]> }
+      : T;
+export type ValidatedManifest<M = AuthoredManifest> = SchemaJson<M> & {
+  readonly [validatedManifest]: M;
+};
+export type AuthoredOf<M> = M extends { readonly [validatedManifest]: infer A }
+  ? A
+  : M;
 declare const compiledManifest: unique symbol;
-export type AuthoredManifest = ReadonlyValue<GameTopologyManifest>;
+export type AuthoredManifest = SchemaAuthoring<GameTopologyManifest>;
 type Entry<T> = T extends readonly (infer V)[] ? V : never;
 type Get<T, K extends PropertyKey> = T extends unknown
   ? K extends keyof T
@@ -114,62 +132,14 @@ export type ManifestIdsOf<M> = {
   spaceId: BoardSpaceId<Boards<M>>;
   spaceTypeId: Extract<Get<BoardSpaceEntry<Boards<M>>, "typeId">, string>;
 };
-type PropertyValue<P, M> = PropertySchema extends P
-  ? RuntimePayload
-  : P extends { type: infer T }
-    ? T extends keyof ManifestIdsOf<M>
-      ? ManifestIdsOf<M>[T]
-      : T extends "string"
-        ? string
-        : T extends "number" | "integer"
-          ? number
-          : T extends "boolean"
-            ? boolean
-            : T extends "enum"
-              ? Entry<Get<P, "enums">>
-              : T extends "array"
-                ? PropertyOutput<Get<P, "items">, M>[]
-                : T extends "record"
-                  ? Record<string, PropertyOutput<Get<P, "values">, M>>
-                  : T extends "object"
-                    ? ObjectProperties<Get<P, "properties">, M>
-                    : never
-    : never;
-type PropertyOutput<P, M> =
-  PropertyValue<P, M> | (P extends { nullable: true } ? null : never);
-type OptionalKeys<P> = {
-  [K in keyof P]: P[K] extends { optional: true }
-    ? P[K] extends { default: unknown }
-      ? never
-      : K
-    : never;
-}[keyof P];
-type ObjectProperties<P, M> = {
-  [K in Exclude<keyof P, OptionalKeys<P>>]: PropertyOutput<P[K], M>;
-} & { [K in OptionalKeys<P>]?: PropertyOutput<P[K], M> };
-type ObjectFields<S, M> = [S] extends [never]
-  ? RuntimeRecord
-  : ObjectSchema extends S
-    ? RuntimeRecord
-    : S extends { properties: infer P }
-      ? ObjectProperties<P, M>
-      : RuntimeRecord;
+type ObjectFields<S, M, B = never> = FieldsOutput<S, M, B>;
 type CardFields<S, Category extends string, M> = S extends {
-  variants: infer Variants;
+  byCardType: infer Variants;
 }
   ? Category extends keyof Variants
-    ? ObjectFields<
-        {
-          properties: Omit<
-            S extends { shared: infer Shared } ? Shared : Record<never, never>,
-            keyof Get<Variants[Category], "properties">
-          > &
-            Get<Variants[Category], "properties">;
-        },
-        M
-      >
+    ? FieldsOutput<Variants[Category], M>
     : never
-  : ObjectFields<S, M>;
+  : FieldsOutput<S, M>;
 type CardStateFor<M, Set, Card> = Card extends {
   id: infer BaseId extends string;
   cardType: infer Category extends string;
@@ -248,7 +218,7 @@ type InferredPieces<M> = {
 type InferredDice<M> = {
   [Id in SeedIds<Entries<M, "dieSeeds">>]: EntityAtId<DieState<M>, Id>;
 };
-type BoardField<B, K extends PropertyKey, M> = ObjectFields<Get<B, K>, M>;
+type BoardField<B, K extends PropertyKey, M> = ObjectFields<Get<B, K>, M, B>;
 type BoardSpaceEntry<B> = B extends { layout: "hex"; spaces: infer Spaces }
   ? Spaces[keyof Spaces]
   : Entry<Get<B, "spaces">>;
@@ -393,7 +363,7 @@ export type ManifestTable<M> = AuthoredManifest extends M
         Record<ManifestIdsOf<M>["resourceId"], number>
       >;
     };
-export type CompiledManifest<M extends AuthoredManifest> = Omit<
+export type CompiledManifest<M> = Omit<
   ReducerManifestContract<
     ManifestTable<M>,
     string,

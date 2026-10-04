@@ -20,7 +20,7 @@ const topology = {
       id: "cards",
       name: "Cards",
       defaultHome: { type: "detached" },
-      cardSchema: { properties: {} },
+      cardSchema: z.object({}),
       cards: [
         {
           id: "card-a",

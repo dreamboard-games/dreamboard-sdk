@@ -1,3 +1,9 @@
+import * as z from "zod";
+import {
+  createFieldValidatorResolver,
+  schemaForCardType,
+  type FieldReferenceContext,
+} from "./field-schemas";
 import type {
   BoardEdgeRef,
   BoardContainerSpec,
@@ -13,9 +19,8 @@ import type {
   HexVertexRef,
   DieSeedSpec,
   CardSetDefinition,
-  ObjectSchema,
+  FieldSchemaJson,
   PieceSeedSpec,
-  PropertySchema,
   SquareBoardSpec,
   SquareEdgeSpec,
   SquareSpaceSpec,
@@ -36,10 +41,10 @@ interface AnalyzedGenericBoard {
   board: GenericBoardSpec;
   boardTypeId?: string | null;
   runtimeBoardIds: string[];
-  boardFieldsSchema?: ObjectSchema | null;
-  spaceFieldsSchema?: ObjectSchema | null;
-  relationFieldsSchema?: ObjectSchema | null;
-  containerFieldsSchema?: ObjectSchema | null;
+  boardFieldsSchema?: FieldSchemaJson | null;
+  spaceFieldsSchema?: FieldSchemaJson | null;
+  relationFieldsSchema?: FieldSchemaJson | null;
+  containerFieldsSchema?: FieldSchemaJson | null;
   spaces: BoardSpaceSpec[];
   relations: BoardRelationSpec[];
   containers: BoardContainerSpec[];
@@ -50,10 +55,10 @@ interface AnalyzedHexBoard {
   board: HexBoardSpec;
   boardTypeId?: string | null;
   runtimeBoardIds: string[];
-  boardFieldsSchema?: ObjectSchema | null;
-  spaceFieldsSchema?: ObjectSchema | null;
-  edgeFieldsSchema?: ObjectSchema | null;
-  vertexFieldsSchema?: ObjectSchema | null;
+  boardFieldsSchema?: FieldSchemaJson | null;
+  spaceFieldsSchema?: FieldSchemaJson | null;
+  edgeFieldsSchema?: FieldSchemaJson | null;
+  vertexFieldsSchema?: FieldSchemaJson | null;
   spaces: HexSpaceSpec[];
   authoredEdges: Array<{
     id: string;
@@ -90,12 +95,12 @@ interface AnalyzedSquareBoard {
   board: SquareBoardSpec;
   boardTypeId?: string | null;
   runtimeBoardIds: string[];
-  boardFieldsSchema?: ObjectSchema | null;
-  spaceFieldsSchema?: ObjectSchema | null;
-  relationFieldsSchema?: ObjectSchema | null;
-  containerFieldsSchema?: ObjectSchema | null;
-  edgeFieldsSchema?: ObjectSchema | null;
-  vertexFieldsSchema?: ObjectSchema | null;
+  boardFieldsSchema?: FieldSchemaJson | null;
+  spaceFieldsSchema?: FieldSchemaJson | null;
+  relationFieldsSchema?: FieldSchemaJson | null;
+  containerFieldsSchema?: FieldSchemaJson | null;
+  edgeFieldsSchema?: FieldSchemaJson | null;
+  vertexFieldsSchema?: FieldSchemaJson | null;
   spaces: SquareSpaceSpec[];
   relations: BoardRelationSpec[];
   containers: BoardContainerSpec[];
@@ -183,40 +188,8 @@ interface ManifestAnalysis {
   spaceIds: string[];
   spaceTypeIds: string[];
   analyzedBoards: AnalyzedBoard[];
-  pieceTypeSchemasById: Map<string, ObjectSchema | null | undefined>;
-  dieTypeSchemasById: Map<string, ObjectSchema | null | undefined>;
-}
-
-type CardPropertySchemaVariants = {
-  shared?: Record<string, PropertySchema>;
-  variants: Record<string, ObjectSchema>;
-};
-
-type CardPropertySchema = ObjectSchema | CardPropertySchemaVariants;
-
-function isCardPropertySchemaVariants(
-  schema: CardPropertySchema | null | undefined,
-): schema is CardPropertySchemaVariants {
-  return Boolean(schema && "variants" in schema);
-}
-
-function mergeSharedCardProperties(
-  schema: CardPropertySchemaVariants,
-  cardType: string,
-): ObjectSchema {
-  const variant = schema.variants[cardType];
-  return {
-    properties: {
-      ...(schema.shared ?? {}),
-      ...variant.properties,
-    },
-  };
-}
-
-function hasPropertySchemaDefault(
-  property: PropertySchema | null | undefined,
-): property is PropertySchema & { default: unknown } {
-  return Boolean(property && "default" in property);
+  pieceTypeSchemasById: Map<string, FieldSchemaJson | null | undefined>;
+  dieTypeSchemasById: Map<string, FieldSchemaJson | null | undefined>;
 }
 
 function dedupeSorted(values: Iterable<string>): string[] {
@@ -721,6 +694,14 @@ export function analyzeManifest(
   runtimePlayerIds?: readonly string[],
 ): ManifestAnalysis {
   assertValidManifest(manifest);
+  return analyzeManifestStructure(manifest, runtimePlayerIds);
+}
+
+/** Structural analysis shared by semantic reference validation and runtime initialization. */
+export function analyzeManifestStructure(
+  manifest: GameTopologyManifest,
+  runtimePlayerIds?: readonly string[],
+): ManifestAnalysis {
   const playerIds = runtimePlayerIds
     ? [...runtimePlayerIds]
     : Array.from(
@@ -1173,100 +1154,64 @@ function boardSpaceRefKey(spaceIds: readonly string[]): string {
     .join("$$");
 }
 
-function materializePropertySchemaDefault(
-  property: PropertySchema,
+export function fieldReferenceContext(
   analysis: ManifestAnalysis,
-  runtimeBoardId?: string,
-): unknown {
-  if (hasPropertySchemaDefault(property)) {
-    return cloneJson(property.default);
-  }
-  if (property.optional) {
-    return undefined;
-  }
-  if (property.nullable) {
-    return null;
-  }
-
-  switch (property.type) {
-    case "string":
-      return "";
-    case "integer":
-    case "number":
-      return 0;
-    case "boolean":
-      return false;
-    case "enum":
-      return property.enums?.[0] ?? "";
-    case "array":
-      return [];
-    case "object":
-      return materializeObjectSchemaDefaults(
-        property.properties ? { properties: property.properties } : undefined,
-        analysis,
-        runtimeBoardId,
-      );
-    case "record":
-      return {};
-    case "zoneId":
-      return analysis.zoneIds[0] ?? "";
-    case "cardId":
-      return analysis.cardIds[0] ?? "";
-    case "playerId":
-      return analysis.playerIds[0] ?? "";
-    case "boardId":
-      return runtimeBoardId ?? analysis.boardIds[0] ?? "";
-    case "edgeId":
-      return analysis.edgeIds[0] ?? "";
-    case "vertexId":
-      return analysis.vertexIds[0] ?? "";
-    case "spaceId":
-      return (
-        (runtimeBoardId
-          ? analysis.spaceIdsByBoardId.get(runtimeBoardId)?.[0]
-          : undefined) ??
-        analysis.spaceIds[0] ??
-        ""
-      );
-    case "pieceId":
-      return analysis.pieceIds[0] ?? "";
-    case "dieId":
-      return analysis.dieIds[0] ?? "";
-    case "resourceId":
-      return analysis.resourceIds[0] ?? "";
-  }
+  stage: "manifest" | "session" = "session",
+  boardId?: string,
+): FieldReferenceContext {
+  const board = boardId
+    ? analysis.analyzedBoards.find(
+        (item) =>
+          item.board.id === boardId || item.runtimeBoardIds.includes(boardId),
+      )
+    : undefined;
+  return {
+    stage,
+    deferred: stage === "manifest" ? ["playerId", "boardId"] : undefined,
+    ids: {
+      cardId: analysis.cardIds,
+      zoneId: analysis.zoneIds,
+      playerId: analysis.playerIds,
+      boardId: analysis.boardIds,
+      spaceId: board
+        ? board.spaces.map((space) => space.id)
+        : analysis.spaceIds,
+      edgeId:
+        board && board.layout !== "generic"
+          ? board.edges.map((edge) => edge.id)
+          : analysis.edgeIds,
+      vertexId:
+        board && board.layout !== "generic"
+          ? board.vertices.map((vertex) => vertex.id)
+          : analysis.vertexIds,
+      pieceId: analysis.pieceIds,
+      dieId: analysis.dieIds,
+      resourceId: analysis.resourceIds,
+    },
+  };
 }
 
-function materializeObjectSchemaDefaults(
-  schema: ObjectSchema | null | undefined,
+const fieldResolvers = new WeakMap<
+  ManifestAnalysis,
+  ReturnType<typeof createFieldValidatorResolver>
+>();
+function materializeFields(
+  schema: FieldSchemaJson | null | undefined,
   analysis: ManifestAnalysis,
-  runtimeBoardId?: string,
+  values: unknown,
+  boardId?: string,
 ): Record<string, unknown> {
-  if (!schema?.properties) {
-    return {};
+  if (!schema) return z.record(z.string(), z.unknown()).parse(values ?? {});
+  let resolve = fieldResolvers.get(analysis);
+  if (!resolve) {
+    resolve = createFieldValidatorResolver((board) =>
+      fieldReferenceContext(analysis, "session", board),
+    );
+    fieldResolvers.set(analysis, resolve);
   }
-
-  return Object.fromEntries(
-    Object.entries(schema.properties).flatMap(([key, property]) => {
-      const value = materializePropertySchemaDefault(
-        property,
-        analysis,
-        runtimeBoardId,
-      );
-      return value === undefined ? [] : [[key, value]];
-    }),
-  );
-}
-
-function materializeCardPropertiesDefaults(
-  schema: CardPropertySchema | null | undefined,
-  cardType: string,
-  analysis: ManifestAnalysis,
-): Record<string, unknown> {
-  const objectSchema = isCardPropertySchemaVariants(schema)
-    ? mergeSharedCardProperties(schema, cardType)
-    : schema;
-  return materializeObjectSchemaDefaults(objectSchema, analysis);
+  return z
+    .record(z.string(), z.unknown())
+    .parse(resolve(schema, boardId).parse(values ?? {}));
 }
 
 export function materializeManifestTable(options: {
@@ -1532,14 +1477,11 @@ export function materializeManifestTable(options: {
           text: card.text,
           frontImage: card.frontImage,
           backImage: card.backImage,
-          properties: {
-            ...materializeCardPropertiesDefaults(
-              cardSet.cardSchema,
-              card.cardType,
-              analysis,
-            ),
-            ...(card.properties ?? {}),
-          },
+          properties: materializeFields(
+            schemaForCardType(cardSet.cardSchema, card.cardType),
+            analysis,
+            card.properties,
+          ),
         };
         const resolvedHome = card.home ?? cardSet.defaultHome;
         const path =
@@ -1725,13 +1667,11 @@ export function materializeManifestTable(options: {
         pieceTypeId: seed.typeId,
         pieceName: pieceType?.name ?? seed.typeId,
         ownerId: seed.ownerId ?? null,
-        properties: {
-          ...materializeObjectSchemaDefaults(
-            analysis.pieceTypeSchemasById.get(seed.typeId),
-            analysis,
-          ),
-          ...(seed.fields ?? {}),
-        },
+        properties: materializeFields(
+          analysis.pieceTypeSchemasById.get(seed.typeId),
+          analysis,
+          seed.fields,
+        ),
       };
       assignSeedLocation(componentId, seed.ownerId, seed.home, {
         path: `manifest.pieceSeeds[${seedIndex}].home`,
@@ -1751,13 +1691,11 @@ export function materializeManifestTable(options: {
         ownerId: seed.ownerId ?? null,
         sides: dieType?.sides ?? 6,
         value: null,
-        properties: {
-          ...materializeObjectSchemaDefaults(
-            analysis.dieTypeSchemasById.get(seed.typeId),
-            analysis,
-          ),
-          ...(seed.fields ?? {}),
-        },
+        properties: materializeFields(
+          analysis.dieTypeSchemasById.get(seed.typeId),
+          analysis,
+          seed.fields,
+        ),
       };
       assignSeedLocation(componentId, seed.ownerId, seed.home, {
         path: `manifest.dieSeeds[${seedIndex}].home`,
@@ -1776,13 +1714,11 @@ export function materializeManifestTable(options: {
       layout: analyzedBoard.layout,
       typeId: analyzedBoard.boardTypeId ?? null,
       scope: analyzedBoard.board.scope,
-      fields: {
-        ...materializeObjectSchemaDefaults(
-          analyzedBoard.boardFieldsSchema,
-          analysis,
-        ),
-        ...(analyzedBoard.board.fields ?? {}),
-      },
+      fields: materializeFields(
+        analyzedBoard.boardFieldsSchema,
+        analysis,
+        analyzedBoard.board.fields,
+      ),
     };
 
     const buildSpaces = () =>
@@ -1793,13 +1729,11 @@ export function materializeManifestTable(options: {
             id: spaceId,
             name: "name" in space ? (space.name ?? null) : null,
             typeId: space?.typeId ?? null,
-            fields: {
-              ...materializeObjectSchemaDefaults(
-                analyzedBoard.spaceFieldsSchema,
-                analysis,
-              ),
-              ...(space.fields ?? {}),
-            },
+            fields: materializeFields(
+              analyzedBoard.spaceFieldsSchema,
+              analysis,
+              space.fields,
+            ),
             zoneId: "zoneId" in space ? (space.zoneId ?? null) : null,
           };
 
@@ -1840,13 +1774,11 @@ export function materializeManifestTable(options: {
             fromSpaceId: relation.fromSpaceId,
             toSpaceId: relation.toSpaceId,
             directed: relation.directed ?? false,
-            fields: {
-              ...materializeObjectSchemaDefaults(
-                analyzedBoard.relationFieldsSchema,
-                analysis,
-              ),
-              ...(relation.fields ?? {}),
-            },
+            fields: materializeFields(
+              analyzedBoard.relationFieldsSchema,
+              analysis,
+              relation.fields,
+            ),
           }));
 
     const buildContainers = (runtimeBoardId: string) =>
@@ -1866,14 +1798,12 @@ export function materializeManifestTable(options: {
                       : { type: "board" },
                   allowedCardSetIds: container.allowedCardSetIds,
                   zoneId: `board:${runtimeBoardId}:container:${containerId}`,
-                  fields: {
-                    ...materializeObjectSchemaDefaults(
-                      analyzedBoard.containerFieldsSchema,
-                      analysis,
-                      runtimeBoardId,
-                    ),
-                    ...(container.fields ?? {}),
-                  },
+                  fields: materializeFields(
+                    analyzedBoard.containerFieldsSchema,
+                    analysis,
+                    container.fields,
+                    runtimeBoardId,
+                  ),
                 },
               ];
             }),
@@ -1888,13 +1818,11 @@ export function materializeManifestTable(options: {
             typeId: edge.typeId ?? null,
             label: edge.label ?? null,
             ownerId: null,
-            fields: {
-              ...materializeObjectSchemaDefaults(
-                analyzedBoard.edgeFieldsSchema,
-                analysis,
-              ),
-              ...(edge.fields ?? {}),
-            },
+            fields: materializeFields(
+              analyzedBoard.edgeFieldsSchema,
+              analysis,
+              edge.fields,
+            ),
           }));
 
     const vertices =
@@ -1906,13 +1834,11 @@ export function materializeManifestTable(options: {
             typeId: vertex.typeId ?? null,
             label: vertex.label ?? null,
             ownerId: null,
-            fields: {
-              ...materializeObjectSchemaDefaults(
-                analyzedBoard.vertexFieldsSchema,
-                analysis,
-              ),
-              ...(vertex.fields ?? {}),
-            },
+            fields: materializeFields(
+              analyzedBoard.vertexFieldsSchema,
+              analysis,
+              vertex.fields,
+            ),
           }));
 
     for (const runtimeBoardId of analyzedBoard.runtimeBoardIds) {

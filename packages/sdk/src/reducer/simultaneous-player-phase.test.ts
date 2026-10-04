@@ -25,7 +25,7 @@ const manifest = compileManifest({
       id: "cards",
       name: "Cards",
       defaultHome: { type: "zone", zoneId: "draw" },
-      cardSchema: { properties: {} },
+      cardSchema: z.object({}),
       cards: (
         [
           "card-1",

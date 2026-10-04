@@ -1,813 +1,253 @@
+import type * as z from "zod";
+import type * as manifestSchemas from "./manifest-schema.js";
 import type { RuntimeJson } from "../runtime-json";
-// Public SDK contract DTOs extracted from Dreamboard's public API schema.
-// This package owns these types for SDK consumers; backend API clients are published separately.
+// Public SDK contracts. Manifest DTOs derive from the SDK structural schema;
+// backend API clients are published separately.
 
 /**
  * Supported player-count metadata for the game
  */
-export type PlayersDefinition = {
-  minPlayers: number;
-  maxPlayers: number;
-  optimalPlayers?: number;
-};
+export type PlayersDefinition = z.infer<
+  typeof manifestSchemas.PlayersDefinitionSchema
+>;
 
 /**
  * Arbitrary authored JSON value.
  */
 export type JsonValue = RuntimeJson;
 
-export type PropertySchema = {
-  /**
-   * The data type of the property.
-   */
-  type:
-    | "string"
-    | "integer"
-    | "number"
-    | "boolean"
-    | "zoneId"
-    | "cardId"
-    | "playerId"
-    | "boardId"
-    | "edgeId"
-    | "vertexId"
-    | "spaceId"
-    | "pieceId"
-    | "dieId"
-    | "resourceId"
-    | "array"
-    | "object"
-    | "record"
-    | "enum";
-  /**
-   * Optional description of the property's purpose and usage.
-   */
-  description?: string;
-  /**
-   * Whether an object property may be omitted.
-   */
-  optional?: boolean;
-  /**
-   * Whether the value may be null.
-   */
-  nullable?: boolean;
-  /**
-   * Optional authored default value for this property. When present, omitted
-   * seed values materialize to the default and generated TypeScript treats
-   * the property as present even if `optional: true` is also set.
-   *
-   */
-  default?: JsonValue;
-  /**
-   * For array types, the schema of the array items. Required if type is 'array'.
-   */
-  items?: PropertySchema;
-  /**
-   * For object types, the schema of the object's properties. Required if type is 'object'.
-   */
-  properties?: {
-    [key: string]: PropertySchema;
-  };
-  /**
-   * For enum types, the list of allowed string values. Required if type is 'enum'.
-   */
-  enums?: Array<string>;
-  /**
-   * For record types, the schema of the record's values. Required if type is 'record'.
-   */
-  values?: PropertySchema;
-};
+/** Portable JSON Schema emitted by SDK field-schema authoring. */
+export type FieldSchemaJson = z.infer<
+  typeof manifestSchemas.FieldSchemaJsonSchema
+>;
+export type CardSchemaJson = z.infer<
+  typeof manifestSchemas.CardSchemaJsonSchema
+>;
 
-export type ObjectSchema = {
-  /**
-   * Map of property names to their schemas. Type is always 'object' and all properties are required.
-   */
-  properties: {
-    [key: string]: PropertySchema;
-  };
-};
+export type DetachedHomeSpec = z.infer<
+  typeof manifestSchemas.DetachedHomeSpecSchema
+>;
 
-export type CardPropertySchemaVariants = {
-  /**
-   * Property schemas present on every card-type variant.
-   */
-  shared?: {
-    [key: string]: PropertySchema;
-  };
-  /**
-   * Property schema for each card type in this card set.
-   */
-  variants: {
-    [key: string]: ObjectSchema;
-  };
-};
+export type ZoneHomeSpec = z.infer<typeof manifestSchemas.ZoneHomeSpecSchema>;
 
-export type CardPropertySchema = ObjectSchema | CardPropertySchemaVariants;
+export type SpaceHomeSpec = z.infer<typeof manifestSchemas.SpaceHomeSpecSchema>;
 
-export type DetachedHomeSpec = {
-  type: "detached";
-};
-
-export type ZoneHomeSpec = {
-  type: "zone";
-  zoneId: string;
-};
-
-export type SpaceHomeSpec = {
-  type: "space";
-  boardId: string;
-  spaceId: string;
-};
-
-export type ContainerHomeSpec = {
-  type: "container";
-  boardId: string;
-  containerId: string;
-};
+export type ContainerHomeSpec = z.infer<
+  typeof manifestSchemas.ContainerHomeSpecSchema
+>;
 
 /**
  * Tiled board edge identified by the spaces that border it
  */
-export type BoardEdgeRef = {
-  spaces: Array<string>;
-};
+export type BoardEdgeRef = z.infer<typeof manifestSchemas.BoardEdgeRefSchema>;
 
-export type EdgeHomeSpec = {
-  type: "edge";
-  boardId: string;
-  ref: BoardEdgeRef;
-};
+export type EdgeHomeSpec = z.infer<typeof manifestSchemas.EdgeHomeSpecSchema>;
 
 /**
  * Tiled board vertex identified by the spaces that touch it
  */
-export type BoardVertexRef = {
-  spaces: Array<string>;
-};
+export type BoardVertexRef = z.infer<
+  typeof manifestSchemas.BoardVertexRefSchema
+>;
 
-export type VertexHomeSpec = {
-  type: "vertex";
-  boardId: string;
-  ref: BoardVertexRef;
-};
+export type VertexHomeSpec = z.infer<
+  typeof manifestSchemas.VertexHomeSpecSchema
+>;
 
-export type PieceSlotHostRef = {
-  kind: "piece";
-  id: string;
-};
+export type PieceSlotHostRef = z.infer<
+  typeof manifestSchemas.PieceSlotHostRefSchema
+>;
 
-export type DieSlotHostRef = {
-  kind: "die";
-  id: string;
-};
+export type DieSlotHostRef = z.infer<
+  typeof manifestSchemas.DieSlotHostRefSchema
+>;
 
-export type SlotHostRef =
-  | ({
-      kind: "piece";
-    } & PieceSlotHostRef)
-  | ({
-      kind: "die";
-    } & DieSlotHostRef);
+export type SlotHostRef = z.infer<typeof manifestSchemas.SlotHostRefSchema>;
 
-export type SlotHomeSpec = {
-  type: "slot";
-  host: SlotHostRef;
-  slotId: string;
-};
+export type SlotHomeSpec = z.infer<typeof manifestSchemas.SlotHomeSpecSchema>;
 
-export type ComponentHomeSpec =
-  | ({
-      type: "detached";
-    } & DetachedHomeSpec)
-  | ({
-      type: "zone";
-    } & ZoneHomeSpec)
-  | ({
-      type: "space";
-    } & SpaceHomeSpec)
-  | ({
-      type: "container";
-    } & ContainerHomeSpec)
-  | ({
-      type: "edge";
-    } & EdgeHomeSpec)
-  | ({
-      type: "vertex";
-    } & VertexHomeSpec)
-  | ({
-      type: "slot";
-    } & SlotHomeSpec);
+export type ComponentHomeSpec = z.infer<
+  typeof manifestSchemas.ComponentHomeSpecSchema
+>;
 
 /**
  * Default authored visibility for a component instance
  */
-export type ComponentVisibilitySpec = {
-  faceUp?: boolean;
-  /**
-   * When omitted, visible to all players
-   */
-  visibleTo?: Array<string>;
-};
+export type ComponentVisibilitySpec = z.infer<
+  typeof manifestSchemas.ComponentVisibilitySpecSchema
+>;
 
-export type BoardCard = {
-  /**
-   * Card definition identifier used to generate runtime CardIds. When count > 1, runtime IDs are generated as '{id}-1', '{id}-2', etc.
-   */
-  id: string;
-  /**
-   * Display name of the card
-   */
-  name: string;
-  /**
-   * Front face image: a repository path under `assets/`, such as
-   * `assets/cards/queen-of-fire.webp`. Game UIs receive it as a loadable URL.
-   */
-  frontImage?: string;
-  /**
-   * Back face image, in the same form as `frontImage`.
-   */
-  backImage?: string;
-  /**
-   * Text content on the card
-   */
-  text?: string;
-  /**
-   * Number of copies of this card
-   */
-  count: number;
-  /**
-   * Authored card category or subtype identifier
-   */
-  cardType: string;
-  /**
-   * Optional per-card initial home. Omitted cards use their card set's
-   * defaultHome. Compatibility declarations such as allowedCardSetIds never
-   * imply placement. Player-scoped distribution belongs in reducer setup.
-   */
-  home?: ComponentHomeSpec;
-  /**
-   * Default authored visibility for the card inventory
-   */
-  visibility?: ComponentVisibilitySpec;
-  /**
-   * Actual property values for this specific card instance. Keys must match the properties defined in the referenced cardSchema.
-   */
-  properties: {
-    [key: string]: JsonValue;
-  };
-};
+export type BoardCard = z.infer<typeof manifestSchemas.BoardCardSchema>;
 
-export type CardSetDefinition = {
-  /**
-   * Unique identifier for the card set
-   */
-  id: string;
-  /**
-   * Display name of the card set
-   */
-  name: string;
-  /**
-   * Schema definition for authored card properties in this card set
-   */
-  cardSchema: CardPropertySchema;
-  /**
-   * Default initial home for cards that do not declare a per-card home.
-   */
-  defaultHome: ComponentHomeSpec;
-  /**
-   * List of authored cards in this card set
-   */
-  cards: Array<BoardCard>;
-};
+export type CardSetDefinition = z.infer<
+  typeof manifestSchemas.CardSetDefinitionSchema
+>;
 
 /**
  * Whether authored topology exists once for the table or once per player
  */
-export type TopologyScope = "shared" | "perPlayer";
+export type TopologyScope = z.infer<typeof manifestSchemas.TopologyScopeSchema>;
 
 /**
  * Default topology visibility for a zone or slot
  */
-export type ZoneVisibility = "ownerOnly" | "public" | "hidden";
+export type ZoneVisibility = z.infer<
+  typeof manifestSchemas.ZoneVisibilitySchema
+>;
 
 /**
  * Generic authored container that can hold cards, pieces, or dice
  */
-export type ZoneSpec = {
-  /**
-   * Stable zone identifier
-   */
-  id: string;
-  /**
-   * Display name for the zone
-   */
-  name: string;
-  scope: TopologyScope;
-  /**
-   * Optional card-set restriction for this zone
-   */
-  allowedCardSetIds?: Array<string>;
-  visibility?: ZoneVisibility;
-};
+export type ZoneSpec = z.infer<typeof manifestSchemas.ZoneSpecSchema>;
 
 /**
  * Stable authored board space or slot anchor
  */
-export type BoardSpaceSpec = {
-  /**
-   * Stable space identifier local to the board
-   */
-  id: string;
-  /**
-   * Human-readable space name
-   */
-  name?: string;
-  /**
-   * Optional authored space type identifier
-   */
-  typeId?: string;
-  /**
-   * Typed authored fields validated against the board's spaceFieldsSchema
-   */
-  fields?: {
-    [key: string]: JsonValue;
-  };
-};
+export type BoardSpaceSpec = z.infer<
+  typeof manifestSchemas.BoardSpaceSpecSchema
+>;
 
 /**
  * Named relation between two authored spaces
  */
-export type BoardRelationSpec = {
-  /**
-   * Optional stable relation identifier
-   */
-  id?: string;
-  /**
-   * Relation type identifier such as adjacent, covers, blocks, or linked
-   */
-  typeId: string;
-  fromSpaceId: string;
-  toSpaceId: string;
-  directed?: boolean;
-  /**
-   * Typed authored relation fields validated against relationFieldsSchema
-   */
-  fields?: {
-    [key: string]: JsonValue;
-  };
-};
+export type BoardRelationSpec = z.infer<
+  typeof manifestSchemas.BoardRelationSpecSchema
+>;
 
-export type BoardHostSpec = {
-  type: "board";
-};
+export type BoardHostSpec = z.infer<typeof manifestSchemas.BoardHostSpecSchema>;
 
-export type SpaceHostSpec = {
-  type: "space";
-  spaceId: string;
-};
+export type SpaceHostSpec = z.infer<typeof manifestSchemas.SpaceHostSpecSchema>;
 
-export type BoardContainerHostSpec =
-  | ({
-      type: "board";
-    } & BoardHostSpec)
-  | ({
-      type: "space";
-    } & SpaceHostSpec);
+export type BoardContainerHostSpec = z.infer<
+  typeof manifestSchemas.BoardContainerHostSpecSchema
+>;
 
 /**
  * Authored board-attached or space-attached container/slot
  */
-export type BoardContainerSpec = {
-  /**
-   * Stable container identifier local to the board
-   */
-  id: string;
-  /**
-   * Display name for the container
-   */
-  name: string;
-  host: BoardContainerHostSpec;
-  allowedCardSetIds?: Array<string>;
-  /**
-   * Typed authored container fields validated against containerFieldsSchema
-   */
-  fields?: {
-    [key: string]: JsonValue;
-  };
-};
+export type BoardContainerSpec = z.infer<
+  typeof manifestSchemas.BoardContainerSpecSchema
+>;
 
 /**
  * Visual orientation for authored hex coordinates
  */
-export type HexOrientation = "pointy" | "flat";
-export type HexCoordinate = { q: number; r: number };
-export type HexShape =
-  | { kind: "hexagon" | "spiral"; radius: number; center?: HexCoordinate }
-  | { kind: "ring"; radius: number; center?: HexCoordinate }
-  | { kind: "rectangle"; width: number; height: number; start?: HexCoordinate }
-  | { kind: "coordinates"; coordinates: readonly HexCoordinate[] };
-export type HexSpaceOverride = Omit<HexSpaceSpec, "id" | "q" | "r"> & {
-  id?: string;
-};
+export type HexOrientation = z.infer<
+  typeof manifestSchemas.HexOrientationSchema
+>;
+export type HexCoordinate = z.infer<typeof manifestSchemas.HexCoordinateSchema>;
+export type HexShape = z.infer<typeof manifestSchemas.HexShapeSchema>;
+export type HexSpaceOverride = z.infer<
+  typeof manifestSchemas.HexSpaceOverrideSchema
+>;
 
 /**
  * One authored hex space in axial coordinates
  */
-export type HexSpaceSpec = {
-  /**
-   * Stable space identifier local to the board
-   */
-  id: string;
-  /**
-   * Axial q coordinate
-   */
-  q: number;
-  /**
-   * Axial r coordinate
-   */
-  r: number;
-  /**
-   * Optional authored space type identifier
-   */
-  typeId?: string;
-  /**
-   * Optional hex-space label for setup or rendering
-   */
-  label?: string;
-  /**
-   * Typed authored fields validated against the board's spaceFieldsSchema
-   */
-  fields?: {
-    [key: string]: JsonValue;
-  };
-};
+export type HexSpaceSpec = z.infer<typeof manifestSchemas.HexSpaceSpecSchema>;
 
 /**
  * Hex edge identified by two adjacent hex spaces
  */
-export type HexEdgeRef =
-  { spaces: [string, string] } | { space: string; side: 0 | 1 | 2 | 3 | 4 | 5 };
+export type HexEdgeRef = z.infer<typeof manifestSchemas.HexEdgeRefSchema>;
 
 /**
  * Authored metadata attached to one derived hex edge
  */
-export type HexEdgeSpec = {
-  ref: HexEdgeRef;
-  /**
-   * Optional authored edge type identifier
-   */
-  typeId?: string;
-  /**
-   * Optional edge label for setup or rendering
-   */
-  label?: string;
-  tags?: Array<string>;
-  /**
-   * Typed authored edge fields validated against edgeFieldsSchema
-   */
-  fields?: {
-    [key: string]: JsonValue;
-  };
-};
+export type HexEdgeSpec = z.infer<typeof manifestSchemas.HexEdgeSpecSchema>;
 
 /**
  * Hex vertex identified by three touching hex spaces
  */
-export type HexVertexRef =
-  | { spaces: [string, string, string] }
-  | { space: string; corner: 0 | 1 | 2 | 3 | 4 | 5 };
+export type HexVertexRef = z.infer<typeof manifestSchemas.HexVertexRefSchema>;
 
 /**
  * Authored metadata attached to one derived hex vertex
  */
-export type HexVertexSpec = {
-  ref: HexVertexRef;
-  /**
-   * Optional authored vertex type identifier
-   */
-  typeId?: string;
-  /**
-   * Optional vertex label for setup or rendering
-   */
-  label?: string;
-  tags?: Array<string>;
-  /**
-   * Typed authored vertex fields validated against vertexFieldsSchema
-   */
-  fields?: {
-    [key: string]: JsonValue;
-  };
-};
+export type HexVertexSpec = z.infer<typeof manifestSchemas.HexVertexSpecSchema>;
 
 /**
  * One authored square space in row/column coordinates
  */
-export type SquareSpaceSpec = {
-  /**
-   * Stable space identifier local to the board
-   */
-  id: string;
-  /**
-   * Zero-based row coordinate
-   */
-  row: number;
-  /**
-   * Zero-based column coordinate
-   */
-  col: number;
-  /**
-   * Optional authored space type identifier
-   */
-  typeId?: string;
-  /**
-   * Optional square-space label for setup or rendering
-   */
-  label?: string;
-  /**
-   * Typed authored fields validated against the board's spaceFieldsSchema
-   */
-  fields?: {
-    [key: string]: JsonValue;
-  };
-};
+export type SquareSpaceSpec = z.infer<
+  typeof manifestSchemas.SquareSpaceSpecSchema
+>;
 
 /**
  * Authored metadata attached to one derived square edge
  */
-export type SquareEdgeSpec = {
-  ref: BoardEdgeRef;
-  /**
-   * Optional authored edge type identifier
-   */
-  typeId?: string;
-  /**
-   * Optional edge label for setup or rendering
-   */
-  label?: string;
-  tags?: Array<string>;
-  /**
-   * Typed authored edge fields validated against edgeFieldsSchema
-   */
-  fields?: {
-    [key: string]: JsonValue;
-  };
-};
+export type SquareEdgeSpec = z.infer<
+  typeof manifestSchemas.SquareEdgeSpecSchema
+>;
 
 /**
  * Authored metadata attached to one derived square vertex
  */
-export type SquareVertexSpec = {
-  ref: BoardVertexRef;
-  /**
-   * Optional authored vertex type identifier
-   */
-  typeId?: string;
-  /**
-   * Optional vertex label for setup or rendering
-   */
-  label?: string;
-  tags?: Array<string>;
-  /**
-   * Typed authored vertex fields validated against vertexFieldsSchema
-   */
-  fields?: {
-    [key: string]: JsonValue;
-  };
-};
+export type SquareVertexSpec = z.infer<
+  typeof manifestSchemas.SquareVertexSpecSchema
+>;
 
 /**
  * Shared or per-player authored board instance shell
  */
-export type GenericBoardSpec = {
-  /**
-   * Stable board identifier
-   */
-  id: string;
-  name: string;
-  layout: "generic";
-  /**
-   * Optional authored board type identifier such as track, map, tableau, or grid
-   */
-  typeId?: string;
-  scope: TopologyScope;
-  boardFieldsSchema?: ObjectSchema;
-  spaceFieldsSchema?: ObjectSchema;
-  relationFieldsSchema?: ObjectSchema;
-  containerFieldsSchema?: ObjectSchema;
-  /**
-   * Typed authored board fields validated against boardFieldsSchema
-   */
-  fields?: {
-    [key: string]: JsonValue;
-  };
-  spaces?: Array<BoardSpaceSpec>;
-  relations?: Array<BoardRelationSpec>;
-  containers?: Array<BoardContainerSpec>;
-};
+export type GenericBoardSpec = z.infer<
+  typeof manifestSchemas.GenericBoardSpecSchema
+>;
 
 /**
  * Shared or per-player authored hex board instance shell
  */
-export type HexBoardSpec = {
-  /**
-   * Stable board identifier
-   */
-  id: string;
-  name: string;
-  layout: "hex";
-  /**
-   * Optional authored board type identifier
-   */
-  typeId?: string;
-  scope: TopologyScope;
-  /**
-   * Shape used to generate spaces before exclusions and coordinate overrides
-   */
-  shape: HexShape;
-  exclude?: Array<HexCoordinate>;
-  orientation?: HexOrientation;
-  boardFieldsSchema?: ObjectSchema;
-  spaceFieldsSchema?: ObjectSchema;
-  edgeFieldsSchema?: ObjectSchema;
-  vertexFieldsSchema?: ObjectSchema;
-  /**
-   * Typed authored board fields validated against boardFieldsSchema
-   */
-  fields?: {
-    [key: string]: JsonValue;
-  };
-  spaces?: { [coordinate: `${number},${number}`]: HexSpaceOverride };
-  edges?: Array<HexEdgeSpec>;
-  vertices?: Array<HexVertexSpec>;
-};
+export type HexBoardSpec = z.infer<typeof manifestSchemas.HexBoardSpecSchema>;
 
 /**
  * Shared or per-player authored square board instance shell
  */
-export type SquareBoardSpec = {
-  /**
-   * Stable board identifier
-   */
-  id: string;
-  name: string;
-  layout: "square";
-  /**
-   * Optional authored board type identifier
-   */
-  typeId?: string;
-  scope: TopologyScope;
-  boardFieldsSchema?: ObjectSchema;
-  spaceFieldsSchema?: ObjectSchema;
-  relationFieldsSchema?: ObjectSchema;
-  containerFieldsSchema?: ObjectSchema;
-  edgeFieldsSchema?: ObjectSchema;
-  vertexFieldsSchema?: ObjectSchema;
-  /**
-   * Typed authored board fields validated against boardFieldsSchema
-   */
-  fields?: {
-    [key: string]: JsonValue;
-  };
-  spaces?: Array<SquareSpaceSpec>;
-  relations?: Array<BoardRelationSpec>;
-  containers?: Array<BoardContainerSpec>;
-  edges?: Array<SquareEdgeSpec>;
-  vertices?: Array<SquareVertexSpec>;
-};
+export type SquareBoardSpec = z.infer<
+  typeof manifestSchemas.SquareBoardSpecSchema
+>;
 
-export type BoardSpec =
-  | ({
-      layout: "generic";
-    } & GenericBoardSpec)
-  | ({
-      layout: "hex";
-    } & HexBoardSpec)
-  | ({
-      layout: "square";
-    } & SquareBoardSpec);
+export type BoardSpec = z.infer<typeof manifestSchemas.BoardSpecSchema>;
 
 /**
  * Named authored slot exposed by a piece or die type
  */
-export type ComponentSlotSpec = {
-  id: string;
-  name?: string;
-};
+export type ComponentSlotSpec = z.infer<
+  typeof manifestSchemas.ComponentSlotSpecSchema
+>;
 
 /**
  * Reusable authored piece type
  */
-export type PieceTypeSpec = {
-  id: string;
-  name: string;
-  fieldsSchema?: ObjectSchema;
-  slots?: Array<ComponentSlotSpec>;
-};
+export type PieceTypeSpec = z.infer<typeof manifestSchemas.PieceTypeSpecSchema>;
 
 /**
  * Authored seeded piece inventory or supply definition
  */
-export type PieceSeedSpec = {
-  /**
-   * Stable piece id seed. When count > 1, runtime ids are generated as '{id}-1', '{id}-2', etc.
-   */
-  id?: string;
-  name?: string;
-  typeId: string;
-  count?: number;
-  ownerId?: string;
-  home?: ComponentHomeSpec;
-  visibility?: ComponentVisibilitySpec;
-  /**
-   * Typed authored piece fields validated against the piece type schema
-   */
-  fields?: {
-    [key: string]: JsonValue;
-  };
-};
+export type PieceSeedSpec = z.infer<typeof manifestSchemas.PieceSeedSpecSchema>;
 
 /**
  * Reusable authored die type
  */
-export type DieTypeSpec = {
-  id: string;
-  name: string;
-  sides?: number;
-  fieldsSchema?: ObjectSchema;
-  slots?: Array<ComponentSlotSpec>;
-};
+export type DieTypeSpec = z.infer<typeof manifestSchemas.DieTypeSpecSchema>;
 
 /**
  * Authored seeded die inventory or supply definition
  */
-export type DieSeedSpec = {
-  /**
-   * Stable die id seed. When count > 1, runtime ids are generated as '{id}-1', '{id}-2', etc.
-   */
-  id?: string;
-  name?: string;
-  typeId: string;
-  count?: number;
-  ownerId?: string;
-  home?: ComponentHomeSpec;
-  visibility?: ComponentVisibilitySpec;
-  /**
-   * Typed authored die fields validated against the die type schema
-   */
-  fields?: {
-    [key: string]: JsonValue;
-  };
-};
+export type DieSeedSpec = z.infer<typeof manifestSchemas.DieSeedSpecSchema>;
 
 /**
  * Definition of a game resource type
  */
-export type ResourceDefinition = {
-  /**
-   * Unique identifier for the resource. Used as a typed ResourceId.
-   */
-  id: string;
-  /**
-   * Human-readable display name for the resource
-   */
-  name: string;
-  /**
-   * Optional compact icon or emoji rendered by generic UI resource controls.
-   */
-  icon?: string;
-  /**
-   * Who sees each player's balance in seat projections. Defaults to
-   * `"public"`; `"owner"` balances reach only the player who holds them.
-   */
-  visibility?: "public" | "owner";
-};
+export type ResourceDefinition = z.infer<
+  typeof manifestSchemas.ResourceDefinitionSchema
+>;
 
-/**
- * One authored setup option choice
- */
 /**
  * Authoritative topology manifest for reducer-native games
  */
-export type GameTopologyManifest = {
-  players: PlayersDefinition;
-  /**
-   * Authored card catalogs and schemas
-   */
-  cardSets: Array<CardSetDefinition>;
-  /**
-   * Shared and per-player authored containers
-   */
-  zones?: Array<ZoneSpec>;
-  /**
-   * Shared and per-player authored board shells
-   */
-  boards?: Array<BoardSpec>;
-  pieceTypes?: Array<PieceTypeSpec>;
-  pieceSeeds?: Array<PieceSeedSpec>;
-  dieTypes?: Array<DieTypeSpec>;
-  dieSeeds?: Array<DieSeedSpec>;
-  resources?: Array<ResourceDefinition>;
-};
+export type GameTopologyManifest = z.infer<
+  typeof manifestSchemas.GameTopologyManifestSchema
+>;
 
 /**
  * Authenticated user acting in a session.

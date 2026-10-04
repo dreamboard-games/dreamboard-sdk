@@ -222,11 +222,22 @@ cards: [
 
 These definitions create runtime IDs `ace-1`, `ace-2`, and `king`, all in the
 `ranked` category. Card IDs cannot start with `hidden:`; that prefix is reserved
-for the positions a seat uses to address concealed cards. When the card schema has `variants`, every `cardType` must
-name one of them; `compileManifest` and `createGame` reject unknown categories.
+for the positions a seat uses to address concealed cards. When the card schema has `byCardType`, every `cardType` must
+name one of its schemas; `compileManifest` and `createGame` reject unknown categories.
 The inferred table narrows a card lookup by its runtime ID to that definition's
-card set, category, and properties. A variant property overrides a shared
-property of the same name in both the runtime schema and inferred type.
+card set, category, and properties. Author field schemas with `z.object`. For card categories, use
+`cardSchema: { byCardType: { ranked: base.extend({ points: z.number().int() }) } }`
+to reuse shared properties. Zod `.extend` defines property overrides in both
+the runtime schema and inferred type. Fields are required unless authored with
+`.optional()` or an explicit `.default(...)`; primitive defaults are not inferred.
+Use `ref.cardId()`, `ref.pieceId()`, and the other `ref` markers for manifest
+references. `defineTopologyManifest` exports portable JSON Schema while
+retaining the authored types; refinements, transforms, and unsupported Zod
+constructs fail at definition time.
+For external JSON documents, call `parseTopologyManifestJson(value)` before
+`compileManifest`. The parser checks structural keys, field schemas and manifest
+references; transport services can preserve the document without duplicating
+the SDK's model.
 To migrate an older manifest, replace each card's `type` with `id` and set
 `cardType` explicitly (often to the former `type` value).
 

@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { compileManifest, createTableQueries } from "../src/reducer";
 import type { GameTopologyManifest, SquareBoardSpec } from "../src/reducer";
 // @ts-expect-error Reusable board template contracts are removed.
@@ -8,8 +9,8 @@ const square = {
   name: "Map",
   layout: "square",
   scope: "shared",
-  boardFieldsSchema: { properties: { round: { type: "integer" } } },
-  spaceFieldsSchema: { properties: { terrain: { type: "string" } } },
+  boardFieldsSchema: z.object({ round: z.number().int().default(0) }),
+  spaceFieldsSchema: z.object({ terrain: z.string() }),
   spaces: [{ id: "home", row: 0, col: 0, fields: { terrain: "grass" } }],
 } as const;
 const manifest = compileManifest({
@@ -46,7 +47,10 @@ table.boards.byId.map.spaces.missing;
 // @ts-expect-error Board identities remain literal.
 q.board("unknown");
 const removedBoard: SquareBoardSpec = {
-  ...square,
+  id: "removed",
+  name: "Removed",
+  layout: "square",
+  scope: "shared",
   spaces: [],
   // @ts-expect-error Boards contain topology directly.
   templateId: "old-map",

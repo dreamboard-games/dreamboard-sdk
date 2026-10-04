@@ -9,12 +9,10 @@ const model = createGame({
       {
         id: "cards",
         name: "Cards",
-        cardSchema: {
-          properties: {
-            suit: { type: "enum", enums: [...suits] },
-            rank: { type: "enum", enums: [...ranks] },
-          },
-        },
+        cardSchema: z.object({
+          suit: z.enum([...suits]),
+          rank: z.enum([...ranks]),
+        }),
         cards: suits.flatMap((suit) =>
           ranks.map((rank) => ({
             id: `${suit}-${rank}`,

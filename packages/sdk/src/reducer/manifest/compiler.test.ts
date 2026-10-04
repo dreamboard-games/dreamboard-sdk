@@ -2,7 +2,6 @@ import { RuntimeJsonSchema } from "../../shared/runtime-json";
 import { ReducerSessionStateSchema } from "../../shared/runtime-schema.js";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import type { GameTopologyManifest } from "../../shared/domain/manifest.js";
 import { compileManifest } from "./compiler";
 import { createGame } from "../authoring/game";
 import { createTableQueries } from "../table-queries";
@@ -17,12 +16,10 @@ const manifest = {
       id: "cards",
       name: "Cards",
       defaultHome: { type: "zone", zoneId: "draw" },
-      cardSchema: {
-        properties: {
-          points: { type: "integer", default: 0 },
-          color: { type: "enum", enums: ["red", "blue"] },
-        },
-      },
+      cardSchema: z.object({
+        points: z.number().int().default(0),
+        color: z.enum(["red", "blue"]),
+      }),
       cards: [
         {
           id: "ace",
@@ -62,12 +59,10 @@ describe("in-memory manifests", () => {
           id: "standard_52_deck",
           name: "Authored playing cards",
           defaultHome: { type: "zone", zoneId: "draw" },
-          cardSchema: {
-            properties: {
-              suit: { type: "enum", enums: ["SPADES", "HEARTS"] },
-              rank: { type: "string" },
-            },
-          },
+          cardSchema: z.object({
+            suit: z.enum(["SPADES", "HEARTS"]),
+            rank: z.string(),
+          }),
           cards: [
             {
               id: "SPADES_A",
@@ -113,14 +108,13 @@ describe("in-memory manifests", () => {
         {
           ...manifest.cardSets[0],
           cardSchema: {
-            shared: { cost: { type: "integer", default: 2 } },
-            variants: {
-              "ranked-card": {
-                properties: {
-                  color: { type: "enum", enums: ["red"] },
-                  points: { type: "integer", default: 0 },
-                },
-              },
+            byCardType: {
+              "ranked-card": z
+                .object({ cost: z.number().int().default(2) })
+                .extend({
+                  color: z.enum(["red"]),
+                  points: z.number().int().default(0),
+                }),
             },
           },
           cards: [
@@ -172,21 +166,23 @@ describe("in-memory manifests", () => {
           name: "Actions",
           defaultHome: { type: "detached" },
           cardSchema: {
-            shared: {
-              value: { type: "string", default: "shared" },
-              status: { type: "string", optional: true, nullable: true },
-            },
-            variants: {
-              attack: {
-                properties: {
-                  value: { type: "integer", default: 3 },
-                  damage: { type: "integer", default: 2 },
-                  status: { type: "integer", nullable: true, default: 5 },
-                },
-              },
-              defense: {
-                properties: { shield: { type: "boolean", default: true } },
-              },
+            byCardType: {
+              attack: z
+                .object({
+                  value: z.string().default("shared"),
+                  status: z.string().nullable().optional(),
+                })
+                .extend({
+                  value: z.number().int().default(3),
+                  damage: z.number().int().default(2),
+                  status: z.number().int().nullable().default(5),
+                }),
+              defense: z
+                .object({
+                  value: z.string().default("shared"),
+                  status: z.string().nullable().optional(),
+                })
+                .extend({ shield: z.boolean().default(true) }),
             },
           },
           cards: [
@@ -211,10 +207,8 @@ describe("in-memory manifests", () => {
           name: "Spells",
           defaultHome: { type: "detached" },
           cardSchema: {
-            variants: {
-              attack: {
-                properties: { mana: { type: "integer", default: 4 } },
-              },
+            byCardType: {
+              attack: z.object({ mana: z.number().int().default(4) }),
             },
           },
           cards: [
@@ -290,19 +284,16 @@ describe("in-memory manifests", () => {
     ).toBe(false);
   });
   test.each([
-    { shared: undefined },
-    { shared: { points: { type: "integer" as const } } },
-  ])("rejects an unknown card category with shared schema %j", ({ shared }) => {
+    { shared: z.object({}) },
+    { shared: z.object({ points: z.number().int() }) },
+  ])("rejects an unknown card category with shared schema %#", ({ shared }) => {
     const invalidManifest = {
       ...manifest,
       cardSets: [
         {
           ...manifest.cardSets[0],
           cardSchema: {
-            ...(shared ? { shared } : {}),
-            variants: {
-              ranked: { properties: { rank: { type: "integer" } } },
-            },
+            byCardType: { ranked: shared.extend({ rank: z.number().int() }) },
           },
           cards: [
             {
@@ -318,9 +309,11 @@ describe("in-memory manifests", () => {
     } as const;
     const error =
       "manifest.cardSets[0].cards[0].cardType: Unknown card category 'missing' for card set 'cards'.";
+    // @ts-expect-error Deliberately invalid correlated authoring data exercises runtime rejection.
     expect(() => compileManifest(invalidManifest)).toThrow(error);
     expect(() =>
       createGame({
+        // @ts-expect-error Deliberately invalid correlated authoring data exercises runtime rejection.
         manifest: invalidManifest,
         state: {
           public: z.object({}),
@@ -335,15 +328,15 @@ describe("in-memory manifests", () => {
     {
       card: { type: "ace", name: "Ace", count: 1, properties: {} },
       error:
-        "manifest.cardSets[0].cards[0].id: Card definition id is required.",
+        /manifest\.cardSets(?:\[0\]|\.0)\.cards(?:\[0\]|\.0)\.id: .*string/,
     },
     {
       card: { id: "ace", name: "Ace", count: 1, properties: {} },
       error:
-        "manifest.cardSets[0].cards[0].cardType: Card category is required.",
+        /manifest\.cardSets(?:\[0\]|\.0)\.cards(?:\[0\]|\.0)\.cardType: .*string/,
     },
   ])("rejects missing authored card identity fields %#", ({ card, error }) => {
-    const invalidManifest: GameTopologyManifest = {
+    const invalidManifest: typeof manifest = {
       ...manifest,
       cardSets: [
         {
@@ -395,6 +388,7 @@ describe("in-memory manifests", () => {
     expect(compiled.createInitialTable().decks.draw).toHaveLength(2);
   });
   test("runs authoring validation during compilation", () => {
+    // @ts-expect-error The declared default home is deliberately missing its zone.
     expect(() => compileManifest({ ...manifest, zones: [] })).toThrow(
       /unknown zone 'draw'/,
     );

@@ -35,13 +35,16 @@ exports[`public export surface > reducer export names are stable 1`] = `
   "noopDiagnosticsSink",
   "normalizeCommandParams",
   "parseBoardRefKey",
+  "parseTopologyManifestJson",
   "perPlayerBoardRef",
   "rectangle",
+  "ref",
   "ring",
   "sharedBoardRef",
   "sparseCounts",
   "sparseMap",
   "spiral",
+  "z",
 ]
 `;
 

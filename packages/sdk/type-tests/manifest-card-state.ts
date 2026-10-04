@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { compileManifest } from "../src/reducer/manifest/compiler.js";
 
 const compiled = compileManifest({
@@ -8,22 +9,25 @@ const compiled = compileManifest({
       name: "Actions",
       defaultHome: { type: "detached" },
       cardSchema: {
-        shared: {
-          label: { type: "string", default: "shared" },
-          value: { type: "string", default: "shared" },
-          status: { type: "string", optional: true, nullable: true },
-        },
-        variants: {
-          attack: {
-            properties: {
-              value: { type: "integer", default: 3 },
-              damage: { type: "integer", default: 2 },
-              status: { type: "integer", nullable: true, default: 5 },
-            },
-          },
-          defense: {
-            properties: { shield: { type: "boolean", default: true } },
-          },
+        byCardType: {
+          attack: z
+            .object({
+              label: z.string().default("shared"),
+              value: z.string().default("shared"),
+              status: z.string().nullable().optional(),
+            })
+            .extend({
+              value: z.number().int().default(3),
+              damage: z.number().int().default(2),
+              status: z.number().int().nullable().default(5),
+            }),
+          defense: z
+            .object({
+              label: z.string().default("shared"),
+              value: z.string().default("shared"),
+              status: z.string().nullable().optional(),
+            })
+            .extend({ shield: z.boolean().default(true) }),
         },
       },
       cards: [
@@ -48,11 +52,7 @@ const compiled = compileManifest({
       name: "Spells",
       defaultHome: { type: "detached" },
       cardSchema: {
-        variants: {
-          attack: {
-            properties: { mana: { type: "integer", default: 4 } },
-          },
-        },
+        byCardType: { attack: z.object({ mana: z.number().int().default(4) }) },
       },
       cards: [
         {
@@ -177,12 +177,10 @@ const playingCards = compileManifest({
       id: "playing-cards",
       name: "Playing cards",
       defaultHome: { type: "detached" },
-      cardSchema: {
-        properties: {
-          suit: { type: "enum", enums: ["SPADES", "HEARTS"] },
-          rank: { type: "string" },
-        },
-      },
+      cardSchema: z.object({
+        suit: z.enum(["SPADES", "HEARTS"]),
+        rank: z.string(),
+      }),
       cards: [
         {
           id: "SPADES_A",
