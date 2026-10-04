@@ -1,7 +1,7 @@
 # 09 — Internal repository adoption
 
 Repository: `dreamboard-games/dreamboard-internal` (private). Two PRs in one stack.
-Read first: the internal repo's `CLAUDE.md` (contract workflow and verification
+Read first: the internal repo's `AGENTS.md` (contract workflow and verification
 lanes). Paths below are relative to that repository.
 
 ## PR A — `backend/manifest-players-only`
@@ -91,11 +91,12 @@ Layer 01's JSON Schema field schemas would fail that check.
    `EmbeddedHarness`) and add a test that a re-upload of an unchanged manifest
    produced by the compiler hashes identically before and after.
 
-4. **Compiler.** In `materialize-authored-manifest.ts`, replace
-   `zGameTopologyManifest.strict().safeParse(value)` with: value is a JSON
-   object with a valid `players` field, then `compileManifest(value)` from the
-   SDK (already called on the next line) as the full validator. Keep the Deno
-   sandbox's JSON-compatibility and import-policy checks unchanged.
+4. **Compiler.** In `materialize-authored-manifest.ts`, preserve the opaque
+   transport document and validate with the installed SDK. PR B adopts
+   `parseTopologyManifestJson(value)` from the redesigned SDK before compilation;
+   the compiler must not duplicate the SDK structural schema or weaken the typed
+   authoring overload to admit unknown input. Keep the Deno sandbox's
+   JSON-compatibility and import-policy checks unchanged.
 
 5. **Consumers of the generated types.** Update `apps/gameplay`,
    `packages/demo-release-core` and `apps/compiler-worker` imports of the removed
@@ -121,17 +122,25 @@ pnpm sdk:repin <alpha-version>
 
 Then fix consumers of the changed SDK surfaces:
 
-| SDK change (layer)                                    | Internal consumers to update                                                                                                                                                                                    |
-| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `z`/`ref` field schemas (01)                          | Demo reference-game sources; compiler sandbox test that evaluates a manifest using `z` and `ref`                                                                                                                |
-| `boardStatic` holds the catalog; bundle `boards` (06) | `apps/gameplay` projection and fixtures, `packages/browser-gameplay-runtime/src/gameplay-ui.ts`, `packages/ui-host-runtime` screenshot projection, `apps/gamepiece` fixtures (`boardStatic() { return null; }`) |
-| Seat zones keyed by host (03)                         | Browser runtime and host UI zone readers                                                                                                                                                                        |
-| Board target value kinds (05)                         | Host runtime parsing of board targets                                                                                                                                                                           |
+| SDK change (layer)                                    | Internal consumers to update                                                                                                                                                 |
+| ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `z`/`ref` field schemas (01)                          | Demo reference-game sources; compiler sandbox test that evaluates a manifest using `z` and `ref`                                                                             |
+| Public definitions and seat-specific `boards` (07–08) | `apps/gameplay` projection and fixtures, `packages/browser-gameplay-runtime/src/gameplay-ui.ts`, `packages/ui-host-runtime` screenshot projection, `apps/gamepiece` fixtures |
+| Seat zones keyed by host (03)                         | Browser runtime and host UI zone readers                                                                                                                                     |
+| Board target value kinds (05)                         | Host runtime parsing of board targets                                                                                                                                        |
 
 Shared static delivery may contain only explicitly public definitions/shells.
 Seat boards and audience-filtered events must pass through gameplay workers,
 hosted frames, browser gameplay and screenshots consistently. Inspect actual
 hosted payloads and UI messages with the private-tile fixture.
+
+Hosted authorization is part of this boundary. At the implementation baseline,
+`apps/gameplay/src/auth.ts` grants the creator every seat through `canRestore`,
+and `connection.ts` sends authored diagnostic logs to that creator. Separate
+normal seat access from developer inspection. Permission to restore a session
+must not implicitly grant another seat's frame or private diagnostic data.
+Any developer inspection capability must be explicit and separate from ordinary
+hosted play; test creator, controller, spectator and unauthorized seat requests.
 
 Hard cut: old running games and checkpoints need not remain usable. Do not add
 compatibility readers, migrations or a parallel legacy runtime. Rebuild reference
