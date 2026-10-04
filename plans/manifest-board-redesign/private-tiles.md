@@ -101,6 +101,13 @@ from connectivity, or include all relevant inputs in one cache key.
 - Containment cycles are forbidden. Visibility derives from current host ownership,
   not a value captured only when a component moved.
 
+Space-attached hosts use stable tile-instance and local-cell identity independently
+of world placement. An empty attached zone may persist for a known detached tile,
+but adding contents requires its space to be currently placed. Initialization and
+restore reject detached tiles with nonempty space-attached zones. Moving within a
+board keeps the host and contents; movement does not create a second zone or
+placement owner.
+
 ## Validation stages
 
 Manifest validation owns portable schemas, definition refs and seed constraints.
@@ -121,6 +128,13 @@ Compare complete unauthorized frames for states differing only in undisclosed
 information: boards, events, descriptors, defaults, drafts, IDs and counts must
 match when the game exposes the same public facts. A rule's deliberately public
 legality result can reveal information; renderer internals cannot.
+
+Privacy acceptance covers every supported component location, including zones,
+spaces, edges and vertices. Descriptor targets, defaults and selected draft values,
+as well as event payloads, must obey the same seat policy. Concealment must not
+leave invalid partial selections or defaults outside the emitted target domain.
+Until a location has that projection coverage, mutation must not newly enable
+concealment there.
 
 Browser tests perform the flow from two seats. Internal integration inspects
 actual hosted payloads and UI bridge messages. Hearts and Hex preserve their
