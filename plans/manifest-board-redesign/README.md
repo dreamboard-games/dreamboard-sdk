@@ -179,9 +179,9 @@ no-restricted-syntax -- reason` convention and state the invariant.
 ## Publication
 
 Publish one SDK alpha after execution layer 10 (tile layout) through the reviewed release workflow
-([alpha-publish.md](../../docs/alpha-publish.md)). If dynamic boards are
-deferred, publish after layer 05 instead. Internal adoption pins the exact
-published version.
+([alpha-publish.md](../../docs/alpha-publish.md)). Publish the complete stack as
+one candidate; intermediate layers do not define separately supported releases.
+Internal adoption pins the exact published version.
 
 ## Settled decisions
 

@@ -192,5 +192,5 @@ pnpm ui test
 - Shared IDs stay literal, zone hosts stay explicit, and ownership is independent
   of replication-origin identity.
 
-This layer completes the scope that can ship without dynamic boards. If boards
-are deferred, publish an alpha here (see the [README](README.md#publication)).
+This layer remains an internal stack step. Publish one complete SDK candidate
+after all execution layers, as specified in the [README](README.md#publication).

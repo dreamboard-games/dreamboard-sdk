@@ -119,6 +119,10 @@ type HostIdOfZone<M, Z> =
 - `ownerOnly`: the owner is the player of a per-player board instance, or the
   component's owner. Reject `ownerOnly` on zones attached to shared boards or
   spaces of shared boards (there is no owner).
+- Resolve the host's current owner during every seat projection. A component
+  with no current owner grants no seat owner-only access. Ownership transfer
+  changes access immediately without changing contained component ownership;
+  do not capture the host owner in card visibility when a component moves.
 
 ### Homes
 
@@ -131,9 +135,16 @@ export type ZoneHomeSpec = {
 };
 ```
 
-Per-player instances resolve from the component's owner, as per-player zones
-do today. Board-attached zones on shared boards have one instance, so no host
-is needed.
+During initialization, a per-player seed resolves the corresponding host from
+its replication seat through the canonical codec. Shared seeds cannot infer a
+per-player host and must be placed by the reducer. A shared board attachment has
+one host, so its authored home can resolve that host from the definition.
+
+Materialize component and zone hosts before resolving home edges, including
+forward references. Reject self-containment and transitive containment cycles
+before installing contents. Mutation validates the destination host and its
+component ancestry before changing either location or ordered membership;
+restore checks the same graph after bidirectional membership admission.
 
 ### Queries and transactions
 
@@ -145,6 +156,20 @@ tx.moveComponentToZone({
   to: { zoneId: "cargo", hostId: "ship-1" },
 });
 ```
+
+### Host membership and lifetime
+
+Extend the existing zone resolver and consistency admission. A decoded host must
+exist now and match the zone's declared board, space or component type; syntax
+alone does not prove membership. Host enumeration and projection use the same
+actual instance set. Headless and UI lookups continue to require explicit hosts.
+
+For future tiles, a space host is identified by stable tile instance and local
+cell, independently of world placement. Its empty zone may persist while the
+known tile is detached, but adding contents requires a live placed space.
+Initialization and restore reject detached tiles with nonempty space zones.
+Removal rejects nonempty attached zones; same-board movement keeps host identity
+and contents without creating another zone or placement owner.
 
 ## Delete
 
@@ -180,6 +205,14 @@ tx.moveComponentToZone({
   roster IDs without collisions; well-formed nonexistent hosts are rejected.
 - Type proofs: `hostId` for each attachment kind accepts the right IDs and
   rejects others (another board, a piece of another type).
+- Mutation and restore reject self-containment, transitive cycles, absent or
+  mismatched hosts, and inconsistent forward/reverse membership without partial
+  updates. Forward-referenced valid initial homes resolve successfully.
+- Ownership transfer immediately changes seat access; ownerless component hosts
+  disclose no owner-only contents, and contained ownership remains unchanged.
+- Space-host lifetime proofs cover empty detached hosts, rejected nonempty
+  detached initialization/restore, rejected dependent removal, and same-board
+  movement retaining host identity when tile placement becomes available.
 
 ## Verify
 
