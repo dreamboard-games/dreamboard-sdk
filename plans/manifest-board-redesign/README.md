@@ -112,7 +112,7 @@ filenames remain source material; this table owns execution order and
 | 6   | `codex/tile-inventory`          | Definitions, instances, seeds and canonical locations       | [Inventory](06-tile-inventory.md) |
 | 7   | `codex/board-topology`          | Derived topology, default placement and game migration      | [Topology](07-board-topology.md)  |
 | 8   | `codex/private-tile-projection` | Seat boards, event disclosure, refs and ingress             | [Private tiles](private-tiles.md) |
-| 9   | `codex/tile-transactions`       | Placement, draw/reveal, dependency rejection and seeded RNG | [07](07-place-tiles.md)           |
+| 9   | `codex/tile-placement`          | Placement, draw/reveal, dependency rejection and seeded RNG | [07](07-place-tiles.md)           |
 | 10  | `codex/tile-layout`             | Headless/registry rendering and private-flow browser proof  | [08](08-tile-layout.md)           |
 
 Internal A owns opaque manifest storage/validation and can proceed independently.
@@ -154,12 +154,25 @@ The following are drafts, not landed changes:
   migration. Independent `pnpm check` passes (915 SDK tests and packed consumers),
   as does full `pnpm ui test`. Hosted checks pass after fixing unavailable touch
   draw activation and allowing the bounded full-game fuzz proof its own timeout.
-  Private tile projection is in progress on the next branch.
+- [SDK #114](https://github.com/dreamboard-games/dreamboard-sdk/pull/114):
+  seat-scoped private projection, explicit event audiences, opaque references and
+  trusted authority lifetime. Independent `pnpm check`, full `pnpm ui test` and
+  all required hosted checks pass.
+- [SDK #115](https://github.com/dreamboard-games/dreamboard-sdk/pull/115):
+  atomic tile placement, dependent-state rejection and typed relation mutation.
+  Independent packed-consumer checks and all required hosted checks pass.
+- [SDK #116](https://github.com/dreamboard-games/dreamboard-sdk/pull/116):
+  projected tile geometry, headless tile controls and private-flow browser proof.
+  Independent `pnpm check` passes (1,037 SDK tests and packed consumers), as does
+  full `pnpm ui test` (44 stories at three viewports plus both real games).
+  All required hosted checks pass.
 - [Internal #668](https://github.com/dreamboard-games/dreamboard-internal/pull/668):
   opaque manifest ownership, generated transport and compiler boundary.
 - [Internal #669](https://github.com/dreamboard-games/dreamboard-internal/pull/669):
-  controller-based hosted seat delivery. Published SDK repin, new projection
-  adoption and the final real-browser proof remain outstanding.
+  controller-based hosted seat delivery and seat-owned board/event projection.
+  Browser authority lifetime, restore/replay, screenshot and generated starter
+  consumers are prepared and tested against packed SDK artifacts. The exact
+  published SDK repin and full monorepo gates remain outstanding.
 
 PR descriptions own current verification receipts. No SDK has been published
 for this redesign; downstream adoption is not complete.

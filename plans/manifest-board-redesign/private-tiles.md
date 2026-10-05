@@ -90,12 +90,26 @@ an old reference is rejected rather than selecting a different tile after reorde
 The trusted host supplies `{ sessionId, version }` to projection and dispatch.
 The full submitted frame basis also names the issuing perspective and action set.
 A hosted session's unique, non-reused session ID supplies the authority lifetime;
-local sources create a fresh lifetime outside checkpoints. Accepted commands and
-restores advance the version. Restores reproject state instead of relabelling
+local sources create a fresh lifetime outside checkpoints. Every accepted command advances the version by exactly one; restores also
+advance the live version. Restores reproject state instead of relabelling
 persisted old projections. Reference issuance depends on this public basis,
 the seat and disclosed slots, never a hash of secret state or authoritative IDs.
 The SDK reconstructs the same ephemeral reference domain at ingress; checkpoint
 state contains no reference map. Materialization rejects a mismatched basis.
+
+Concealed pending selections carry a basis stamp for only the immediately following
+frame. Any other accepted command invalidates them, including no-op shuffles,
+shuffle-back operations, and a reveal that makes the chosen tile visible. An
+existing stamp still governs after reveal. Visible selections instead revalidate
+against current eligibility and receive fresh references. Production projection,
+dispatch, completion, testing inspection and authored-command encoding use one
+pending-selection reconciliation owner.
+
+Identity-specific defaults, typed tile event details and explicit view reference
+helpers publish visible tile identities only. They omit concealed identities even
+when an input may select a concealed public slot. This prevents an author-selected
+secret tile from being linked to a public position. Arbitrary authored JSON and
+text remain explicit publication.
 
 Draw intent names a zone. The trusted reducer selects the hidden top component.
 Schema-aware projection covers targets, defaults, drafts, results and errors,

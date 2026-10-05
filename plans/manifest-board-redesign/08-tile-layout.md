@@ -4,10 +4,10 @@ This is execution PR 10. Render projected seat topology only, including delibera
 
 See [private tiles and authority](private-tiles.md).
 
-Branch: `sdk/tile-layout` (on `sdk/place-tiles`). Size: M.
+Branch: `codex/tile-layout` (on `codex/tile-placement`). Size: M.
 Read first: [headless board feature](../../packages/sdk/src/headless/features/board.ts),
 [board-targets.tsx](../../registry/items/board-targets.tsx),
-[hex-grid.tsx](../../registry/items/hex-grid.tsx), [ui/boards.md](../../docs/guides/ui/boards.md).
+[ui/boards.md](../../docs/guides/ui/boards.md).
 Follow the Tailwind and shadcn registry conventions from #80–#81.
 
 ## Goal
@@ -21,7 +21,7 @@ art render correctly. Remove the second, disconnected hex renderer.
 - Layouts expose spaces, edges and vertices only; nothing groups spaces into
   tiles.
 - The registry ships two hex renderers: `BoardTargets`, bound to real
-  geometry, and `HexGrid` ([hex-grid.tsx:16](../../registry/items/hex-grid.tsx#L16)),
+  geometry, and `HexGrid` (the former `registry/items/hex-grid.tsx`),
   which takes hand-written polygon point strings and is used only by a story
   ([components.stories.tsx](../../registry/stories/components.stories.tsx)).
 - `BoardTargets` computes each selectable target's nearest neighbour on every
@@ -32,33 +32,26 @@ art render correctly. Remove the second, disconnected hex renderer.
 
 ### Layout tiles
 
-```ts
-export interface BoardLayoutTile<G> {
-  readonly id: TileIdOf<G>;
-  readonly spaceIds: readonly SpaceIdOf<G>[];
-  /** Outer boundary of the tile's cells, in layout coordinates. */
-  readonly outline: readonly Point[];
-  /** Centroid of the tile's cell centres. */
-  readonly center: Point;
-  /** Rotation to apply to tile art: placement rotation × 60° (hex) or × 90° (square). */
-  readonly rotationDegrees: number;
-  /** Centre of the tile's local origin cell; rotate art around this point. */
-  readonly anchor: Point;
-}
+`layout.getTiles()` returns rendering geometry over the current seat projection:
+opaque `SeatTileRef`, discriminated visible/concealed `data`, visible `spaceIds`,
+plural `outlines`, `center`, `anchor`, and `rotationDegrees`. It never carries an
+authoritative inventory identity or spatial target methods.
 
-layout.getTiles(): readonly BoardLayoutTile<G>[];
-```
+Visible footprints come from projected cells. Concealed footprints come only from
+the independently authored public appearance transformed by placement. Shared
+admission validates transformed coordinate bounds. Concealed footprints affect
+bounds but cannot create cells, edges, vertices or hit-test targets.
 
-Outline algorithm (no new dependency; honeycomb cannot merge polygons):
+Cancel internal sides by exact lattice identity and walk oriented boundary loops.
+Reject non-finite derived coordinates and bounds, including viewport transforms.
+Support holes, disconnected islands and corner-touching footprints; render filled
+paths using `fillRule="evenodd"`. Cache admitted geometry with its projected
+owner, presentation, placement, size and origin. Preserve immutable captures.
 
-1. Boundary edges are the tile's cell edges whose other side is not a cell of
-   the same tile (absent, or another tile).
-2. Each boundary vertex has exactly two boundary edges; walk them into one
-   closed loop using the vertex positions from layer 02.
-3. Validate at table creation that each tile's cells are edge-connected with no
-   holes, so the boundary is always a single loop.
-
-Compute tiles inside the memoized geometric layout (layer 02), not per render.
+Zone tile controls are a separate headless facade: `getTiles`, `getTile`,
+`findTile`, selection and target props. Tile targets route through
+`{ kind: "tile", value: SeatTileRef }` and the tile input. Captured handlers expire
+when their frame, authority, seat or source changes.
 
 ### `BoardTargets`
 
@@ -69,7 +62,13 @@ Compute tiles inside the memoized geometric layout (layer 02), not per render.
     <g
       transform={`rotate(${tile.rotationDegrees} ${tile.anchor.x} ${tile.anchor.y})`}
     >
-      <image href={tileArt[tile.id]} /* positioned around tile.anchor */ />
+      <image
+        href={
+          tile.data.disclosure === "visible"
+            ? tile.data.frontImage
+            : tile.data.appearance.backImage
+        } /* positioned around tile.anchor */
+      />
     </g>
   )}
   tileProps={(tile) => ({ className: "fill-none stroke-2 stroke-foreground" })}
@@ -77,7 +76,7 @@ Compute tiles inside the memoized geometric layout (layer 02), not per render.
 ```
 
 - `renderTile` and `tileProps` render beneath spaces. With neither provided,
-  output is unchanged from today, so single-cell boards need no edits.
+  tile artwork is omitted, so single-cell boards need no edits.
 - Compute the edge/vertex hit size once per layout and selectable set instead
   of per target per render.
 
@@ -102,7 +101,8 @@ Compute tiles inside the memoized geometric layout (layer 02), not per render.
 - Browser (story test): the tri-hex board renders 13 tile outlines and 37
   spaces; clicking a cell selects that space; the tile art `transform` matches
   `rotationDegrees`; Axe passes; desktop and touch widths.
-- Both reference-game browser suites pass unchanged.
+- Both reference-game browser suites use the currently emitted seat references
+  and pass with physically exercised desktop and touch actions.
 
 ## Verify
 
@@ -116,4 +116,4 @@ pnpm ui test
 - One hex renderer remains, bound to real geometry.
 - Multi-hex tiles render as tiles, with correct rotation.
 
-After this layer, publish the SDK alpha (see the [README](README.md#publication)).
+After this layer and explicit publication authorization, publish the SDK alpha (see the [README](README.md#publication)).

@@ -120,6 +120,10 @@ On PR A, after the SDK alpha is published.
 pnpm sdk:repin <alpha-version>
 ```
 
+Consumer changes may be prepared and verified against one packed SDK candidate
+before publication. The final tracked dependency must be the exact published SDK
+version; do not use source aliases or a local-file pin as the adoption result.
+
 Then fix consumers of the changed SDK surfaces:
 
 | SDK change (layer)                                    | Internal consumers to update                                                                                                                                                 |
@@ -128,6 +132,13 @@ Then fix consumers of the changed SDK surfaces:
 | Public definitions and seat-specific `boards` (07–08) | `apps/gameplay` projection and fixtures, `packages/browser-gameplay-runtime/src/gameplay-ui.ts`, `packages/ui-host-runtime` screenshot projection, `apps/gamepiece` fixtures |
 | Seat zones keyed by host (03)                         | Browser runtime and host UI zone readers                                                                                                                                     |
 | Board target value kinds (05)                         | Host runtime parsing of board targets                                                                                                                                        |
+
+Studio component packs remain JSON-literal modules. Emit portable JSON Schema
+(`type`, `properties`, `required`) and pass the generated manifest document to
+`compileManifest`, which owns admission. Authored Zod schemas use the authored
+manifest boundary; do not add a consumer-specific JSON-to-Zod adapter. Verify
+both empty packs and real generated packs through runtime compilation, UI
+compilation and installed-package type checks.
 
 Shared static delivery may contain only explicitly public definitions/shells.
 Layer 07 removes the old `boardStatic()` method, static projection schema and
@@ -140,6 +151,14 @@ column separately from the runtime cut; no reader should depend on it.
 Seat boards and audience-filtered events must pass through gameplay workers,
 hosted frames, browser gameplay and screenshots consistently. Inspect actual
 hosted payloads and UI messages with the private-tile fixture.
+
+The trusted host owns the unique session lifetime and monotonic accepted-input
+version. Forward the full client basis at ingress; project accepted state under
+the next version. Restore must execute projection again under the new live basis,
+never copy old projections. Browser runtime lifetimes are fresh on reopen and are
+not persisted in checkpoints. Durable input replay uses each recorded input's
+historical trusted basis, then reprojects restored state under the current lifetime.
+UI presentation and seat switching do not invent new authority versions.
 
 Hosted authorization is part of this boundary. At the implementation baseline,
 `apps/gameplay/src/auth.ts` grants the creator every seat through `canRestore`,
