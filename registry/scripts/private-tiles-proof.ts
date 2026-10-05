@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { expect, type Page, type Locator } from "@playwright/test";
 async function activate(control: Locator, touch: boolean) {
   if (touch) await control.tap();
@@ -19,6 +20,31 @@ async function hidden(page: Page) {
     /SECRET_|secret-west|secret-east|secret-root|secret-crown/,
   );
   await expect(page.locator("svg [data-input=cell]")).toHaveCount(0);
+  const diagnostic = z
+    .object({
+      view: z.object({
+        boards: z.object({
+          map: z.object({
+            spaces: z.record(z.string(), z.unknown()),
+            edges: z.array(z.unknown()),
+            vertices: z.array(z.unknown()),
+          }),
+        }),
+      }),
+    })
+    .parse(JSON.parse((await authorized.textContent()) ?? "null"));
+  expect(Object.keys(diagnostic.view.boards.map.spaces)).toEqual([]);
+  expect(diagnostic.view.boards.map.edges).toEqual([]);
+  expect(diagnostic.view.boards.map.vertices).toEqual([]);
+  await expect(page.locator("svg [data-target-kind]")).toHaveCount(0);
+  const viewBox = await page
+    .getByRole("group", { name: "Expedition board", exact: true })
+    .getAttribute("viewBox");
+  const [, , width, height] = (viewBox ?? "").split(/\s+/).map(Number);
+  expect(width).toBeGreaterThanOrEqual(60);
+  expect(height).toBeGreaterThanOrEqual(60);
+  expect(width).toBe(height);
+
   await expect(
     page.locator("svg [data-tile-disclosure=concealed]"),
   ).toHaveCount(1);
@@ -45,11 +71,13 @@ export async function provePrivateTiles(page: Page, touch: boolean) {
     .first()
     .getAttribute("data-value");
   await action(page, "Track bag tile", touch);
-  await expect(page.locator('[data-draft="play.track"]')).not.toHaveText("{}");
+  await expect(page.locator('[data-draft="play.trackBag"]')).not.toHaveText(
+    "{}",
+  );
   await seat.selectOption(seats[1]);
   await action(page, "Shuffle bag", touch);
   await seat.selectOption(seats[0]);
-  await expect(page.locator('[data-draft="play.track"]')).toHaveText("{}");
+  await expect(page.locator('[data-draft="play.trackBag"]')).toHaveText("{}");
   if (touch) await page.locator("[data-bag-tile]").first().tap();
   else {
     await page.locator("[data-bag-tile]").first().focus();
@@ -66,11 +94,13 @@ export async function provePrivateTiles(page: Page, touch: boolean) {
     touch,
   );
   await action(page, "Track board tile", touch);
-  await expect(page.locator('[data-draft="play.track"]')).not.toHaveText("{}");
+  await expect(page.locator('[data-draft="play.trackBoard"]')).not.toHaveText(
+    "{}",
+  );
   await seat.selectOption(seats[0]);
   await action(page, "Reveal board", touch);
   await seat.selectOption(seats[1]);
-  await expect(page.locator('[data-draft="play.track"]')).toHaveText("{}");
+  await expect(page.locator('[data-draft="play.trackBoard"]')).toHaveText("{}");
   await expect(page.locator("svg [data-tile-disclosure=visible]")).toHaveCount(
     1,
   );
@@ -92,10 +122,12 @@ export async function provePrivateTiles(page: Page, touch: boolean) {
     await page.locator("[data-bag-tile]").first().getAttribute("data-value"),
   ).not.toBe(oldRef);
   await action(page, "Track bag tile", touch);
-  await expect(page.locator('[data-draft="play.track"]')).not.toHaveText("{}");
+  await expect(page.locator('[data-draft="play.trackBag"]')).not.toHaveText(
+    "{}",
+  );
   await seat.selectOption(seats[0]);
   await action(page, "Shuffle bag", touch);
   await seat.selectOption(seats[1]);
-  await expect(page.locator('[data-draft="play.track"]')).toHaveText("{}");
+  await expect(page.locator('[data-draft="play.trackBag"]')).toHaveText("{}");
   await hidden(page);
 }

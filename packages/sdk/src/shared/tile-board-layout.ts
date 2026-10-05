@@ -1,6 +1,6 @@
 import { immutableCopy } from "./immutable.js";
 import { createHexTopology } from "./hex-board.js";
-import { rotateHex, rotateSquare } from "./board-topology.js";
+import { getPublicTileFootprint } from "./tile-appearance.js";
 import {
   SeatBoardTopologySchema,
   type SeatBoardTopology,
@@ -176,6 +176,10 @@ function build(
   }
   const tiles = board.tiles.map((tile): TileLayoutGeometry => {
     const visible = visibleByTile.get(tile.ref);
+    const footprint =
+      tile.disclosure === "concealed"
+        ? getPublicTileFootprint(tile.appearance, tile.placement)
+        : null;
     let cells: Cell[];
     let anchor: TileLayoutPoint;
     if (board.layout === "hex" && tile.placement.layout === "hex") {
@@ -183,17 +187,11 @@ function build(
       cells =
         tile.disclosure === "visible"
           ? (visible?.cells ?? [])
-          : tile.appearance.layout === "hex"
+          : footprint?.layout === "hex"
             ? hexCells(
                 board.id,
                 board.orientation,
-                tile.appearance.cells.map((cell) => {
-                  const rotated = rotateHex(cell.q, cell.r, placement.rotation);
-                  return {
-                    q: rotated.q + placement.q,
-                    r: rotated.r + placement.r,
-                  };
-                }),
+                footprint.cells,
                 size,
                 origin,
               )
@@ -213,22 +211,8 @@ function build(
       cells =
         tile.disclosure === "visible"
           ? (visible?.cells ?? [])
-          : tile.appearance.layout === "square"
-            ? squareCells(
-                tile.appearance.cells.map((cell) => {
-                  const rotated = rotateSquare(
-                    cell.col,
-                    cell.row,
-                    placement.rotation,
-                  );
-                  return {
-                    col: rotated.col + placement.col,
-                    row: rotated.row + placement.row,
-                  };
-                }),
-                size,
-                origin,
-              )
+          : footprint?.layout === "square"
+            ? squareCells(footprint.cells, size, origin)
             : [];
       anchor = squareCells(
         [{ col: placement.col, row: placement.row }],

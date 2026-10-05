@@ -444,7 +444,7 @@ type LayoutElement<G, Kind extends "edges" | "vertices", Value> = LayoutTarget<
 export type BoardLayoutTile<G> =
   BoardDataOf<G, IdOf<G, "boardId">> extends infer Board
     ? Board extends { readonly tiles: readonly (infer Tile)[] }
-      ? TileLayoutGeometry<Extract<Tile, TileLayoutGeometry["data"]>>
+      ? Omit<TileLayoutGeometry, "data"> & { readonly data: Tile }
       : never
     : never;
 

@@ -80,3 +80,22 @@ source fixtures, and SDK consumers must adopt the same exact published SDK
 version together. Remove `"player-board-space"` domains and player-bearing target
 values before deployment; publishing the SDK alone does not complete downstream
 adoption.
+
+## Tile rendering
+
+`board.getLayout({ hexSize: 40 }).getTiles()` returns the current seat's placed
+tile presentations. Each tile exposes its opaque `ref`, discriminated `data`,
+`outlines`, `center`, `anchor`, `rotationDegrees`, and visible `spaceIds`.
+Outlines are closed boundary loops; disconnected islands and holes are valid.
+Render filled paths with `fillRule="evenodd"`. Rotate tile artwork around
+`anchor`; outlines already include placement rotation.
+
+Concealed tiles contribute only their independently public footprint to layout
+bounds. They have no visible space IDs and do not create cells, edges, vertices,
+hit-test targets or drop controls. Their layout data has no selection methods;
+use the dedicated tile input for inventory selection.
+
+The registry `BoardTargets` accepts `renderTile` and `tileProps` beneath the
+space layer. Both are optional. Use `targetLabel` for game-specific accessible
+space, edge and vertex names; defaults use public space names and element
+ordinals. Opaque reference strings are never the default spoken label.

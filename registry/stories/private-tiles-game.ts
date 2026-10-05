@@ -75,15 +75,28 @@ export const privateTilesGame = model.assemble({
           reduce({ tx, input }) {
             tx.placeTile({
               boardId: "map",
-              tileId: input.tile,
+              tileId: input.params.tile,
               at: { col: 0, row: 0, rotation: 0 },
             });
           },
         }),
-        track: play.interaction({
+        trackBag: play.interaction({
           steps: play
             .steps()
-            .input("tile", play.inputs.tile({ from: ["bag"], boards: ["map"] }))
+            .input("tile", play.inputs.tile({ from: ["bag"] }))
+            .input(
+              "confirm",
+              play.inputs.form.choice({
+                choices: [{ value: "finish", label: "Finish" }],
+                defaultValue: () => undefined,
+              }),
+            ),
+          reduce() {},
+        }),
+        trackBoard: play.interaction({
+          steps: play
+            .steps()
+            .input("tile", play.inputs.tile({ boards: ["map"] }))
             .input(
               "confirm",
               play.inputs.form.choice({

@@ -1,4 +1,4 @@
-# Zones and cards
+# Zones, cards and tiles
 
 ```ts
 import type { GameInstance } from "@dreamboard-games/sdk";
@@ -24,10 +24,21 @@ from the keys present in the projection.
 `get` requires the zone to exist in the seat's frame; `find` returns `undefined`
 when it is absent. `getAll` lists only projected zone instances.
 
-This UI facade presents cards: its count and empty-state helpers describe the
-projected cards. Reducer `q.zone(zoneId, hostId)` returns the complete ordered
-component inventory, including pieces and dice. A zone containing only pieces
-can therefore have an empty card presentation.
+The UI facade presents projected cards and tiles. `count` and `getIsEmpty()`
+count those presentations only; omitted private inventory does not contribute.
+Reducer `q.zone(zoneId, hostId)` returns the complete ordered component inventory,
+including pieces and dice. A zone containing only pieces can therefore have an
+empty UI inventory.
+
+`zone.getTiles()` returns the current tile presentations. Use `getTile(ref)` or
+`findTile(ref)` with a `SeatTileRef` from the current frame. `tile.data.disclosure`
+is `"visible"` or `"concealed"`; a concealed tile has only its independent public
+appearance. Each tile exposes selection state, `getInteractions()`,
+`getSelectHandler(options)` and `getTargetProps(options)`. Pass an explicit
+interaction and input when more than one route accepts the tile. Captured
+handlers expire when the frame, seat, source or restored authority changes.
+A tile inventory target is `{ kind: "tile", value: tile.ref }`; it is separate
+from selecting a board cell.
 
 Public per-player zones are visible across seats. Another player's owner-only
 zone is omitted. Within an accessible zone, cards remain in authoritative order.

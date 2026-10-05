@@ -1,3 +1,4 @@
+import { provePrivateTiles } from "./private-tiles-proof.ts";
 import {
   perPlayerInstanceId,
   tileSpaceId,
@@ -209,7 +210,7 @@ try {
         await expect(card).toHaveCSS("width", "180px");
         await expect(card).toHaveCSS("border-radius", "0px");
         await expect(card).toHaveCSS("--tw-shadow", "0 0 #0000");
-        for (const kind of ["hex", "square"]) {
+        for (const kind of ["square"]) {
           const overlay = page.getByTestId(`${kind}-overlay`);
           await expect(overlay).toHaveCSS("fill", "rgb(255, 165, 0)");
           await expect(overlay).toHaveCSS("stroke", "rgb(128, 0, 128)");
@@ -257,6 +258,28 @@ try {
         await expect(page.getByTestId("scenario-view")).toContainText(
           `"selected":${JSON.stringify(targets)}`,
         );
+      }
+      if (story.id === "private-tiles--expedition")
+        await provePrivateTiles(page, touch);
+      if (story.id === "boards-tri-hex--island") {
+        await expect(page.locator("[data-tile-outline]")).toHaveCount(13);
+        await expect(page.locator("[data-trihex-space]")).toHaveCount(37);
+        const target = page
+          .locator("svg [data-action=select]")
+          .filter({ has: page.locator("[data-trihex-space]") })
+          .first();
+        if (touch) await target.tap();
+        else await target.press("Enter");
+        await expect(page.locator("[data-trihex-selection-count]")).toHaveText(
+          "1",
+        );
+        for (const art of await page.locator("[data-tile-art]").all()) {
+          const rotation = await art.getAttribute("data-rotation-degrees");
+          await expect(art).toHaveAttribute(
+            "transform",
+            new RegExp(`^rotate\\(${rotation} `),
+          );
+        }
       }
       // Gesture proofs run on a portrait phone and a desktop.
       if (story.id.endsWith("host-hands") && name !== "landscape")

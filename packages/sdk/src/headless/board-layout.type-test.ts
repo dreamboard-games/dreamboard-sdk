@@ -113,8 +113,9 @@ declare const layoutTile: ReturnType<Layout["getTiles"]>[number];
 const tileReference: SeatTileRef = layoutTile.ref;
 const tileIsAny: 0 extends 1 & typeof layoutTile ? true : false = false;
 if (layoutTile.data.disclosure === "visible") {
-  const charges: import("../shared/runtime-json.js").ReadonlyRuntimeJson =
-    layoutTile.data.properties.charges;
+  const charges: number = layoutTile.data.properties.charges;
+  // @ts-expect-error Visible tile properties retain exact authored names.
+  layoutTile.data.properties.unknown;
   // @ts-expect-error Visible tile properties are immutable.
   layoutTile.data.properties.charges = 3;
   void charges;

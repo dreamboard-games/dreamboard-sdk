@@ -37,6 +37,7 @@ function hex(
   cells: readonly { q: number; r: number }[],
   rotation: 0 | 1 | 2 | 3 | 4 | 5 = 0,
   visible = true,
+  orientation: "pointy" | "flat" = "pointy",
 ) {
   const manifest = compileManifest({
     players: { minPlayers: 1, maxPlayers: 1 },
@@ -48,7 +49,7 @@ function hex(
         name: "Map",
         scope: "shared",
         layout: "hex",
-        orientation: "pointy",
+        orientation,
       },
     ],
     tileTypes: [
@@ -218,4 +219,35 @@ describe("projected tile geometry", () => {
     const malformed: SeatBoardTopology = { ...board, id: "wrong" };
     expect(() => createTileBoardLayout(malformed, 10)).toThrow();
   });
+});
+
+test("flat hex footprints retain holes and separate disconnected islands", () => {
+  const ring = [
+    { q: 1, r: 0 },
+    { q: 0, r: 1 },
+    { q: -1, r: 1 },
+    { q: -1, r: 0 },
+    { q: 0, r: -1 },
+    { q: 1, r: -1 },
+  ];
+  for (const visible of [true, false]) {
+    const tile = createTileBoardLayout(hex(ring, 0, visible, "flat"), 17)
+      .tiles[0];
+    expect(
+      tile.outlines.map((loop) => loop.length).sort((a, b) => a - b),
+    ).toEqual([6, 18]);
+    const islands = createTileBoardLayout(
+      hex(
+        [
+          { q: 0, r: 0 },
+          { q: 3, r: 0 },
+        ],
+        0,
+        visible,
+        "flat",
+      ),
+      17,
+    ).tiles[0];
+    expect(islands.outlines.map((loop) => loop.length)).toEqual([6, 6]);
+  }
 });

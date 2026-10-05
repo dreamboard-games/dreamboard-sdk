@@ -1,12 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useLayoutEffect, useState } from "react";
 import {
-  localSource,
+  scenarioSource,
   type LocalSource,
   type LocalCheckpoint,
 } from "@dreamboard-games/sdk/testing";
 import { GameProvider, useGame } from "../typecheck/game";
 import { BoardTargets } from "../items/board-targets";
+import privateTilesScenario from "../test/scenarios/private-tiles.scenario";
 import { privateTilesGame } from "./private-tiles-game";
 function Surface({ source }: { source: LocalSource<typeof privateTilesGame> }) {
   const game = useGame((value) => value);
@@ -116,8 +117,8 @@ function Surface({ source }: { source: LocalSource<typeof privateTilesGame> }) {
       <button
         disabled={!tiles[0]}
         onClick={() => {
-          tiles[0]?.select({ interaction: "play.track", input: "tile" });
-          submit("play.track");
+          tiles[0]?.select({ interaction: "play.trackBag", input: "tile" });
+          submit("play.trackBag");
         }}
       >
         Track bag tile
@@ -125,8 +126,10 @@ function Surface({ source }: { source: LocalSource<typeof privateTilesGame> }) {
       <button
         disabled={!boardTiles[0]}
         onClick={() => {
-          game.inputs.get("play.track", "tile").setValue(boardTiles[0].ref);
-          submit("play.track");
+          game.inputs
+            .get("play.trackBoard", "tile")
+            .setValue(boardTiles[0].ref);
+          submit("play.trackBoard");
         }}
       >
         Track board tile
@@ -134,7 +137,9 @@ function Surface({ source }: { source: LocalSource<typeof privateTilesGame> }) {
       {game.interactions
         .list()
         .filter((interaction) =>
-          ["play.place", "play.track"].includes(interaction.key),
+          ["play.place", "play.trackBag", "play.trackBoard"].includes(
+            interaction.key,
+          ),
         )
         .map((interaction) => (
           <section key={interaction.key} aria-label={interaction.key}>
@@ -180,6 +185,7 @@ function Surface({ source }: { source: LocalSource<typeof privateTilesGame> }) {
       />
       <pre
         aria-label="Authorized frame"
+        tabIndex={0}
         style={{
           maxHeight: 180,
           overflow: "auto",
@@ -215,7 +221,9 @@ function PrivateTiles() {
   useEffect(() => {
     let active = true;
     let value: typeof created = null;
-    void localSource(privateTilesGame, { players: 2, seed: 1 })
+    void scenarioSource(privateTilesGame, privateTilesScenario, {
+      at: "opening",
+    })
       .then((source) => {
         if (active) {
           value = { source, adopted: false };
