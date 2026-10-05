@@ -312,7 +312,7 @@ test("incompatible public appearance rejects placement before inventory mutation
     face: { audience: "none" },
     appearance: { layout: "hex", cells: [{ q: 0, r: 0 }] },
   };
-  atomic(table, () => place(), "appearance layout");
+  atomic(table, () => place(), "public appearance");
 });
 
 test("seeded twelve-triangle setup covers exactly the 37-cell radius-three hexagon", () => {
@@ -465,4 +465,24 @@ test("seeded twelve-triangle setup covers exactly the 37-cell radius-three hexag
   };
   for (const seed of [1, 2, 3, 4, 5, 17, 91, 1024, 9999, 0x7fffffff])
     expect(build(seed)).toEqual(build(seed));
+});
+
+test("rejects overflow in the independently public footprint before removing inventory", () => {
+  const { table } = fixture();
+  table.tiles.a.disclosure = {
+    face: { audience: "none" },
+    appearance: { layout: "square", cells: [{ col: 2, row: 0 }] },
+  };
+  atomic(
+    table,
+    () =>
+      placeTileInPlace({
+        table,
+        definitions: manifest,
+        tileId: "a",
+        boardId: "map",
+        at: { col: MAXIMUM_BOARD_COORDINATE - 1, row: 0, rotation: 0 },
+      }),
+    "coordinate domain",
+  );
 });
