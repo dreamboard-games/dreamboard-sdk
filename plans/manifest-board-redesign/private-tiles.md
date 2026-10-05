@@ -64,12 +64,38 @@ Keep one seat-board projection owner. Retain shared static caching only for a
 clear, non-overlapping public responsibility; never put private placement there.
 Hosted browsers must not receive all private seats and select one in the UI.
 
+The concrete policy model uses the existing zone visibility vocabulary. Boards
+declare `public`, `ownerOnly` or `hidden` visibility; runtime board visibility
+is initialized from that declaration and can change explicitly. Shared boards
+cannot use `ownerOnly`. Per-player boards default to public. Zone policies remain
+definition-owned; relocating a tile changes its containing location policy.
+There is no global location-policy registry or additional board-ownership store.
+
+Each runtime tile has a face audience (`public`, `owner`, `none`, or an explicit
+runtime seat list) and an optional independently authored public appearance.
+Seeds cannot name runtime seats. Appearances contain only layout, footprint
+coordinates and optional back artwork. Zone snapshots contain projected tiles
+inline; boards contain placed projected tiles. No second client tile-membership
+map is required. Detached tiles are omitted. Visible tiled cells use seat space
+references, and authored views request references explicitly from their view
+context rather than passing authoritative instance identities to UI consumers.
+
 ## Actions, references and events
 
 Authoritative `TileId` and client `SeatTileRef` are distinct types. Concealed
 references cannot encode identity or preserve tracking through a hidden shuffle.
 Resolve submitted references only for their issuing seat and frame/action basis;
 an old reference is rejected rather than selecting a different tile after reorder.
+
+The trusted host supplies `{ sessionId, version }` to projection and dispatch.
+The full submitted frame basis also names the issuing perspective and action set.
+A hosted session's unique, non-reused session ID supplies the authority lifetime;
+local sources create a fresh lifetime outside checkpoints. Accepted commands and
+restores advance the version. Restores reproject state instead of relabelling
+persisted old projections. Reference issuance depends on this public basis,
+the seat and disclosed slots, never a hash of secret state or authoritative IDs.
+The SDK reconstructs the same ephemeral reference domain at ingress; checkpoint
+state contains no reference map. Materialization rejects a mismatched basis.
 
 Draw intent names a zone. The trusted reducer selects the hidden top component.
 Schema-aware projection covers targets, defaults, drafts, results and errors,
