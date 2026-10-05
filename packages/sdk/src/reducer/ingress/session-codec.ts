@@ -126,6 +126,18 @@ const currentRuntimeTableSchema = z
         track: z.record(z.string(), runtimeRecordSchema).optional(),
       })
       .strict(),
+    tiles: z.record(
+      z.string(),
+      z
+        .object({
+          componentType: z.literal("tile"),
+          id: z.string(),
+          tileTypeId: z.string(),
+          ownerId: z.string().nullable(),
+          properties: runtimeRecordSchema,
+        })
+        .strict(),
+    ),
     dice: z.record(
       z.string(),
       z

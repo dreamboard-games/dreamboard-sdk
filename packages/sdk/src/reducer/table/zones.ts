@@ -18,6 +18,10 @@ export type ZoneTable = {
     string,
     { id: string; pieceTypeId: string; ownerId?: string | null }
   >;
+  readonly tiles: Record<
+    string,
+    { id: string; tileTypeId: string; ownerId: string | null }
+  >;
   readonly dice: Record<
     string,
     { id: string; dieTypeId: string; ownerId?: string | null }
@@ -230,7 +234,7 @@ export function resolveZone(
 
 export function assertComponent(table: ZoneTable, componentId: string): void {
   if (
-    ![table.cards, table.pieces, table.dice].some((family) =>
+    ![table.cards, table.pieces, table.dice, table.tiles].some((family) =>
       Object.hasOwn(family, componentId),
     )
   )
@@ -245,6 +249,13 @@ export function assertComponentAllowed(
   componentId: string,
 ): void {
   assertComponent(table, componentId);
+  if (
+    Object.hasOwn(table.tiles, componentId) &&
+    definition.visibility !== "public"
+  )
+    throw new Error(
+      "Tiles require public zone destinations until tile projection supports privacy.",
+    );
   const card = Object.hasOwn(table.cards, componentId)
     ? table.cards[componentId]
     : undefined;
@@ -268,6 +279,7 @@ export function assertZoneConsistency(
     table.cards,
     table.pieces,
     table.dice,
+    table.tiles,
   ];
   for (const family of families)
     for (const [id, component] of Object.entries(family)) {
@@ -325,6 +337,12 @@ export function assertZoneConsistency(
     if (!Object.hasOwn(table.componentLocations, id))
       throw new Error(`Missing location for component '${id}'.`);
   for (const [id, location] of Object.entries(table.componentLocations)) {
+    if (
+      Object.hasOwn(table.tiles, id) &&
+      location.type !== "Detached" &&
+      location.type !== "InZone"
+    )
+      throw new Error("Tiles may only be detached or in public zones.");
     if (
       location.type === "InZone" &&
       location.playedBy !== null &&

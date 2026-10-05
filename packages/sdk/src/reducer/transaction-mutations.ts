@@ -6,6 +6,7 @@ import type {
   BoardIdOfTable,
   CardIdOfTable,
   ComponentIdOfTable,
+  SpatialComponentIdOfTable,
   HiddenStateOfState,
   PhaseStateOfState,
   PlayerIdOfState,
@@ -168,7 +169,7 @@ export interface TransactionMutations<
   moveComponentToSpace<
     BoardId extends BoardIdOfTable<TableOfState<State>>,
     SpaceId extends SpaceIdOfTable<TableOfState<State>, BoardId>,
-    ComponentId extends ComponentIdOfTable<TableOfState<State>>,
+    ComponentId extends SpatialComponentIdOfTable<TableOfState<State>>,
   >(args: {
     componentId: ComponentId;
     boardId: BoardId;
@@ -179,7 +180,7 @@ export interface TransactionMutations<
   moveComponentToEdge<
     BoardId extends TiledBoardIdOfTable<TableOfState<State>>,
     EdgeId extends TiledEdgeIdOfTable<TableOfState<State>, BoardId>,
-    ComponentId extends ComponentIdOfTable<TableOfState<State>>,
+    ComponentId extends SpatialComponentIdOfTable<TableOfState<State>>,
   >(args: {
     componentId: ComponentId;
     boardId: BoardId;
@@ -190,7 +191,7 @@ export interface TransactionMutations<
   moveComponentToVertex<
     BoardId extends TiledBoardIdOfTable<TableOfState<State>>,
     VertexId extends TiledVertexIdOfTable<TableOfState<State>, BoardId>,
-    ComponentId extends ComponentIdOfTable<TableOfState<State>>,
+    ComponentId extends SpatialComponentIdOfTable<TableOfState<State>>,
   >(args: {
     componentId: ComponentId;
     boardId: BoardId;
@@ -421,6 +422,11 @@ export const transactionMutations = {
     else if (Object.hasOwn(state.table.dice, componentId))
       state.table.dice[componentId] = {
         ...state.table.dice[componentId],
+        ownerId,
+      };
+    else if (Object.hasOwn(state.table.tiles, componentId))
+      state.table.tiles[componentId] = {
+        ...state.table.tiles[componentId],
         ownerId,
       };
     else throw new Error(`Unknown component '${componentId}'.`);

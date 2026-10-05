@@ -128,7 +128,11 @@ export {
 } from "./reducer/manifest/authoring.js";
 
 export type { GameTopologyManifest } from "./shared/domain/manifest.js";
-export type { SquareBoardSpec } from "./shared/domain/contracts.js";
+export type {
+  SquareBoardSpec,
+  TileTypeSpec,
+  TileSeedSpec,
+} from "./shared/domain/contracts.js";
 
 export * as z from "zod";
 export { ref } from "./reducer/manifest/field-schemas";

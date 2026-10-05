@@ -41,6 +41,7 @@ const definitions: ZoneDefinitions = {
 };
 function table(): RuntimeTableRecord {
   return {
+    tiles: {},
     playerOrder: ["alice", "table"],
     cards: {},
     pieces: {

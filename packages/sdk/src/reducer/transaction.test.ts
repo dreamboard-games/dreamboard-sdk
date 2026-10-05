@@ -41,6 +41,7 @@ function createState(): TestState {
   const players = [player("player-1"), player("player-2"), player("player-3")];
   return {
     table: {
+      tiles: {},
       playerOrder: players,
       zones: {
         hand: Object.fromEntries(

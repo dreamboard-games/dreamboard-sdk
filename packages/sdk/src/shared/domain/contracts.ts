@@ -201,6 +201,9 @@ export type DieTypeSpec = z.infer<typeof manifestSchemas.DieTypeSpecSchema>;
  */
 export type DieSeedSpec = z.infer<typeof manifestSchemas.DieSeedSpecSchema>;
 
+export type TileTypeSpec = z.infer<typeof manifestSchemas.TileTypeSpecSchema>;
+export type TileSeedSpec = z.infer<typeof manifestSchemas.TileSeedSpecSchema>;
+
 /**
  * Definition of a game resource type
  */

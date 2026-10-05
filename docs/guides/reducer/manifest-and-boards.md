@@ -8,14 +8,14 @@ export const contract = compileManifest(manifest);
 
 The manifest owns identities, card metadata, zones and static board geometry. Hex topology uses canonical space/edge/vertex identities and shared layout math; generic and square boards use inline data, with no template identity or merging. The SDK projects current board instances into each seat's `boards` collection. The frame materializer exposes that collection as `frame.view.boards`; authored views cannot overwrite it. See the real Hex manifest and geometry guide for authored shapes.
 
-Inferred tables preserve each card, piece, and die's runtime ID, authored type,
+Inferred tables preserve each card, piece, die and tile's runtime ID, authored type,
 and property schema. Component IDs are the union of those inventories, so
 component queries and movement commands reject unknown IDs at compile time.
-Board scope and space IDs stay literal. Per-player board, card, piece and die IDs
+Board scope and space IDs stay literal. Per-player board, card, piece, die and tile IDs
 carry exact family and expanded seed-base types. The shared identity codec owns
 encoding and parsing; active roster and inventory membership are checked separately.
 
-A card or piece/die seed with `scope: "perPlayer"` creates one copy per actual
+A card or piece/die/tile seed with `scope: "perPlayer"` creates one copy per actual
 session seat. It starts with that seat as owner; shared components start unowned.
 Manifests do not contain `ownerId` or `visibility.visibleTo`. Replication is not a
 privacy policy, and changing ownership later never changes an instance's ID.
@@ -43,7 +43,7 @@ fields, so UI code renders `card.frontImage` directly.
 Zones have one ordered membership array per host: `table.zones[zoneId][hostId]`.
 Shared zones use the `"table"` host; per-player zones use an active player ID.
 Compiled manifest definitions own scope, visibility and allowed card sets. Those
-rules are not duplicated in mutable table state. Cards, pieces and dice use the
+rules are not duplicated in mutable table state. Cards, pieces, dice and tiles use the
 same `InZone { zoneId, hostId, playedBy }` location; their IDs are unique across
 component families. Array order is authoritative, with no location position copy.
 
@@ -143,6 +143,48 @@ Attached zones replace board containers and component slots. All containment
 uses `InZone`; the old container/slot declarations, locations, queries and
 transactions are removed.
 
+## Tile inventory
+
+Declare reusable `tileTypes` and game-owned `tileSeeds`. A type owns immutable
+geometry, face metadata and rule fields. An instance owns its ID, type ID,
+current owner and mutable properties. Locations and ordered zone memberships
+remain the sole placement and containment owners.
+
+```ts
+tileTypes: [
+  {
+    id: "forest",
+    name: "Forest",
+    layout: "hex",
+    cells: [{ id: "center", at: { q: 0, r: 0 } }],
+    fieldsSchema: z.object({ resource: z.literal("wood") }),
+    fields: { resource: "wood" },
+    propertiesSchema: z.object({ exhausted: z.boolean().default(false) }),
+  },
+],
+tileSeeds: [
+  { id: "forest", typeId: "forest", count: 3 },
+],
+```
+
+Every type has a nonempty array of explicitly named local cells. Hex cells use
+`q`/`r`; square cells use `col`/`row`. Optional edges and vertices name a `cellId`
+and a bounded `side` or `corner`. Cell, edge and vertex field schemas validate
+immutable metadata separately from instance `propertiesSchema`. Duplicate local
+identities, coordinates and annotation addresses are invalid.
+
+`q.tile(tileId)` returns the instance; `q.component.location(tileId)` returns its
+canonical location. Tile seed counts and per-player expansion follow the same
+identity rules as other components. Omitted homes are detached. `ref.tileId()`
+uses declaration-stage validation at authoring and live inventory at restore.
+
+This layer supports detached tiles and public zone inventory. Private initial
+homes and destinations reject before mutation. Tiles cannot occupy a component
+space, edge or vertex. Board placement, private projection and tile UI follow in
+the subsequent layers; the current headless zone facade continues to present
+cards. Tile seed assignments and instance properties are not automatically sent
+in static, seat or UI bridge projections.
+
 ## Field schemas
 
 Author field data with `z.object(...)`, importing `z` and `ref` from
@@ -167,7 +209,7 @@ these output policies through JSON. Enum-keyed records and arbitrary schema
 compositions are outside the portable subset.
 
 `ref` exposes `cardId`, `zoneId`, `playerId`, `boardId`, `spaceId`, `edgeId`,
-`vertexId`, `pieceId`, `dieId` and `resourceId`. The markers preserve ID families
+`vertexId`, `pieceId`, `dieId`, `tileId` and `resourceId`. The markers preserve ID families
 inside nested fields, arrays and records. Board-owned schemas resolve spaces,
 edges and vertices within that board. Manifest validation checks declared bases and static topology. Player IDs and
 replicated inventory references require the actual session roster. Table validation

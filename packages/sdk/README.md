@@ -188,7 +188,7 @@ and pass a source to its `GameProvider`. The hosted UI imports `Game` only as a 
 No authoring generation step or shared workspace files are needed.
 
 `createInitialTable({ playerIds })` takes the actual roster explicitly. Cards,
-piece seeds and die seeds can use `scope: "perPlayer"` to replicate for those
+piece, die and tile seeds can use `scope: "perPlayer"` to replicate for those
 seats, with initial ownership derived from the replication origin. Ownership
 changes do not change instance IDs. Use `perPlayerInstanceId` when constructing
 a reference from a known family, expanded base and seat; decoding validates
@@ -205,7 +205,14 @@ access follows the host's current owner, independently of contained ownership
 and card face state. Initialization, movement and restore reject containment
 cycles. Containers, slots and their location variants are removed.
 
-Manifest card counts and explicit piece/die seed counts must be positive safe
+`tileTypes` own immutable hex/square cells, annotations and rule fields;
+`tileSeeds` create game-owned instances with independent ownership and mutable
+properties. `q.tile(id)` addresses that inventory. This layer supports detached
+tiles and public zones; private tile destinations and spatial component moves
+reject before writes. Tile assignments are not automatically projected, and the
+existing UI zone facade still presents cards.
+
+Manifest card counts and explicit piece/die/tile seed counts must be positive safe
 integers. Omitted seed counts mean one copy. Zero, negative, fractional, non-finite,
 and unsafe counts fail before ID expansion; negative, zero, and fractional literals
 also fail typechecking. Widened `number` values still require runtime validation.

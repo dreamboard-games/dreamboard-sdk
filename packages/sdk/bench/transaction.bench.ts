@@ -129,6 +129,7 @@ function createBenchState() {
   } satisfies RuntimeHexBoardState;
   return {
     table: {
+      tiles: {},
       playerOrder: playerIds,
       zones: {
         "main-deck": {

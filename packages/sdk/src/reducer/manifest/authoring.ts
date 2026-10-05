@@ -459,6 +459,64 @@ type TypedDieSeed<Seed, Manifest extends GameTopologyManifest> = Seed extends {
       }
   : never;
 
+type TileTypeId<Manifest extends GameTopologyManifest> = IdsOf<
+  Manifest["tileTypes"]
+>;
+type TypedTileType<T, Manifest extends GameTopologyManifest> = T extends object
+  ? Omit<
+      TypedFields<T, SchemaForEntry<T, "fieldsSchema">, Manifest>,
+      "cells" | "edges" | "vertices"
+    > & {
+      cells: ReadonlyArray<
+        TypedFields<
+          ArrayItem<T extends { cells: infer C } ? C : never>,
+          SchemaForEntry<T, "cellFieldsSchema">,
+          Manifest
+        >
+      >;
+      edges?: ReadonlyArray<
+        TypedFields<
+          ArrayItem<T extends { edges?: infer E } ? E : never>,
+          SchemaForEntry<T, "edgeFieldsSchema">,
+          Manifest
+        > & { cellId: IdsOf<T extends { cells: infer C } ? C : never> }
+      >;
+      vertices?: ReadonlyArray<
+        TypedFields<
+          ArrayItem<T extends { vertices?: infer V } ? V : never>,
+          SchemaForEntry<T, "vertexFieldsSchema">,
+          Manifest
+        > & { cellId: IdsOf<T extends { cells: infer C } ? C : never> }
+      >;
+    }
+  : never;
+type TypedTileSeed<Seed, Manifest extends GameTopologyManifest> = Seed extends {
+  typeId: infer T;
+}
+  ? Omit<Seed, "typeId" | "properties" | "home" | "ownerId" | "visibility"> & {
+      ownerId?: never;
+      visibility?: never;
+      typeId: TileTypeId<Manifest>;
+      properties?: FieldsInput<
+        SchemaForEntry<
+          Extract<ArrayItem<Manifest["tileTypes"]>, { id: T }>,
+          "propertiesSchema"
+        >,
+        Manifest
+      >;
+      home?:
+        | { type: "detached" }
+        | ZoneHomeFor<
+            Exclude<
+              ArrayItem<NonNullable<Manifest["zones"]>>,
+              { visibility: "hidden" | "ownerOnly" }
+            >,
+            Manifest,
+            Seed extends { scope: "perPlayer" } ? false : true
+          >;
+    }
+  : never;
+
 export type TypedTopologyManifest<Manifest extends GameTopologyManifest> = Omit<
   Manifest,
   | "cardSets"
@@ -468,7 +526,15 @@ export type TypedTopologyManifest<Manifest extends GameTopologyManifest> = Omit<
   | "dieTypes"
   | "pieceSeeds"
   | "dieSeeds"
+  | "tileTypes"
+  | "tileSeeds"
 > & {
+  tileTypes?: ReadonlyArray<
+    TypedTileType<ArrayItem<Manifest["tileTypes"]>, Manifest>
+  >;
+  tileSeeds?: ReadonlyArray<
+    TypedTileSeed<ArrayItem<Manifest["tileSeeds"]>, Manifest>
+  >;
   pieceTypes?: ReadonlyArray<
     ArrayItem<Manifest["pieceTypes"]> extends infer T
       ? "slots" extends keyof T

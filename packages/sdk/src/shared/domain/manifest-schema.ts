@@ -1,3 +1,4 @@
+import { MAXIMUM_BOARD_COORDINATE } from "./board-coordinates.js";
 import * as z from "zod";
 import { RuntimeJsonSchema } from "../runtime-json.js";
 
@@ -262,6 +263,87 @@ export const DieTypeSpecSchema = PieceTypeSpecSchema.extend({
   sides: positiveInteger.optional(),
 });
 export const DieSeedSpecSchema = PieceSeedSpecSchema;
+const tileCoordinate = z
+  .int()
+  .min(-MAXIMUM_BOARD_COORDINATE)
+  .max(MAXIMUM_BOARD_COORDINATE);
+const tileCell = {
+  id,
+  name: z.string().optional(),
+  typeId: id.optional(),
+  fields: fields.optional(),
+};
+const tileAnnotation = {
+  cellId: id,
+  typeId: id.optional(),
+  label: z.string().optional(),
+  fields: fields.optional(),
+};
+const tileType = {
+  id,
+  name: z.string(),
+  fieldsSchema: fields.optional(),
+  fields: fields.optional(),
+  propertiesSchema: fields.optional(),
+  frontImage: z.string().optional(),
+  cellFieldsSchema: fields.optional(),
+  edgeFieldsSchema: fields.optional(),
+  vertexFieldsSchema: fields.optional(),
+};
+export const HexTileTypeSpecSchema = z.strictObject({
+  ...tileType,
+  layout: z.literal("hex"),
+  cells: z
+    .array(
+      z.strictObject({
+        ...tileCell,
+        at: z.strictObject({ q: tileCoordinate, r: tileCoordinate }),
+      }),
+    )
+    .nonempty(),
+  edges: z.array(z.strictObject({ ...tileAnnotation, side })).optional(),
+  vertices: z
+    .array(z.strictObject({ ...tileAnnotation, corner: side }))
+    .optional(),
+});
+const squareTileSide = z.union([
+  z.literal(0),
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+]);
+export const SquareTileTypeSpecSchema = z.strictObject({
+  ...tileType,
+  layout: z.literal("square"),
+  cells: z
+    .array(
+      z.strictObject({
+        ...tileCell,
+        at: z.strictObject({ col: tileCoordinate, row: tileCoordinate }),
+      }),
+    )
+    .nonempty(),
+  edges: z
+    .array(z.strictObject({ ...tileAnnotation, side: squareTileSide }))
+    .optional(),
+  vertices: z
+    .array(z.strictObject({ ...tileAnnotation, corner: squareTileSide }))
+    .optional(),
+});
+export const TileTypeSpecSchema = z.discriminatedUnion("layout", [
+  HexTileTypeSpecSchema,
+  SquareTileTypeSpecSchema,
+]);
+export const TileSeedSpecSchema = z.strictObject({
+  id,
+  typeId: id,
+  count: positiveInteger.optional(),
+  scope: TopologyScopeSchema.optional(),
+  properties: fields.optional(),
+  home: z
+    .discriminatedUnion("type", [DetachedHomeSpecSchema, ZoneHomeSpecSchema])
+    .optional(),
+});
 export const ResourceDefinitionSchema = z.strictObject({
   id,
   name: z.string(),
@@ -278,5 +360,7 @@ export const GameTopologyManifestSchema = z.strictObject({
   pieceSeeds: z.array(PieceSeedSpecSchema).optional(),
   dieTypes: z.array(DieTypeSpecSchema).optional(),
   dieSeeds: z.array(DieSeedSpecSchema).optional(),
+  tileTypes: z.array(TileTypeSpecSchema).optional(),
+  tileSeeds: z.array(TileSeedSpecSchema).optional(),
   resources: z.array(ResourceDefinitionSchema).optional(),
 });

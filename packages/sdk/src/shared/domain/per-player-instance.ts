@@ -4,7 +4,7 @@ import * as z from "zod";
 export const GENERATED_ID_PREFIX = "@db/";
 
 const instanceTuple = z.tuple([
-  z.enum(["board", "card", "piece", "die"]),
+  z.enum(["board", "card", "piece", "die", "tile"]),
   z.string().min(1),
   z.string().min(1),
 ]);

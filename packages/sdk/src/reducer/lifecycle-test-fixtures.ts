@@ -106,6 +106,7 @@ export function createTable(
       square: {},
       track: {},
     },
+    tiles: {},
     dice: {
       "die-1": {
         id: "die-1",

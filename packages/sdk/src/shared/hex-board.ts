@@ -1,3 +1,4 @@
+import { MAXIMUM_BOARD_COORDINATE } from "./domain/board-coordinates.js";
 import type { HexEdgeId, HexVertexId } from "./domain/board-identities.js";
 import type {
   HexShape,
@@ -41,7 +42,7 @@ export type HexBoardSpace<Id extends string = string> = AxialCoordinate & {
   id: Id;
 };
 // Cube-coordinate sums and pairwise differences remain exact in this domain.
-const maximumCoordinate = Math.floor(Number.MAX_SAFE_INTEGER / 4);
+const maximumCoordinate = MAXIMUM_BOARD_COORDINATE;
 const coordinateKey = ({ q, r }: AxialCoordinate) => `${q},${r}`;
 const directions: readonly AxialCoordinate[] = [
   { q: 1, r: 0 },

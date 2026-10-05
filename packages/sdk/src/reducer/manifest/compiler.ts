@@ -64,6 +64,8 @@ export function compileManifest<
     pieceIds: analysis.pieceIds,
     dieTypeIds: analysis.dieTypeIds,
     dieIds: analysis.dieIds,
+    tileTypeIds: analysis.tileTypeIds,
+    tileIds: analysis.tileIds,
     boardTypeIds: analysis.boardTypeIds,
     boardBaseIds: analysis.boardBaseIds,
     boardIds: analysis.boardIds,
@@ -103,6 +105,8 @@ export function compileManifest<
     "pieceId",
     "dieTypeId",
     "dieId",
+    "tileTypeId",
+    "tileId",
     "boardTypeId",
     "boardBaseId",
     "boardId",
@@ -175,6 +179,16 @@ export function compileManifest<
       })),
     ).schema,
     "dieId",
+  );
+  ids.tileId = markManifestScopedSchema(
+    createInstanceDeclaration(
+      "tile",
+      (source.tileSeeds ?? []).map((seed) => ({
+        baseIds: expandSeedIds([seed]),
+        scope: seed.scope,
+      })),
+    ).schema,
+    "tileId",
   );
   const zoneDefinitions = Object.freeze(
     Object.fromEntries(
@@ -296,6 +310,7 @@ export function compileManifest<
             family === "cardId" ||
             family === "pieceId" ||
             family === "dieId" ||
+            family === "tileId" ||
             family === "boardId";
           if (dynamic && !options)
             throw new Error(

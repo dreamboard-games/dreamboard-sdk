@@ -115,6 +115,20 @@ export function createTableSchema(
       });
     },
   ).strict();
+  const tileStateByIdSchema = shape(
+    analysis.tileIds,
+    (id) => id,
+    (id) => {
+      const type = analysis.tileTypeIdByTileId.get(id)!;
+      return z.strictObject({
+        componentType: z.literal("tile"),
+        id: z.literal(id),
+        tileTypeId: z.literal(type),
+        ownerId: activePlayerId.nullable(),
+        properties: objectSchema(analysis.tilePropertiesSchemasById.get(type)),
+      });
+    },
+  ).strict();
   const boardSpaceTypeIdSchema = ids.spaceTypeId.nullable().optional();
   const boardSpaceStateSchema = z.strictObject({
     id: ids.spaceId,
@@ -352,6 +366,7 @@ export function createTableSchema(
         track: z.record(z.string(), unknownRecordSchema).default({}),
       }),
       dice: dieStateByIdSchema,
+      tiles: tileStateByIdSchema,
     })
     .strict()
     .superRefine((table, context) => {
@@ -469,6 +484,49 @@ export function createTableSchema(
           analysis.dieTypeSchemasById.get(analysis.dieTypeIdByDieId.get(id)!),
           property(die, "properties"),
           ["dice", id, "properties"],
+        );
+      for (const [i, type] of (analysis.manifest.tileTypes ?? []).entries()) {
+        validateFields(type.fieldsSchema, type.fields ?? {}, [
+          "manifest",
+          "tileTypes",
+          i,
+          "fields",
+        ]);
+        for (const [j, cell] of type.cells.entries())
+          validateFields(type.cellFieldsSchema, cell.fields ?? {}, [
+            "manifest",
+            "tileTypes",
+            i,
+            "cells",
+            j,
+            "fields",
+          ]);
+        for (const [j, edge] of (type.edges ?? []).entries())
+          validateFields(type.edgeFieldsSchema, edge.fields ?? {}, [
+            "manifest",
+            "tileTypes",
+            i,
+            "edges",
+            j,
+            "fields",
+          ]);
+        for (const [j, vertex] of (type.vertices ?? []).entries())
+          validateFields(type.vertexFieldsSchema, vertex.fields ?? {}, [
+            "manifest",
+            "tileTypes",
+            i,
+            "vertices",
+            j,
+            "fields",
+          ]);
+      }
+      for (const [id, tile] of recordEntries(table.tiles))
+        validateFields(
+          analysis.tilePropertiesSchemasById.get(
+            analysis.tileTypeIdByTileId.get(id)!,
+          ),
+          property(tile, "properties"),
+          ["tiles", id, "properties"],
         );
       for (const [id, board] of recordEntries(table.boards.byId)) {
         const definition = analysis.analyzedBoards.find(

@@ -2,6 +2,7 @@ import { resolveZone, assertComponent } from "./zones";
 import type {
   BoardIdOfTable,
   ComponentIdOfTable,
+  SpatialComponentIdOfTable,
   RuntimeTableRecord,
   ZoneDefinitions,
   SpaceIdOfTable,
@@ -136,7 +137,7 @@ export function removeComponentFromCurrentLocation<
 
 export function moveComponentToSpaceInPlace<
   Table extends RuntimeTableRecord,
-  ComponentId extends ComponentIdOfTable<Table>,
+  ComponentId extends SpatialComponentIdOfTable<Table>,
   BoardId extends BoardIdOfTable<NoInfer<Table>>,
   SpaceId extends SpaceIdOfTable<NoInfer<Table>, BoardId>,
 >(
@@ -146,6 +147,10 @@ export function moveComponentToSpaceInPlace<
   spaceId: SpaceId,
   definitions: ZoneDefinitions,
 ): void {
+  if (Object.hasOwn(table.tiles, componentId))
+    throw new Error(
+      "Tiles cannot use spatial component locations before board placement is supported.",
+    );
   const position = getComponentsOnSpace(table, boardId, spaceId).length;
   removeComponentFromCurrentLocation(table, componentId, definitions);
   table.componentLocations[componentId] = {
@@ -166,7 +171,7 @@ export function moveComponentToDetachedInPlace<
 
 export function moveComponentToEdgeInPlace<
   Table extends RuntimeTableRecord,
-  ComponentId extends ComponentIdOfTable<Table>,
+  ComponentId extends SpatialComponentIdOfTable<Table>,
   BoardId extends TiledBoardIdOfTable<NoInfer<Table>>,
   EdgeId extends TiledEdgeIdOfTable<NoInfer<Table>, BoardId>,
 >(
@@ -176,6 +181,10 @@ export function moveComponentToEdgeInPlace<
   edgeId: EdgeId,
   definitions: ZoneDefinitions,
 ): void {
+  if (Object.hasOwn(table.tiles, componentId))
+    throw new Error(
+      "Tiles cannot use spatial component locations before board placement is supported.",
+    );
   getEdge(table, boardId, edgeId);
   const position = getComponentsOnEdge(table, boardId, edgeId).length;
   removeComponentFromCurrentLocation(table, componentId, definitions);
@@ -189,7 +198,7 @@ export function moveComponentToEdgeInPlace<
 
 export function moveComponentToVertexInPlace<
   Table extends RuntimeTableRecord,
-  ComponentId extends ComponentIdOfTable<Table>,
+  ComponentId extends SpatialComponentIdOfTable<Table>,
   BoardId extends TiledBoardIdOfTable<NoInfer<Table>>,
   VertexId extends TiledVertexIdOfTable<NoInfer<Table>, BoardId>,
 >(
@@ -199,6 +208,10 @@ export function moveComponentToVertexInPlace<
   vertexId: VertexId,
   definitions: ZoneDefinitions,
 ): void {
+  if (Object.hasOwn(table.tiles, componentId))
+    throw new Error(
+      "Tiles cannot use spatial component locations before board placement is supported.",
+    );
   getVertex(table, boardId, vertexId);
   const position = getComponentsOnVertex(table, boardId, vertexId).length;
   removeComponentFromCurrentLocation(table, componentId, definitions);

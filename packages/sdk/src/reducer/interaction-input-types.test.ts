@@ -39,6 +39,8 @@ function buildContract() {
   const phaseNames = ["play"] as const;
   const manifest = {
     literals: {
+      tileTypeIds: [] as const,
+      tileIds: [] as const,
       playerIds,
       phaseNames,
       boardLayouts: [] as const,
@@ -71,6 +73,8 @@ function buildContract() {
       },
     },
     ids: {
+      tileTypeId: z.never(),
+      tileId: z.never(),
       playerId: createManifestStringLiteralSchema(playerIds),
       phaseName: createManifestStringLiteralSchema(phaseNames),
       boardLayout: z.never(),

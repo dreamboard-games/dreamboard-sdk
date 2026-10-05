@@ -7,6 +7,7 @@ import { requireLookup } from "../shared/lookup.js";
 import { bindBoardQueries } from "./table/board-queries";
 import type {
   ZoneDefinitions,
+  TileIdOfTable,
   BoardIdOfTable,
   CardIdOfTable,
   ComponentDataOfTable,
@@ -39,6 +40,12 @@ export function createTableQueries<Table extends RuntimeTableRecord>(
   definitions: ZoneDefinitions,
 ): TableQueries<Table> {
   return {
+    tile: <Id extends TileIdOfTable<Table>>(tileId: Id) =>
+      requireLookup(
+        Object.hasOwn(table.tiles, tileId) ? table.tiles[tileId] : undefined,
+        "Tile",
+        tileId,
+      ) as Table["tiles"][Id],
     board: <BoardId extends BoardIdOfTable<Table>>(boardId: BoardId) =>
       bindBoardQueries(table, boardId),
     // Query construction boundary: compiled definitions admit hosts and canonical
@@ -88,7 +95,9 @@ export function createTableQueries<Table extends RuntimeTableRecord>(
               ? table.pieces[componentId]
               : Object.hasOwn(table.dice, componentId)
                 ? table.dice[componentId]
-                : undefined,
+                : Object.hasOwn(table.tiles, componentId)
+                  ? table.tiles[componentId]
+                  : undefined,
           "Component",
           componentId,
         ) as ComponentDataOfTable<Table, ComponentId>,

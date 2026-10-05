@@ -30,6 +30,7 @@ export function cloneRuntimeTable<Table extends RuntimeTableRecord>(
         ),
       ]),
     ),
+    tiles: structuredClone(table.tiles),
     pieces: Object.fromEntries(
       Object.entries(table.pieces).map(([pieceId, piece]) => [
         pieceId,

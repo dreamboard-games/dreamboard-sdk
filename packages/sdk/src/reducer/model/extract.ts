@@ -571,6 +571,27 @@ export type TiledVertexMap<
   BoardId extends TiledBoardIdOfTable<Table>,
   Value,
 > = Partial<Record<TiledVertexIdOfTable<Table, BoardId>, Value>>;
+export type TileIdOfTable<Table> = Table extends { tiles: infer Tiles }
+  ? StringKeyOf<Tiles>
+  : never;
+export type TileTypeIdOfTable<Table> = Table extends {
+  tiles: Record<string, { tileTypeId: infer Id }>;
+}
+  ? Extract<Id, string>
+  : never;
+export type TileIdOfState<State> = TileIdOfTable<TableOfState<State>>;
+export type TileIdOfManifest<Manifest> = Manifest extends {
+  ids: { tileId: z.ZodType<infer Id> };
+}
+  ? Extract<Id, string>
+  : string;
+export type SpatialComponentIdOfTable<Table> = Table extends {
+  cards: infer Cards;
+  pieces: infer Pieces;
+  dice: infer Dice;
+}
+  ? StringKeyOf<Cards> | StringKeyOf<Pieces> | StringKeyOf<Dice>
+  : never;
 export type ComponentIdOfTable<Table> = Table extends {
   componentLocations: infer ComponentLocations;
 }

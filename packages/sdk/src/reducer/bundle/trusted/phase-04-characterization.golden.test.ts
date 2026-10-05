@@ -33,6 +33,7 @@ function stableStringify(value: unknown): string {
 function createTable(playerIds = ["player-1", "player-2"]) {
   const ids = playerIds.map((id) => asPlayerId(id));
   return {
+    tiles: {},
     playerOrder: [...playerIds],
     zones: {},
     cards: {},

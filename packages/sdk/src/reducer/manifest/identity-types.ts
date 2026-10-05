@@ -18,7 +18,7 @@ type ValidateCounts<Entries> = Entries extends readonly unknown[]
   : Entries;
 
 export type ManifestCountValidation<M> = {
-  [K in keyof M]: K extends "pieceSeeds" | "dieSeeds"
+  [K in keyof M]: K extends "pieceSeeds" | "dieSeeds" | "tileSeeds"
     ? ValidateCounts<M[K]>
     : K extends "cardSets"
       ? {
