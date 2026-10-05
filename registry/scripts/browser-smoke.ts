@@ -67,6 +67,7 @@ try {
       if (story.id.startsWith("actual-scenarios--")) {
         await expect(page.getByTestId("scenario-view")).toBeAttached();
         const phases: Record<string, string> = {
+          "host-hands": "play",
           "hearts-passing": "passing",
           "hearts-opening": "passing",
           "hearts-sealed-pass": "passing",
@@ -92,7 +93,7 @@ try {
           "hex-trade": "pendingTrade",
         };
         const expected = phases[story.id.replace("actual-scenarios--", "")];
-        expect(expected).toBeDefined();
+        expect(expected, `Expected phase for ${story.id}`).toBeDefined();
         await expect(page.getByRole("heading", { level: 2 })).toHaveText(
           expected,
         );
