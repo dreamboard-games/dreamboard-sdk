@@ -102,6 +102,12 @@ const trailId = q
   in the current roster is still rejected by session/table membership checks.
   Authored static reference validation and live roster validation remain separate
   stages; `maxPlayers` does not define a roster.
+- Live player IDs are nonempty and unique. Reserve only `__proto__`, which the
+  record parser drops; retain `constructor`, `toString`, `table`, separators and
+  Unicode. Codec syntax remains independent of this live-roster admission rule.
+- Commands and requested seat projections require current roster membership
+  before authored callbacks run. Restore validates SDK-owned actor references
+  against that same roster, including active players and pending interactions.
 - `ownerId` initially equals the replication-origin seat for per-player
   components and is `null` for shared components. Reducers may reassign ownership
   independently. Decoding an ID must never be used to infer the current owner.
