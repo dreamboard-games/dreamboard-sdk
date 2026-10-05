@@ -3,7 +3,7 @@ import { emptyEdge, touchesStartingCamp } from "../eligibility";
 import { producingHexesAtIntersection } from "../model";
 import {
   appendHistory,
-  detachedPiece,
+  supplyPiece,
   setupPlayerId,
   systemEvent,
 } from "../reducer-support";
@@ -22,12 +22,12 @@ const placeStartingTrail = setupTrail.interaction({
     {
       id: "trail-piece-available",
       errorCode: "TRAIL_PIECES_EXHAUSTED",
-      validate: ({ state, input }) =>
-        detachedPiece(state, input.playerId, "trail") !== null,
+      validate: ({ input, q }) =>
+        supplyPiece(q, input.playerId, "trail") !== null,
     },
   ],
   reduce({ state, tx, input, q }) {
-    const trailId = detachedPiece(state, input.playerId, "trail");
+    const trailId = supplyPiece(q, input.playerId, "trail");
     const setup = state.publicState.setup;
     const intersectionId = setup?.pendingIntersectionId;
     if (!trailId || !setup || !intersectionId) {

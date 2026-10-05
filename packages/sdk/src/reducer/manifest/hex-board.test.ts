@@ -183,7 +183,7 @@ it("bound board queries validate generated space membership", async () => {
     ],
   } as const);
   const board = createTableQueries(
-    contract.createInitialTable(),
+    contract.createInitialTable({ playerIds: [] }),
     contract,
   ).board("map");
   expect(board.space("0,0").q).toBe(0);
@@ -338,7 +338,7 @@ it("reuses topology across cloned tables while retaining independent board state
       },
     ],
   } as const);
-  const table = manifest.createInitialTable();
+  const table = manifest.createInitialTable({ playerIds: [] });
   const first = bindBoardQueries(table, "map");
   const next = cloneRuntimeTable(table);
   const second = bindBoardQueries(next, "map");

@@ -205,14 +205,7 @@ async function exploreTransitions<
           phase: node.flow.phase,
           interactionId: action.interactionId,
           params: assignment,
-          playerIds: node.setup.players
-            ? Array.from(
-                { length: node.setup.players },
-                (_, seat) =>
-                  options.game.contract.manifest.literals.playerIds[seat] ??
-                  `player-${seat + 1}`,
-              )
-            : [],
+          playerIds: replay.state().table.playerOrder,
           path: `explore.${action.interactionId}`,
         }),
       };

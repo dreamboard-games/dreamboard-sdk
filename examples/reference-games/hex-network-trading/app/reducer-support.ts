@@ -65,9 +65,6 @@ export function resourceTotalFromState(
 type Occupancy = {
   readonly campsByIntersectionId: Partial<Record<VertexId, PlayerId>>;
   readonly trailsByEdgeId: Partial<Record<EdgeId, PlayerId>>;
-  readonly detachedByPlayerAndType: Partial<
-    Record<PlayerId, { camp: PieceId[]; trail: PieceId[] }>
-  >;
   readonly banditsHexId: SpaceId | null;
 };
 
@@ -84,25 +81,14 @@ const occupancyForTable = memoize((table: GameState["table"]): Occupancy => {
 
   const campsByIntersectionId: Partial<Record<VertexId, PlayerId>> = {};
   const trailsByEdgeId: Partial<Record<EdgeId, PlayerId>> = {};
-  const detachedByPlayerAndType: Occupancy["detachedByPlayerAndType"] = {};
   let banditsHexId: SpaceId | null = null;
 
-  for (const pieceId of literals.pieceIds) {
-    const piece = table.pieces[pieceId];
+  for (const piece of Object.values(table.pieces)) {
+    const pieceId = piece.id;
     const location = locations[pieceId];
-    if (!piece || !location) continue;
+    if (!location) continue;
     const ownerId = ownerIdOf(pieceId, table);
     if (
-      location.type === "Detached" &&
-      ownerId &&
-      (piece.pieceTypeId === "camp" || piece.pieceTypeId === "trail")
-    ) {
-      const byType = (detachedByPlayerAndType[ownerId] ??= {
-        camp: [],
-        trail: [],
-      });
-      byType[piece.pieceTypeId].push(pieceId);
-    } else if (
       location.type === "OnVertex" &&
       location.boardId === BOARD_ID &&
       ownerId &&
@@ -131,7 +117,6 @@ const occupancyForTable = memoize((table: GameState["table"]): Occupancy => {
   const resolved = {
     campsByIntersectionId,
     trailsByEdgeId,
-    detachedByPlayerAndType,
     banditsHexId,
   };
   return resolved;
@@ -159,25 +144,33 @@ export function banditsHexId(state: GameState): SpaceId {
   return hexId;
 }
 
-export function detachedPiece(
-  state: GameState,
+function supplyPieces(
+  q: Q,
+  playerId: PlayerId,
+  pieceTypeId: "camp" | "trail",
+): PieceId[] {
+  return q.zone("supply", playerId).flatMap((componentId) => {
+    const component = q.component.data(componentId);
+    return "pieceTypeId" in component && component.pieceTypeId === pieceTypeId
+      ? [component.id]
+      : [];
+  });
+}
+
+export function supplyPiece(
+  q: Q,
   playerId: PlayerId,
   pieceTypeId: "camp" | "trail",
 ): PieceId | null {
-  return (
-    occupancy(state).detachedByPlayerAndType[playerId]?.[pieceTypeId][0] ?? null
-  );
+  return supplyPieces(q, playerId, pieceTypeId)[0] ?? null;
 }
 
 export function remainingPieceCount(
-  state: GameState,
+  q: Q,
   playerId: PlayerId,
   pieceTypeId: "camp" | "trail",
 ): number {
-  return (
-    occupancy(state).detachedByPlayerAndType[playerId]?.[pieceTypeId].length ??
-    0
-  );
+  return supplyPieces(q, playerId, pieceTypeId).length;
 }
 
 export function campCount(state: GameState, playerId: PlayerId): number {

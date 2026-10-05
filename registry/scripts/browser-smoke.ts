@@ -1,3 +1,4 @@
+import { perPlayerInstanceId } from "@dreamboard-games/sdk/reducer";
 import { z } from "zod";
 import { proveCardDrag } from "./card-drag-proof.ts";
 import {
@@ -224,11 +225,18 @@ try {
         const boardControl = story.id.endsWith("generic-board-spaces")
           ? "section button"
           : "svg";
+        const ownId = perPlayerInstanceId("board", "mat", "player-1");
+        const opponentId = perPlayerInstanceId("board", "mat", "player-2");
+        const ownSelector = await page.evaluate((id) => CSS.escape(id), ownId);
+        const opponentSelector = await page.evaluate(
+          (id) => CSS.escape(id),
+          opponentId,
+        );
         const own = page.locator(
-          `${boardControl}[data-board="mat:player-1"][data-action="select"], ${boardControl} [data-board="mat:player-1"][data-action="select"]`,
+          `${boardControl}[data-board="${ownSelector}"][data-action="select"], ${boardControl} [data-board="${ownSelector}"][data-action="select"]`,
         );
         const opponent = page.locator(
-          `${boardControl}[data-board="mat:player-2"][data-action="select"], ${boardControl} [data-board="mat:player-2"][data-action="select"]`,
+          `${boardControl}[data-board="${opponentSelector}"][data-action="select"], ${boardControl} [data-board="${opponentSelector}"][data-action="select"]`,
         );
         await own.focus();
         await page.keyboard.press("Enter");
@@ -240,7 +248,10 @@ try {
           .locator('[data-action="submit"][data-interaction="play.choose"]')
           .click();
         await expect(page.getByTestId("scenario-view")).toContainText(
-          '"selected":[{"boardId":"mat","playerId":"player-1","spaceId":"slot"},{"boardId":"mat","playerId":"player-2","spaceId":"slot"}]',
+          `"selected":${JSON.stringify([
+            { boardId: ownId, spaceId: "slot" },
+            { boardId: opponentId, spaceId: "slot" },
+          ])}`,
         );
       }
       // Gesture proofs run on a portrait phone and a desktop.

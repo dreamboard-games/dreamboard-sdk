@@ -1,4 +1,8 @@
 import type {
+  PerPlayerInstanceId,
+  PerPlayerInstanceFamily,
+} from "../../shared/domain/per-player-instance.js";
+import type {
   HexSpaceId,
   HexEdgeId,
   HexVertexId,
@@ -66,14 +70,25 @@ type Get<T, K extends PropertyKey> = T extends unknown
   : never;
 type Entries<M, K extends PropertyKey> = Entry<Get<M, K>>;
 type Id<T> = T extends { id: infer I extends string } ? I : never;
-type SeedIds<S> = S extends { typeId: infer T extends string }
-  ? RuntimeIdsFromCount<
-      S extends { id: infer I extends string } ? I : T,
-      Get<S, "count">
+type ScopedId<
+  S,
+  Family extends PerPlayerInstanceFamily,
+  Base extends string,
+> = S extends { scope: "perPlayer" } ? PerPlayerInstanceId<Family, Base> : Base;
+type SeedIds<S, Family extends "piece" | "die" = "piece"> = S extends {
+  typeId: infer T extends string;
+}
+  ? ScopedId<
+      S,
+      Family,
+      RuntimeIdsFromCount<
+        S extends { id: infer I extends string } ? I : T,
+        Get<S, "count">
+      >
     >
   : never;
 type CardIds<C> = C extends { id: infer I extends string }
-  ? RuntimeIdsFromCount<I, Get<C, "count">>
+  ? ScopedId<C, "card", RuntimeIdsFromCount<I, Get<C, "count">>>
   : never;
 type CardSets<M> = Entries<M, "cardSets">;
 type Cards<M> =
@@ -86,7 +101,7 @@ export type Zone<M, Scope> = Id<Extract<Entries<M, "zones">, { scope: Scope }>>;
 type Boards<M> = Entries<M, "boards">;
 type RuntimeBoardId<B> = B extends { id: infer I extends string }
   ? B extends { scope: "perPlayer" }
-    ? `${I}:${string}`
+    ? PerPlayerInstanceId<"board", I>
     : I
   : never;
 type CardTypeOf<C> = C extends { cardType: infer T extends string } ? T : never;
@@ -102,7 +117,7 @@ export type ManifestIdsOf<M> = {
   pieceTypeId: Id<Entries<M, "pieceTypes">>;
   pieceId: SeedIds<Entries<M, "pieceSeeds">>;
   dieTypeId: Id<Entries<M, "dieTypes">>;
-  dieId: SeedIds<Entries<M, "dieSeeds">>;
+  dieId: SeedIds<Entries<M, "dieSeeds">, "die">;
   boardTypeId: Extract<Get<Boards<M>, "typeId">, string>;
   boardBaseId: Id<Boards<M>>;
   boardId: RuntimeBoardId<Boards<M>>;
@@ -142,7 +157,11 @@ type CardStateFor<M, Set, Card> = Card extends {
   cardType: infer Category extends string;
   count: infer Count extends number;
 }
-  ? RuntimeIdsFromCount<BaseId, Count> extends infer RuntimeId
+  ? ScopedId<
+      Card,
+      "card",
+      RuntimeIdsFromCount<BaseId, Count>
+    > extends infer RuntimeId
     ? RuntimeId extends string
       ? Omit<
           RuntimeCardData,
@@ -176,7 +195,10 @@ type SeedState<
   Data,
   TypeKey extends string,
 > = Seed extends { typeId: infer TypeId extends string }
-  ? SeedIds<Seed> extends infer RuntimeId
+  ? SeedIds<
+      Seed,
+      TypeKey extends "dieTypeId" ? "die" : "piece"
+    > extends infer RuntimeId
     ? RuntimeId extends string
       ? Omit<Data, "id" | TypeKey | "properties"> & {
           id: RuntimeId;
@@ -213,7 +235,7 @@ type InferredPieces<M> = {
   [Id in SeedIds<Entries<M, "pieceSeeds">>]: EntityAtId<PieceState<M>, Id>;
 };
 type InferredDice<M> = {
-  [Id in SeedIds<Entries<M, "dieSeeds">>]: EntityAtId<DieState<M>, Id>;
+  [Id in SeedIds<Entries<M, "dieSeeds">, "die">]: EntityAtId<DieState<M>, Id>;
 };
 type BoardField<B, K extends PropertyKey, M> = ObjectFields<Get<B, K>, M, B>;
 type BoardSpaceEntry<B> = B extends { layout: "hex"; spaces: infer Spaces }
@@ -312,7 +334,10 @@ type SeedSlotLocation<
       ? never
       : {
           type: "InSlot";
-          host: { kind: Kind; id: SeedIds<Seed> };
+          host: {
+            kind: Kind;
+            id: SeedIds<Seed, Kind extends "die" ? "die" : "piece">;
+          };
           slotId: SlotId;
           position?: number | null;
         }
@@ -375,6 +400,15 @@ export type ManifestTable<M> = AuthoredManifest extends M
         Record<ManifestIdsOf<M>["resourceId"], number>
       >;
     };
+type SharedCardMetadata<M, Key extends "cardSetId" | "cardType"> = {
+  [
+    Card in Exclude<CardState<M>, { id: PerPlayerInstanceId }> as Card["id"]
+  ]: Card[Key];
+};
+type InstanceFamily = "cardId" | "pieceId" | "dieId" | "boardId";
+type SharedBoardManifest<M> = Omit<M, "boards"> & {
+  boards: readonly Exclude<Boards<M>, { scope: "perPlayer" }>[];
+};
 export type CompiledManifest<M> = Omit<
   ReducerManifestContract<
     ManifestTable<M>,
@@ -392,7 +426,10 @@ export type CompiledManifest<M> = Omit<
       "scope"
     > & { readonly scope: Get<Z, "scope"> };
   };
-  staticBoards: Pick<InferredBoards<M>, "byId" | "hex" | "square">;
+  staticBoards: Pick<
+    InferredBoards<SharedBoardManifest<M>>,
+    "byId" | "hex" | "square"
+  >;
   literals: Omit<
     ReducerManifestContract<
       RuntimeTableRecord,
@@ -401,21 +438,30 @@ export type CompiledManifest<M> = Omit<
       string,
       string
     >["literals"],
-    `${keyof ManifestIdsOf<M>}s`
+    `${keyof ManifestIdsOf<M>}s` | "cardSetIdByCardId" | "cardTypeByCardId"
   > & {
-    [K in keyof ManifestIdsOf<M> as `${K}s`]: readonly ManifestIdsOf<M>[K][];
+    [K in keyof ManifestIdsOf<M> as `${K}s`]: readonly Exclude<
+      ManifestIdsOf<M>[K],
+      PerPlayerInstanceId
+    >[];
+  } & {
+    cardSetIdByCardId: SharedCardMetadata<M, "cardSetId">;
+    cardTypeByCardId: SharedCardMetadata<M, "cardType">;
   };
   records: {
     [K in Exclude<keyof ManifestIdsOf<M>, "playerId"> as `${K}s`]: <V>(
       initial: V | ((id: ManifestIdsOf<M>[K]) => V),
+      ...roster: K extends InstanceFamily
+        ? [options: { playerIds: readonly string[] }]
+        : []
     ) => Record<ManifestIdsOf<M>[K], V>;
   };
   ids: {
     [K in keyof ManifestIdsOf<M>]: ManifestIdSchema<ManifestIdsOf<M>[K], K>;
   };
   schemas: { table: z.ZodType<ManifestTable<M>>; runtime: z.ZodTypeAny };
-  createInitialTable(options?: {
-    playerIds?: readonly string[];
+  createInitialTable(options: {
+    playerIds: readonly string[];
     shuffleItems?: <V>(values: readonly V[]) => V[];
   }): ManifestTable<M>;
 };

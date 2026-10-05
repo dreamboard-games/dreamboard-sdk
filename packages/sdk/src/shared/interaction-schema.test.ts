@@ -1,3 +1,4 @@
+import { perPlayerInstanceId } from "./domain/per-player-instance.js";
 import { inputTargetInDomain, inputValueKey } from "./input-domain";
 import { describe, expect, test } from "vitest";
 import {
@@ -164,36 +165,38 @@ test("board domain admission distinguishes scalar IDs and complete player-board 
     type: "boardTarget",
     projection: "resolved",
     targetKind: "space",
-    boardId: "mat",
+    boardBaseId: "mat",
   };
-  const target = { boardId: "mat", playerId: "alice", spaceId: "slot" };
+  const target = {
+    boardId: perPlayerInstanceId("board", "mat", "alice"),
+    spaceId: "slot",
+  };
   const domain = InputDomainSchema.parse({
     ...base,
-    valueKind: "player-board-space",
+    valueKind: "board-space",
     eligibleTargets: [target],
   });
   expect(domain).toMatchObject({ eligibleTargets: [target] });
   expect(
     inputTargetInDomain(domain, {
       spaceId: "slot",
-      playerId: "alice",
-      boardId: "mat",
+      boardId: perPlayerInstanceId("board", "mat", "alice"),
     }),
   ).toBe(true);
   for (const forged of [
     "slot",
-    { ...target, boardId: "mat:alice" },
+    { ...target, boardId: perPlayerInstanceId("board", "mat", "bob") },
     { ...target, playerId: "bob" },
     { ...target, spaceId: "other" },
   ])
     expect(inputTargetInDomain(domain, forged)).toBe(false);
   for (const invalid of [
     { ...base, eligibleTargets: ["slot"] },
-    { ...base, valueKind: "player-board-space", eligibleTargets: ["slot"] },
+    { ...base, valueKind: "board-space", eligibleTargets: ["slot"] },
     { ...base, valueKind: "board-id", eligibleTargets: [target] },
     {
       ...base,
-      valueKind: "player-board-space",
+      valueKind: "board-space",
       targetKind: "edge",
       eligibleTargets: [target],
     },
@@ -201,17 +204,26 @@ test("board domain admission distinguishes scalar IDs and complete player-board 
     expect(InputDomainSchema.safeParse(invalid).success).toBe(false);
   expect(
     InputDomainSchema.parse({
-      ...base,
+      type: "boardTarget",
+      projection: "resolved",
+      targetKind: "space",
       valueKind: "board-id",
+      boardId: "mat",
       eligibleTargets: ["slot"],
     }),
   ).toMatchObject({ eligibleTargets: ["slot"] });
 });
 
 test("canonical tuple keys ignore insertion order without changing custom object identity", () => {
-  const target = { boardId: "mat", playerId: "alice", spaceId: "slot" };
+  const target = {
+    boardId: perPlayerInstanceId("board", "mat", "alice"),
+    spaceId: "slot",
+  };
   expect(inputValueKey(target)).toBe(
-    inputValueKey({ spaceId: "slot", playerId: "alice", boardId: "mat" }),
+    inputValueKey({
+      spaceId: "slot",
+      boardId: perPlayerInstanceId("board", "mat", "alice"),
+    }),
   );
   expect(inputValueKey({ ...target, payload: 1 })).not.toBe(
     inputValueKey({ ...target, payload: 2 }),

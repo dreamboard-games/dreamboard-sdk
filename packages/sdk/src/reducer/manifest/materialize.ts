@@ -1,3 +1,18 @@
+import {
+  PlayerRosterSchema,
+  isPlayerIdValue,
+} from "../../shared/domain/player-identity.js";
+import {
+  renderCardInstanceIds,
+  expandSeedIds,
+  scopedInstances,
+  initialCardMetadata,
+  createInstanceDeclaration,
+} from "./identity-runtime.js";
+import {
+  perPlayerInstanceId,
+  parsePerPlayerInstanceId,
+} from "../../shared/domain/per-player-instance.js";
 import * as z from "zod";
 import {
   createFieldValidatorResolver,
@@ -203,37 +218,6 @@ function sortedObject<Value>(
 
 function createRecord<Value>(): Record<string, Value> {
   return Object.create(null) as Record<string, Value>;
-}
-
-function renderCardInstanceIds(card: BoardCard): string[] {
-  if (card.count > 1) {
-    return Array.from(
-      { length: card.count },
-      (_, index) => `${card.id}-${index + 1}`,
-    );
-  }
-  return [card.id];
-}
-
-function expandSeedIds(
-  seeds: ReadonlyArray<
-    | PieceSeedSpec
-    | { id?: string | null; typeId: string; count?: number | null }
-  >,
-): string[] {
-  const expanded: string[] = [];
-  for (const seed of seeds) {
-    const count = seed.count ?? 1;
-    const baseId = seed.id ?? seed.typeId;
-    if (count <= 1) {
-      expanded.push(baseId);
-      continue;
-    }
-    for (let index = 1; index <= count; index += 1) {
-      expanded.push(`${baseId}-${index}`);
-    }
-  }
-  return expanded;
 }
 
 function isHexBoardSpec(board: BoardSpec): board is HexBoardSpec {
@@ -599,7 +583,9 @@ function analyzeBoards(manifest: GameTopologyManifest, playerIds: string[]) {
   return (manifest.boards ?? []).map((board): AnalyzedBoard => {
     const runtimeBoardIds =
       board.scope === "perPlayer"
-        ? playerIds.map((playerId) => `${board.id}:${playerId}`)
+        ? playerIds.map((playerId) =>
+            perPlayerInstanceId("board", board.id, playerId),
+          )
         : [board.id];
 
     if (isHexBoardSpec(board)) {
@@ -703,12 +689,7 @@ export function analyzeManifestStructure(
   manifest: GameTopologyManifest,
   runtimePlayerIds?: readonly string[],
 ): ManifestAnalysis {
-  const playerIds = runtimePlayerIds
-    ? [...runtimePlayerIds]
-    : Array.from(
-        { length: manifest.players.maxPlayers },
-        (_, index) => `player-${index + 1}`,
-      );
+  const playerIds = [...(runtimePlayerIds ?? [])];
   const sharedZones = (manifest.zones ?? []).filter(
     (zone) => zone.scope === "shared",
   );
@@ -722,13 +703,27 @@ export function analyzeManifestStructure(
     cardSets.flatMap((cardSet) => cardSet.cards.map((card) => card.cardType)),
   );
   const cardIds = dedupeSorted(
-    cardSets.flatMap((cardSet) => cardSet.cards.flatMap(renderCardInstanceIds)),
+    cardSets.flatMap((cardSet) =>
+      cardSet.cards.flatMap((card) =>
+        scopedInstances(
+          "card",
+          renderCardInstanceIds(card),
+          card.scope,
+          playerIds,
+        ).map((instance) => instance.id),
+      ),
+    ),
   );
   const cardSetIdByCardId = new Map<string, string>();
   const cardTypeByCardId = new Map<string, string>();
   for (const cardSet of cardSets) {
     for (const card of cardSet.cards) {
-      for (const cardId of renderCardInstanceIds(card)) {
+      for (const { id: cardId } of scopedInstances(
+        "card",
+        renderCardInstanceIds(card),
+        card.scope,
+        playerIds,
+      )) {
         cardSetIdByCardId.set(cardId, cardSet.id);
         cardTypeByCardId.set(cardId, card.cardType);
       }
@@ -837,7 +832,12 @@ export function analyzeManifestStructure(
   );
   const pieceTypeIdByPieceId = new Map<string, string>();
   for (const seed of manifest.pieceSeeds ?? []) {
-    for (const pieceId of expandSeedIds([seed])) {
+    for (const { id: pieceId } of scopedInstances(
+      "piece",
+      expandSeedIds([seed]),
+      seed.scope,
+      playerIds,
+    )) {
       pieceTypeIdByPieceId.set(pieceId, seed.typeId);
     }
   }
@@ -859,7 +859,12 @@ export function analyzeManifestStructure(
   );
   const dieTypeIdByDieId = new Map<string, string>();
   for (const seed of manifest.dieSeeds ?? []) {
-    for (const dieId of expandSeedIds([seed])) {
+    for (const { id: dieId } of scopedInstances(
+      "die",
+      expandSeedIds([seed]),
+      seed.scope,
+      playerIds,
+    )) {
       dieTypeIdByDieId.set(dieId, seed.typeId);
     }
   }
@@ -871,13 +876,9 @@ export function analyzeManifestStructure(
       }
       const slotIds = pieceTypeSlotIdsById.get(seed.typeId) ?? [];
       return slotIds.length > 0
-        ? [
-            {
-              kind: "piece" as const,
-              id: seed.id,
-              slotIds,
-            },
-          ]
+        ? scopedInstances("piece", [seed.id], seed.scope, playerIds).map(
+            ({ id }) => ({ kind: "piece" as const, id, slotIds }),
+          )
         : [];
     }),
     ...(manifest.dieSeeds ?? []).flatMap((seed) => {
@@ -886,13 +887,9 @@ export function analyzeManifestStructure(
       }
       const slotIds = dieTypeSlotIdsById.get(seed.typeId) ?? [];
       return slotIds.length > 0
-        ? [
-            {
-              kind: "die" as const,
-              id: seed.id,
-              slotIds,
-            },
-          ]
+        ? scopedInstances("die", [seed.id], seed.scope, playerIds).map(
+            ({ id }) => ({ kind: "die" as const, id, slotIds }),
+          )
         : [];
     }),
   ].sort(
@@ -1168,7 +1165,64 @@ export function fieldReferenceContext(
     : undefined;
   return {
     stage,
-    deferred: stage === "manifest" ? ["playerId", "boardId"] : undefined,
+    deferred:
+      stage === "manifest"
+        ? [
+            "playerId",
+            "boardId",
+            ...(analysis.cardSets.some((set) =>
+              set.cards.some((card) => card.scope === "perPlayer"),
+            )
+              ? ["cardId" as const]
+              : []),
+            ...(analysis.manifest.pieceSeeds?.some(
+              (seed) => seed.scope === "perPlayer",
+            )
+              ? ["pieceId" as const]
+              : []),
+            ...(analysis.manifest.dieSeeds?.some(
+              (seed) => seed.scope === "perPlayer",
+            )
+              ? ["dieId" as const]
+              : []),
+          ]
+        : undefined,
+    accepts:
+      stage === "manifest"
+        ? {
+            playerId: isPlayerIdValue,
+            boardId: createInstanceDeclaration(
+              "board",
+              (analysis.manifest.boards ?? []).map((board) => ({
+                baseIds: [board.id],
+                scope: board.scope,
+              })),
+            ).accepts,
+            cardId: createInstanceDeclaration(
+              "card",
+              analysis.cardSets.flatMap((set) =>
+                set.cards.map((card) => ({
+                  baseIds: renderCardInstanceIds(card),
+                  scope: card.scope,
+                })),
+              ),
+            ).accepts,
+            pieceId: createInstanceDeclaration(
+              "piece",
+              (analysis.manifest.pieceSeeds ?? []).map((seed) => ({
+                baseIds: expandSeedIds([seed]),
+                scope: seed.scope,
+              })),
+            ).accepts,
+            dieId: createInstanceDeclaration(
+              "die",
+              (analysis.manifest.dieSeeds ?? []).map((seed) => ({
+                baseIds: expandSeedIds([seed]),
+                scope: seed.scope,
+              })),
+            ).accepts,
+          }
+        : undefined,
     ids: {
       cardId: analysis.cardIds,
       zoneId: analysis.zoneIds,
@@ -1201,12 +1255,13 @@ function materializeFields(
   analysis: ManifestAnalysis,
   values: unknown,
   boardId?: string,
+  stage: "manifest" | "session" = "session",
 ): Record<string, unknown> {
   if (!schema) return z.record(z.string(), z.unknown()).parse(values ?? {});
   let resolve = fieldResolvers.get(analysis);
   if (!resolve) {
     resolve = createFieldValidatorResolver((board) =>
-      fieldReferenceContext(analysis, "session", board),
+      fieldReferenceContext(analysis, stage, board),
     );
     fieldResolvers.set(analysis, resolve);
   }
@@ -1215,12 +1270,40 @@ function materializeFields(
     .parse(resolve(schema, boardId).parse(values ?? {}));
 }
 
-export function materializeManifestTable(options: {
+type MaterializeOptions = {
   manifest: GameTopologyManifest;
   playerIds: readonly string[];
   shuffleItems: <Value>(values: readonly Value[]) => Value[];
-}): Record<string, unknown> {
+};
+/** Construct actual session inventory; references use the supplied live roster. */
+export function materializeManifestTable(
+  options: MaterializeOptions,
+): Record<string, unknown> {
+  return materializeManifest(
+    { ...options, playerIds: PlayerRosterSchema.parse(options.playerIds) },
+    "session",
+  );
+}
+/** Compile shared board definitions without admitting a fictitious session. */
+export function materializeManifestStaticBoards(
+  manifest: GameTopologyManifest,
+): unknown {
+  return materializeManifest(
+    { manifest, playerIds: [], shuffleItems: (values) => [...values] },
+    "manifest",
+  ).boards;
+}
+function materializeManifest(
+  options: MaterializeOptions,
+  stage: "manifest" | "session",
+): Record<string, unknown> {
   const analysis = analyzeManifest(options.manifest, options.playerIds);
+  const fields = (
+    schema: FieldSchemaJson | null | undefined,
+    analysis: ManifestAnalysis,
+    values: unknown,
+    boardId?: string,
+  ) => materializeFields(schema, analysis, values, boardId, stage);
   const manifest = analysis.manifest;
   const playerIds = [...options.playerIds];
 
@@ -1272,7 +1355,7 @@ export function materializeManifestTable(options: {
   ]);
   const resolveRuntimeBoardId = (
     boardBaseId: string,
-    ownerId: string | null | undefined,
+    origin: string | null | undefined,
     context?: string,
   ) => {
     const analyzedBoard = boardAnalysisByBaseId.get(boardBaseId);
@@ -1282,12 +1365,12 @@ export function materializeManifestTable(options: {
       );
     }
     if (analyzedBoard?.board.scope === "perPlayer") {
-      if (!ownerId) {
+      if (!origin) {
         throw new Error(
-          `${context ?? `Home on board '${boardBaseId}'`} requires ownerId because board '${boardBaseId}' has scope 'perPlayer'. Add ownerId to resolve the player-scoped destination.`,
+          `${context ?? `Home on board '${boardBaseId}'`} requires perPlayer scope because board '${boardBaseId}' has scope 'perPlayer'. Use perPlayer scope to resolve the player-scoped destination.`,
         );
       }
-      return `${boardBaseId}:${ownerId}`;
+      return perPlayerInstanceId("board", boardBaseId, origin);
     }
     return boardBaseId;
   };
@@ -1322,8 +1405,26 @@ export function materializeManifestTable(options: {
     return vertexId;
   };
 
+  function resolveSlotHost(
+    host: { kind: "piece" | "die"; id: string },
+    origin: string | null,
+  ) {
+    const seeds =
+      host.kind === "piece" ? manifest.pieceSeeds : manifest.dieSeeds;
+    const seed = seeds?.find((seed) => seed.id === host.id);
+    if (seed?.scope !== "perPlayer") return host;
+    if (!origin)
+      throw new Error(
+        `Shared component cannot target per-player slot host '${host.id}'.`,
+      );
+    return {
+      kind: host.kind,
+      id: perPlayerInstanceId(host.kind, host.id, origin),
+    };
+  }
   const materializeComponentLocation = (
     home: NonNullable<BoardCard["home"]>,
+    origin: string | null,
     context: {
       path: string;
       label: string;
@@ -1334,13 +1435,14 @@ export function materializeManifestTable(options: {
     }
 
     if (home.type === "slot") {
+      const host = resolveSlotHost(home.host, origin);
       return {
         type: "InSlot",
-        host: home.host,
+        host,
         slotId: home.slotId,
         position: nextLocationPosition({
           type: "InSlot",
-          host: home.host,
+          host,
           slotId: home.slotId,
         }),
       };
@@ -1353,15 +1455,15 @@ export function materializeManifestTable(options: {
           `${context.path}.zoneId: ${context.label} targets unknown zone '${home.zoneId}'.`,
         );
       }
-      if (zoneScope === "perPlayer") {
+      if (zoneScope === "perPlayer" && !origin) {
         throw new Error(
-          `${context.path}.zoneId: ${context.label} cannot target per-player zone '${home.zoneId}' because card inventory has no ownerId. Place it during reducer setup instead.`,
+          `${context.path}.zoneId: ${context.label} cannot target per-player zone '${home.zoneId}' because shared card inventory has no replication origin. Place it during reducer setup instead.`,
         );
       }
       return {
         type: "InZone",
         zoneId: home.zoneId,
-        hostId: "table",
+        hostId: zoneScope === "perPlayer" ? origin : "table",
         playedBy: null,
       };
     }
@@ -1369,7 +1471,7 @@ export function materializeManifestTable(options: {
     if (home.type === "space") {
       const boardId = resolveRuntimeBoardId(
         home.boardId,
-        null,
+        origin,
         `${context.path}.boardId: ${context.label}`,
       );
       if (
@@ -1394,7 +1496,7 @@ export function materializeManifestTable(options: {
     if (home.type === "container") {
       const boardId = resolveRuntimeBoardId(
         home.boardId,
-        null,
+        origin,
         `${context.path}.boardId: ${context.label}`,
       );
       if (
@@ -1421,7 +1523,7 @@ export function materializeManifestTable(options: {
     if (home.type === "edge") {
       const boardId = resolveRuntimeBoardId(
         home.boardId,
-        null,
+        origin,
         `${context.path}.boardId: ${context.label}`,
       );
       const edgeId = resolveBoardEdgeId(home.boardId, home.ref.spaces);
@@ -1440,7 +1542,7 @@ export function materializeManifestTable(options: {
     if (home.type === "vertex") {
       const boardId = resolveRuntimeBoardId(
         home.boardId,
-        null,
+        origin,
         `${context.path}.boardId: ${context.label}`,
       );
       const vertexId = resolveBoardVertexId(home.boardId, home.ref.spaces);
@@ -1464,8 +1566,16 @@ export function materializeManifestTable(options: {
 
   for (const [cardSetIndex, cardSet] of manifest.cardSets.entries()) {
     for (const [cardIndex, card] of cardSet.cards.entries()) {
-      const cardInstanceIds = renderCardInstanceIds(card);
-      for (const [instanceIndex, cardId] of cardInstanceIds.entries()) {
+      const cardInstanceIds = scopedInstances(
+        "card",
+        renderCardInstanceIds(card),
+        card.scope,
+        playerIds,
+      );
+      for (const [
+        instanceIndex,
+        { id: cardId, playerId: origin },
+      ] of cardInstanceIds.entries()) {
         cards[cardId] = {
           id: cardId,
           cardSetId: cardSet.id,
@@ -1474,7 +1584,7 @@ export function materializeManifestTable(options: {
           text: card.text,
           frontImage: card.frontImage,
           backImage: card.backImage,
-          properties: materializeFields(
+          properties: fields(
             schemaForCardType(cardSet.cardSchema, card.cardType),
             analysis,
             card.properties,
@@ -1487,6 +1597,7 @@ export function materializeManifestTable(options: {
             : `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}].home`;
         componentLocations[cardId] = materializeComponentLocation(
           resolvedHome,
+          origin,
           {
             path,
             label: `Card '${card.id}' instance ${instanceIndex + 1}`,
@@ -1516,7 +1627,7 @@ export function materializeManifestTable(options: {
 
   const assignSeedLocation = (
     componentId: string,
-    ownerId: string | null | undefined,
+    origin: string | null | undefined,
     home: PieceSeedSpec["home"] | DieSeedSpec["home"] | undefined,
     context: {
       path: string;
@@ -1529,13 +1640,14 @@ export function materializeManifestTable(options: {
     }
 
     if (home.type === "slot") {
+      const host = resolveSlotHost(home.host, origin ?? null);
       componentLocations[componentId] = {
         type: "InSlot",
-        host: home.host,
+        host,
         slotId: home.slotId,
         position: nextLocationPosition({
           type: "InSlot",
-          host: home.host,
+          host,
           slotId: home.slotId,
         }),
       };
@@ -1544,15 +1656,15 @@ export function materializeManifestTable(options: {
 
     if (home.type === "zone") {
       if (zoneScopeById.get(home.zoneId) === "perPlayer") {
-        if (!ownerId) {
+        if (!origin) {
           throw new Error(
-            `${context.path}.zoneId: ${context.label} requires ownerId because zone '${home.zoneId}' has scope 'perPlayer'. Add ownerId to resolve the player-scoped destination.`,
+            `${context.path}.zoneId: ${context.label} requires perPlayer scope because zone '${home.zoneId}' has scope 'perPlayer'. Use perPlayer scope to resolve the player-scoped destination.`,
           );
         }
         componentLocations[componentId] = {
           type: "InZone",
           zoneId: home.zoneId,
-          hostId: ownerId,
+          hostId: origin,
           playedBy: null,
         };
         return;
@@ -1570,7 +1682,7 @@ export function materializeManifestTable(options: {
     if (home.type === "space") {
       const boardId = resolveRuntimeBoardId(
         home.boardId,
-        ownerId,
+        origin,
         `${context.path}.boardId: ${context.label}`,
       );
       componentLocations[componentId] = {
@@ -1589,7 +1701,7 @@ export function materializeManifestTable(options: {
     if (home.type === "container") {
       const boardId = resolveRuntimeBoardId(
         home.boardId,
-        ownerId,
+        origin,
         `${context.path}.boardId: ${context.label}`,
       );
       componentLocations[componentId] = {
@@ -1608,7 +1720,7 @@ export function materializeManifestTable(options: {
     if (home.type === "edge") {
       const boardId = resolveRuntimeBoardId(
         home.boardId,
-        ownerId,
+        origin,
         `${context.path}.boardId: ${context.label}`,
       );
       const edgeId = resolveBoardEdgeId(home.boardId, home.ref.spaces);
@@ -1628,7 +1740,7 @@ export function materializeManifestTable(options: {
     if (home.type === "vertex") {
       const boardId = resolveRuntimeBoardId(
         home.boardId,
-        ownerId,
+        origin,
         `${context.path}.boardId: ${context.label}`,
       );
       const vertexId = resolveBoardVertexId(home.boardId, home.ref.spaces);
@@ -1650,20 +1762,25 @@ export function materializeManifestTable(options: {
 
   for (const [seedIndex, seed] of (manifest.pieceSeeds ?? []).entries()) {
     const pieceType = pieceTypesById.get(seed.typeId);
-    for (const componentId of expandSeedIds([seed])) {
+    for (const { id: componentId, playerId: origin } of scopedInstances(
+      "piece",
+      expandSeedIds([seed]),
+      seed.scope,
+      playerIds,
+    )) {
       pieces[componentId] = {
         componentType: "piece",
         id: componentId,
         pieceTypeId: seed.typeId,
         pieceName: pieceType?.name ?? seed.typeId,
-        ownerId: seed.ownerId ?? null,
-        properties: materializeFields(
+        ownerId: origin,
+        properties: fields(
           analysis.pieceTypeSchemasById.get(seed.typeId),
           analysis,
           seed.fields,
         ),
       };
-      assignSeedLocation(componentId, seed.ownerId, seed.home, {
+      assignSeedLocation(componentId, origin, seed.home, {
         path: `manifest.pieceSeeds[${seedIndex}].home`,
         label: `Piece seed '${seed.id ?? seed.typeId}'`,
       });
@@ -1672,22 +1789,27 @@ export function materializeManifestTable(options: {
 
   for (const [seedIndex, seed] of (manifest.dieSeeds ?? []).entries()) {
     const dieType = dieTypesById.get(seed.typeId);
-    for (const componentId of expandSeedIds([seed])) {
+    for (const { id: componentId, playerId: origin } of scopedInstances(
+      "die",
+      expandSeedIds([seed]),
+      seed.scope,
+      playerIds,
+    )) {
       dice[componentId] = {
         componentType: "die",
         id: componentId,
         dieTypeId: seed.typeId,
         dieName: dieType?.name ?? seed.typeId,
-        ownerId: seed.ownerId ?? null,
+        ownerId: origin,
         sides: dieType?.sides ?? 6,
         value: null,
-        properties: materializeFields(
+        properties: fields(
           analysis.dieTypeSchemasById.get(seed.typeId),
           analysis,
           seed.fields,
         ),
       };
-      assignSeedLocation(componentId, seed.ownerId, seed.home, {
+      assignSeedLocation(componentId, origin, seed.home, {
         path: `manifest.dieSeeds[${seedIndex}].home`,
         label: `Die seed '${seed.id ?? seed.typeId}'`,
       });
@@ -1704,7 +1826,7 @@ export function materializeManifestTable(options: {
       layout: analyzedBoard.layout,
       typeId: analyzedBoard.boardTypeId ?? null,
       scope: analyzedBoard.board.scope,
-      fields: materializeFields(
+      fields: fields(
         analyzedBoard.boardFieldsSchema,
         analysis,
         analyzedBoard.board.fields,
@@ -1719,7 +1841,7 @@ export function materializeManifestTable(options: {
             id: spaceId,
             name: "name" in space ? (space.name ?? null) : null,
             typeId: space?.typeId ?? null,
-            fields: materializeFields(
+            fields: fields(
               analyzedBoard.spaceFieldsSchema,
               analysis,
               space.fields,
@@ -1764,7 +1886,7 @@ export function materializeManifestTable(options: {
             fromSpaceId: relation.fromSpaceId,
             toSpaceId: relation.toSpaceId,
             directed: relation.directed ?? false,
-            fields: materializeFields(
+            fields: fields(
               analyzedBoard.relationFieldsSchema,
               analysis,
               relation.fields,
@@ -1788,7 +1910,7 @@ export function materializeManifestTable(options: {
                       : { type: "board" },
                   allowedCardSetIds: container.allowedCardSetIds,
                   zoneId: `board:${runtimeBoardId}:container:${containerId}`,
-                  fields: materializeFields(
+                  fields: fields(
                     analyzedBoard.containerFieldsSchema,
                     analysis,
                     container.fields,
@@ -1808,7 +1930,7 @@ export function materializeManifestTable(options: {
             typeId: edge.typeId ?? null,
             label: edge.label ?? null,
             ownerId: null,
-            fields: materializeFields(
+            fields: fields(
               analyzedBoard.edgeFieldsSchema,
               analysis,
               edge.fields,
@@ -1824,7 +1946,7 @@ export function materializeManifestTable(options: {
             typeId: vertex.typeId ?? null,
             label: vertex.label ?? null,
             ownerId: null,
-            fields: materializeFields(
+            fields: fields(
               analyzedBoard.vertexFieldsSchema,
               analysis,
               vertex.fields,
@@ -1834,7 +1956,7 @@ export function materializeManifestTable(options: {
     for (const runtimeBoardId of analyzedBoard.runtimeBoardIds) {
       const playerId =
         analyzedBoard.board.scope === "perPlayer"
-          ? runtimeBoardId.slice(analyzedBoard.board.id.length + 1)
+          ? (parsePerPlayerInstanceId(runtimeBoardId)?.playerId ?? null)
           : null;
       const boardState = {
         id: runtimeBoardId,
@@ -1884,11 +2006,9 @@ export function materializeManifestTable(options: {
     if (!ids) throw new Error(`Missing zone host for '${componentId}'.`);
     ids.push(componentId);
   }
-  const ownerOfCard = Object.fromEntries(
-    Object.keys(cards).map((cardId) => [cardId, null]),
-  );
-  const visibility = Object.fromEntries(
-    Object.keys(cards).map((cardId) => [cardId, { faceUp: true }]),
+  const { ownerOfCard, visibility } = initialCardMetadata(
+    manifest.cardSets,
+    playerIds,
   );
   const resourcesByPlayer = Object.fromEntries(
     playerIds.map((playerId) => [

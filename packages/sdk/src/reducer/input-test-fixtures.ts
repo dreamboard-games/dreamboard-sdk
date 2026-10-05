@@ -1,3 +1,7 @@
+import {
+  perPlayerInstanceId,
+  parsePerPlayerInstanceId,
+} from "../shared/domain/per-player-instance.js";
 import type { RuntimeHexBoardState } from "./model";
 import { createTable } from "./lifecycle-test-fixtures";
 
@@ -24,10 +28,10 @@ export function createInputTestState() {
   for (const id of [
     "board",
     "main-board",
-    "workshop-mat:player-1",
-    "workshop-mat:player-2",
+    perPlayerInstanceId("board", "workshop-mat", "player-1"),
+    perPlayerInstanceId("board", "workshop-mat", "player-2"),
   ]) {
-    const playerId = id.split(":")[1];
+    const playerId = parsePerPlayerInstanceId(id)?.playerId;
     const board: RuntimeHexBoardState = {
       id,
       baseId: playerId ? "workshop-mat" : id,

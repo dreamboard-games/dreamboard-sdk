@@ -9,7 +9,8 @@ import type {
 export function collectTargetDomainMetadata(collector: InputCollector): {
   targetKind?: string;
   boardId?: string;
-  valueKind?: "board-id" | "player-board-space";
+  boardBaseId?: string;
+  valueKind?: "board-id" | "board-space";
   zoneId?: string;
   zoneIds?: readonly string[];
 } {
@@ -31,7 +32,9 @@ export function collectTargetDomainMetadata(collector: InputCollector): {
       const meta = collector.meta ?? {};
       return {
         targetKind: meta.targetKind ?? collector.kind.replace("board-", ""),
-        boardId: meta.boardId,
+        ...(meta.valueKind === "board-space"
+          ? { boardBaseId: meta.boardBaseId }
+          : { boardId: "boardId" in meta ? meta.boardId : undefined }),
         valueKind: meta.valueKind,
       };
     }
@@ -60,6 +63,7 @@ export function collectInputMetadata<
     kind: string;
     targetKind?: string;
     boardId?: string;
+    boardBaseId?: string;
     zoneId?: string;
     zoneIds?: readonly string[];
   }

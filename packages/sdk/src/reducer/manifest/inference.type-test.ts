@@ -46,7 +46,9 @@ type CardId = z.infer<typeof compiled.ids.cardId>;
 const card: CardId = "ace-1";
 // @ts-expect-error Card ids come from authored counts.
 const invalidCard: CardId = "ace-3";
-const table = compiled.createInitialTable();
+const table = compiled.createInitialTable({
+  playerIds: ["player-1", "player-2"],
+});
 const points: number = table.cards[card].properties.points;
 // @ts-expect-error Card property enums remain narrow.
 const badColor: "green" = table.cards[card].properties.color;

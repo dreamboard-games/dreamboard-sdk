@@ -2,7 +2,6 @@ import { createGame, hexagon } from "@dreamboard-games/sdk/reducer";
 import { z } from "zod";
 const target = z.object({
   boardId: z.string(),
-  playerId: z.string(),
   spaceId: z.string(),
 });
 const model = createGame({
@@ -19,6 +18,7 @@ const model = createGame({
             name: "Card",
             cardType: "card",
             count: 1,
+            scope: "perPlayer",
             properties: {},
           },
         ],

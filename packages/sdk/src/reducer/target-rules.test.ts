@@ -1,3 +1,4 @@
+import { perPlayerInstanceId } from "../shared/domain/per-player-instance.js";
 import { createInputTestState, inputDefinitions } from "./input-test-fixtures";
 import { createStateQueries } from "./table-queries";
 import { describe, expect, test } from "vitest";
@@ -51,19 +52,18 @@ describe("target rules", () => {
       .where({
         id: "own-cell",
         errorCode: "not-owned",
-        test: ({ playerId, target }) => target.playerId === playerId,
+        test: ({ playerId, target, q }) =>
+          q.board(target.boardId).state.playerId === playerId,
       })
       .build();
 
     const input = boardInput.playerSpace({ target });
     const ownedTarget = {
-      boardId: "workshop-mat",
-      playerId: "player-1",
+      boardId: perPlayerInstanceId("board", "workshop-mat", "player-1"),
       spaceId: "s1",
     } as const;
     const otherPlayerTarget = {
-      boardId: "workshop-mat",
-      playerId: "player-2",
+      boardId: perPlayerInstanceId("board", "workshop-mat", "player-2"),
       spaceId: "s1",
     } as const;
 
@@ -74,7 +74,7 @@ describe("target rules", () => {
     expect(input.domain?.(state, "player-1", q)).toMatchObject({
       type: "boardTarget",
       projection: "resolved",
-      valueKind: "player-board-space",
+      valueKind: "board-space",
       eligibleTargets: [ownedTarget, { ...ownedTarget, spaceId: "s2" }],
     });
     expect(input.schema.parse(ownedTarget)).toEqual(ownedTarget);
@@ -207,12 +207,14 @@ describe("runtime target admission", () => {
     "s1",
     {},
     {
-      boardId: "workshop-mat",
-      playerId: "player-1",
+      boardId: perPlayerInstanceId("board", "workshop-mat", "player-1"),
       spaceId: "s1",
       injected: true,
     },
-    { boardId: "wrong", playerId: "player-1", spaceId: "s1" },
+    {
+      boardId: perPlayerInstanceId("board", "wrong", "player-1"),
+      spaceId: "s1",
+    },
     { boardId: "workshop-mat", playerId: "missing-player", spaceId: "s1" },
   ])(
     "rejects unknown structured board target %# before predicates",
@@ -252,13 +254,15 @@ describe("runtime target admission", () => {
       })
       .build();
     const submitted = {
-      boardId: "workshop-mat",
-      playerId: "player-1",
+      boardId: perPlayerInstanceId("board", "workshop-mat", "player-1"),
       spaceId: "s1",
     };
     expect(target.validate(ctx, submitted)).toBeNull();
     expect(seen).toEqual([
-      { boardId: "workshop-mat", playerId: "player-1", spaceId: "s1" },
+      {
+        boardId: perPlayerInstanceId("board", "workshop-mat", "player-1"),
+        spaceId: "s1",
+      },
     ]);
     expect(seen[0]).not.toBe(submitted);
   });

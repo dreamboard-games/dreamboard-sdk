@@ -1,3 +1,4 @@
+import { perPlayerInstanceId } from "../../shared/domain/per-player-instance.js";
 import { z } from "zod";
 import { compileManifest } from "./compiler";
 import { createTableQueries } from "../table-queries";
@@ -43,7 +44,9 @@ const manifest = compileManifest({
   ],
 });
 
-const table = manifest.createInitialTable();
+const table = manifest.createInitialTable({
+  playerIds: ["player-1", "player-2"],
+});
 const pieceId: "pawn-1" = table.pieces["pawn-1"].id;
 const pieceType: "worker" = table.pieces["pawn-1"].pieceTypeId;
 const strength: number = table.pieces["pawn-1"].properties.strength;
@@ -51,8 +54,11 @@ const color: string = table.pieces.flag.properties.color;
 const dieId: "battle" = table.dice.battle.id;
 const dieType: "combat" = table.dice.battle.dieTypeId;
 const bonus: number = table.dice.battle.properties.bonus;
-const scope: "perPlayer" = table.boards.byId["mat:player-1"].scope;
-const spaceId: "home" = table.boards.byId["mat:player-1"].spaces.home.id;
+const scope: "perPlayer" =
+  table.boards.byId[perPlayerInstanceId("board", "mat", "player-1")].scope;
+const spaceId: "home" =
+  table.boards.byId[perPlayerInstanceId("board", "mat", "player-1")].spaces.home
+    .id;
 const componentId: ComponentIdOfTable<typeof table> = "battle";
 // @ts-expect-error Component identity includes only authored cards, pieces and dice.
 const missingComponent: ComponentIdOfTable<typeof table> = "missing";
@@ -100,7 +106,9 @@ const dynamic = compileManifest({
     })),
   ],
 });
-const dynamicTable = dynamic.createInitialTable();
+const dynamicTable = dynamic.createInitialTable({
+  playerIds: ["player-1", "player-2"],
+});
 const dynamicPiece = dynamicTable.pieces["flag"];
 if (dynamicPiece.pieceTypeId === "marker") {
   const type: "marker" = dynamicPiece.pieceTypeId;

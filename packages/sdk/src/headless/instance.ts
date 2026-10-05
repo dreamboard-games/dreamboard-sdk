@@ -91,8 +91,13 @@ function matchesBoardTarget(
     domain.valueKind === target.valueKind &&
     (domain.targetKind === target.kind ||
       (target.kind === "space" && domain.targetKind === "tile")) &&
-    domain.boardId ===
-      (target.valueKind === "board-id" ? target.boardId : target.value.boardId)
+    (domain.valueKind === "board-id" && target.valueKind === "board-id"
+      ? domain.boardId === target.boardId
+      : domain.valueKind === "board-space" &&
+        target.valueKind === "board-space" &&
+        domain.eligibleTargets.some(
+          (candidate) => candidate.boardId === target.value.boardId,
+        ))
   );
 }
 function immutableValues(value: Values): Values {

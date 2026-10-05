@@ -235,7 +235,7 @@ test("validateManifestAuthoring rejects invalid strict slot hosts and slot ids",
   );
 });
 
-test("validateManifestAuthoring rejects player-scoped seed homes without ownerId", () => {
+test("validateManifestAuthoring rejects player-scoped seed homes without perPlayer scope", () => {
   const validation = validateManifestAuthoring({
     ...BASE_MANIFEST,
     zones: [
@@ -284,14 +284,14 @@ test("validateManifestAuthoring rejects player-scoped seed homes without ownerId
   });
 
   expect(validation.errors).toContain(
-    "manifest.pieceSeeds[0].home.boardId: Piece seed 'worker-a' requires ownerId because board 'player-mat' has scope 'perPlayer'. Add ownerId to resolve the player-scoped destination.",
+    "manifest.pieceSeeds[0].home.boardId: Piece seed 'worker-a' requires perPlayer scope because board 'player-mat' has scope 'perPlayer'. Use perPlayer scope to resolve the player-scoped destination.",
   );
   expect(validation.errors).toContain(
-    "manifest.dieSeeds[0].home.zoneId: Die seed 'die-a' requires ownerId because zone 'scout-hand' has scope 'perPlayer'. Add ownerId to resolve the player-scoped destination.",
+    "manifest.dieSeeds[0].home.zoneId: Die seed 'die-a' requires perPlayer scope because zone 'scout-hand' has scope 'perPlayer'. Use perPlayer scope to resolve the player-scoped destination.",
   );
 });
 
-test("validateManifestAuthoring accepts player-scoped seed homes with ownerId", () => {
+test("validateManifestAuthoring accepts player-scoped seed homes with perPlayer scope", () => {
   const validation = validateManifestAuthoring({
     ...BASE_MANIFEST,
     zones: [
@@ -319,7 +319,7 @@ test("validateManifestAuthoring accepts player-scoped seed homes with ownerId", 
       {
         id: "worker-a",
         typeId: "meeple",
-        ownerId: "player-1",
+        scope: "perPlayer",
         home: {
           type: "space",
           boardId: "player-mat",
@@ -332,7 +332,7 @@ test("validateManifestAuthoring accepts player-scoped seed homes with ownerId", 
       {
         id: "die-a",
         typeId: "d6",
-        ownerId: "player-1",
+        scope: "perPlayer",
         home: {
           type: "zone",
           zoneId: "scout-hand",
@@ -400,10 +400,10 @@ test("validateManifestAuthoring rejects player-scoped card homes", () => {
   });
 
   expect(validation.errors).toContain(
-    "manifest.cardSets[0].cards[0].home.zoneId: Card 'scout' cannot target per-player zone 'player-hand' because card inventory has no ownerId. Place it during reducer setup instead.",
+    "manifest.cardSets[0].cards[0].home.zoneId: Card 'scout' cannot target per-player zone 'player-hand' because shared card inventory has no replication origin. Place it during reducer setup instead.",
   );
   expect(validation.errors).toContain(
-    "manifest.cardSets[0].cards[1].home.boardId: Card 'camp' cannot target per-player board 'player-mat' because card inventory has no ownerId. Place it during reducer setup instead.",
+    "manifest.cardSets[0].cards[1].home.boardId: Card 'camp' cannot target per-player board 'player-mat' because shared card inventory has no replication origin. Place it during reducer setup instead.",
   );
 });
 
@@ -539,7 +539,9 @@ test("distinct literal ids remain distinct when their old handles matched", () =
 
   expect(validateManifestAuthoring(manifest).errors).toEqual([]);
   const compiled = compileManifest(manifest);
-  const table = compiled.createInitialTable();
+  const table = compiled.createInitialTable({
+    playerIds: ["player-1", "player-2"],
+  });
   expect(Object.keys(table.cards)).toEqual(["foo-bar", "foo_bar"]);
   expect(Object.keys(table.zones)).toEqual(["draw-zone", "draw_zone"]);
   expect(compiled.ids.cardId.safeParse("foo-bar").success).toBe(true);

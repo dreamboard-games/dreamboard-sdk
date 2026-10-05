@@ -1,3 +1,4 @@
+import { perPlayerInstanceId } from "../../../shared/domain/per-player-instance.js";
 import {
   createInputTestState,
   inputDefinitions,
@@ -227,8 +228,9 @@ describe("trusted collector input solver", () => {
         .where({
           id: "own-open-space",
           errorCode: "SPACE_BLOCKED",
-          test: ({ playerId, target }) =>
-            target.playerId === playerId && target.spaceId === "s1",
+          test: ({ playerId, target, q }) =>
+            q.board(target.boardId).state.playerId === playerId &&
+            target.spaceId === "s1",
         })
         .build(),
     });
@@ -260,8 +262,7 @@ describe("trusted collector input solver", () => {
       {
         card: "card-a",
         playerSpace: {
-          boardId: "workshop-mat",
-          playerId: "player-1",
+          boardId: perPlayerInstanceId("board", "workshop-mat", "player-1"),
           spaceId: "s1",
         },
       },

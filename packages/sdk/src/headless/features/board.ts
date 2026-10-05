@@ -201,8 +201,9 @@ function createRuntimeBoardFeature(context: RuntimeFeatureContext) {
             return (
               domain.type === "boardTarget" &&
               inputKinds.includes(String(domain.targetKind)) &&
-              (domain.valueKind === "player-board-space"
-                ? board.scope === "perPlayer" && domain.boardId === board.baseId
+              (domain.valueKind === "board-space"
+                ? board.scope === "perPlayer" &&
+                  domain.boardBaseId === board.baseId
                 : domain.boardId === board.id)
             );
           })
@@ -213,10 +214,9 @@ function createRuntimeBoardFeature(context: RuntimeFeatureContext) {
               input,
               value:
                 domain.type === "boardTarget" &&
-                domain.valueKind === "player-board-space"
+                domain.valueKind === "board-space"
                   ? Object.freeze({
-                      boardId: board.baseId!,
-                      playerId: board.playerId!,
+                      boardId: board.id,
                       spaceId: id,
                     })
                   : id,
@@ -254,7 +254,7 @@ function createRuntimeBoardFeature(context: RuntimeFeatureContext) {
         if (domain.type !== "boardTarget") return;
         const value = matching[0].value;
         const target =
-          domain.valueKind === "player-board-space" && typeof value !== "string"
+          domain.valueKind === "board-space" && typeof value !== "string"
             ? { kind: "space" as const, valueKind: domain.valueKind, value }
             : {
                 kind,

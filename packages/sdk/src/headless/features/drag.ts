@@ -90,7 +90,7 @@ function createRuntimeDragFeature(context: RuntimeFeatureContext) {
               cardInputKey: cardInput.key,
               inputKey: input.key,
             };
-            if (domain.valueKind === "player-board-space")
+            if (domain.valueKind === "board-space")
               return domain.eligibleTargets
                 .filter((value) => !input.getTargetProps(value).disabled)
                 .map((value) =>

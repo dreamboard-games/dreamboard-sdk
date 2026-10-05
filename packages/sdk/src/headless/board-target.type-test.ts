@@ -1,3 +1,7 @@
+import {
+  perPlayerInstanceId,
+  type PerPlayerInstanceId,
+} from "../shared/domain/per-player-instance.js";
 import { z } from "zod";
 import { createGame, many } from "../reducer.js";
 import type { InputDomain } from "../shared/interaction-schema.js";
@@ -39,8 +43,10 @@ const game = model.assemble({
         choose: play.interaction({
           inputs: { space: collector, spaces: several },
           reduce({ input }) {
-            const base: "mat" = input.params.space.boardId;
-            const manyBase: "mat" = input.params.spaces[0].boardId;
+            const base: PerPlayerInstanceId<"board", "mat"> =
+              input.params.space.boardId;
+            const manyBase: PerPlayerInstanceId<"board", "mat"> =
+              input.params.spaces[0].boardId;
             // @ts-expect-error A player-space value is not a scalar ID.
             const scalar: string = input.params.space;
             void [base, manyBase, scalar];
@@ -52,20 +58,17 @@ const game = model.assemble({
   view: model.view(() => ({})),
 });
 declare const domain: InputDomain;
-if (
-  domain.type === "boardTarget" &&
-  domain.valueKind === "player-board-space"
-) {
-  const player: string = domain.eligibleTargets[0].playerId;
+if (domain.type === "boardTarget" && domain.valueKind === "board-space") {
+  const boardId: string = domain.eligibleTargets[0].boardId;
   // @ts-expect-error The tuple domain cannot expose scalar targets.
   const scalar: string = domain.eligibleTargets[0];
-  void [player, scalar];
+  void [boardId, scalar];
 }
 declare const drop: DropTarget<typeof game>;
-if (drop.valueKind === "player-board-space") {
-  const base: IdOf<typeof game, "boardBaseId"> = drop.value.boardId;
-  // @ts-expect-error A base board identity is not a player-specific runtime board.
+if (drop.valueKind === "board-space") {
   const runtime: IdOf<typeof game, "boardId"> = drop.value.boardId;
+  // @ts-expect-error A runtime instance is not an authored board base.
+  const base: IdOf<typeof game, "boardBaseId"> = drop.value.boardId;
   void [base, runtime];
 } else {
   const runtime: IdOf<typeof game, "boardId"> = drop.boardId;
@@ -78,9 +81,8 @@ void game;
 import type { CoreInstance, SelectionTarget } from "./model.js";
 declare const instance: CoreInstance<typeof game>;
 const selectedSpace = {
-  boardId: "mat" as const,
+  boardId: perPlayerInstanceId("board", "mat", "player-2"),
   spaceId: "slot" as const,
-  playerId: model.contract.manifest.ids.playerId.parse("player-2"),
 };
 const spacesInput = instance.inputs.get("play.choose", "spaces");
 spacesInput.setValue([selectedSpace]);
@@ -91,20 +93,20 @@ spacesInput.getSelectHandler([selectedSpace]);
 spacesInput.setValue(selectedSpace);
 const target: SelectionTarget<typeof game> = {
   kind: "space",
-  valueKind: "player-board-space",
+  valueKind: "board-space",
   value: selectedSpace,
 };
 const duplicateBoard: SelectionTarget<typeof game> = {
   kind: "space",
-  valueKind: "player-board-space",
+  valueKind: "board-space",
   value: selectedSpace,
   // @ts-expect-error Tuple targets already own their board identity.
-  boardId: "mat:player-1",
+  boardId: perPlayerInstanceId("board", "mat", "player-1"),
 };
 const tupleEdge: SelectionTarget<typeof game> = {
   kind: "edge",
   // @ts-expect-error Tuple targets are spaces, not edges.
-  valueKind: "player-board-space",
+  valueKind: "board-space",
   value: selectedSpace,
 };
 // @ts-expect-error Scalar board targets require their runtime board ID.
@@ -117,15 +119,18 @@ const noBoard: SelectionTarget<typeof game> = {
 const missingSpace: SelectionTarget<typeof game> = {
   kind: "space",
   valueKind: "board-id",
-  boardId: "mat:player-2",
+  boardId: perPlayerInstanceId("board", "mat", "player-2"),
   value: "missing",
 };
 void [target, duplicateBoard, tupleEdge, noBoard, missingSpace];
 
 import type { BoardBase } from "./model.js";
-declare const board: BoardBase<typeof game, "mat:player-2">;
+declare const board: BoardBase<
+  typeof game,
+  PerPlayerInstanceId<"board", "mat">
+>;
 const boardScope: "perPlayer" = board.data.scope;
-const boardIdentity: "mat:player-2" = board.data.id;
+const boardIdentity: PerPlayerInstanceId<"board", "mat"> = board.data.id;
 const spaceIdentity: "slot" = board.data.spaces.slot.id;
 // @ts-expect-error Board data preserves the declared topology.
 void board.data.spaces.missing;
@@ -141,17 +146,24 @@ const ui = createGameInstance<typeof game>()({
   source,
   features: (core, context) => ({ board: boardFeature(core, context) }),
 });
-const semanticSpace = ui.boards.get("mat:player-2").spaces.get("slot");
+const semanticSpace = ui.boards
+  .get(perPlayerInstanceId("board", "mat", "player-2"))
+  .spaces.get("slot");
 const semanticId: "slot" = semanticSpace.id;
-const ownerId: "mat:player-2" = semanticSpace.board.id;
+const ownerId: PerPlayerInstanceId<"board", "mat"> = semanticSpace.board.id;
 const row: number = semanticSpace.data.row;
-semanticSpace.board.game.boards.get("mat:player-2").spaces.get("slot");
+semanticSpace.board.game.boards
+  .get(perPlayerInstanceId("board", "mat", "player-2"))
+  .spaces.get("slot");
 semanticSpace.getSelectHandler({
   interaction: "play.choose",
   input: "space",
 })();
+const scopedSpaces = ui.boards.get(
+  perPlayerInstanceId("board", "mat", "player-2"),
+).spaces;
 // @ts-expect-error A board-scoped lookup rejects an unknown space.
-ui.boards.get("mat:player-2").spaces.get("missing");
+scopedSpaces.get("missing");
 // @ts-expect-error Space selection retains interaction identity.
 semanticSpace.getSelectHandler({ interaction: "play.missing" });
 void [semanticId, ownerId, row];

@@ -1,3 +1,5 @@
+import { renderCardInstanceIds, expandSeedIds } from "./identity-runtime.js";
+import { PER_PLAYER_INSTANCE_PREFIX } from "../../shared/domain/per-player-instance.js";
 import { analyzeManifestStructure, fieldReferenceContext } from "./materialize";
 import {
   fieldSchemaKeyIssues,
@@ -66,6 +68,10 @@ function validateRecordKey(
   value: string | null | undefined,
   path: string,
 ): string[] {
+  if (value?.startsWith(PER_PLAYER_INSTANCE_PREFIX))
+    return [
+      `${path}: authored identities must not begin with reserved prefix '${PER_PLAYER_INSTANCE_PREFIX}'.`,
+    ];
   if (!value || !PROTOTYPE_SENSITIVE_KEYS.has(value)) {
     return [];
   }
@@ -80,36 +86,11 @@ function collectKeyIssues(
   return entries.flatMap(({ value, path }) => validateRecordKey(value, path));
 }
 
-function renderCardInstanceIds(card: BoardCard): string[] {
-  return card.count > 1
-    ? Array.from(
-        { length: card.count },
-        (_, index) => `${card.id}-${index + 1}`,
-      )
-    : [card.id];
-}
-
 function collectCardSchemaKeyIssues(
   cardSet: GameTopologyManifest["cardSets"][number],
   path: string,
 ): string[] {
   return fieldSchemaKeyIssues(cardSet.cardSchema, `${path}.cardSchema`);
-}
-
-function expandSeedIds<
-  Seed extends {
-    id?: string | null;
-    typeId: string;
-    count?: number | null;
-  },
->(seeds: readonly Seed[]): string[] {
-  return seeds.flatMap((seed) => {
-    const count = seed.count ?? 1;
-    const baseId = seed.id ?? seed.typeId;
-    return count > 1
-      ? Array.from({ length: count }, (_, index) => `${baseId}-${index + 1}`)
-      : [baseId];
-  });
 }
 
 function validateTypeSlotDuplicates(options: {
@@ -202,11 +183,21 @@ function validateSlotHostsAndHomes(manifest: GameTopologyManifest): string[] {
   const validateHome = (
     home: BoardCard["home"] | PieceSeedSpec["home"] | DieSeedSpec["home"],
     path: string,
+    scope?: "shared" | "perPlayer",
   ) => {
     if (home?.type !== "slot") {
       return;
     }
 
+    const seeds =
+      home.host.kind === "piece" ? manifest.pieceSeeds : manifest.dieSeeds;
+    if (
+      scope !== "perPlayer" &&
+      seeds?.find((seed) => seed.id === home.host.id)?.scope === "perPlayer"
+    )
+      issues.push(
+        `${path}.host: Shared inventory cannot target per-player slot host '${home.host.id}'. Place it during reducer setup instead.`,
+      );
     const hostKey = `${home.host.kind}:${home.host.id}`;
     const slotIds = slotIdsByHostKey.get(hostKey);
     if (!slotIds) {
@@ -226,21 +217,23 @@ function validateSlotHostsAndHomes(manifest: GameTopologyManifest): string[] {
     validateHome(
       cardSet.defaultHome,
       `manifest.cardSets[${cardSetIndex}].defaultHome`,
+      "perPlayer",
     );
     for (const [cardIndex, card] of cardSet.cards.entries()) {
       validateHome(
-        card.home,
+        card.home ?? cardSet.defaultHome,
         `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}].home`,
+        card.scope,
       );
     }
   }
 
   for (const [index, seed] of (manifest.pieceSeeds ?? []).entries()) {
-    validateHome(seed.home, `manifest.pieceSeeds[${index}].home`);
+    validateHome(seed.home, `manifest.pieceSeeds[${index}].home`, seed.scope);
   }
 
   for (const [index, seed] of (manifest.dieSeeds ?? []).entries()) {
-    validateHome(seed.home, `manifest.dieSeeds[${index}].home`);
+    validateHome(seed.home, `manifest.dieSeeds[${index}].home`, seed.scope);
   }
 
   return issues;
@@ -263,7 +256,7 @@ function validatePlayerScopedSeedHomes(
     label: "Piece seed" | "Die seed",
   ) => {
     const authoredId = seed.id ?? seed.typeId;
-    if (seed.ownerId) {
+    if (seed.scope === "perPlayer") {
       return;
     }
 
@@ -272,7 +265,7 @@ function validatePlayerScopedSeedHomes(
       boardScopeById.get(seed.home.boardId) === "perPlayer"
     ) {
       issues.push(
-        `${path}.boardId: ${label} '${authoredId}' requires ownerId because board '${seed.home.boardId}' has scope 'perPlayer'. Add ownerId to resolve the player-scoped destination.`,
+        `${path}.boardId: ${label} '${authoredId}' requires perPlayer scope because board '${seed.home.boardId}' has scope 'perPlayer'. Use perPlayer scope to resolve the player-scoped destination.`,
       );
       return;
     }
@@ -282,7 +275,7 @@ function validatePlayerScopedSeedHomes(
       zoneScopeById.get(seed.home.zoneId) === "perPlayer"
     ) {
       issues.push(
-        `${path}.zoneId: ${label} '${authoredId}' requires ownerId because zone '${seed.home.zoneId}' has scope 'perPlayer'. Add ownerId to resolve the player-scoped destination.`,
+        `${path}.zoneId: ${label} '${authoredId}' requires perPlayer scope because zone '${seed.home.zoneId}' has scope 'perPlayer'. Use perPlayer scope to resolve the player-scoped destination.`,
       );
     }
   };
@@ -324,7 +317,7 @@ function validateCardHomes(manifest: GameTopologyManifest): string[] {
         zoneScopeById.get(home.zoneId) === "perPlayer"
       ) {
         issues.push(
-          `${path}.zoneId: ${label} cannot target per-player zone '${home.zoneId}' because card inventory has no ownerId. Place it during reducer setup instead.`,
+          `${path}.zoneId: ${label} cannot target per-player zone '${home.zoneId}' because shared card inventory has no replication origin. Place it during reducer setup instead.`,
         );
       }
       if (
@@ -332,19 +325,22 @@ function validateCardHomes(manifest: GameTopologyManifest): string[] {
         boardScopeById.get(home.boardId) === "perPlayer"
       ) {
         issues.push(
-          `${path}.boardId: ${label} cannot target per-player board '${home.boardId}' because card inventory has no ownerId. Place it during reducer setup instead.`,
+          `${path}.boardId: ${label} cannot target per-player board '${home.boardId}' because shared card inventory has no replication origin. Place it during reducer setup instead.`,
         );
       }
     };
 
-    validateCardHome(
-      cardSet.defaultHome,
-      `manifest.cardSets[${cardSetIndex}].defaultHome`,
-      `Card set '${cardSet.id}' defaultHome`,
-    );
     for (const [cardIndex, card] of cardSet.cards.entries()) {
-      const path = `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}].home`;
-      validateCardHome(card.home, path, `Card '${card.id}'`);
+      if (card.scope === "perPlayer") continue;
+      const path =
+        card.home === undefined
+          ? `manifest.cardSets[${cardSetIndex}].defaultHome`
+          : `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}].home`;
+      validateCardHome(
+        card.home ?? cardSet.defaultHome,
+        path,
+        `Card '${card.id}'`,
+      );
     }
   }
 
@@ -544,18 +540,10 @@ function collectAmbiguousBoardTypeWarnings(
 
 function collectBoardRecordKeyIssues(manifest: GameTopologyManifest): string[] {
   const issues: string[] = [];
-  const maxPlayers = manifest.players.maxPlayers;
-  const playerIds = Array.from(
-    { length: maxPlayers },
-    (_, index) => `player-${index + 1}`,
-  );
 
   for (const [boardIndex, board] of (manifest.boards ?? []).entries()) {
     const boardPath = `manifest.boards[${boardIndex}]`;
-    const runtimeBoardIds =
-      board.scope === "perPlayer"
-        ? playerIds.map((playerId) => `${board.id}:${playerId}`)
-        : [board.id];
+    const runtimeBoardIds = board.scope === "perPlayer" ? [] : [board.id];
     issues.push(
       ...collectKeyIssues([
         { value: board.id, path: `${boardPath}.id` },

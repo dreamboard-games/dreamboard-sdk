@@ -36,7 +36,7 @@ const manifest = compileManifest({
     },
   ],
 } as const);
-const table = manifest.createInitialTable();
+const table = manifest.createInitialTable({ playerIds: [] });
 const round: number = table.boards.byId.map.fields.round;
 const terrain: string = table.boards.byId.map.spaces.home.fields.terrain;
 const q = createTableQueries(table, manifest);

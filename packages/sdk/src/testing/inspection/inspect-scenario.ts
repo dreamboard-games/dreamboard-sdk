@@ -105,7 +105,6 @@ export function inspectScenarioReplayNode<Game>(options: {
   });
   const perspective = resolvePerspective(
     options.perspective,
-    baseAuthority.scenario.setup.players,
     baseAuthority.playerIds,
   );
   const authority = inspectScenarioReplayAuthority({
@@ -172,19 +171,18 @@ export function inspectScenarioReplayNode<Game>(options: {
 
 function resolvePerspective(
   selector: PerspectiveSelector,
-  playerCount: number,
-  declaredPlayerIds: readonly string[],
+  playerIds: readonly string[],
 ): PerspectiveRef {
   if (selector.kind === "spectator") return { kind: "spectator" };
   const seat = selector.seat;
-  if (!Number.isSafeInteger(seat) || seat < 0 || seat >= playerCount) {
+  if (!Number.isSafeInteger(seat) || seat < 0 || seat >= playerIds.length) {
     throw new ScenarioInspectionError({
       code: "TEST_PERSPECTIVE_INVALID",
-      message: `Perspective seat ${String(seat)} is outside this ${playerCount}-player scenario.`,
+      message: `Perspective seat ${String(seat)} is outside this ${playerIds.length}-player scenario.`,
       context: {
         requestedSeat: seat,
         minimumSeat: 0,
-        maximumSeat: Math.max(0, playerCount - 1),
+        maximumSeat: Math.max(0, playerIds.length - 1),
       },
     });
   }
@@ -192,7 +190,7 @@ function resolvePerspective(
     kind: "player",
     actor: {
       seat,
-      playerId: declaredPlayerIds[seat] ?? `player-${seat + 1}`,
+      playerId: playerIds[seat],
     },
   };
 }

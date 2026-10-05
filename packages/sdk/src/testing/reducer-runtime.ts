@@ -81,9 +81,10 @@ export function createReducerTestingRuntime<
   function inspect({ state, playerId, interactionId }: InspectionInput) {
     if (typeof playerId !== "string")
       throw new Error("Expected a string playerId.");
+    const [perspective] = codec.parseStatePerspectives(state, [playerId]);
     return {
       state: scope.toCombinedState(parseState(state)),
-      playerId: codec.parsePlayerId(playerId),
+      playerId: perspective,
       interactionId,
     };
   }
@@ -93,7 +94,11 @@ export function createReducerTestingRuntime<
     state,
     input,
   }: Wire.DispatchRequest): Promise<Wire.DispatchResult> {
-    if (input.kind !== "interaction") return bundle.dispatch({ state, input });
+    if (
+      input.kind !== "interaction" ||
+      !codec.isStatePlayer(state, input.playerId)
+    )
+      return bundle.dispatch({ state, input });
     const combinedState = scope.toCombinedState(parseState(state));
     const playerId = codec.parsePlayerId(input.playerId);
     return bundle.dispatch({
@@ -120,9 +125,16 @@ export function createReducerTestingRuntime<
     ...bundle,
     dispatch,
     async validateInput({ state, input }) {
+      const parsed = parseInput(input);
+      if (!codec.isStatePlayer(state, parsed.playerId))
+        return {
+          valid: false,
+          errorCode: "NOT_YOUR_TURN",
+          message: "Player is not seated in this session.",
+        };
       return interactions.validateClientInput(
         scope.toCombinedState(parseState(state)),
-        parseInput(input),
+        parsed,
       );
     },
     async reduce(input) {
@@ -138,10 +150,11 @@ export function createReducerTestingRuntime<
     project({ state, playerIds, projectionMode }) {
       if (projectionMode !== "actionsOnly")
         return bundle.project({ state, playerIds });
+      const perspectives = codec.parseStatePerspectives(state, playerIds);
       // eslint-disable-next-line no-restricted-syntax -- This game-bound actions-only projector assembles the wire seat bundle from parsed session and player IDs.
       return projection.project({
         state: parseState(state),
-        playerIds: playerIds.map((id) => codec.parsePlayerId(id)),
+        playerIds: perspectives,
         projectionMode,
       }) as unknown as Wire.SeatProjectionBundle;
     },

@@ -478,6 +478,8 @@ export type HostGameplaySeatView = {
    * JSON-serialized reducer-projected UI view for this player.
    */
   view: string | null;
+  /** JSON-serialized SDK-owned current board presentation for this player. */
+  boards: string;
   /**
    * Descriptor refs for interactions available to this player.
    */

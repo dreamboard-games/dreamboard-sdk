@@ -1,3 +1,4 @@
+import { perPlayerInstanceId } from "../shared/domain/per-player-instance.js";
 import { compileManifest } from "../reducer/manifest/compiler";
 import { createGame as createModel } from "../reducer";
 import { InteractionSteps } from "../reducer/authoring/steps";
@@ -40,7 +41,7 @@ function createScenarioGame() {
       },
     ],
   } as const);
-  const playerIds = manifest.literals.playerIds;
+  const playerIds = [asPlayerId("player-1"), asPlayerId("player-2")] as const;
   const playerIdSchema = manifest.ids.playerId;
   const contract = createModel({
     manifest,
@@ -69,8 +70,9 @@ function createScenarioGame() {
     .where({
       id: "own-open-cell",
       errorCode: "CELL_NOT_AVAILABLE",
-      test: ({ playerId, target }) =>
-        target.playerId === playerId && target.spaceId === "cell-a",
+      test: ({ playerId, target, q }) =>
+        q.board(target.boardId).state.playerId === playerId &&
+        target.spaceId === "cell-a",
     })
     .build();
   return contract.assemble({
@@ -659,8 +661,7 @@ describe("scenario inspection and exploration", () => {
       interactionId: "markCell",
       params: {
         cell: {
-          boardId: "survey-grid",
-          playerId: { seat: 0 },
+          boardId: perPlayerInstanceId("board", "survey-grid", "player-1"),
           spaceId: "cell-a",
         },
       },

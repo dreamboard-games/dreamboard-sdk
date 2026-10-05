@@ -1,3 +1,5 @@
+import { asPlayerId } from "../per-player.js";
+import { parsePerPlayerInstanceId } from "../../shared/domain/per-player-instance.js";
 import * as z from "zod";
 import type { FieldSchemaJson } from "../../shared/domain/contracts.js";
 import {
@@ -33,6 +35,11 @@ export function createTableSchema(
   ids: Ids,
   definitions: ZoneDefinitions,
 ) {
+  const membership = (values: readonly string[]): z.ZodType<string> =>
+    values.length ? z.enum(values) : z.never();
+  const activeBoardId = membership(analysis.boardIds);
+  const activeCardId = membership(analysis.cardIds);
+  const activePlayerId = membership(analysis.playerIds).transform(asPlayerId);
   const unknownRecordSchema = z.record(z.string(), z.unknown());
   const resolveStatic = createFieldValidatorResolver((boardId) =>
     fieldReferenceContext(analysis, "manifest", boardId),
@@ -83,7 +90,7 @@ export function createTableSchema(
         id: z.literal(id),
         pieceTypeId: z.literal(type),
         pieceName: z.string().nullish(),
-        ownerId: ids.playerId.nullish(),
+        ownerId: activePlayerId.nullish(),
         properties: objectSchema(analysis.pieceTypeSchemasById.get(type)),
       });
     },
@@ -98,7 +105,7 @@ export function createTableSchema(
         id: z.literal(id),
         dieTypeId: z.literal(type),
         dieName: z.string().nullish(),
-        ownerId: ids.playerId.nullish(),
+        ownerId: activePlayerId.nullish(),
         sides: z.literal(
           analysis.manifest.dieTypes?.find((die) => die.id === type)?.sides ??
             6,
@@ -157,12 +164,12 @@ export function createTableSchema(
     fields: unknownRecordSchema,
   });
   const runtimeGenericBoardStateSchema = z.object({
-    id: ids.boardId,
+    id: activeBoardId,
     baseId: ids.boardBaseId,
     layout: z.literal("generic"),
     typeId: ids.boardTypeId.nullable().optional(),
     scope: z.enum(["shared", "perPlayer"]),
-    playerId: ids.playerId.nullable().optional(),
+    playerId: activePlayerId.nullable().optional(),
     fields: unknownRecordSchema,
     // T220: per-board state.spaces is loose-keyed by string. See the
     // codegen-template comment in renderGenericBoardStateSchema for
@@ -177,7 +184,7 @@ export function createTableSchema(
     spaceIds: z.array(ids.spaceId).min(1).max(2),
     typeId: ids.edgeTypeId.nullable().optional(),
     label: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
+    ownerId: activePlayerId.nullable().optional(),
     fields: unknownRecordSchema,
   });
   const hexVertexStateSchema = z.object({
@@ -185,7 +192,7 @@ export function createTableSchema(
     spaceIds: z.array(ids.spaceId).min(1).max(3),
     typeId: ids.vertexTypeId.nullable().optional(),
     label: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
+    ownerId: activePlayerId.nullable().optional(),
     fields: unknownRecordSchema,
   });
   const squareVertexStateSchema = z.object({
@@ -193,7 +200,7 @@ export function createTableSchema(
     spaceIds: z.array(ids.spaceId).min(1).max(4),
     typeId: ids.vertexTypeId.nullable().optional(),
     label: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
+    ownerId: activePlayerId.nullable().optional(),
     fields: unknownRecordSchema,
   });
   const runtimeHexBoardStateSchema = runtimeGenericBoardStateSchema.extend({
@@ -218,10 +225,11 @@ export function createTableSchema(
   const boards = analysis.analyzedBoards.flatMap((board) =>
     board.runtimeBoardIds.map((id) => {
       const base = {
-        id:
+        id: z.literal(id),
+        playerId:
           board.board.scope === "perPlayer"
-            ? z.templateLiteral([board.board.id, ":", z.string().min(1)])
-            : z.literal(id),
+            ? z.literal(parsePerPlayerInstanceId(id)?.playerId)
+            : z.null(),
         baseId: z.literal(board.board.id),
         scope: z.literal(board.board.scope),
         fields: objectSchema(board.boardFieldsSchema),
@@ -305,17 +313,12 @@ export function createTableSchema(
       };
     }),
   );
-  const boardCollection = (entries: typeof boards) => {
-    const shared = entries.filter((board) => board.scope === "shared");
-    const scoped = entries
-      .filter((board) => board.scope === "perPlayer")
-      .map((board) => board.schema);
-    return shape(
-      shared,
+  const boardCollection = (entries: typeof boards) =>
+    shape(
+      entries,
       (board) => board.id,
       (board) => board.schema,
-    ).catchall(scoped.length ? z.union(scoped) : z.never());
-  };
+    ).strict();
   const boardStateByIdSchema = boardCollection(boards);
   const hexBoardStateByIdSchema = boardCollection(
     boards.filter((board) => board.layout === "hex"),
@@ -328,7 +331,7 @@ export function createTableSchema(
     ReturnType<typeof createFieldValidatorResolver> | undefined;
   return z
     .object({
-      playerOrder: z.array(ids.playerId),
+      playerOrder: z.array(activePlayerId),
       zones: z.record(z.string(), z.record(z.string(), z.array(z.string()))),
       cards: cardStateByIdSchema,
       pieces: pieceStateByIdSchema,
@@ -341,46 +344,46 @@ export function createTableSchema(
               type: z.literal("InZone"),
               zoneId: ids.zoneId,
               hostId: z.string(),
-              playedBy: ids.playerId.nullable(),
+              playedBy: activePlayerId.nullable(),
             })
             .strict(),
           z.object({
             type: z.literal("OnSpace"),
-            boardId: ids.boardId,
+            boardId: activeBoardId,
             spaceId: ids.spaceId,
             position: z.number().int().nullable().optional(),
           }),
           z.object({
             type: z.literal("InContainer"),
-            boardId: ids.boardId,
+            boardId: activeBoardId,
             containerId: ids.boardContainerId,
             position: z.number().int().nullable().optional(),
           }),
           z.object({
             type: z.literal("OnEdge"),
-            boardId: ids.boardId,
+            boardId: activeBoardId,
             edgeId: ids.edgeId,
             position: z.number().int().nullable().optional(),
           }),
           z.object({
             type: z.literal("OnVertex"),
-            boardId: ids.boardId,
+            boardId: activeBoardId,
             vertexId: ids.vertexId,
             position: z.number().int().nullable().optional(),
           }),
           slotLocationSchema,
         ]),
       ),
-      ownerOfCard: z.record(ids.cardId, ids.playerId.nullable()),
+      ownerOfCard: z.record(activeCardId, activePlayerId.nullable()),
       visibility: z.record(
-        ids.cardId,
+        activeCardId,
         z.object({
           faceUp: z.boolean(),
-          visibleTo: z.array(ids.playerId).nullable().optional(),
+          visibleTo: z.array(activePlayerId).nullable().optional(),
         }),
       ),
       resources: z.record(
-        ids.playerId,
+        activePlayerId,
         z.record(ids.resourceId, z.number().int()),
       ),
       boards: z.object({
@@ -394,7 +397,7 @@ export function createTableSchema(
     })
     .strict()
     .superRefine((table, context) => {
-      const players = new Set(table.playerOrder);
+      const players = new Set<string>(table.playerOrder);
       if (players.size !== table.playerOrder.length) {
         context.addIssue({
           code: "custom",

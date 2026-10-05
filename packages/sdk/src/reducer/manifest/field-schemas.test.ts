@@ -1,3 +1,4 @@
+import { perPlayerInstanceId } from "../../shared/domain/per-player-instance.js";
 import { asPlayerId } from "../per-player";
 import type { FieldSchemaJson } from "../../shared/domain/contracts";
 import * as z from "zod";
@@ -110,8 +111,14 @@ test("default callbacks are sampled once and exported as concrete JSON", () => {
   expect(calls).toBe(1);
   expect(JSON.parse(JSON.stringify(defined))).toEqual(defined);
   const compiled = compileManifest(defined);
-  expect(compiled.createInitialTable().pieces.token.properties.n).toBe(1);
-  expect(compiled.createInitialTable().pieces.token.properties.n).toBe(1);
+  expect(
+    compiled.createInitialTable({ playerIds: ["player-1", "player-2"] }).pieces
+      .token.properties.n,
+  ).toBe(1);
+  expect(
+    compiled.createInitialTable({ playerIds: ["player-1", "player-2"] }).pieces
+      .token.properties.n,
+  ).toBe(1);
   expect(calls).toBe(1);
 });
 
@@ -320,7 +327,9 @@ test("custom roster board fields resolve within the instantiated board's definit
   const compiled = compileManifest(source);
   const table = compiled.createInitialTable({ playerIds: ["alice"] });
   expect(compiled.tableSchema.safeParse(table).success).toBe(true);
-  table.boards.byId["personal:alice"].fields.selected = "other";
+  table.boards.byId[
+    perPlayerInstanceId("board", "personal", "alice")
+  ].fields.selected = "other";
   expect(compiled.tableSchema.safeParse(table).success).toBe(false);
 });
 

@@ -1,7 +1,7 @@
 import { emptyIntersection } from "../eligibility";
 import {
   appendHistory,
-  detachedPiece,
+  supplyPiece,
   setupPlayerId,
   systemEvent,
 } from "../reducer-support";
@@ -20,12 +20,12 @@ const placeStartingCamp = setupCamp.interaction({
     {
       id: "camp-piece-available",
       errorCode: "CAMP_PIECES_EXHAUSTED",
-      validate: ({ state, input }) =>
-        detachedPiece(state, input.playerId, "camp") !== null,
+      validate: ({ input, q }) =>
+        supplyPiece(q, input.playerId, "camp") !== null,
     },
   ],
-  reduce({ state, tx, input }) {
-    const campId = detachedPiece(state, input.playerId, "camp");
+  reduce({ tx, input, q }) {
+    const campId = supplyPiece(q, input.playerId, "camp");
     if (!campId) throw new Error("Starting camp piece is unavailable.");
     tx.moveComponentToVertex({
       componentId: campId,

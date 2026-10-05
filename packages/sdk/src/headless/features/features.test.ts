@@ -1,3 +1,4 @@
+import { perPlayerInstanceId } from "../../shared/domain/per-player-instance.js";
 import { RuntimeJsonSchema } from "../../shared/runtime-json.js";
 import { describe, expect, it, vi } from "vitest";
 import { createGameInstance, AmbiguousTargetError } from "../instance.js";
@@ -96,10 +97,13 @@ function source(board: RuntimeBoardState = hexBoard()) {
                 type: "boardTarget",
                 projection: "resolved",
                 targetKind: "space",
-                boardId: "island",
-                valueKind: "player-board-space",
+                boardBaseId: "island",
+                valueKind: "board-space",
                 eligibleTargets: [
-                  { boardId: "island", playerId: "alice", spaceId: "center" },
+                  {
+                    boardId: perPlayerInstanceId("board", "island", "alice"),
+                    spaceId: "center",
+                  },
                 ],
               },
             }
@@ -224,8 +228,12 @@ describe("headless features", () => {
   });
 
   it("keeps hex boundary identities and round-trips origin plus viewport coordinates", () => {
-    const { game } = setup(hexBoard("island:alice", "alice"));
-    const board = game.boards.get("island:alice");
+    const { game } = setup(
+      hexBoard(perPlayerInstanceId("board", "island", "alice"), "alice"),
+    );
+    const board = game.boards.get(
+      perPlayerInstanceId("board", "island", "alice"),
+    );
     expect(board.game).toBe(game);
     const layout = board.getLayout({
       hexSize: 24,
@@ -246,12 +254,15 @@ describe("headless features", () => {
     expect(cell.getIsSelectable()).toBe(true);
     cell.getSelectHandler()();
     expect(game.state.drafts["play.move"]).toMatchObject({
-      space: { boardId: "island", playerId: "alice", spaceId: "center" },
+      space: {
+        boardId: perPlayerInstanceId("board", "island", "alice"),
+        spaceId: "center",
+      },
     });
     expect(cell.getIsSelected()).toBe(false);
     expect(
       game.boards
-        .get("island:alice")
+        .get(perPlayerInstanceId("board", "island", "alice"))
         .getLayout({ hexSize: 24 })
         .getSpaces()[0]
         .getIsSelected(),
@@ -562,9 +573,11 @@ describe("headless features", () => {
     game.dispose();
   });
   it("does not route a per-player target absent from its projected domain", () => {
-    const { game } = setup(hexBoard("island:bob", "bob"));
+    const { game } = setup(
+      hexBoard(perPlayerInstanceId("board", "island", "bob"), "bob"),
+    );
     const cell = game.boards
-      .get("island:bob")
+      .get(perPlayerInstanceId("board", "island", "bob"))
       .getLayout({ hexSize: 10 })
       .getSpaces()[0];
     expect(cell.getIsSelectable()).toBe(false);
@@ -673,7 +686,10 @@ it.each(["shared", "perPlayer"] as const)(
   "selects generic %s spaces without constructing geometry",
   (scope) => {
     const board: RuntimeBoardState = {
-      id: scope === "shared" ? "island" : "island:alice",
+      id:
+        scope === "shared"
+          ? "island"
+          : perPlayerInstanceId("board", "island", "alice"),
       baseId: "island",
       playerId: scope === "perPlayer" ? "alice" : null,
       scope,
@@ -693,8 +709,7 @@ it.each(["shared", "perPlayer"] as const)(
         scope === "shared"
           ? "center"
           : {
-              boardId: "island",
-              playerId: "alice",
+              boardId: perPlayerInstanceId("board", "island", "alice"),
               spaceId: "center",
             },
     });

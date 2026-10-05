@@ -1,8 +1,9 @@
+import { perPlayerInstanceId } from "../src/shared/domain/per-player-instance.js";
 import { createGame } from "../src/reducer.js";
 import { resolveScenarioCommandParams } from "../src/testing/scenario-player-refs.js";
 import { z } from "zod";
 import { many } from "../src/reducer/inputs/many.js";
-import type { PlayerSpaceInputSchema } from "../src/reducer/inputs/boardInput.js";
+import type { BoardSpaceInputSchema } from "../src/reducer/inputs/boardInput.js";
 import { markManifestScopedSchema } from "../src/reducer/model/manifest.js";
 import type { ReducerBundle } from "../src/reducer.js";
 import * as testingFacade from "../src/testing.js";
@@ -131,16 +132,15 @@ const manyRuntimeIdsAreRejected: ScenarioSchemaOutput<
   "player-1",
 ];
 
-type PlayerSpace = ScenarioSchemaOutput<PlayerSpaceInputSchema<"mat">>;
+type PlayerSpace = ScenarioSchemaOutput<BoardSpaceInputSchema>;
 const playerSpace: PlayerSpace = {
-  boardId: "mat",
-  playerId: { seat: 1 },
+  boardId: '@db/["board","mat","player-2"]',
   spaceId: "slot-a",
 };
 const playerSpaceRuntimeIdIsRejected: PlayerSpace = {
   ...playerSpace,
-  // @ts-expect-error player-board-space uses the same semantic seat reference.
-  playerId: "player-2",
+  // @ts-expect-error Canonical board identity is a string, not a seat reference.
+  boardId: { seat: 1 },
 };
 
 const { defineScenario } = createScenarioAuthoring(game);

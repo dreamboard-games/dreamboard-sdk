@@ -733,7 +733,7 @@ const collectedPlayerSpace = boardInput.playerSpace({
 type _PlayerSpaceSyntax = Expect<
   Equal<
     z.infer<typeof collectedPlayerSpace.schema>,
-    { boardId: "mat"; playerId: string; spaceId: string }
+    { boardId: string; spaceId: string }
   >
 >;
 type _PlayerSpaceValue = Expect<

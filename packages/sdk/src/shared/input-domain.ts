@@ -1,7 +1,4 @@
-import {
-  isPlayerBoardSpaceTarget,
-  samePlayerBoardSpaceTarget,
-} from "./board-target";
+import { isBoardSpaceTarget, sameBoardSpaceTarget } from "./board-target";
 import type {
   InputDomainDescriptor,
   InputSelectionDescriptor,
@@ -117,10 +114,10 @@ export function inputTargetInDomain(
         typeof value === "string" && domain.eligibleTargets.includes(value)
       );
     case "boardTarget":
-      return domain.valueKind === "player-board-space"
-        ? isPlayerBoardSpaceTarget(value) &&
+      return domain.valueKind === "board-space"
+        ? isBoardSpaceTarget(value) &&
             domain.eligibleTargets.some((candidate) =>
-              samePlayerBoardSpaceTarget(candidate, value),
+              sameBoardSpaceTarget(candidate, value),
             )
         : typeof value === "string" && domain.eligibleTargets.includes(value);
     default:
@@ -154,8 +151,8 @@ function ineligibleMessage(domain: InputDomainDescriptor): string {
 /** Matches the reducer's JSON value identity for projected distinct selections. */
 export function inputValueKey(value: unknown): string {
   if (value === null) return "null";
-  if (isPlayerBoardSpaceTarget(value))
-    return `player-board-space:${JSON.stringify([value.boardId, value.playerId, value.spaceId])}`;
+  if (isBoardSpaceTarget(value))
+    return `board-space:${JSON.stringify([value.boardId, value.spaceId])}`;
   switch (typeof value) {
     case "string":
       return `string:${value}`;

@@ -54,6 +54,20 @@ export type IngressRuntimeCodec<
       PhaseName
     >["table"];
   };
+  /** Check live membership before invoking authored callbacks or state schemas. */
+  isStatePlayer: (rawState: unknown, playerId: string) => boolean;
+  parseStatePerspectives: (
+    rawState: unknown,
+    playerIds: readonly string[],
+  ) => PlayerIdOfState<
+    ReducerStateForConfig<
+      Table,
+      PublicSchema,
+      PrivateSchema,
+      HiddenSchema,
+      PhaseName
+    >
+  >[];
   parseState: (
     rawState: unknown,
   ) => ReducerSessionForConfig<

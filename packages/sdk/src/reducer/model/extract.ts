@@ -177,10 +177,12 @@ export type CardTypeOfTable<Table> = Table extends {
 export type CardIdOfState<State> = CardIdOfTable<TableOfState<State>>;
 export type CardTypeOfState<State> = CardTypeOfTable<TableOfState<State>>;
 export type CardIdOfManifest<Manifest> = Manifest extends {
-  literals: { cardIds: readonly (infer CardId)[] };
+  ids: { cardId: z.ZodType<infer Id> };
 }
-  ? Extract<CardId, string>
-  : string;
+  ? Extract<Id, string>
+  : Manifest extends { literals: { cardIds: readonly (infer Id)[] } }
+    ? Extract<Id, string>
+    : string;
 export type BoardMapOfTable<Table> = Table extends {
   boards: { byId: infer Boards };
 }
@@ -597,10 +599,12 @@ export type PlayerZoneIdOfState<State> = PlayerZoneIdOfTable<
   TableOfState<State>
 >;
 export type BoardIdOfManifest<Manifest> = Manifest extends {
-  literals: { boardIds: readonly (infer BoardId)[] };
+  ids: { boardId: z.ZodType<infer Id> };
 }
-  ? Extract<BoardId, string>
-  : string;
+  ? Extract<Id, string>
+  : Manifest extends { literals: { boardIds: readonly (infer Id)[] } }
+    ? Extract<Id, string>
+    : string;
 export type BoardLayoutOfManifest<Manifest> = Manifest extends {
   literals: { boardLayouts: readonly (infer BoardLayout)[] };
 }
@@ -647,15 +651,19 @@ export type SpaceTypeIdOfManifest<Manifest> = Manifest extends {
   ? Extract<SpaceTypeId, string>
   : string;
 export type PieceIdOfManifest<Manifest> = Manifest extends {
-  literals: { pieceIds: readonly (infer PieceId)[] };
+  ids: { pieceId: z.ZodType<infer Id> };
 }
-  ? Extract<PieceId, string>
-  : string;
+  ? Extract<Id, string>
+  : Manifest extends { literals: { pieceIds: readonly (infer Id)[] } }
+    ? Extract<Id, string>
+    : string;
 export type DieIdOfManifest<Manifest> = Manifest extends {
-  literals: { dieIds: readonly (infer DieId)[] };
+  ids: { dieId: z.ZodType<infer Id> };
 }
-  ? Extract<DieId, string>
-  : string;
+  ? Extract<Id, string>
+  : Manifest extends { literals: { dieIds: readonly (infer Id)[] } }
+    ? Extract<Id, string>
+    : string;
 export type ManifestOf<Source> = Source extends { contract: infer Contract }
   ? ManifestOf<Contract>
   : Source extends { manifest: infer Manifest }

@@ -248,8 +248,7 @@ test("preserves optional structural metadata across all board layouts", () => {
         name: "Named piece",
         typeId: "piece",
         count: 1,
-        ownerId: "player-1",
-        visibility: { faceUp: false, visibleTo: ["player-1"] },
+        visibility: { faceUp: false },
       },
     ],
     dieTypes: [
@@ -266,7 +265,6 @@ test("preserves optional structural metadata across all board layouts", () => {
         name: "Named die",
         typeId: "die",
         count: 1,
-        ownerId: "player-1",
         visibility: { faceUp: true },
       },
     ],

@@ -1,4 +1,4 @@
-import type { PlayerBoardSpaceTarget } from "../shared/board-target.js";
+import type { BoardSpaceTarget } from "../shared/board-target.js";
 import type {
   BoardIdOfTable,
   BoardStateOfTable,
@@ -6,7 +6,6 @@ import type {
   TiledBoardIdOfTable,
   TiledEdgeIdOfTable,
   TiledVertexIdOfTable,
-  PlayerIdOfTable,
 } from "../reducer/model/extract.js";
 import type {
   InputKey,
@@ -24,9 +23,9 @@ export type RuntimeBoardTarget =
       readonly value: string;
     }
   | {
-      readonly valueKind: "player-board-space";
+      readonly valueKind: "board-space";
       readonly kind: "space";
-      readonly value: PlayerBoardSpaceTarget;
+      readonly value: BoardSpaceTarget;
     };
 export type RuntimeSelectionTarget =
   RuntimeBoardTarget | { readonly kind: "card"; readonly value: string };
@@ -65,19 +64,15 @@ type TargetOnBoard<Table, B extends BoardIdOfTable<Table>> =
     ))
   | (BoardStateOfTable<Table, B> extends {
       scope: "perPlayer";
-      baseId: infer Base extends string;
+      baseId: string;
     }
       ? {
-          readonly valueKind: "player-board-space";
+          readonly valueKind: "board-space";
           readonly kind: "space";
-          readonly value: PlayerBoardSpaceTarget<
-            Base,
-            SpaceIdOfTable<Table, B>,
-            PlayerIdOfTable<Table>
-          >;
+          readonly value: BoardSpaceTarget<B, SpaceIdOfTable<Table, B>>;
         }
       : never);
-/** One target identity; player-space tuples already contain their board identity. */
+/** One target identity; board-space targets already contain their board identity. */
 export type BoardTarget<G> = [TableOfGame<G>] extends [never]
   ? RuntimeBoardTarget
   : {
