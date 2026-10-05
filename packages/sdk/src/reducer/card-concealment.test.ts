@@ -221,3 +221,166 @@ test("only card inputs name cards by position", async () => {
   ).toEqual({ accepted: true });
   source.dispose();
 });
+
+function cargoGame() {
+  const model = createGame({
+    manifest: {
+      players: { minPlayers: 2, maxPlayers: 2 },
+      zones: [
+        {
+          id: "cargo",
+          name: "Cargo",
+          attachedTo: { pieceType: "ship" },
+          visibility: "ownerOnly",
+        },
+      ],
+      pieceTypes: [
+        { id: "ship", name: "Ship" },
+        { id: "crate", name: "Crate" },
+      ],
+      pieceSeeds: [
+        { id: "vessel", typeId: "ship" },
+        {
+          id: "parcel",
+          typeId: "crate",
+          home: { type: "zone", zoneId: "cargo", component: "vessel" },
+        },
+      ],
+      cardSets: [
+        {
+          id: "cards",
+          name: "Cards",
+          cardSchema: z.object({}),
+          defaultHome: { type: "zone", zoneId: "cargo", component: "vessel" },
+          cards: [card("treasure")],
+        },
+      ],
+    },
+    phases: { play: z.object({}) },
+    state: {
+      public: z.object({}),
+      private: z.object({}),
+      hidden: z.object({}),
+    },
+  });
+  const play = model.phase("play");
+  return model.assemble({
+    initial: { public: () => ({}) },
+    initialPhase: "play",
+    phases: {
+      play: play.define({
+        kind: "player",
+        initialState: () => ({}),
+        enter({ tx, q }) {
+          tx.setComponentOwner({
+            componentId: "vessel",
+            ownerId: q.player.order()[0],
+          });
+          tx.setActivePlayers([]);
+        },
+        interactions: {
+          selectCargo: play.interaction({
+            inputs: { cardId: play.inputs.card({ from: ["cargo"] }) },
+            reduce() {},
+          }),
+          transfer: play.interaction({
+            inputs: {},
+            reduce({ tx, q }) {
+              tx.setComponentOwner({
+                componentId: "vessel",
+                ownerId: q.player.order()[1],
+              });
+            },
+          }),
+          abandon: play.interaction({
+            inputs: {},
+            reduce({ tx }) {
+              tx.setComponentOwner({ componentId: "vessel", ownerId: null });
+            },
+          }),
+          cover: play.interaction({
+            inputs: {},
+            reduce({ tx }) {
+              tx.flipCard({ cardId: "treasure", faceUp: false });
+            },
+          }),
+        },
+      }),
+    },
+    view: model.view(() => ({})),
+  });
+}
+
+test("attached cargo follows its host's current owner without granting card visibility", async () => {
+  for (const faceDown of [false, true]) {
+    const game = cargoGame();
+    const source = await localSource(game, { players: 2, seed: 1 });
+    const instance = createGameInstance<typeof game>()({ source });
+    try {
+      // Reducer cargo also contains a piece; the UI facade presents cards only.
+      expect(source.checkpoint().state.domain).toMatchObject({
+        table: { zones: { cargo: { vessel: ["treasure", "parcel"] } } },
+      });
+      expect(instance.zones.get("cargo", "vessel").count).toBe(1);
+      expect(instance.zones.get("cargo", "vessel").getIsEmpty()).toBe(false);
+      expect(source.inspect().frame.zones.cargo.vessel.cardIds).toEqual([
+        "treasure",
+      ]);
+      source.switchSeat("player-2");
+      expect(source.inspect().frame.zones.cargo).toBeUndefined();
+      expect(
+        JSON.stringify(source.inspect().frame.availableInteractions),
+      ).not.toContain("treasure");
+      if (faceDown)
+        await source.apply({
+          actor: { seat: 0 },
+          interactionId: "cover",
+          params: {},
+        });
+      expect(
+        await source.apply({
+          actor: { seat: 0 },
+          interactionId: "transfer",
+          params: {},
+        }),
+      ).toEqual({ accepted: true });
+      const transferred = source.checkpoint();
+      const cargo = source.inspect().frame.zones.cargo.vessel;
+      expect(cargo.cardIds).toEqual([
+        faceDown ? 'hidden:["cargo","vessel",0]' : "treasure",
+      ]);
+      expect(Object.keys(cargo.cardViewsById)).toEqual(
+        faceDown ? [] : ["treasure"],
+      );
+      source.switchSeat("player-1");
+      expect(source.inspect().frame.zones.cargo).toBeUndefined();
+      expect(
+        JSON.stringify(source.inspect().frame.availableInteractions),
+      ).not.toContain("treasure");
+      expect(
+        await source.apply({
+          actor: { seat: 0 },
+          interactionId: "abandon",
+          params: {},
+        }),
+      ).toEqual({ accepted: true });
+      for (const player of ["player-1", "player-2"]) {
+        source.switchSeat(player);
+        expect(source.inspect().frame.zones.cargo).toBeUndefined();
+        expect(
+          JSON.stringify(source.inspect().frame.availableInteractions),
+        ).not.toContain("treasure");
+      }
+      source.restore(transferred);
+      source.switchSeat("player-1");
+      expect(source.inspect().frame.zones.cargo).toBeUndefined();
+      source.switchSeat("player-2");
+      expect(source.inspect().frame.zones.cargo.vessel.cardIds).toEqual(
+        cargo.cardIds,
+      );
+    } finally {
+      instance.dispose();
+      source.dispose();
+    }
+  }
+});

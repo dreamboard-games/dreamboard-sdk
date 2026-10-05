@@ -123,3 +123,9 @@ export {
   type PerPlayerInstanceId,
   type PerPlayerInstanceFamily,
 } from "./shared/domain/per-player-instance.js";
+
+export {
+  boardSpaceHostId,
+  parseBoardSpaceHostId,
+  type BoardSpaceHostId,
+} from "./shared/domain/board-space-host.js";

@@ -4,7 +4,6 @@ import {
   createHexTopologyCache,
 } from "../../shared/hex-board";
 import type {
-  BoardContainerIdOfTable,
   BoardIdOfTable,
   BoardTypeIdOfTable,
   ComponentIdOfTable,
@@ -137,22 +136,6 @@ export function getSquareSpace<
     Table["boards"]["byId"][BoardId],
     { layout: "square" }
   >["spaces"][SpaceId];
-}
-
-export function getContainer<
-  Table extends RuntimeTableRecord,
-  BoardId extends BoardIdOfTable<NoInfer<Table>>,
-  ContainerId extends BoardContainerIdOfTable<NoInfer<Table>, BoardId>,
->(
-  table: Table,
-  boardId: BoardId,
-  containerId: ContainerId,
-): Table["boards"]["byId"][BoardId]["containers"][ContainerId] {
-  return requireLookup(
-    getBoard(table, boardId).containers[containerId],
-    `Container on board ${boardId}`,
-    containerId,
-  ) as Table["boards"]["byId"][BoardId]["containers"][ContainerId];
 }
 
 export function getEdge<
@@ -554,40 +537,13 @@ export function getComponentsOnSpace<
   boardId: BoardId,
   spaceId: SpaceId,
 ): ComponentIdOfTable<Table>[] {
-  const zoneId = getSpace(table, boardId, spaceId).zoneId;
+  getSpace(table, boardId, spaceId);
   return orderedComponentIdsForLocation(
     table,
     (location) =>
-      (location.type === "OnSpace" &&
-        location.boardId === boardId &&
-        location.spaceId === spaceId) ||
-      (location.type === "InZone" &&
-        typeof zoneId === "string" &&
-        zoneId.length > 0 &&
-        location.zoneId === zoneId),
-  ) as ComponentIdOfTable<Table>[];
-}
-
-export function getComponentsInContainer<
-  Table extends RuntimeTableRecord,
-  BoardId extends BoardIdOfTable<NoInfer<Table>>,
-  ContainerId extends BoardContainerIdOfTable<NoInfer<Table>, BoardId>,
->(
-  table: Table,
-  boardId: BoardId,
-  containerId: ContainerId,
-): ComponentIdOfTable<Table>[] {
-  const zoneId = getContainer(table, boardId, containerId).zoneId;
-  return orderedComponentIdsForLocation(
-    table,
-    (location) =>
-      (location.type === "InContainer" &&
-        location.boardId === boardId &&
-        location.containerId === containerId) ||
-      (location.type === "InZone" &&
-        typeof zoneId === "string" &&
-        zoneId.length > 0 &&
-        location.zoneId === zoneId),
+      location.type === "OnSpace" &&
+      location.boardId === boardId &&
+      location.spaceId === spaceId,
   ) as ComponentIdOfTable<Table>[];
 }
 
@@ -633,9 +589,6 @@ export function bindBoardQueries<
     space: <SpaceId extends SpaceIdOfTable<Table, BoardId>>(id: SpaceId) => {
       return getSpace(table, boardId, id);
     },
-    container: <ContainerId extends BoardContainerIdOfTable<Table, BoardId>>(
-      id: ContainerId,
-    ) => getContainer(table, boardId, id),
     spacesByType: <TypeId extends SpaceTypeIdOfTable<Table, BoardId>>(
       id: TypeId,
     ) => getSpacesByTypeId(table, boardId, id),
@@ -654,8 +607,6 @@ export function bindBoardQueries<
     ) => getSpaceDistance(table, boardId, from, to),
     spaceOccupants: (id: SpaceIdOfTable<Table, BoardId>) =>
       getComponentsOnSpace(table, boardId, id),
-    containerOccupants: (id: BoardContainerIdOfTable<Table, BoardId>) =>
-      getComponentsInContainer(table, boardId, id),
   };
   if (state.layout === "hex") {
     const geometry = geometryOf(state);
@@ -725,9 +676,6 @@ type CommonBoardQueries<
 > = {
   state: Board;
   space<Id extends SpaceId<Board>>(id: Id): Board["spaces"][Id];
-  container<Id extends keyof Board["containers"] & string>(
-    id: Id,
-  ): Board["containers"][Id];
   spacesByType(
     id: Extract<Board["spaces"][keyof Board["spaces"]]["typeId"], string>,
   ): SpaceId<Board>[];
@@ -738,7 +686,6 @@ type CommonBoardQueries<
   neighbors(id: SpaceId<Board>): SpaceId<Board>[];
   distance(from: SpaceId<Board>, to: SpaceId<Board>): number;
   spaceOccupants(id: SpaceId<Board>): ComponentId[];
-  containerOccupants(id: keyof Board["containers"] & string): ComponentId[];
 };
 type HexQueries<Board extends RuntimeBoardState> = ReturnType<
   typeof createHexTopology<Extract<Board["baseId"], string>, SpaceId<Board>>

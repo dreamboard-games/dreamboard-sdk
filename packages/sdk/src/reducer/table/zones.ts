@@ -1,3 +1,7 @@
+import {
+  boardSpaceHostId,
+  parseBoardSpaceHostId,
+} from "../../shared/domain/board-space-host";
 import type {
   RuntimeTableRecord,
   ZoneDefinition,
@@ -5,12 +9,192 @@ import type {
   ZoneRef,
 } from "../model";
 
-type ZoneTable = Pick<
-  RuntimeTableRecord,
-  "playerOrder" | "zones" | "cards" | "pieces" | "dice" | "componentLocations"
+/** Only state needed to admit zone hosts, memberships, and containment. */
+export type ZoneTable = {
+  readonly playerOrder: readonly string[];
+  readonly zones: Record<string, Record<string, string[]>>;
+  readonly cards: Record<string, { id: string; cardSetId: string }>;
+  readonly pieces: Record<
+    string,
+    { id: string; pieceTypeId: string; ownerId?: string | null }
+  >;
+  readonly dice: Record<
+    string,
+    { id: string; dieTypeId: string; ownerId?: string | null }
+  >;
+  readonly componentLocations: Readonly<
+    Record<string, RuntimeTableRecord["componentLocations"][string]>
+  >;
+  readonly boards: {
+    readonly byId: Record<
+      string,
+      {
+        id: string;
+        baseId?: string;
+        scope: "shared" | "perPlayer";
+        playerId?: string | null;
+        spaces: Record<string, unknown>;
+      }
+    >;
+  };
+};
+
+export type ZoneHostTable = Pick<
+  ZoneTable,
+  "playerOrder" | "boards" | "pieces" | "dice"
 >;
 
 export type ZoneInput = { readonly zoneId: string; readonly hostId?: string };
+
+/** The actual state graph, rather than identity syntax, owns host membership. */
+export function enumerateZoneHosts(
+  table: ZoneHostTable,
+  definition: ZoneDefinition,
+): readonly string[] {
+  if ("scope" in definition)
+    return definition.scope === "shared" ? ["table"] : table.playerOrder;
+  const attachment = definition.attachedTo;
+  if ("board" in attachment) {
+    const boards = Object.values(table.boards.byId).filter(
+      (board) => (board.baseId ?? board.id) === attachment.board,
+    );
+    return boards.flatMap((board) =>
+      attachment.space === undefined
+        ? [board.id]
+        : Object.hasOwn(board.spaces, attachment.space)
+          ? [boardSpaceHostId(board.id, attachment.space)]
+          : [],
+    );
+  }
+  if ("pieceType" in attachment)
+    return Object.values(table.pieces)
+      .filter((piece) => piece.pieceTypeId === attachment.pieceType)
+      .map((piece) => piece.id);
+  return Object.values(table.dice)
+    .filter((die) => die.dieTypeId === attachment.dieType)
+    .map((die) => die.id);
+}
+
+/** Resolve one live host without scanning its inventory family. */
+export function resolveZoneHost(
+  table: ZoneHostTable,
+  definition: ZoneDefinition,
+  hostId: string,
+): { owner: string | null; shared: boolean; componentId: string | null } {
+  const invalid = () => new Error(`Invalid zone host '${hostId}'.`);
+  if ("scope" in definition) {
+    if (definition.scope === "shared") {
+      if (hostId !== "table") throw invalid();
+      return { owner: null, shared: true, componentId: null };
+    }
+    if (!table.playerOrder.includes(hostId)) throw invalid();
+    return { owner: hostId, shared: false, componentId: null };
+  }
+  const attachment = definition.attachedTo;
+  if ("board" in attachment) {
+    const spaceHost =
+      attachment.space === undefined ? null : parseBoardSpaceHostId(hostId);
+    const boardId =
+      attachment.space === undefined ? hostId : spaceHost?.boardId;
+    const board =
+      boardId && Object.hasOwn(table.boards.byId, boardId)
+        ? table.boards.byId[boardId]
+        : undefined;
+    if (
+      !board ||
+      board.id !== boardId ||
+      (board.baseId ?? board.id) !== attachment.board ||
+      (attachment.space !== undefined &&
+        (spaceHost?.spaceId !== attachment.space ||
+          !Object.hasOwn(board.spaces, attachment.space)))
+    )
+      throw invalid();
+    return {
+      owner: board.scope === "perPlayer" ? (board.playerId ?? null) : null,
+      shared: board.scope === "shared",
+      componentId: null,
+    };
+  }
+  const component =
+    "pieceType" in attachment
+      ? Object.hasOwn(table.pieces, hostId) &&
+        table.pieces[hostId].pieceTypeId === attachment.pieceType
+        ? table.pieces[hostId]
+        : undefined
+      : Object.hasOwn(table.dice, hostId) &&
+          table.dice[hostId].dieTypeId === attachment.dieType
+        ? table.dice[hostId]
+        : undefined;
+  if (!component || component.id !== hostId) throw invalid();
+  return {
+    owner: component.ownerId ?? null,
+    shared: false,
+    componentId: hostId,
+  };
+}
+
+export function resolveZoneOwner(
+  table: ZoneHostTable,
+  definition: ZoneDefinition,
+  hostId: string,
+): string | null {
+  return resolveZoneHost(table, definition, hostId).owner;
+}
+
+/** Audience admission is independent from individual card face visibility. */
+export function resolveZoneAccess(
+  table: ZoneHostTable,
+  definition: ZoneDefinition,
+  hostId: string,
+  viewerId: string,
+): boolean {
+  if (definition.visibility === "public") {
+    resolveZoneHost(table, definition, hostId);
+    return true;
+  }
+  const { owner, shared } = resolveZoneHost(table, definition, hostId);
+  return (definition.visibility === "hidden" && shared) || owner === viewerId;
+}
+
+/** Validate the final parent graph before mutating any ordered memberships. */
+export function assertContainmentAcyclic(
+  table: ZoneTable,
+  definitions: ZoneDefinitions,
+  proposedLocations: Readonly<
+    Record<string, RuntimeTableRecord["componentLocations"][string]>
+  > = {},
+): void {
+  const parents = new Map<string, string>();
+  for (const [componentId, current] of Object.entries(
+    table.componentLocations,
+  )) {
+    const location = Object.hasOwn(proposedLocations, componentId)
+      ? proposedLocations[componentId]
+      : current;
+    if (location.type !== "InZone") continue;
+    const definition = Object.hasOwn(
+      definitions.zoneDefinitions,
+      location.zoneId,
+    )
+      ? definitions.zoneDefinitions[location.zoneId]
+      : undefined;
+    if (!definition) throw new Error(`Unknown zone '${location.zoneId}'.`);
+    const host = resolveZoneHost(table, definition, location.hostId);
+    if (host.componentId !== null) parents.set(componentId, host.componentId);
+  }
+  const complete = new Set<string>();
+  for (const start of parents.keys()) {
+    const chain = new Set<string>();
+    let cursor: string | undefined = start;
+    while (cursor !== undefined && !complete.has(cursor)) {
+      if (chain.has(cursor))
+        throw new Error(`Containment cycle involving component '${cursor}'.`);
+      chain.add(cursor);
+      cursor = parents.get(cursor);
+    }
+    for (const id of chain) complete.add(id);
+  }
+}
 
 /** Resolve one declared, instantiated host; never infer scope from state keys. */
 export function resolveZone(
@@ -27,17 +211,15 @@ export function resolveZone(
     : undefined;
   if (!definition) throw new Error(`Unknown zone '${zone.zoneId}'.`);
   const hostId =
-    zone.hostId ?? (definition.scope === "shared" ? "table" : undefined);
-  if (
-    !hostId ||
-    (definition.scope === "shared"
-      ? hostId !== "table"
-      : !table.playerOrder.includes(hostId))
-  )
-    throw new Error(
-      `Invalid host '${hostId ?? ""}' for zone '${zone.zoneId}'.`,
-    );
-  const hosts = table.zones[zone.zoneId];
+    zone.hostId ??
+    ("scope" in definition && definition.scope === "shared"
+      ? "table"
+      : undefined);
+  if (!hostId) throw new Error(`Invalid host '' for zone '${zone.zoneId}'.`);
+  resolveZoneHost(table, definition, hostId);
+  const hosts = Object.hasOwn(table.zones, zone.zoneId)
+    ? table.zones[zone.zoneId]
+    : undefined;
   const ids = hosts && Object.hasOwn(hosts, hostId) ? hosts[hostId] : undefined;
   if (!ids)
     throw new Error(
@@ -107,8 +289,7 @@ export function assertZoneConsistency(
       ? definitions.zoneDefinitions[zoneId]
       : undefined;
     if (!definition) throw new Error(`Unknown zone '${zoneId}'.`);
-    const expected =
-      definition.scope === "shared" ? ["table"] : table.playerOrder;
+    const expected = enumerateZoneHosts(table, definition);
     if (
       Object.keys(hosts).length !== expected.length ||
       expected.some((host) => !Object.hasOwn(hosts, host))
@@ -155,4 +336,5 @@ export function assertZoneConsistency(
     if (location.type === "InZone" && !membership.has(id))
       throw new Error(`Missing zone membership for '${id}'.`);
   }
+  assertContainmentAcyclic(table, definitions);
 }

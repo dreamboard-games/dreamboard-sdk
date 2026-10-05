@@ -23,7 +23,6 @@ const model = createGame({
         edges: [],
         vertices: [],
         relations: [],
-        containers: [],
       },
     ],
   },

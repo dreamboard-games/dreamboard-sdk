@@ -20,6 +20,7 @@ import {
   analyzeManifestStructure,
   materializeManifestTable,
   materializeManifestStaticBoards,
+  materializeEmptyZones,
 } from "./materialize";
 import { createTableSchema, type RuntimeManifestIds } from "./schema";
 import { asPlayerId } from "../per-player";
@@ -66,7 +67,6 @@ export function compileManifest<
     boardTypeIds: analysis.boardTypeIds,
     boardBaseIds: analysis.boardBaseIds,
     boardIds: analysis.boardIds,
-    boardContainerIds: analysis.boardContainerIds,
     relationTypeIds: analysis.relationTypeIds,
     edgeIds: analysis.edgeIds,
     edgeTypeIds: analysis.edgeTypeIds,
@@ -106,7 +106,6 @@ export function compileManifest<
     "boardTypeId",
     "boardBaseId",
     "boardId",
-    "boardContainerId",
     "relationTypeId",
     "edgeId",
     "edgeTypeId",
@@ -182,7 +181,9 @@ export function compileManifest<
       (source.zones ?? []).map((zone) => [
         zone.id,
         Object.freeze({
-          scope: zone.scope,
+          ...("scope" in zone
+            ? { scope: zone.scope }
+            : { attachedTo: zone.attachedTo }),
           visibility: zone.visibility ?? "public",
           allowedCardSetIds: Object.freeze([
             ...(analysis.zoneCardSetIdsById.get(zone.id) ?? []),
@@ -237,16 +238,11 @@ export function compileManifest<
     PlayerRosterSchema.parse(players).map(asPlayerId);
   const defaults = {
     zones: (players?: readonly string[]) =>
-      Object.fromEntries(
-        Object.entries(zoneDefinitions).map(([zoneId, definition]) => [
-          zoneId,
-          Object.fromEntries(
-            (definition.scope === "shared"
-              ? ["table"]
-              : resolvePlayers(players)
-            ).map((hostId) => [hostId, []]),
-          ),
-        ]),
+      materializeEmptyZones(
+        analyzeManifestStructure(
+          source,
+          PlayerRosterSchema.parse(players ?? []),
+        ),
       ),
     ownerOfCard: (players?: readonly string[]) =>
       initialCardMetadata(

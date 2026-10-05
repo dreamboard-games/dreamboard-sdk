@@ -31,16 +31,12 @@ export const DetachedHomeSpecSchema = z.strictObject({
 export const ZoneHomeSpecSchema = z.strictObject({
   type: z.literal("zone"),
   zoneId: id,
+  component: id.optional(),
 });
 export const SpaceHomeSpecSchema = z.strictObject({
   type: z.literal("space"),
   boardId: id,
   spaceId: id,
-});
-export const ContainerHomeSpecSchema = z.strictObject({
-  type: z.literal("container"),
-  boardId: id,
-  containerId: id,
 });
 export const EdgeHomeSpecSchema = z.strictObject({
   type: z.literal("edge"),
@@ -52,31 +48,12 @@ export const VertexHomeSpecSchema = z.strictObject({
   boardId: id,
   ref: BoardVertexRefSchema,
 });
-export const PieceSlotHostRefSchema = z.strictObject({
-  kind: z.literal("piece"),
-  id,
-});
-export const DieSlotHostRefSchema = z.strictObject({
-  kind: z.literal("die"),
-  id,
-});
-export const SlotHostRefSchema = z.discriminatedUnion("kind", [
-  PieceSlotHostRefSchema,
-  DieSlotHostRefSchema,
-]);
-export const SlotHomeSpecSchema = z.strictObject({
-  type: z.literal("slot"),
-  host: SlotHostRefSchema,
-  slotId: id,
-});
 export const ComponentHomeSpecSchema = z.discriminatedUnion("type", [
   DetachedHomeSpecSchema,
   ZoneHomeSpecSchema,
   SpaceHomeSpecSchema,
-  ContainerHomeSpecSchema,
   EdgeHomeSpecSchema,
   VertexHomeSpecSchema,
-  SlotHomeSpecSchema,
 ]);
 export const BoardCardSchema = z.strictObject({
   /** With multiple copies, runtime IDs expand to '{id}-1', '{id}-2', etc. */
@@ -104,13 +81,22 @@ export const CardSetDefinitionSchema = z.strictObject({
   defaultHome: ComponentHomeSpecSchema,
   cards: z.array(BoardCardSchema),
 });
-export const ZoneSpecSchema = z.strictObject({
+export const ZoneAttachmentSchema = z.union([
+  z.strictObject({ board: id }),
+  z.strictObject({ board: id, space: id }),
+  z.strictObject({ pieceType: id }),
+  z.strictObject({ dieType: id }),
+]);
+const zoneBase = {
   id,
   name: z.string(),
-  scope: TopologyScopeSchema,
   allowedCardSetIds: z.array(id).optional(),
   visibility: ZoneVisibilitySchema.optional(),
-});
+};
+export const ZoneSpecSchema = z.union([
+  z.strictObject({ ...zoneBase, scope: TopologyScopeSchema }),
+  z.strictObject({ ...zoneBase, attachedTo: ZoneAttachmentSchema }),
+]);
 export const BoardSpaceSpecSchema = z.strictObject({
   id,
   name: z.string().optional(),
@@ -123,22 +109,6 @@ export const BoardRelationSpecSchema = z.strictObject({
   fromSpaceId: id,
   toSpaceId: id,
   directed: z.boolean().optional(),
-  fields: fields.optional(),
-});
-export const BoardHostSpecSchema = z.strictObject({ type: z.literal("board") });
-export const SpaceHostSpecSchema = z.strictObject({
-  type: z.literal("space"),
-  spaceId: id,
-});
-export const BoardContainerHostSpecSchema = z.discriminatedUnion("type", [
-  BoardHostSpecSchema,
-  SpaceHostSpecSchema,
-]);
-export const BoardContainerSpecSchema = z.strictObject({
-  id,
-  name: z.string(),
-  host: BoardContainerHostSpecSchema,
-  allowedCardSetIds: z.array(id).optional(),
   fields: fields.optional(),
 });
 export const HexOrientationSchema = z.enum(["pointy", "flat"]);
@@ -228,11 +198,9 @@ const boardBase = {
   spaceFieldsSchema: fields.optional(),
   fields: fields.optional(),
 };
-const relationsAndContainers = {
+const relations = {
   relationFieldsSchema: fields.optional(),
-  containerFieldsSchema: fields.optional(),
   relations: z.array(BoardRelationSpecSchema).optional(),
-  containers: z.array(BoardContainerSpecSchema).optional(),
 };
 const latticeSchemas = {
   edgeFieldsSchema: fields.optional(),
@@ -240,7 +208,7 @@ const latticeSchemas = {
 };
 export const GenericBoardSpecSchema = z.strictObject({
   ...boardBase,
-  ...relationsAndContainers,
+  ...relations,
   layout: z.literal("generic"),
   spaces: z.array(BoardSpaceSpecSchema).optional(),
 });
@@ -262,7 +230,7 @@ export const HexBoardSpecSchema = z.strictObject({
 });
 export const SquareBoardSpecSchema = z.strictObject({
   ...boardBase,
-  ...relationsAndContainers,
+  ...relations,
   ...latticeSchemas,
   layout: z.literal("square"),
   spaces: z.array(SquareSpaceSpecSchema).optional(),
@@ -274,15 +242,10 @@ export const BoardSpecSchema = z.discriminatedUnion("layout", [
   HexBoardSpecSchema,
   SquareBoardSpecSchema,
 ]);
-export const ComponentSlotSpecSchema = z.strictObject({
-  id,
-  name: z.string().optional(),
-});
 export const PieceTypeSpecSchema = z.strictObject({
   id,
   name: z.string(),
   fieldsSchema: fields.optional(),
-  slots: z.array(ComponentSlotSpecSchema).optional(),
 });
 export const PieceSeedSpecSchema = z.strictObject({
   /** With multiple copies, runtime IDs expand to '{id}-1', '{id}-2', etc. */

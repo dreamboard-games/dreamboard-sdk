@@ -45,7 +45,6 @@ function hexBoard(id = "island", playerId?: string): RuntimeHexBoardState {
     edges: geometry.edges.map((edge) => ({ ...edge, fields: {} })),
     vertices: geometry.vertices.map((vertex) => ({ ...vertex, fields: {} })),
     relations: [],
-    containers: {},
   };
 }
 function descriptor(): InteractionDescriptor {
@@ -357,7 +356,6 @@ describe("headless features", () => {
         b: { id: "b", row: 0, col: 1, fields: {} },
       },
       relations: [],
-      containers: {},
       edges: [
         { id: "authored-edge", spaceIds: ["a", "b"], fields: {} },
         { id: "unlocated-boundary", spaceIds: ["a"], fields: {} },
@@ -385,7 +383,6 @@ describe("headless features", () => {
       fields: {},
       spaces: {},
       relations: [],
-      containers: {},
     });
     expect(generic.game.boards.get("generic").data).toMatchObject({
       id: "generic",
@@ -696,7 +693,6 @@ it.each(["shared", "perPlayer"] as const)(
       layout: "generic",
       fields: {},
       spaces: { center: { id: "center", fields: { score: 2 } } },
-      containers: {},
       relations: [],
     };
     const { game } = setup(board);

@@ -3,13 +3,11 @@ import type {
   CardCollection,
   ViewCardOfTable,
 } from "../../shared/domain/cards.js";
-import type { ViewSlotOccupant } from "../../shared/domain/slots.js";
 import type {
   ZoneIdOfTable,
   ZoneComponentsOfTable,
   ZoneHostsOfTable,
   ZoneScopeOfTable,
-  BoardContainerIdOfTable,
   BoardIdOfTable,
   CardIdOfTable,
   ComponentIdOfTable,
@@ -18,24 +16,23 @@ import type {
   ResourceBalancesOfTable,
   ResourceIdOfTable,
   SpaceIdOfTable,
-  SlotHostOfTable,
-  SlotIdOfTable,
   TableOfState,
   TiledBoardIdOfTable,
   TiledEdgeIdOfTable,
   TiledVertexIdOfTable,
 } from "./extract";
-import type {
-  RuntimeComponentLocation,
-  RuntimeSlotHostRef,
-  RuntimeTableRecord,
-} from "./table";
+import type { RuntimeComponentLocation, RuntimeTableRecord } from "./table";
 
-type ScopedZoneHostArgs<Table, Scope> = Scope extends "shared"
+type ScopedZoneHostArgs<
+  Table,
+  Z extends ZoneIdOfTable<Table>,
+  Scope,
+> = Scope extends "shared"
   ? [hostId?: "table"]
-  : [hostId: PlayerIdOfTable<Table>];
+  : [hostId: ZoneHostsOfTable<Table, Z>];
 type ZoneHostArgs<Table, Z extends ZoneIdOfTable<Table>> = ScopedZoneHostArgs<
   Table,
+  Z,
   ZoneScopeOfTable<Table, Z>
 >;
 
@@ -65,21 +62,6 @@ type CardCollectionOfTable<
     Table,
     Extract<ZoneComponentsOfTable<Table, Z>, CardIdOfTable<Table>>
   >
->;
-
-type SlotOccupantOfTable<Table extends RuntimeTableRecord> = ViewSlotOccupant<
-  ComponentIdOfTable<Table> & string,
-  PlayerIdOfTable<Table> & string,
-  string,
-  Record<string, unknown>
->;
-
-type SlotOccupantsOfTable<Table extends RuntimeTableRecord> = ReadonlyArray<
-  SlotOccupantOfTable<Table>
->;
-
-type SlotOccupantsBySlotIdOfTable<Table extends RuntimeTableRecord> = Readonly<
-  Record<string, SlotOccupantsOfTable<Table>>
 >;
 
 export type ComponentLocationOfTable<
@@ -159,29 +141,6 @@ export type ResolvedSpaceLocation<
   }[SpaceIdOfTable<Table, BoardId>];
 }[BoardIdOfTable<Table>];
 
-export type ResolvedContainerLocation<
-  Table extends RuntimeTableRecord,
-  ComponentId extends ComponentIdOfTable<Table>,
-> = {
-  [BoardId in BoardIdOfTable<Table>]: {
-    [ContainerId in BoardContainerIdOfTable<Table, BoardId>]: {
-      componentId: ComponentId;
-      boardId: BoardId;
-      board: BoardRecord<Table, BoardId>;
-      containerId: ContainerId;
-      container: Table["boards"]["byId"][BoardId]["containers"][ContainerId];
-      location: ComponentLocationByTypeOfTable<
-        Table,
-        ComponentId,
-        "InContainer"
-      > & {
-        boardId: BoardId;
-        containerId: ContainerId;
-      };
-    };
-  }[BoardContainerIdOfTable<Table, BoardId>];
-}[BoardIdOfTable<Table>];
-
 export type ResolvedEdgeLocation<
   Table extends RuntimeTableRecord,
   ComponentId extends ComponentIdOfTable<Table>,
@@ -230,29 +189,6 @@ export type ResolvedVertexLocation<
   }[TiledVertexIdOfTable<Table, BoardId>];
 }[TiledBoardIdOfTable<Table>];
 
-export type ResolvedSlotLocation<
-  Table extends RuntimeTableRecord,
-  ComponentId extends ComponentIdOfTable<Table>,
-> =
-  ComponentLocationByTypeOfTable<
-    Table,
-    ComponentId,
-    "InSlot"
-  > extends infer Location
-    ? Location extends {
-        type: "InSlot";
-        host: infer Host extends RuntimeSlotHostRef;
-        slotId: infer SlotId extends string;
-      }
-      ? {
-          componentId: ComponentId;
-          host: Host;
-          slotId: SlotId;
-          location: Location;
-        }
-      : never
-    : never;
-
 export type TableQueries<Table extends RuntimeTableRecord> = {
   board<BoardId extends BoardIdOfTable<Table>>(
     boardId: BoardId,
@@ -291,29 +227,6 @@ export type TableQueries<Table extends RuntimeTableRecord> = {
     visibility: <CardId extends CardIdOfTable<Table>>(
       cardId: CardId,
     ) => Table["visibility"][CardId];
-  };
-  slot: {
-    occupants: <Host extends SlotHostOfTable<Table>>(
-      host: Host,
-      slotId: SlotIdOfTable<Table, NoInfer<Host>>,
-    ) => SlotOccupantsOfTable<Table>;
-    occupantsByHost: (
-      host: SlotHostOfTable<Table>,
-    ) => SlotOccupantsBySlotIdOfTable<Table>;
-    pieceOccupants: <Id extends keyof Table["pieces"] & string>(
-      hostId: Id,
-      slotId: SlotIdOfTable<Table, { kind: "piece"; id: NoInfer<Id> }>,
-    ) => SlotOccupantsOfTable<Table>;
-    pieceOccupantsByHost: (
-      hostId: keyof Table["pieces"] & string,
-    ) => SlotOccupantsBySlotIdOfTable<Table>;
-    dieOccupants: <Id extends keyof Table["dice"] & string>(
-      hostId: Id,
-      slotId: SlotIdOfTable<Table, { kind: "die"; id: NoInfer<Id> }>,
-    ) => SlotOccupantsOfTable<Table>;
-    dieOccupantsByHost: (
-      hostId: keyof Table["dice"] & string,
-    ) => SlotOccupantsBySlotIdOfTable<Table>;
   };
   player: {
     /** Seating order from the manifest / setup profile. */
@@ -364,18 +277,12 @@ export type TableQueries<Table extends RuntimeTableRecord> = {
     space: <ComponentId extends ComponentIdOfTable<Table>>(
       componentId: ComponentId,
     ) => ResolvedSpaceLocation<Table, ComponentId> | null;
-    container: <ComponentId extends ComponentIdOfTable<Table>>(
-      componentId: ComponentId,
-    ) => ResolvedContainerLocation<Table, ComponentId> | null;
     edge: <ComponentId extends ComponentIdOfTable<Table>>(
       componentId: ComponentId,
     ) => ResolvedEdgeLocation<Table, ComponentId> | null;
     vertex: <ComponentId extends ComponentIdOfTable<Table>>(
       componentId: ComponentId,
     ) => ResolvedVertexLocation<Table, ComponentId> | null;
-    slot: <ComponentId extends ComponentIdOfTable<Table>>(
-      componentId: ComponentId,
-    ) => ResolvedSlotLocation<Table, ComponentId> | null;
   };
 };
 

@@ -182,6 +182,17 @@ export type TableOfGame<G> = G extends {
 }
   ? z.output<Schema>
   : never;
+/** Actual host identity admitted for one zone's attachment. */
+export type ZoneHostId<G, K extends IdOf<G, "zoneId"> = IdOf<G, "zoneId">> = [
+  TableOfGame<G>,
+] extends [never]
+  ? string
+  : TableOfGame<G> extends { zones: infer Zones }
+    ? K extends keyof Zones
+      ? Extract<keyof Zones[K], string>
+      : never
+    : never;
+
 export type BoardDataOf<G, K extends string> = [TableOfGame<G>] extends [never]
   ? ReadonlyData<import("../reducer/model/table.js").RuntimeBoardState>
   : TableOfGame<G> extends { boards: { byId: infer Boards } }
@@ -421,7 +432,7 @@ export type CardDataOf<G, K extends string> = [TableOfGame<G>] extends [never]
 
 interface CardEntity<G> {
   readonly zone: IdOf<G, "zoneId">;
-  readonly hostId: IdOf<G, "playerId"> | "table";
+  readonly hostId: ZoneHostId<G>;
   readonly index: number;
 
   readonly game: CoreInstance<G>;
@@ -467,7 +478,7 @@ export type Card<
   };
 export interface ZoneBase<G, K extends IdOf<G, "zoneId"> = IdOf<G, "zoneId">> {
   readonly id: K;
-  readonly hostId: IdOf<G, "playerId"> | "table";
+  readonly hostId: ZoneHostId<G, K>;
   readonly count: number;
   readonly game: CoreInstance<G>;
   getIsEmpty(): boolean;
@@ -526,11 +537,11 @@ export interface ReadModel<G, F extends Features = Record<never, never>> {
   readonly zones: {
     get<K extends IdOf<G, "zoneId">>(
       id: K,
-      hostId: IdOf<G, "playerId"> | "table",
+      hostId: ZoneHostId<G, NoInfer<K>>,
     ): Zone<G, F, K>;
     find<K extends IdOf<G, "zoneId">>(
       id: K,
-      hostId: IdOf<G, "playerId"> | "table",
+      hostId: ZoneHostId<G, NoInfer<K>>,
     ): Zone<G, F, K> | undefined;
     getAll(): readonly Zone<G, F>[];
   };

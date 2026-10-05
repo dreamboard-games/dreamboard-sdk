@@ -1,4 +1,4 @@
-import type { CoreInstance, IdOf, SeatCardId } from "../model.js";
+import type { CoreInstance, IdOf, SeatCardId, ZoneHostId } from "../model.js";
 import type { SourceSnapshot } from "../sources/types.js";
 
 /**
@@ -9,7 +9,7 @@ import type { SourceSnapshot } from "../sources/types.js";
 export type CardOrigin<G> =
   | {
       readonly zone: IdOf<G, "zoneId">;
-      readonly hostId: IdOf<G, "playerId"> | "table";
+      readonly hostId: ZoneHostId<G>;
       readonly hidden: boolean;
     }
   | { readonly player: IdOf<G, "playerId">; readonly hidden: true };

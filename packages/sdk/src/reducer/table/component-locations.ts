@@ -1,12 +1,9 @@
 import { requireLookup } from "../../shared/lookup.js";
 import type {
-  BoardContainerIdOfTable,
   BoardIdOfTable,
   ComponentLocationOfTable,
   ComponentIdOfTable,
-  ResolvedContainerLocation,
   ResolvedEdgeLocation,
-  ResolvedSlotLocation,
   ResolvedSpaceLocation,
   ResolvedVertexLocation,
   ResolvedZoneLocation,
@@ -18,7 +15,6 @@ import type {
 } from "../model";
 import {
   getBoard,
-  getContainer,
   getEdge,
   getSpace,
   getTiledBoard,
@@ -83,33 +79,6 @@ export function getComponentSpaceLocation<
   } as ResolvedSpaceLocation<Table, ComponentId>;
 }
 
-export function getComponentContainerLocation<
-  Table extends RuntimeTableRecord,
-  ComponentId extends ComponentIdOfTable<NoInfer<Table>>,
->(
-  table: Table,
-  componentId: ComponentId,
-): ResolvedContainerLocation<Table, ComponentId> | null {
-  const location = getComponentLocation(table, componentId);
-  if (location.type !== "InContainer") {
-    return null;
-  }
-
-  const boardId = location.boardId as BoardIdOfTable<Table>;
-  const containerId = location.containerId as BoardContainerIdOfTable<
-    Table,
-    typeof boardId
-  >;
-  return {
-    componentId,
-    boardId,
-    board: getBoard(table, boardId),
-    containerId,
-    container: getContainer(table, boardId, containerId),
-    location,
-  } as ResolvedContainerLocation<Table, ComponentId>;
-}
-
 export function getComponentEdgeLocation<
   Table extends RuntimeTableRecord,
   ComponentId extends ComponentIdOfTable<NoInfer<Table>>,
@@ -159,24 +128,4 @@ export function getComponentVertexLocation<
     vertex: getVertex(table, boardId, vertexId),
     location,
   } as ResolvedVertexLocation<Table, ComponentId>;
-}
-
-export function getComponentSlotLocation<
-  Table extends RuntimeTableRecord,
-  ComponentId extends ComponentIdOfTable<NoInfer<Table>>,
->(
-  table: Table,
-  componentId: ComponentId,
-): ResolvedSlotLocation<Table, ComponentId> | null {
-  const location = getComponentLocation(table, componentId);
-  if (location.type !== "InSlot") {
-    return null;
-  }
-
-  return {
-    componentId,
-    host: location.host,
-    slotId: location.slotId,
-    location,
-  } as ResolvedSlotLocation<Table, ComponentId>;
 }

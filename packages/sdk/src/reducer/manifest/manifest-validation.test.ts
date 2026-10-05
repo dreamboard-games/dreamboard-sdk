@@ -85,52 +85,19 @@ test("validateManifestAuthoring accepts hex vertex refs from shape coordinates",
   expect(validation.errors).toEqual([]);
 });
 
-test("validateManifestAuthoring rejects slot-bearing piece seeds without explicit singleton ids", () => {
+test("attached component zones permit expanded piece and die seeds", () => {
   const validation = validateManifestAuthoring({
     ...BASE_MANIFEST,
-    pieceTypes: [
-      {
-        id: "player-mat",
-        name: "Player Mat",
-        slots: [{ id: "worker-rest" }],
-      },
+    zones: [
+      { id: "cargo", name: "Cargo", attachedTo: { pieceType: "ship" } },
+      { id: "dice", name: "Dice", attachedTo: { dieType: "die-holder" } },
     ],
-    pieceSeeds: [
-      {
-        typeId: "player-mat",
-        count: 2,
-      },
-    ],
+    pieceTypes: [{ id: "ship", name: "Ship" }],
+    pieceSeeds: [{ typeId: "ship", count: 2 }],
+    dieTypes: [{ id: "die-holder", name: "Holder" }],
+    dieSeeds: [{ typeId: "die-holder", count: 2 }],
   });
-
-  expect(validation.errors).toContain(
-    "manifest.pieceSeeds[0].id: Piece seed for slot-bearing type 'player-mat' must declare an explicit id.",
-  );
-});
-
-test("validateManifestAuthoring rejects slot-bearing die seeds with count greater than one", () => {
-  const validation = validateManifestAuthoring({
-    ...BASE_MANIFEST,
-    dieTypes: [
-      {
-        id: "die-holder",
-        name: "Die Holder",
-        sides: 6,
-        slots: [{ id: "staging" }],
-      },
-    ],
-    dieSeeds: [
-      {
-        id: "holder",
-        typeId: "die-holder",
-        count: 2,
-      },
-    ],
-  });
-
-  expect(validation.errors).toContain(
-    "manifest.dieSeeds[0].count: Die seed 'holder' for slot-bearing type 'die-holder' must omit count or set it to 1.",
-  );
+  expect(validation.errors).toEqual([]);
 });
 
 test("validateManifestAuthoring accepts die types that omit sides", () => {
@@ -153,85 +120,36 @@ test("validateManifestAuthoring accepts die types that omit sides", () => {
   expect(validation.errors).toEqual([]);
 });
 
-test("validateManifestAuthoring rejects invalid strict slot hosts and slot ids", () => {
+test("attached component homes require the correct expanded host base", () => {
   const validation = validateManifestAuthoring({
     ...BASE_MANIFEST,
-    cardSets: [
-      {
-        id: "main",
-        name: "Main",
-        defaultHome: { type: "detached" },
-        cardSchema: { type: "object", properties: {}, required: [] },
-        cards: [
-          {
-            id: "ace",
-            cardType: "ace",
-            name: "Ace",
-            count: 1,
-            properties: {},
-            home: {
-              type: "slot",
-              host: {
-                kind: "piece",
-                id: "missing-host",
-              },
-              slotId: "worker-rest",
-            },
-          },
-        ],
-      },
+    zones: [
+      { id: "cargo", name: "Cargo", attachedTo: { pieceType: "ship" } },
+      { id: "dice", name: "Dice", attachedTo: { dieType: "die-holder" } },
     ],
-    pieceTypes: [
-      {
-        id: "player-mat",
-        name: "Player Mat",
-        slots: [{ id: "worker-rest" }],
-      },
-    ],
+    pieceTypes: [{ id: "ship", name: "Ship" }],
     pieceSeeds: [
       {
-        id: "mat-alpha",
-        typeId: "player-mat",
+        id: "ship",
+        typeId: "ship",
+        count: 2,
+        home: { type: "zone", zoneId: "dice", component: "ship-1" },
       },
     ],
-    dieTypes: [
-      {
-        id: "die-holder",
-        name: "Die Holder",
-        sides: 6,
-        slots: [{ id: "staging" }],
-      },
-      {
-        id: "d6",
-        name: "D6",
-        sides: 6,
-      },
-    ],
+    dieTypes: [{ id: "die-holder", name: "Holder" }],
     dieSeeds: [
       {
-        id: "holder-a",
+        id: "holder",
         typeId: "die-holder",
-      },
-      {
-        id: "d6-a",
-        typeId: "d6",
-        home: {
-          type: "slot",
-          host: {
-            kind: "die",
-            id: "holder-a",
-          },
-          slotId: "missing-slot",
-        },
+        home: { type: "zone", zoneId: "cargo", component: "ship" },
       },
     ],
   });
-
   expect(validation.errors).toContain(
-    "manifest.cardSets[0].cards[0].home.host: Unknown strict slot host 'piece:missing-host'. Hosts must be singleton piece/die seeds whose type declares slots.",
+    "manifest.pieceSeeds[0].home.component: Expected an expanded component base of type 'die-holder'.",
   );
   expect(validation.errors).toContain(
-    "manifest.dieSeeds[1].home.slotId: Unknown slot 'missing-slot' for host 'die:holder-a'.",
+    "manifest.dieSeeds[0].home.component: Expected an expanded component base of type 'ship'.",
   );
 });
 
@@ -253,7 +171,6 @@ test("validateManifestAuthoring rejects player-scoped seed homes without perPlay
         scope: "perPlayer",
         spaces: [{ id: "camp", row: 0, col: 0 }],
         relations: [],
-        containers: [],
         edges: [],
         vertices: [],
       },
@@ -309,7 +226,6 @@ test("validateManifestAuthoring accepts player-scoped seed homes with perPlayer 
         scope: "perPlayer",
         spaces: [{ id: "camp", row: 0, col: 0 }],
         relations: [],
-        containers: [],
         edges: [],
         vertices: [],
       },
@@ -392,7 +308,6 @@ test("validateManifestAuthoring rejects player-scoped card homes", () => {
         scope: "perPlayer",
         spaces: [{ id: "camp", row: 0, col: 0 }],
         relations: [],
-        containers: [],
         edges: [],
         vertices: [],
       },
@@ -453,7 +368,6 @@ test("validateManifestAuthoring rejects reserved record keys before generation",
         scope: "shared",
         spaces: [{ id: "constructor" }],
         relations: [],
-        containers: [],
       },
     ],
     pieceTypes: [{ id: "worker", name: "Worker" }],

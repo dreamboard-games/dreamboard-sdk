@@ -55,7 +55,6 @@ function authoredGame(
           edges: [],
           vertices: [],
           relations: [],
-          containers: [],
         },
       ],
     },

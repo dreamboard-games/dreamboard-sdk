@@ -74,7 +74,6 @@ export { memoize } from "./reducer/memoize";
 // Flat `getX` table helpers were removed from the public surface in favour
 // of the opinionated `q.*` namespace returned by `createTableQueries` /
 // `createStateQueries` (also injected into every reducer callback as `q`).
-export { assertCardAllowedInContainer } from "./reducer/table";
 export {
   createTableQueries,
   createStateQueries,
@@ -145,3 +144,9 @@ export {
   type PerPlayerInstanceId,
   type PerPlayerInstanceFamily,
 } from "./shared/domain/per-player-instance.js";
+
+export {
+  boardSpaceHostId,
+  parseBoardSpaceHostId,
+  type BoardSpaceHostId,
+} from "./shared/domain/board-space-host.js";

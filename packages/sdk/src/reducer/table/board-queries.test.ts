@@ -3,7 +3,6 @@ import {
   getAdjacentSpaces,
   getBoard,
   getBoardsByTypeId,
-  getContainer,
   getEdge,
   getHexBoard,
   getHexSpace,
@@ -42,12 +41,11 @@ describe("table ops spatial helpers", () => {
     expect(
       getVertex(table, "hex-board", "tile-a$$tile-a$$tile-b").spaceIds,
     ).toEqual(["tile-a", "tile-a", "tile-b"]);
-    expect(getSpace(table, "main-board", "space-a").zoneId).toBe(
-      "main-board::space::space-a",
-    );
-    expect(getContainer(table, "main-board", "market-row").name).toBe(
-      "Market Row",
-    );
+    expect(getSpace(table, "main-board", "space-a")).toEqual({
+      id: "space-a",
+      typeId: "slot",
+      fields: {},
+    });
     expect(getBoardsByTypeId(table, "track")).toEqual(["main-board"]);
     expect(getSpacesByTypeId(table, "main-board", "slot")).toEqual([
       "space-a",

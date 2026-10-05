@@ -1,4 +1,8 @@
-import type { RuntimeTableRecord, StringKeyOf } from "./table";
+import type {
+  RuntimeTableRecord,
+  StringKeyOf,
+  DeclaredZoneScopeOfHosts,
+} from "./table";
 import type {
   ReducerManifestContractLike,
   ManifestContract,
@@ -126,13 +130,17 @@ export type ZoneHostsOfTable<
 > = Table extends { zones: infer Zones }
   ? StringKeyOf<Zones[Z & keyof Zones]>
   : never;
-/** Broad runtime host maps defer scope admission to compiled definitions. */
-export type ZoneScopeOfTable<Table, Z extends ZoneIdOfTable<Table>> =
-  string extends ZoneHostsOfTable<Table, Z>
-    ? "shared" | "perPlayer"
-    : ZoneHostsOfTable<Table, Z> extends "table"
-      ? "shared"
-      : "perPlayer";
+type DeclaredZoneScope<Table, Z extends ZoneIdOfTable<Table>> = Table extends {
+  zones: infer Zones;
+}
+  ? DeclaredZoneScopeOfHosts<Zones[Z & keyof Zones]>
+  : never;
+/** Compiled tables carry declaration scope; broad raw maps defer to runtime admission. */
+export type ZoneScopeOfTable<Table, Z extends ZoneIdOfTable<Table>> = [
+  DeclaredZoneScope<Table, Z>,
+] extends [never]
+  ? "shared" | "perPlayer" | "attached"
+  : DeclaredZoneScope<Table, Z>;
 export type SharedZoneIdOfTable<Table> = {
   [Z in ZoneIdOfTable<Table>]: "shared" extends ZoneScopeOfTable<Table, Z>
     ? Z
@@ -149,7 +157,7 @@ type ScopedZoneArg<
   Scope,
 > = Scope extends "shared"
   ? { readonly zoneId: Z; readonly hostId?: "table" }
-  : { readonly zoneId: Z; readonly hostId: PlayerIdOfTable<Table> };
+  : { readonly zoneId: Z; readonly hostId: ZoneHostsOfTable<Table, Z> };
 export type ZoneArg<
   Table,
   Z extends ZoneIdOfTable<Table> = ZoneIdOfTable<Table>,
@@ -161,8 +169,9 @@ export type ZoneComponentsOfTable<
   Table,
   Z extends ZoneIdOfTable<Table>,
 > = Table extends { zones: infer Zones }
-  ? Zones[Z & keyof Zones][keyof Zones[Z &
-      keyof Zones]] extends readonly (infer Id)[]
+  ? Zones[Z & keyof Zones][StringKeyOf<
+      Zones[Z & keyof Zones]
+    >] extends readonly (infer Id)[]
     ? Extract<Id, string>
     : never
   : never;
@@ -276,13 +285,6 @@ export type SpaceTypeIdOfTable<Table, BoardId extends BoardIdOfTable<Table>> =
     ? Spaces[StringKeyOf<Spaces>] extends { typeId?: infer SpaceTypeId | null }
       ? Extract<SpaceTypeId, string>
       : never
-    : never;
-export type BoardContainerIdOfTable<
-  Table,
-  BoardId extends BoardIdOfTable<Table>,
-> =
-  BoardStateOfTable<Table, BoardId> extends { containers: infer Containers }
-    ? StringKeyOf<Containers>
     : never;
 export type RelationTypeIdOfTable<
   Table,
@@ -625,11 +627,6 @@ export type RelationTypeIdOfManifest<Manifest> = Manifest extends {
 }
   ? Extract<RelationTypeId, string>
   : string;
-export type BoardContainerIdOfManifest<Manifest> = Manifest extends {
-  literals: { boardContainerIds: readonly (infer ContainerId)[] };
-}
-  ? Extract<ContainerId, string>
-  : string;
 export type EdgeTypeIdOfManifest<Manifest> = Manifest extends {
   literals: { edgeTypeIds: readonly (infer EdgeTypeId)[] };
 }
@@ -731,26 +728,4 @@ export type OptionsSchemaOfContract<Contract> = Contract extends {
   : SchemaLike<Record<string, never>>;
 export type OptionsOfContract<Contract> = z.infer<
   OptionsSchemaOfContract<Contract>
->;
-
-/** Slot hosts share the canonical piece and die inventories. */
-export type SlotHostOfTable<Table extends RuntimeTableRecord> =
-  | { kind: "piece"; id: keyof Table["pieces"] & string }
-  | { kind: "die"; id: keyof Table["dice"] & string };
-type SlotLocationOfTable<Table> = Table extends {
-  componentLocations: infer Locations;
-}
-  ? Extract<Locations[keyof Locations], { type: "InSlot" }>
-  : never;
-type SlotIdForHost<Location, Host> = Location extends {
-  host: infer Candidate;
-  slotId: infer Id;
-}
-  ? Host extends Candidate
-    ? Extract<Id, string>
-    : never
-  : never;
-export type SlotIdOfTable<Table, Host> = SlotIdForHost<
-  SlotLocationOfTable<Table>,
-  Host
 >;

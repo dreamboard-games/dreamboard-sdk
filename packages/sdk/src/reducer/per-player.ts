@@ -2,7 +2,7 @@ import { isPlayerIdValue } from "../shared/domain/player-identity.js";
 import {
   perPlayerInstanceId,
   parsePerPlayerInstanceId,
-  PER_PLAYER_INSTANCE_PREFIX,
+  GENERATED_ID_PREFIX,
 } from "../shared/domain/per-player-instance.js";
 import * as z from "zod";
 import type { Brand } from "./model/table";
@@ -106,7 +106,7 @@ export function parseBoardRefKey(key: string): BoardRef | null {
   if (!key.length) {
     return null;
   }
-  if (!key.startsWith(PER_PLAYER_INSTANCE_PREFIX)) return { baseId: key };
+  if (!key.startsWith(GENERATED_ID_PREFIX)) return { baseId: key };
   const instance = parsePerPlayerInstanceId(key);
   return instance?.family === "board"
     ? { baseId: instance.baseId, seat: asPlayerId(instance.playerId) }

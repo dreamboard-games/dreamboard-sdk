@@ -8,6 +8,9 @@ export function createSpatialTable() {
       "draw-deck": { table: ["card-1"] },
       "special-deck": { table: [] },
       supply: { table: ["piece-1", "die-1"] },
+      "market-row": { "main-board": [] },
+      "restricted-row": { "main-board": [] },
+      "cell-storage": { "square-board": [] },
     },
 
     cards: {
@@ -73,13 +76,11 @@ export function createSpatialTable() {
               id: "space-a",
               typeId: "slot",
               fields: {},
-              zoneId: "main-board::space::space-a",
             },
             "space-b": {
               id: "space-b",
               typeId: "slot",
               fields: {},
-              zoneId: "main-board::space::space-b",
             },
           },
           relations: [
@@ -91,24 +92,6 @@ export function createSpatialTable() {
               fields: {},
             },
           ],
-          containers: {
-            "market-row": {
-              id: "market-row",
-              name: "Market Row",
-              host: { type: "board" },
-              allowedCardSetIds: ["main"],
-              zoneId: "main-board::container::market-row",
-              fields: {},
-            },
-            "restricted-row": {
-              id: "restricted-row",
-              name: "Restricted Row",
-              host: { type: "board" },
-              allowedCardSetIds: ["special"],
-              zoneId: "main-board::container::restricted-row",
-              fields: {},
-            },
-          },
         },
         "hex-board": {
           id: "hex-board",
@@ -144,7 +127,6 @@ export function createSpatialTable() {
               fields: {},
             },
           ],
-          containers: {},
           edges: [
             {
               id: "tile-a$$tile-b",
@@ -236,15 +218,6 @@ export function createSpatialTable() {
               fields: {},
             },
           ],
-          containers: {
-            "cell-storage": {
-              id: "cell-storage",
-              name: "Cell Storage",
-              host: { type: "board" },
-              zoneId: "square-board::container::cell-storage",
-              fields: {},
-            },
-          },
           edges: [
             {
               id: "square-edge:a1-a2",
@@ -304,6 +277,21 @@ export const spatialDefinitions = {
       scope: "shared",
       visibility: "public",
       allowedCardSetIds: ["special"],
+    },
+    "market-row": {
+      attachedTo: { board: "main-board" },
+      visibility: "public",
+      allowedCardSetIds: ["main"],
+    },
+    "restricted-row": {
+      attachedTo: { board: "main-board" },
+      visibility: "public",
+      allowedCardSetIds: ["special"],
+    },
+    "cell-storage": {
+      attachedTo: { board: "square-board", space: "a1" },
+      visibility: "public",
+      allowedCardSetIds: [],
     },
     supply: { scope: "shared", visibility: "public", allowedCardSetIds: [] },
   },

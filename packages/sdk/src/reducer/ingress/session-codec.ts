@@ -46,14 +46,6 @@ const runtimeComponentLocationSchema = z.discriminatedUnion("type", [
     .strict(),
   z
     .object({
-      type: z.literal("InContainer"),
-      boardId: z.string(),
-      containerId: z.string(),
-      position: z.number().int().nullable().optional(),
-    })
-    .strict(),
-  z
-    .object({
       type: z.literal("OnEdge"),
       boardId: z.string(),
       edgeId: z.string(),
@@ -65,17 +57,6 @@ const runtimeComponentLocationSchema = z.discriminatedUnion("type", [
       type: z.literal("OnVertex"),
       boardId: z.string(),
       vertexId: z.string(),
-      position: z.number().int().nullable().optional(),
-    })
-    .strict(),
-  z
-    .object({
-      type: z.literal("InSlot"),
-      host: z.union([
-        z.object({ kind: z.literal("piece"), id: z.string() }).strict(),
-        z.object({ kind: z.literal("die"), id: z.string() }).strict(),
-      ]),
-      slotId: z.string(),
       position: z.number().int().nullable().optional(),
     })
     .strict(),
@@ -127,7 +108,18 @@ const currentRuntimeTableSchema = z
     resources: z.record(z.string().min(1), runtimeRecordSchema),
     boards: z
       .object({
-        byId: z.record(z.string(), runtimeRecordSchema),
+        byId: z.record(
+          z.string(),
+          z
+            .object({
+              id: z.string(),
+              baseId: z.string().optional(),
+              scope: z.enum(["shared", "perPlayer"]),
+              playerId: z.string().nullable().optional(),
+              spaces: z.record(z.string(), runtimePayloadSchema),
+            })
+            .catchall(runtimePayloadSchema),
+        ),
         hex: z.record(z.string(), runtimeRecordSchema),
         square: z.record(z.string(), runtimeRecordSchema),
         network: z.record(z.string(), runtimeRecordSchema).optional(),

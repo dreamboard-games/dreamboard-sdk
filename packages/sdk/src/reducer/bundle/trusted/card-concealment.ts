@@ -1,6 +1,7 @@
 import type { RuntimeTableRecord, ZoneDefinitions } from "../../model";
 import type { RuntimeJson } from "../../../shared/runtime-json";
 import { getZoneComponents } from "../../table/zone-queries";
+import { enumerateZoneHosts, resolveZoneAccess } from "../../table/zones";
 import type { InteractionDescriptorShape } from "./interaction-types";
 
 export type SeatZone = readonly [
@@ -16,7 +17,7 @@ export type SeatZone = readonly [
  * order reveals which card it is. Card ids are otherwise the table's own.
  */
 export type CardConcealment = {
-  /** The seat's own player zones, public player zones, and all shared zones. */
+  /** Zone hosts whose projected card inventory this seat may access. */
   zones: readonly SeatZone[];
   /** The id the seat knows a card by. */
   seatCardId(cardId: string): string;
@@ -41,20 +42,15 @@ export function concealCards(
   for (const [zoneId, definition] of Object.entries(
     definitions.zoneDefinitions,
   )) {
-    const hosts = definition.scope === "shared" ? ["table"] : table.playerOrder;
+    const hosts = enumerateZoneHosts(table, definition);
     for (const hostId of hosts) {
-      const accessible =
-        definition.scope === "shared" ||
-        hostId === playerId ||
-        definition.visibility === "public";
+      const accessible = resolveZoneAccess(table, definition, hostId, playerId);
       const cardIds = getZoneComponents(table, definitions, {
         zoneId,
         hostId,
       }).filter((id) => Object.hasOwn(table.cards, id));
       if (accessible) zones.push([zoneId, hostId, cardIds]);
-      const hiddenZone =
-        definition.visibility === "hidden" ||
-        (definition.visibility === "ownerOnly" && hostId !== playerId);
+      const hiddenZone = definition.visibility === "hidden";
       cardIds.forEach((cardId, index) => {
         if (!accessible) denied.add(cardId);
         const visibility = table.visibility[cardId];

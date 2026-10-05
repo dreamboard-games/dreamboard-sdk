@@ -944,7 +944,6 @@ export function toManifestJson(value: unknown): unknown {
               "boardFieldsSchema",
               "spaceFieldsSchema",
               "relationFieldsSchema",
-              "containerFieldsSchema",
               "edgeFieldsSchema",
               "vertexFieldsSchema",
             ])

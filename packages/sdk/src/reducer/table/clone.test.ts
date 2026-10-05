@@ -23,7 +23,6 @@ test("board clones preserve square coordinates and isolate nested JSON fields", 
       },
     },
     relations: [],
-    containers: {},
     edges: [],
     vertices: [],
   } satisfies RuntimeSquareBoardState;

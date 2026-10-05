@@ -3,84 +3,9 @@ import type {
   CardCollection,
   ViewCardOfTable,
 } from "../../shared/domain/cards.js";
-import type { ViewSlotOccupant } from "../../shared/domain/slots.js";
-import type {
-  CardIdOfTable,
-  ComponentIdOfTable,
-  PlayerIdOfTable,
-  RuntimeComponentLocation,
-  RuntimeTableRecord,
-  SlotHostOfTable,
-  SlotIdOfTable,
-} from "../model";
-import { orderedComponentIdsForLocation } from "./internal";
-import { resolveZone, type ZoneInput } from "./zones";
+import type { CardIdOfTable, RuntimeTableRecord } from "../model";
+import { enumerateZoneHosts, resolveZone, type ZoneInput } from "./zones";
 import type { ZoneDefinitions } from "../model";
-
-type ViewSlotOccupantForTable<Table extends RuntimeTableRecord> =
-  ViewSlotOccupant<
-    ComponentIdOfTable<Table> & string,
-    PlayerIdOfTable<Table> & string,
-    string,
-    Record<string, unknown>
-  >;
-
-function matchesSlotHost(
-  location: RuntimeComponentLocation,
-  host: Extract<RuntimeComponentLocation, { type: "InSlot" }>["host"],
-  slotId?: string,
-): location is Extract<RuntimeComponentLocation, { type: "InSlot" }> {
-  return (
-    location.type === "InSlot" &&
-    location.host.kind === host.kind &&
-    location.host.id === host.id &&
-    (slotId === undefined || location.slotId === slotId)
-  );
-}
-
-function componentPlayerId<Table extends RuntimeTableRecord>(
-  table: Table,
-  componentId: ComponentIdOfTable<Table>,
-): (PlayerIdOfTable<Table> & string) | null {
-  const piece = table.pieces[componentId];
-  if (piece) {
-    return (piece.ownerId ?? null) as (PlayerIdOfTable<Table> & string) | null;
-  }
-
-  const die = table.dice[componentId];
-  if (die) {
-    return (die.ownerId ?? null) as (PlayerIdOfTable<Table> & string) | null;
-  }
-
-  const owner = table.ownerOfCard[componentId];
-  if (owner !== undefined) {
-    return (owner ?? null) as (PlayerIdOfTable<Table> & string) | null;
-  }
-
-  return null;
-}
-
-function componentData<Table extends RuntimeTableRecord>(
-  table: Table,
-  componentId: ComponentIdOfTable<Table>,
-): Record<string, unknown> | undefined {
-  const piece = table.pieces[componentId];
-  if (piece) {
-    return piece.properties;
-  }
-
-  const die = table.dice[componentId];
-  if (die) {
-    return die.properties;
-  }
-
-  const card = table.cards[componentId];
-  if (card) {
-    return card.properties;
-  }
-
-  return undefined;
-}
 
 export function getZoneComponents(
   table: RuntimeTableRecord,
@@ -99,12 +24,10 @@ export function getZones(
     : undefined;
   if (!definition) throw new Error(`Unknown zone '${zoneId}'.`);
   return Object.fromEntries(
-    (definition.scope === "shared" ? ["table"] : table.playerOrder).map(
-      (hostId) => [
-        hostId,
-        getZoneComponents(table, definitions, { zoneId, hostId }),
-      ],
-    ),
+    enumerateZoneHosts(table, definition).map((hostId) => [
+      hostId,
+      getZoneComponents(table, definitions, { zoneId, hostId }),
+    ]),
   );
 }
 export function getZoneCardCollection(
@@ -156,62 +79,6 @@ export function getCardsById<
   return Object.fromEntries(
     cardIds.map((cardId) => [cardId, getCard(table, cardId)]),
   );
-}
-
-export function getSlotOccupants<
-  Table extends RuntimeTableRecord,
-  Host extends SlotHostOfTable<Table>,
->(
-  table: Table,
-  host: Host,
-  slotId: SlotIdOfTable<Table, NoInfer<Host>>,
-): ViewSlotOccupantForTable<Table>[];
-export function getSlotOccupants<Table extends RuntimeTableRecord>(
-  table: Table,
-  host: Extract<RuntimeComponentLocation, { type: "InSlot" }>["host"],
-  slotId: string,
-): ViewSlotOccupantForTable<Table>[] {
-  return orderedComponentIdsForLocation(table, (location) =>
-    matchesSlotHost(location, host, slotId),
-  ).map((componentId) => ({
-    pieceId: componentId as ComponentIdOfTable<Table> & string,
-    playerId: componentPlayerId(
-      table,
-      componentId as ComponentIdOfTable<Table>,
-    ),
-    slotId,
-    data: componentData(table, componentId as ComponentIdOfTable<Table>),
-  }));
-}
-
-export function getSlotOccupantsByHost<Table extends RuntimeTableRecord>(
-  table: Table,
-  host: SlotHostOfTable<Table>,
-): Readonly<Record<string, ViewSlotOccupantForTable<Table>[]>> {
-  const occupantsBySlot: Record<string, ViewSlotOccupantForTable<Table>[]> = {};
-
-  orderedComponentIdsForLocation(table, (location) =>
-    matchesSlotHost(location, host),
-  ).forEach((componentId) => {
-    const location = table.componentLocations[componentId];
-    if (!location || !matchesSlotHost(location, host)) {
-      return;
-    }
-
-    const slotOccupant: ViewSlotOccupantForTable<Table> = {
-      pieceId: componentId as ComponentIdOfTable<Table> & string,
-      playerId: componentPlayerId(
-        table,
-        componentId as ComponentIdOfTable<Table>,
-      ),
-      slotId: location.slotId,
-      data: componentData(table, componentId as ComponentIdOfTable<Table>),
-    };
-
-    (occupantsBySlot[location.slotId] ??= []).push(slotOccupant);
-  });
-
-  return occupantsBySlot;
 }
 
 export function getCardOwner<

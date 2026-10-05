@@ -9,7 +9,20 @@ const game = createGame({
   manifest: {
     players: { minPlayers: 1, maxPlayers: 2 },
     cardSets: [],
-    zones: [],
+    zones: [
+      {
+        id: "pocket",
+        name: "Pocket",
+        attachedTo: { pieceType: "worker" },
+        visibility: "public",
+      },
+      {
+        id: "face",
+        name: "Face",
+        attachedTo: { dieType: "combat" },
+        visibility: "public",
+      },
+    ],
     boards: [
       {
         id: "mat",
@@ -26,11 +39,9 @@ const game = createGame({
         spaces: [{ id: "supply" }],
       },
     ],
-    pieceTypes: [{ id: "worker", name: "Worker", slots: [{ id: "pocket" }] }],
+    pieceTypes: [{ id: "worker", name: "Worker" }],
     pieceSeeds: [{ id: "pawn", typeId: "worker" }],
-    dieTypes: [
-      { id: "combat", name: "Combat", sides: 6, slots: [{ id: "face" }] },
-    ],
+    dieTypes: [{ id: "combat", name: "Combat", sides: 6 }],
     dieSeeds: [{ id: "battle", typeId: "combat" }],
   },
   state: { public: z.object({}), private: z.object({}), hidden: z.object({}) },
@@ -68,12 +79,12 @@ const q = createTableQueries(
   }),
   game.contract.manifest,
 );
-q.slot.occupants({ kind: "piece", id: "pawn" }, "pocket");
-q.slot.dieOccupants("battle", "face");
-// @ts-expect-error Die IDs cannot be passed as piece hosts.
-q.slot.pieceOccupants("battle", "face");
-// @ts-expect-error Slot IDs belong to the selected host.
-q.slot.occupants({ kind: "piece", id: "pawn" }, "face");
+q.zone("pocket", "pawn");
+q.zone("face", "battle");
+// @ts-expect-error Die IDs cannot be passed as piece-attached zone hosts.
+q.zone("pocket", "battle");
+// @ts-expect-error Host IDs belong to the selected attachment.
+q.zone("face", "pawn");
 // @ts-expect-error Unknown components cannot be moved.
 const missingComponent: Parameters<typeof q.component.data>[0] = "missing";
 void [space, playerSpace, supply, wrongSpace, target, missingComponent];

@@ -1,3 +1,4 @@
+import type { ZoneHostMap } from "../src/reducer/model/table";
 import type { ScenarioCommandOf } from "../src/testing/definitions.js";
 import { many } from "../src/reducer.js";
 import { boardInput, boardTarget } from "../src/reducer/inputs.js";
@@ -52,7 +53,10 @@ type TestTable = Omit<
 > & {
   playerOrder: TestPlayerId[];
   cards: Record<TestCardId, RuntimeCardData>;
-  zones: Record<TestPlayerZoneId, TestPlayerRecord<TestCardId[]>>;
+  zones: Record<
+    TestPlayerZoneId,
+    ZoneHostMap<PlayerId, TestCardId, "perPlayer">
+  >;
   resources: TestPlayerRecord<RuntimeRecord>;
 };
 function testPlayerRecord<Value>(): TestPlayerRecord<Value> {
@@ -91,7 +95,6 @@ const manifest = {
     boardTypeIds: [] as const,
     boardBaseIds: [] as const,
     boardIds: [] as const,
-    boardContainerIds: [] as const,
     relationTypeIds: [] as const,
     edgeIds: [] as const,
     edgeTypeIds: [] as const,
@@ -118,7 +121,6 @@ const manifest = {
     boardTypeId: z.never(),
     boardId: z.never(),
     boardBaseId: z.never(),
-    boardContainerId: z.never(),
     relationTypeId: z.never(),
     edgeId: z.never(),
     edgeTypeId: z.never(),

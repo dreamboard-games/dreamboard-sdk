@@ -88,6 +88,61 @@ balance only its holder may see: each seat projection's `resources` lists every
 player's public balances plus that seat's own owner-only balances. Reveal hidden
 totals at the end through the game outcome.
 
+## Attached zones
+
+A zone can attach to a board, one of its spaces, or every instance of a piece
+or die type. Declare `attachedTo` instead of `scope`:
+
+```ts
+zones: [
+  { id: "market-row", name: "Market", attachedTo: { board: "market" } },
+  {
+    id: "cargo",
+    name: "Cargo",
+    attachedTo: { pieceType: "ship" },
+    visibility: "ownerOnly",
+  },
+];
+```
+
+Each host has its own ordered membership array. Board attachments use the
+runtime board ID; component attachments use the component ID. A board-space
+attachment uses the SDK's canonical board-space host codec. Decoding a host
+only checks its syntax: admission also checks that the current host exists and
+matches the zone's declared board, space or component type.
+
+```ts
+const cargo = q.zone("cargo", "ship-1");
+tx.moveComponentToZone({
+  componentId: "crate-3",
+  to: { zoneId: "cargo", hostId: "ship-1" },
+});
+```
+
+Owner-only access follows the host's current owner. Transferring a ship changes
+who can see its cargo immediately, while preserving the cargo's own ownership.
+An unowned component grants no seat owner-only access. A per-player board's
+replication seat owns access to its attached zones. Shared boards have no owner,
+so their attached zones cannot use `ownerOnly`.
+
+Moving a card into a public or owner-only zone starts it face-up for that zone's
+permitted audience; moving it into a hidden zone starts it face-down. No owner
+ID is copied into the card's audience. An explicit later `flipCard(false)` can
+conceal the face even from a seat that can access the zone.
+
+An initial home in a component-attached zone names the expanded authored
+component base with `component`, for example
+`{ type: "zone", zoneId: "cargo", component: "ship-1" }`. Replicated seeds
+resolve replicated hosts from their origin seat. Shared seeds cannot choose a
+replicated host implicitly. Initialization resolves forward references after
+constructing hosts, then checks containment. Self-containment and transitive
+cycles are rejected during initialization, restore and mutation; rejected moves
+leave both location and ordered zone membership unchanged.
+
+Attached zones replace board containers and component slots. All containment
+uses `InZone`; the old container/slot declarations, locations, queries and
+transactions are removed.
+
 ## Field schemas
 
 Author field data with `z.object(...)`, importing `z` and `ref` from

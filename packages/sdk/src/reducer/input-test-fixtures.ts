@@ -46,7 +46,6 @@ export function createInputTestState() {
         s2: { id: "s2", q: 1, r: 0, typeId: "test-space", fields: {} },
       },
       relations: [],
-      containers: {},
       vertices: ["v1", "v2"].map((id) => ({
         id,
         spaceIds: ["s1", "s2"],

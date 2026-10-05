@@ -20,12 +20,8 @@ import {
   getCardsById,
   getCardOwner,
   getCardVisibility,
-  getSlotOccupants,
-  getSlotOccupantsByHost,
-  getComponentContainerLocation,
   getComponentEdgeLocation,
   getComponentLocation,
-  getComponentSlotLocation,
   getComponentSpaceLocation,
   getComponentVertexLocation,
   getComponentZoneLocation,
@@ -69,18 +65,6 @@ export function createTableQueries<Table extends RuntimeTableRecord>(
       visibility: <CardId extends CardIdOfTable<Table>>(cardId: CardId) =>
         getCardVisibility(table, cardId),
     },
-    slot: {
-      occupants: (host, slotId) => getSlotOccupants(table, host, slotId),
-      occupantsByHost: (host) => getSlotOccupantsByHost(table, host),
-      pieceOccupants: (hostId, slotId) =>
-        getSlotOccupants(table, { kind: "piece", id: hostId }, slotId),
-      pieceOccupantsByHost: (hostId) =>
-        getSlotOccupantsByHost(table, { kind: "piece", id: hostId }),
-      dieOccupants: (hostId, slotId) =>
-        getSlotOccupants(table, { kind: "die", id: hostId }, slotId),
-      dieOccupantsByHost: (hostId) =>
-        getSlotOccupantsByHost(table, { kind: "die", id: hostId }),
-    },
     player: {
       order: () => getPlayerOrder(table),
       nextInOrder: (playerId) => getNextPlayerInOrder(table, playerId),
@@ -117,18 +101,12 @@ export function createTableQueries<Table extends RuntimeTableRecord>(
       space: <ComponentId extends ComponentIdOfTable<Table>>(
         componentId: ComponentId,
       ) => getComponentSpaceLocation(table, componentId),
-      container: <ComponentId extends ComponentIdOfTable<Table>>(
-        componentId: ComponentId,
-      ) => getComponentContainerLocation(table, componentId),
       edge: <ComponentId extends ComponentIdOfTable<Table>>(
         componentId: ComponentId,
       ) => getComponentEdgeLocation(table, componentId),
       vertex: <ComponentId extends ComponentIdOfTable<Table>>(
         componentId: ComponentId,
       ) => getComponentVertexLocation(table, componentId),
-      slot: <ComponentId extends ComponentIdOfTable<Table>>(
-        componentId: ComponentId,
-      ) => getComponentSlotLocation(table, componentId),
     },
   };
 }

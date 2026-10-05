@@ -20,10 +20,17 @@ export type Brand<Value, Name extends string> = Value & {
 
 /** Static definitions belong to the compiled manifest, never a session checkpoint. */
 export type ZoneDefinition = {
-  readonly scope: "shared" | "perPlayer";
   readonly visibility: "public" | "ownerOnly" | "hidden";
   readonly allowedCardSetIds: readonly string[];
-};
+} & (
+  | { readonly scope: "shared" | "perPlayer" }
+  | {
+      readonly attachedTo:
+        | { readonly board: string; readonly space?: string }
+        | { readonly pieceType: string }
+        | { readonly dieType: string };
+    }
+);
 export type ZoneDefinitions = {
   readonly zoneDefinitions: Readonly<Record<string, ZoneDefinition>>;
 };
@@ -34,6 +41,18 @@ export type ZoneRef<
   readonly zoneId: ZoneId;
   readonly hostId: HostId;
 };
+declare const zoneScopeWitness: unique symbol;
+/** Declaration-only scope evidence; no corresponding runtime or checkpoint field. */
+export type ZoneHostMap<
+  Host extends string,
+  Component extends string,
+  Scope extends "shared" | "perPlayer" | "attached",
+> = Record<Host, Component[]> & { readonly [zoneScopeWitness]?: Scope };
+export type DeclaredZoneScopeOfHosts<Hosts> =
+  typeof zoneScopeWitness extends keyof Hosts
+    ? NonNullable<Hosts[typeof zoneScopeWitness]>
+    : never;
+
 /** Membership arrays are the sole owner of zone order. */
 export type RuntimeZoneMap = Record<string, Record<string, string[]>>;
 export type RuntimeOwnerMap = Record<string, string | null>;
@@ -43,7 +62,6 @@ export type RuntimeBoardSpaceState = {
   name?: string | null;
   typeId?: string | null;
   fields: RuntimeRecord;
-  zoneId?: string | null;
 };
 export type RuntimeBoardRelationState = {
   id?: string | null;
@@ -53,23 +71,9 @@ export type RuntimeBoardRelationState = {
   directed: boolean;
   fields: RuntimeRecord;
 };
-export type RuntimeBoardContainerState = {
-  id: string;
-  name: string;
-  host:
-    | { type: "board" }
-    | {
-        type: "space";
-        spaceId: string;
-      };
-  allowedCardSetIds?: readonly string[];
-  zoneId: string;
-  fields: RuntimeRecord;
-};
 export type RuntimeBoardCompatibilityState = {
   spaces: Record<string, RuntimeBoardSpaceState>;
   relations: RuntimeBoardRelationState[];
-  containers: Record<string, RuntimeBoardContainerState>;
 };
 export type RuntimeBoardBaseState = {
   id: string;
@@ -117,7 +121,6 @@ export type RuntimeHexOrientation = "pointy" | "flat";
 export type RuntimeTiledBoardBaseState = RuntimeBoardBaseState & {
   layout: "hex" | "square";
   relations: RuntimeBoardRelationState[];
-  containers: Record<string, RuntimeBoardContainerState>;
   edges: RuntimeTiledEdgeState[];
   vertices: RuntimeTiledVertexState[];
 };
@@ -179,15 +182,6 @@ export type RuntimeDieData = {
   value?: number | null;
   properties: RuntimeRecord;
 };
-export type RuntimeSlotHostRef =
-  | {
-      kind: "piece";
-      id: string;
-    }
-  | {
-      kind: "die";
-      id: string;
-    };
 export type RuntimeComponentLocation =
   | { type: "Detached" }
   | {
@@ -203,12 +197,6 @@ export type RuntimeComponentLocation =
       position?: number | null;
     }
   | {
-      type: "InContainer";
-      boardId: string;
-      containerId: string;
-      position?: number | null;
-    }
-  | {
       type: "OnEdge";
       boardId: string;
       edgeId: string;
@@ -218,12 +206,6 @@ export type RuntimeComponentLocation =
       type: "OnVertex";
       boardId: string;
       vertexId: string;
-      position?: number | null;
-    }
-  | {
-      type: "InSlot";
-      host: RuntimeSlotHostRef;
-      slotId: string;
       position?: number | null;
     };
 export type RuntimeComponentLocationMap = Record<

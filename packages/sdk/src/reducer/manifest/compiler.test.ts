@@ -435,7 +435,6 @@ test("player-scoped boards follow the active roster rather than max-player place
         scope: "perPlayer",
         spaces: [],
         relations: [],
-        containers: [],
       },
     ],
   } as const);
@@ -471,7 +470,6 @@ test("derived geometry IDs remain constrained by the materialized topology", () 
           { id: "b", row: 0, col: 1 },
         ],
         relations: [],
-        containers: [],
         edges: [],
         vertices: [],
       },

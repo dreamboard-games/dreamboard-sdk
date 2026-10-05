@@ -235,8 +235,7 @@ describe("canonical zone mutations", () => {
     move(table, "card-1", { zoneId: "hand", hostId: "alice" });
     expect(table.ownerOfCard["card-1"]).toBe("bob");
     expect(table.visibility["card-1"]).toEqual({
-      faceUp: false,
-      visibleTo: ["alice"],
+      faceUp: true,
     });
     move(table, "card-1", { zoneId: "public", hostId: "bob" });
     expect(table.ownerOfCard["card-1"]).toBe("bob");
@@ -290,8 +289,7 @@ describe("canonical zone mutations", () => {
     expect(table.zones.hand[asPlayerId("bob")]).toEqual([]);
     expect(table.ownerOfCard["card-1"]).toBe("bob");
     expect(table.visibility["card-1"]).toEqual({
-      faceUp: false,
-      visibleTo: ["alice"],
+      faceUp: true,
     });
     dealComponentsInPlace({
       table,

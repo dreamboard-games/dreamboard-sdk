@@ -1,5 +1,5 @@
+import { perPlayerInstanceId } from "../../shared/domain/per-player-instance.js";
 import { compileManifest } from "./compiler";
-import { perPlayerInstanceId } from "../../shared/domain/per-player-instance";
 import * as z from "zod";
 import { expect, test } from "vitest";
 import type { GameTopologyManifest } from "../../shared/domain/manifest.js";
@@ -20,107 +20,65 @@ const EMPTY_MANIFEST: GameTopologyManifest = {
   resources: [],
 };
 
-test("materializeManifestTable keeps runtime board topology board-local", () => {
-  const table = materializeManifestTable({
-    manifest: {
-      ...EMPTY_MANIFEST,
-      boards: [
-        {
-          id: "board-a",
-          name: "Board A",
-          layout: "generic",
-          scope: "shared",
-          spaceFieldsSchema: {
-            type: "object",
-            properties: { marker: { type: "string" } },
-            required: ["marker"],
-          },
-          containerFieldsSchema: {
-            type: "object",
-            properties: { capacity: { type: "integer" } },
-            required: ["capacity"],
-          },
-          spaces: [
-            { id: "a-1", fields: { marker: "alpha" } },
-            { id: "a-2", fields: { marker: "bravo" } },
-          ],
-          relations: [],
-          containers: [
-            {
-              id: "a-row",
-              name: "A Row",
-              host: { type: "board" },
-              fields: { capacity: 2 },
-            },
-          ],
-        },
-        {
-          id: "board-b",
-          name: "Board B",
-          layout: "generic",
-          scope: "shared",
-          spaceFieldsSchema: {
-            type: "object",
-            properties: { marker: { type: "string" } },
-            required: ["marker"],
-          },
-          spaces: [{ id: "b-1", fields: { marker: "charlie" } }],
-          relations: [],
-          containers: [
-            {
-              id: "b-row",
-              name: "B Row",
-              host: { type: "board" },
-            },
-          ],
-        },
-        {
-          id: "player-board",
-          name: "Player Board",
-          layout: "generic",
-          scope: "perPlayer",
-          spaces: [{ id: "player-space" }],
-          relations: [],
-          containers: [
-            {
-              id: "player-row",
-              name: "Player Row",
-              host: { type: "board" },
-            },
-          ],
-        },
-      ],
-    },
-    playerIds: ["player-1", "player-2"],
-    shuffleItems: (values) => [...values],
-  }) as {
-    boards: {
-      byId: Record<
-        string,
-        {
-          spaces: Record<string, unknown>;
-          containers: Record<string, unknown>;
-        }
-      >;
-    };
-  };
-
-  expect(Object.keys(table.boards.byId["board-a"].spaces).sort()).toEqual([
+test("materializeManifestTable keeps runtime board topology and attached zones board-local", () => {
+  const table = compileManifest({
+    players: EMPTY_MANIFEST.players,
+    cardSets: [],
+    boards: [
+      {
+        id: "board-a",
+        name: "Board A",
+        layout: "generic",
+        scope: "shared",
+        spaces: [{ id: "a-1" }, { id: "a-2" }],
+      },
+      {
+        id: "board-b",
+        name: "Board B",
+        layout: "generic",
+        scope: "shared",
+        spaces: [{ id: "b-1" }],
+      },
+      {
+        id: "player-board",
+        name: "Player Board",
+        layout: "generic",
+        scope: "perPlayer",
+        spaces: [{ id: "player-space" }],
+      },
+    ],
+    zones: [
+      { id: "a-row", name: "A row", attachedTo: { board: "board-a" } },
+      { id: "b-row", name: "B row", attachedTo: { board: "board-b" } },
+      {
+        id: "player-row",
+        name: "Player row",
+        attachedTo: { board: "player-board" },
+      },
+    ],
+  } as const).createInitialTable({ playerIds: ["player-1", "player-2"] });
+  const first = perPlayerInstanceId("board", "player-board", "player-1");
+  const second = perPlayerInstanceId("board", "player-board", "player-2");
+  expect(Object.keys(table.boards.byId["board-a"].spaces)).toEqual([
     "a-1",
     "a-2",
   ]);
   expect(Object.keys(table.boards.byId["board-b"].spaces)).toEqual(["b-1"]);
   expect(table.boards.byId["board-a"].spaces).not.toHaveProperty("b-1");
-  expect(table.boards.byId["board-b"].containers).not.toHaveProperty("a-row");
-  const firstBoard =
-    table.boards.byId[perPlayerInstanceId("board", "player-board", "player-1")];
-  const secondBoard =
-    table.boards.byId[perPlayerInstanceId("board", "player-board", "player-2")];
-  expect(Object.keys(firstBoard.spaces)).toEqual(["player-space"]);
-  expect(Object.keys(secondBoard.containers)).toEqual(["player-row"]);
-  expect(firstBoard.spaces).not.toBe(secondBoard.spaces);
-  expect(firstBoard.spaces["player-space"]).not.toBe(
-    secondBoard.spaces["player-space"],
+  expect(table.zones["a-row"]).toEqual({ "board-a": [] });
+  expect(table.zones["b-row"]).not.toHaveProperty("board-a");
+  expect(Object.keys(table.boards.byId[first].spaces)).toEqual([
+    "player-space",
+  ]);
+  expect(Object.keys(table.zones["player-row"])).toEqual([first, second]);
+  expect(table.boards.byId[first].spaces).not.toBe(
+    table.boards.byId[second].spaces,
+  );
+  expect(table.boards.byId[first].spaces["player-space"]).not.toBe(
+    table.boards.byId[second].spaces["player-space"],
+  );
+  expect(table.zones["player-row"][first]).not.toBe(
+    table.zones["player-row"][second],
   );
 });
 
@@ -181,14 +139,13 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
                   properties: {},
                 },
                 {
-                  id: "container-card",
-                  cardType: "container-card",
-                  name: "Container",
+                  id: "board-zone-card",
+                  cardType: "board-zone-card",
+                  name: "Board zone",
                   count: 1,
                   home: {
-                    type: "container",
-                    boardId: "square-board",
-                    containerId: "display-row",
+                    type: "zone",
+                    zoneId: "display-row",
                   },
                   properties: {},
                 },
@@ -217,14 +174,14 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
                   properties: {},
                 },
                 {
-                  id: "slot-card",
-                  cardType: "slot-card",
-                  name: "Slot",
+                  id: "component-zone-card",
+                  cardType: "component-zone-card",
+                  name: "Component zone",
                   count: 1,
                   home: {
-                    type: "slot",
-                    host: { kind: "piece", id: "holder-a" },
-                    slotId: "pocket",
+                    type: "zone",
+                    zoneId: "pocket",
+                    component: "holder-a",
                   },
                   properties: {},
                 },
@@ -232,6 +189,16 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
             },
           ],
           zones: [
+            {
+              id: "display-row",
+              name: "Display row",
+              attachedTo: { board: "square-board" },
+            },
+            {
+              id: "pocket",
+              name: "Pocket",
+              attachedTo: { pieceType: "holder" },
+            },
             {
               id: "shared-deck",
               name: "Shared Deck",
@@ -258,13 +225,6 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
                 { id: "b2", row: 1, col: 1 },
               ],
               relations: [],
-              containers: [
-                {
-                  id: "display-row",
-                  name: "Display Row",
-                  host: { type: "board" },
-                },
-              ],
               edges: [],
               vertices: [],
             },
@@ -273,7 +233,6 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
             {
               id: "holder",
               name: "Holder",
-              slots: [{ id: "pocket" }],
             },
           ],
           pieceSeeds: [{ id: "holder-a", typeId: "holder" }],
@@ -288,10 +247,10 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
     "detached",
     "zone-card",
     "space-card",
-    "container-card",
+    "board-zone-card",
     "edge-card",
     "vertex-card",
-    "slot-card",
+    "component-zone-card",
     "holder-a",
   ]);
   expect(table.componentLocations.omitted).toEqual({
@@ -314,10 +273,10 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
     boardId: "square-board",
     spaceId: "a1",
   });
-  expect(table.componentLocations["container-card"]).toMatchObject({
-    type: "InContainer",
-    boardId: "square-board",
-    containerId: "display-row",
+  expect(table.componentLocations["board-zone-card"]).toMatchObject({
+    type: "InZone",
+    zoneId: "display-row",
+    hostId: "square-board",
   });
   expect(table.componentLocations["edge-card"]).toMatchObject({
     type: "OnEdge",
@@ -329,10 +288,10 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
     boardId: "square-board",
     vertexId: "square-vertex:1,1",
   });
-  expect(table.componentLocations["slot-card"]).toMatchObject({
-    type: "InSlot",
-    host: { kind: "piece", id: "holder-a" },
-    slotId: "pocket",
+  expect(table.componentLocations["component-zone-card"]).toMatchObject({
+    type: "InZone",
+    zoneId: "pocket",
+    hostId: "holder-a",
   });
   expect(table.zones["shared-deck"].table).toEqual(["omitted", "zone-card"]);
   expect(table.zones["compatible-only"].table).toEqual([]);

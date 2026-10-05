@@ -16,7 +16,6 @@ describe("manifest static projection", () => {
           scope: "shared",
           spaces: [{ id: "home", name: "Home" }],
           relations: [],
-          containers: [],
         },
       ],
     } as const);
