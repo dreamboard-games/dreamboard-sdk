@@ -26,7 +26,7 @@ export type BoardTargetPredicate<
   Definitions extends TopologyDefinitions = TopologyDefinitions,
 > = TargetPredicate<State, Target, Definitions>;
 
-type BoardTargetKind = Exclude<TargetKind, "card">;
+type BoardTargetKind = Exclude<TargetKind, "card" | "tile">;
 
 export type BoardIdTargetRule<
   State extends CollectorState,
@@ -235,7 +235,6 @@ export const boardTarget = {
   edge: makeBoardTargetFactory("edge"),
   vertex: makeBoardTargetFactory("vertex"),
   space: makeBoardTargetFactory("space"),
-  tile: makeBoardTargetFactory("tile"),
   playerSpace<
     State extends CollectorState,
     BoardId extends string,

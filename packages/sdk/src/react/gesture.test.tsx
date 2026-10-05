@@ -60,6 +60,7 @@ function snapshot(version = 1): SourceSnapshot {
       zones: {
         hand: {
           alice: {
+            tiles: [],
             cardIds: ["red", "blue"],
             cardViewsById: {
               red: { id: "red", cardType: "ranked", properties: {} },

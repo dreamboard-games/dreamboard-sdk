@@ -467,7 +467,7 @@ test("the same tile category may be used on multiple boards without global alias
   expect(compiled.tileDefinitions.terrain.cells[0].typeId).toBe("site");
   expect(compiled.tileDefinitions.terrain.edges[0].typeId).toBe("route");
   expect(compiled.createInitialTable({ playerIds: [] }).boards).toEqual({
-    alpha: { baseId: "alpha", relations: [] },
-    beta: { baseId: "beta", relations: [] },
+    alpha: { baseId: "alpha", visibility: "public", relations: [] },
+    beta: { baseId: "beta", visibility: "public", relations: [] },
   });
 });

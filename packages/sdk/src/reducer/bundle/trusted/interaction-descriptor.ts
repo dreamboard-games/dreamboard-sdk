@@ -50,7 +50,7 @@ function isTargetCollector(collector: InputCollector): boolean {
     case "card":
     case "board-edge":
     case "board-space":
-    case "board-tile":
+    case "tile":
     case "board-vertex":
       return true;
     default:

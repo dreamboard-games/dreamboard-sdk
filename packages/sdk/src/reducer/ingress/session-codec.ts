@@ -1,3 +1,6 @@
+import { assertGameEventReferences } from "../../shared/domain/event-admission.js";
+import { TileDisclosureSchema } from "../../shared/domain/tile-disclosure.js";
+import { ZoneVisibilitySchema } from "../../shared/domain/manifest-schema.js";
 import { BoardRelationSchema } from "../../shared/board-topology-schema.js";
 import { TilePlacementSchema } from "../../shared/domain/tile-placement.js";
 import { PlayerRosterSchema } from "../../shared/domain/player-identity";
@@ -113,6 +116,7 @@ const currentRuntimeTableSchema = z
       z.string(),
       z.strictObject({
         baseId: z.string(),
+        visibility: ZoneVisibilitySchema,
         relations: z.array(BoardRelationSchema),
       }),
     ),
@@ -120,6 +124,7 @@ const currentRuntimeTableSchema = z
       z.string(),
       z
         .object({
+          disclosure: TileDisclosureSchema,
           componentType: z.literal("tile"),
           id: z.string(),
           tileTypeId: z.string(),
@@ -250,6 +255,7 @@ export function createIngressRuntimeCodec<
           phaseName: phaseNameSchema,
           interactionId: z.string().min(1),
           values: z.array(runtimePayloadSchema).min(1),
+          concealedBasis: ContractZod.ReferenceBasisSchema.optional(),
         })
         .strict()
         .refine((pending) => {
@@ -388,6 +394,7 @@ export function createIngressRuntimeCodec<
       }
       assertZoneConsistency(rawTable, definition.contract.manifest);
       const table = safeParseOrThrow(tableSchema, rawTable, "domain.table");
+      assertGameEventReferences(envelope.runtime.events, table);
       const privateState = Object.fromEntries(
         playerIds.map((playerId) => [
           playerId,

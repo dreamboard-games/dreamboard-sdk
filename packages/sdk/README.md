@@ -275,9 +275,15 @@ To migrate an older manifest, replace each card's `type` with `id` and set
 ## Reducer runner contract
 
 `createReducerBundle(game)` returns exactly the contract version and three
-operations: `initialize(input)`, `dispatch({ state, input })`,
-and `project({ state, playerIds })`. The runner contract is `0.10.0`; hosts must
-require that exact version. Dispatch includes validation, direct transaction mutations, and phase entry.
+operations: `initialize(input)`, `dispatch({ state, input, referenceBasis })`,
+and `project({ state, playerIds, referenceBasis })`. The runner contract is `0.11.0`; hosts must
+require that exact version. The host supplies `referenceBasis: { sessionId, version }`:
+use a fresh session ID for each authority lifetime, increment version exactly once
+for every accepted input, and advance it on restore without restoring an old
+version from checkpoint data. Never change authoritative state under the same
+basis. Submitted inputs carry the complete issuing frame basis; the host checks
+its action-set version before dispatch. Dispatch includes validation, direct
+transaction mutations, and phase entry.
 Initialization returns
 `{ state, terminal?, events? }`, preserving outcomes and events from initial
 phase entry and returned transitions.
@@ -358,15 +364,20 @@ the hosted entry uses only `iframeSource()` and type imports.
 
 Local sources expose `inspect`, bounded `explore`, typed explicit-actor `apply`,
 `switchSeat`, `checkpoint`, and validated `restore`. A JSON checkpoint preserves
-pending selections and terminal state; restoring does not replay commands.
+visible pending selections and terminal state; restoring does not replay commands.
+Concealed selections expire after any other accepted input or restore. Each
+accepted extension of that same unfinished selection issues a new validity stamp
+for the immediately following frame. This prevents drafts from tracking hidden
+tiles or cards through a shuffle, including a shuffle that leaves their position
+unchanged.
 `createTestSource(snapshot)` supplies controlled frames and acknowledgements for
 instance and React tests. Static and hosted sources do not expose `apply`.
 
 Hosts import `assertReducerBundleContract`, `REDUCER_CONTRACT_VERSION`,
 `ReducerWire` types and `ReducerWireZod` schemas from `/reducer`. Canonical iframe
 and gameplay websocket schemas plus `materializePluginGameplayFrame` live at the
-root. Materialize the seat projection with static board data before publishing it;
-sources publish the canonical seat view and keep command bases private.
+root. Materialize the requested seat directly from its projection before publishing it;
+sources publish the canonical seat view and submit the exact frame basis.
 
 Visible cards share one complete `ViewCard` shape: `id`, `cardType`, and JSON
 `properties`, plus optional `name`, `text`, `frontImage`, and `backImage`.
@@ -375,7 +386,28 @@ contain these objects directly. Headless `card.view` preserves the manifest's
 card identity, category, and property inference and is deeply readonly; table-only
 `cardSetId` and `componentType` are absent. Concealed cards have a positional
 opaque seat identity, no view, and an optional separate `cardBacksById` entry.
-This wire format requires plugin protocol version 9 and reducer contract `0.10.0`.
+This wire format requires plugin protocol version 10 and reducer contract `0.11.0`.
+
+Tiles use opaque `SeatTileRef` values even when visible. A projected tile is either
+`{ disclosure: "visible", ref, tileTypeId, name, ownerId, fields, properties, frontImage? }` or
+`{ disclosure: "concealed", ref, appearance }`; an omitted tile contributes no
+entry or count. Public appearances are authored independently of secret faces.
+Boards and zones each carry their own projected tiles. Only visible tiles
+contribute cells, edges, vertices, and relations to the seat's board topology.
+Use `phase.inputs.tile({ from: [zoneId] })` or
+`phase.inputs.tile({ boards: [boardId] })` to select a tile. Reducers receive
+its authoritative identity after the SDK validates and resolves the reference.
+`tx.setTileDisclosure` controls face audiences and public appearance;
+`tx.setBoardVisibility` controls the board's audience. Location visibility always
+caps tile disclosure. Authored defaults cannot identify concealed tiles or cards.
+Game-owned view fields can publish visible references through `references.tile`
+and `references.space`; arbitrary authored text and JSON remain explicit publication.
+
+Every `tx.emit` event declares `audience: { kind: "public" }` or
+`{ kind: "seats", playerIds }`. A typed detail `{ kind: "tile", tileId }` is
+projected only when that tile is visible to the audience. Identity-specific event
+details and view references never track a concealed tile. Clients receive only
+their own events and admitted tile references.
 
 Card sets contain their authored `cards`, `cardSchema`, and `defaultHome` directly.
 Standard playing cards are game-owned definitions with ordinary suit/rank

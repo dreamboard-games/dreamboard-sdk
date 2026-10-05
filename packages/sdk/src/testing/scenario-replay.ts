@@ -243,6 +243,14 @@ export async function probeScenarioCommand<Game>(options: {
 }
 
 class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
+  private readonly authoritySessionId = crypto.randomUUID();
+  private authorityVersion = 1;
+  private referenceBasis() {
+    return {
+      sessionId: this.authoritySessionId,
+      version: this.authorityVersion,
+    };
+  }
   readonly operations: ScenarioRuntimeOperations;
   readonly scenarioId: string;
   readonly scenario: ScenarioReplayDefinition<Game>;
@@ -352,6 +360,7 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
   ): InteractionExplanationLike {
     return structuredClone(
       this.bundle.explainInteraction({
+        referenceBasis: this.referenceBasis(),
         state: this.reducerState,
         playerId: this.playerId(seat, "seat"),
         interactionId,
@@ -382,6 +391,7 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
         : null;
     const projection = this.bundle.project({
       state: this.reducerState,
+      referenceBasis: this.referenceBasis(),
       playerIds: selectedPlayerId ? [selectedPlayerId] : [],
     });
     const descriptors = selectedPlayerId
@@ -417,6 +427,7 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
         descriptor: structuredClone(descriptor),
         explanation: structuredClone(
           this.bundle.explainInteraction({
+            referenceBasis: this.referenceBasis(),
             state: this.reducerState,
             playerId: selectedPlayerId!,
             interactionId: String(descriptor.interactionId ?? ""),
@@ -424,6 +435,7 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
         ),
         actionability: structuredClone(
           this.bundle.resolveInteractionActionability({
+            referenceBasis: this.referenceBasis(),
             state: this.reducerState,
             playerId: selectedPlayerId!,
             interactionId: String(descriptor.interactionId ?? ""),
@@ -438,8 +450,18 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
     };
   }
 
+  currentAuthorParamSchema(seat: number, interactionId: string) {
+    return this.bundle.currentAuthorParamSchema({
+      referenceBasis: this.referenceBasis(),
+      state: this.reducerState,
+      playerId: this.playerId({ seat }, "actor"),
+      interactionId,
+    }) as z.ZodTypeAny | null;
+  }
+
   currentClientParamSchema(seat: number, interactionId: string) {
     return this.bundle.currentClientParamSchema({
+      referenceBasis: this.referenceBasis(),
       state: this.reducerState,
       playerId: this.playerId({ seat }, "actor"),
       interactionId,
@@ -453,6 +475,7 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
   }): InteractionInputEnumerationResult {
     return structuredClone(
       this.bundle.enumerateInteractionParams({
+        referenceBasis: this.referenceBasis(),
         state: this.reducerState,
         playerId: this.playerId({ seat: options.seat }, "perspective.seat"),
         interactionId: options.interactionId,
@@ -606,7 +629,7 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
       path: `scenario.${segment}[${index}].actor`,
     });
     const params = this.operations.resolveCommandParams({
-      currentSchema: this.currentClientParamSchema(
+      currentSchema: this.currentAuthorParamSchema(
         command.actor.seat,
         command.interactionId,
       ),
@@ -618,8 +641,14 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
     });
     const result = await this.bundle.dispatch({
       state: this.reducerState,
+      referenceBasis: this.referenceBasis(),
       input: {
         kind: "interaction",
+        basis: {
+          ...this.referenceBasis(),
+          perspectivePlayerId: playerId,
+          actionSetVersion: "scenario",
+        },
         playerId,
         interactionId: command.interactionId,
         params: params as RuntimeJson,
@@ -634,6 +663,7 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
       };
     }
     this.reducerState = structuredClone(result.state);
+    this.authorityVersion++;
     this.terminal = result.terminal ?? null;
     return {
       kind: "accept",
@@ -652,6 +682,7 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
   private project(playerId: string): Wire.SeatProjectionBundle {
     return this.bundle.project({
       state: this.reducerState,
+      referenceBasis: this.referenceBasis(),
       playerIds: [playerId],
     });
   }

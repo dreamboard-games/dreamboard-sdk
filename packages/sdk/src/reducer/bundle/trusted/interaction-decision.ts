@@ -1,4 +1,7 @@
-import { schemaForCollectors } from "../../client-param-schemas";
+import {
+  schemaForCollectors,
+  schemaForAuthorCollectors,
+} from "../../client-param-schemas";
 import { evaluateStepPrefix } from "./step-prefix";
 import type {
   PhaseMapOf,
@@ -649,6 +652,20 @@ export function createInteractionDecisionResolver<
     return schemaForCollectors(decision.interaction.inputs ?? {});
   }
 
+  function currentAuthorParamSchema(input: {
+    state: State;
+    playerId: PlayerId;
+    interactionId: string;
+  }) {
+    const decision = resolveInteractionDecision({
+      ...input,
+      mode: "descriptor",
+    });
+    if (!decision.found || !decision.visible || !decision.descriptor.step)
+      return null;
+    return schemaForAuthorCollectors(decision.interaction.inputs ?? {});
+  }
+
   function enumerateInteractionParams(input: {
     state: State;
     playerId: PlayerId;
@@ -833,6 +850,7 @@ export function createInteractionDecisionResolver<
 
   return {
     currentClientParamSchema,
+    currentAuthorParamSchema,
     enumerateInteractionParams,
     explainInteraction,
     resolveAvailableInteractionsFor,

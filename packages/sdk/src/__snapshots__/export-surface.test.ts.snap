@@ -132,10 +132,8 @@ exports[`public export surface > root export names are stable 1`] = `
   "parsePluginGameplayFrame",
   "parsePluginSessionDescriptor",
   "parsePluginToHostEnvelope",
-  "parseTileSpaceId",
   "perPlayerInstanceId",
   "staticSource",
-  "tileSpaceId",
 ]
 `;
 

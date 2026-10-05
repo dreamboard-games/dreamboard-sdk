@@ -408,6 +408,7 @@ describe("headless instance", () => {
       zones: {
         hand: {
           alice: {
+            tiles: [],
             cardIds: ["ace", "hidden"],
             cardViewsById: {
               ace: { id: "ace", cardType: "ranked", properties: { rank: "A" } },
@@ -444,6 +445,7 @@ describe("headless instance", () => {
       zones: {
         hand: {
           alice: {
+            tiles: [],
             cardIds: ["ace"],
             cardViewsById: { ace: card },
             cardBacksById: {},
@@ -819,6 +821,7 @@ it("per-card descriptor identity resolves against the latest frame and drop writ
     zones: {
       hand: {
         alice: {
+          tiles: [],
           cardIds: ["ace"],
           cardViewsById: {
             ace: { id: "ace", cardType: "ranked", properties: { rank: "A" } },
@@ -961,6 +964,7 @@ it("reconciles with the selected card's narrow domain, not the broad global desc
   const zones = (route: InteractionDescriptor) => ({
     hand: {
       alice: {
+        tiles: [],
         cardIds: ["ace"],
         cardViewsById: {
           ace: { id: "ace", cardType: "ranked", properties: {} },
@@ -1310,6 +1314,7 @@ it("keeps connected instance projections live and nonenumerable", () => {
 it("keeps public instances of the same zone distinct across hosts", () => {
   const x = setup();
   const hand = (id: string) => ({
+    tiles: [],
     cardIds: [id],
     cardViewsById: { [id]: { id, cardType: "ranked", properties: {} } },
     cardBacksById: {},

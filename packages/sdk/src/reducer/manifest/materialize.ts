@@ -162,7 +162,11 @@ function seededTopologyInventory(
       board.scope,
       playerIds,
     ))
-      boards[id] = { baseId: board.id, relations: [] };
+      boards[id] = {
+        baseId: board.id,
+        visibility: board.visibility ?? "public",
+        relations: [],
+      };
   const tiles: Record<
     string,
     { id: string; tileTypeId: string; ownerId: string | null }
@@ -1460,6 +1464,9 @@ function materializeManifest(
     )) {
       tiles[id] = {
         componentType: "tile",
+        disclosure: structuredClone(
+          seed.disclosure ?? { face: { audience: "public" } },
+        ),
         id,
         tileTypeId: seed.typeId,
         ownerId: origin,
@@ -1484,6 +1491,7 @@ function materializeManifest(
     for (const id of board.runtimeBoardIds)
       boardStatesById[id] = {
         baseId: board.board.id,
+        visibility: board.board.visibility ?? "public",
         relations: board.relations.map((relation) => ({
           ...(relation.id === undefined ? {} : { id: relation.id }),
           typeId: relation.typeId,

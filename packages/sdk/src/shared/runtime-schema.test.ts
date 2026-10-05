@@ -10,6 +10,12 @@ const sessionFixture = FIXTURES.find(
 const state = current.ReducerSessionStateSchema.parse(sessionFixture.value);
 
 const checkedInput = {
+  basis: {
+    sessionId: "fixture-session",
+    version: 1,
+    actionSetVersion: "actions",
+    perspectivePlayerId: "player-1",
+  },
   kind: "interaction",
   playerId: "player-1",
   interactionId: "play",
@@ -115,20 +121,23 @@ describe("canonical runtime schemas", () => {
       }).success,
     ).toBe(false);
     expect(
-      current.SeatProjectionBundleSchema.parse({ seats: {}, events: [] }),
+      current.SeatProjectionBundleSchema.parse({
+        seats: {},
+        referenceBasis: { sessionId: "fixture-session", version: 1 },
+      }),
     ).toEqual({
       seats: {},
-      events: [],
+      referenceBasis: { sessionId: "fixture-session", version: 1 },
     });
     expect(
       current.SeatProjectionBundleSchema.parse({
         seats: {},
-        events: [],
+        referenceBasis: { sessionId: "fixture-session", version: 1 },
         simultaneousPhase: null,
       }),
     ).toEqual({
       seats: {},
-      events: [],
+      referenceBasis: { sessionId: "fixture-session", version: 1 },
       simultaneousPhase: null,
     });
     expect(
@@ -166,7 +175,12 @@ describe("canonical runtime schemas", () => {
       current.OutcomeStandingSchema.safeParse({ ...standing, score: Infinity })
         .success,
     ).toBe(false);
-    const event = { kind: "systemAction", procedureId: "deal", title: "Deal" };
+    const event = {
+      kind: "systemAction",
+      procedureId: "deal",
+      title: "Deal",
+      audience: { kind: "public" as const },
+    };
     const result = {
       kind: "accept",
       state,

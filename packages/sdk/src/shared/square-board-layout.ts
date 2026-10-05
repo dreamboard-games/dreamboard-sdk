@@ -5,7 +5,17 @@ type Point = { readonly x: number; readonly y: number };
 
 /** Render admitted square topology without inferring boundary incidence from cells. */
 export function createSquareBoardLayout(
-  board: SquareBoardTopology,
+  board: {
+    readonly id: string;
+    readonly spaces: Readonly<
+      Record<
+        string,
+        { readonly id: string; readonly col: number; readonly row: number }
+      >
+    >;
+    readonly vertices: SquareBoardTopology["vertices"];
+    readonly edges: SquareBoardTopology["edges"];
+  },
   size: number,
   origin: Point,
 ) {

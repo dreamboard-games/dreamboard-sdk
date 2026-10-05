@@ -13,7 +13,6 @@ function projectPublic(state: GameState, q: typeof stormtrail.types.Queries) {
     activePlayerId: state.flow.activePlayers[0] ?? null,
     turnNumber: state.publicState.turnNumber,
     setup: state.publicState.setup,
-    banditsHexId: banditsHexId(state),
     campsByIntersectionId: campsByIntersectionId(state),
     trailsByEdgeId: trailsByEdgeId(state),
     lastRoll: state.publicState.lastRoll,
@@ -47,7 +46,7 @@ function projectPublic(state: GameState, q: typeof stormtrail.types.Queries) {
     outcome: state.publicState.outcome,
   };
 }
-export const view = stormtrail.view(({ state, playerId, q }) => {
+export const view = stormtrail.view(({ state, playerId, q, references }) => {
   const privateState = state.privateState[playerId];
   const lastSteal = state.publicState.lastSteal;
   const participatedInLastSteal =
@@ -55,6 +54,7 @@ export const view = stormtrail.view(({ state, playerId, q }) => {
     lastSteal?.victimPlayerId === playerId;
   return {
     ...projectPublic(state, q),
+    banditsHexId: references.space("frontier", banditsHexId(state)),
     playerId,
     mySupplies: q.player.resources(playerId),
     myDiscardRequired:

@@ -6,6 +6,7 @@ import type {
   InteractionInputDescriptor,
 } from "../../../shared/interaction-schema";
 import type {
+  InputDomainDescriptor,
   AnyInteractionSpec,
   InteractionIdOfDefinition,
   PhaseMapOf,
@@ -106,8 +107,8 @@ export type TrustedInteractionDescriptorShape<
 
 export type InteractionInputDescriptorShape = Omit<
   InteractionInputDescriptor,
-  "defaultValue"
-> & { defaultValue?: unknown };
+  "defaultValue" | "domain"
+> & { defaultValue?: unknown; domain: InputDomainDescriptor };
 
 export type InteractionActorAuthorization<PlayerId extends string> =
   | { readonly mode: "actors"; readonly actors: ReadonlySet<PlayerId> }

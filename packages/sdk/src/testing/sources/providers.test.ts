@@ -1,4 +1,5 @@
 import { tileSpaceId } from "../../shared/domain/tile-space.js";
+import { projectedSpaceRef } from "../../shared/__fixtures__/reference-basis.js";
 import { describe, expect, it, vi } from "vitest";
 import hearts from "../../../../../examples/reference-games/hearts/app/game.ts";
 import hex from "../../../../../examples/reference-games/hex-network-trading/app/game.ts";
@@ -178,9 +179,16 @@ describe("production-backed local sources", () => {
       at: "ready-to-move",
       as: "player-1",
     });
+    const untouched = source.checkpoint();
     expect(
       await source.submit("moveBandits", {
         hexId: tileSpaceId("northForest", "cell"),
+      }),
+    ).toMatchObject({ accepted: false });
+    expect(source.checkpoint()).toEqual(untouched);
+    expect(
+      await source.submit("moveBandits", {
+        hexId: projectedSpaceRef(source.inspect(), "frontier", "northForest"),
       }),
     ).toEqual({ accepted: true });
     const saved: unknown = JSON.parse(JSON.stringify(source.checkpoint()));
@@ -191,7 +199,7 @@ describe("production-backed local sources", () => {
         (item) => item.interactionId === "moveBandits",
       )!.step;
     expect(step?.selected).toEqual({
-      hexId: tileSpaceId("northForest", "cell"),
+      hexId: projectedSpaceRef(source.inspect(), "frontier", "northForest"),
     });
     expect(
       (await source.submit("moveBandits", { targetPlayerId: "player-1" }))
@@ -208,11 +216,13 @@ describe("production-backed local sources", () => {
         .frame.availableInteractions.find(
           (item) => item.interactionId === "moveBandits",
         )!.step?.selected,
-    ).toEqual({ hexId: tileSpaceId("northForest", "cell") });
+    ).toEqual({
+      hexId: projectedSpaceRef(source.inspect(), "frontier", "northForest"),
+    });
     expect(await source.cancel("moveBandits")).toEqual({ accepted: true });
     expect(
       await source.submit("moveBandits", {
-        hexId: tileSpaceId("southWestClay", "cell"),
+        hexId: projectedSpaceRef(source.inspect(), "frontier", "southWestClay"),
       }),
     ).toEqual({ accepted: true });
     expect(
@@ -227,7 +237,7 @@ describe("production-backed local sources", () => {
       as: "player-1",
     });
     await source.submit("moveBandits", {
-      hexId: tileSpaceId("northForest", "cell"),
+      hexId: projectedSpaceRef(source.inspect(), "frontier", "northForest"),
     });
     const before = source.checkpoint();
     const commands = await source.explore({ maxEvaluations: 100 });

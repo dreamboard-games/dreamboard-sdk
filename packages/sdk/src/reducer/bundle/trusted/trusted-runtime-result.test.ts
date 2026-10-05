@@ -14,6 +14,7 @@ describe("normalizeGameOutcome", () => {
   test("normalizeGameEvents normalizes bounded system action events", () => {
     const result = normalizeGameEvents([
       gameEvent.systemAction({
+        audience: { kind: "public" as const },
         procedureId: "river-advance",
         title: "The river advanced",
         summary: "A card moved through the public river.",
@@ -28,6 +29,7 @@ describe("normalizeGameOutcome", () => {
 
     expect(result).toEqual([
       {
+        audience: { kind: "public" as const },
         kind: "systemAction",
         procedureId: "river-advance",
         title: "The river advanced",
@@ -46,21 +48,23 @@ describe("normalizeGameOutcome", () => {
     expect(() =>
       normalizeGameEvents([
         gameEvent.systemAction({
+          audience: { kind: "public" as const },
           procedureId: "",
           title: "Bad event",
         }),
       ]),
-    ).toThrow("procedureId must be a non-empty string");
+    ).toThrow(/procedureId/);
 
     expect(() =>
       normalizeGameEvents([
         gameEvent.systemAction({
+          audience: { kind: "public" as const },
           procedureId: "bad-number",
           title: "Bad number",
           details: [{ label: "Amount", value: Infinity }],
         }),
       ]),
-    ).toThrow("finite number");
+    ).toThrow(/finite|number/);
   });
 
   test("normalizes canonical GameOutcome standings by rank then player order", () => {
@@ -145,7 +149,7 @@ describe("normalizeGameOutcome", () => {
           { playerId: "player-2", rank: 2, result: "loss" },
         ],
       }),
-    ).toThrow("finite number");
+    ).toThrow(/finite|number/);
 
     expect(() =>
       normalizeGameOutcome(state, {

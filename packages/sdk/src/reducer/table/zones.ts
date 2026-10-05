@@ -357,13 +357,6 @@ export function assertComponentAllowed(
   componentId: string,
 ): void {
   assertComponent(table, componentId);
-  if (
-    Object.hasOwn(table.tiles, componentId) &&
-    definition.visibility !== "public"
-  )
-    throw new Error(
-      "Tiles require public zone destinations until tile projection supports privacy.",
-    );
   const card = Object.hasOwn(table.cards, componentId)
     ? table.cards[componentId]
     : undefined;

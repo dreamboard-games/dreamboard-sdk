@@ -19,12 +19,14 @@ export function createReducerScenarioRunner(
     ): Promise<ReducerScenarioTrace> {
       let state = structuredClone(options.initialState);
       let gameVersion = options.initialGameVersion ?? 1;
+      const sessionId = crypto.randomUUID();
       const frames: ReducerScenarioFrame[] = [];
       const exchanges: ReducerScenarioExchange[] = [];
 
       const appendFrame = (id: string): ReducerScenarioFrame => {
         const dynamicProjection = options.bundle.project({
           state,
+          referenceBasis: { sessionId, version: gameVersion },
           playerIds: [options.viewer.playerId],
         });
         const flow = readFlowState(state);
@@ -34,6 +36,7 @@ export function createReducerScenarioRunner(
           dynamicProjection,
           perspectivePlayerId: options.viewer.playerId,
           version: gameVersion,
+          sessionId,
           actionSetVersion: "pending",
         });
         const actionSetVersion = computePluginActionSetVersion({
@@ -70,6 +73,7 @@ export function createReducerScenarioRunner(
           // Authoring probes execute the canonical operation without committing it.
           const dispatched = await options.bundle.dispatch({
             state: structuredClone(state),
+            referenceBasis: { sessionId, version: gameVersion },
             input: operation.input,
           });
           const result =
@@ -92,6 +96,7 @@ export function createReducerScenarioRunner(
 
         const result = await options.bundle.dispatch({
           state,
+          referenceBasis: { sessionId, version: gameVersion },
           input: operation.input,
         });
         if (result.kind === "reject") {

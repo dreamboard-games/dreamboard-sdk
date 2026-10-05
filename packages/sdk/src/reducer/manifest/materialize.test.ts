@@ -435,7 +435,11 @@ test("square tile metadata and defaults survive topology derivation", () => {
   expect(
     result.vertices.find((vertex) => vertex.typeId === "city"),
   ).toMatchObject({ fields: { points: 4 } });
-  expect(table.boards.map).toEqual({ baseId: "map", relations: [] });
+  expect(table.boards.map).toEqual({
+    baseId: "map",
+    visibility: "public",
+    relations: [],
+  });
   expect(() =>
     compileManifest({
       ...source,

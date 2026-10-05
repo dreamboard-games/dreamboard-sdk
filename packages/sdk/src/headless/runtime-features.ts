@@ -1,4 +1,4 @@
-import type { BoardTopology } from "../shared/board-topology.js";
+import type { SeatBoardTopology } from "../shared/seat-topology-schema.js";
 import type { ActionProps } from "./model.js";
 import type { InputDomain } from "../shared/protocol/frame.js";
 import type { RuntimeJson } from "../shared/runtime-json.js";
@@ -45,7 +45,7 @@ export interface RuntimeFeatureGame extends RuntimeFeatureSnapshot {
 }
 export interface RuntimeBoard {
   readonly id: string;
-  readonly data: BoardTopology;
+  readonly data: SeatBoardTopology;
   readonly game: RuntimeFeatureGame;
 }
 export interface RuntimeCollection<Value> {
@@ -55,8 +55,8 @@ export interface RuntimeCollection<Value> {
 }
 export interface RuntimeFeatureContext {
   readonly game: RuntimeFeatureGame;
-  getBoards(): Readonly<Record<string, BoardTopology>>;
-  createBoard(data: BoardTopology): RuntimeBoard;
+  getBoards(): Readonly<Record<string, SeatBoardTopology>>;
+  createBoard(data: SeatBoardTopology): RuntimeBoard;
   routeTarget(
     target: RuntimeSelectionTarget,
     options?: RuntimeTargetOptions,

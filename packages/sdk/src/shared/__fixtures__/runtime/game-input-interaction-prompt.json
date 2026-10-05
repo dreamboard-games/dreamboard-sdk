@@ -4,5 +4,11 @@
   "interactionId": "discardHalf",
   "params": {
     "discards": ["card-a", "card-b"]
+  },
+  "basis": {
+    "sessionId": "fixture-session",
+    "version": 1,
+    "actionSetVersion": "fixture-actions",
+    "perspectivePlayerId": "player-1"
   }
 }

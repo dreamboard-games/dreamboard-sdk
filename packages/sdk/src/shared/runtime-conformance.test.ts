@@ -1,3 +1,4 @@
+import { testGameplayBasis } from "./__fixtures__/reference-basis.js";
 import { describe, expect, test } from "vitest";
 import { FIXTURES } from "./__fixtures__/runtime";
 import type * as Wire from "./runtime-types";
@@ -289,6 +290,7 @@ describe("strict zod rejects unknown keys", () => {
 describe("committed step wire shape", () => {
   test("cancel is an actor command without params", () => {
     const command = {
+      basis: testGameplayBasis("player-1"),
       kind: "interaction.cancel",
       playerId: "player-1",
       interactionId: "choose",

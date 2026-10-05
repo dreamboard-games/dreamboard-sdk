@@ -93,7 +93,7 @@ export type RuntimeState<
   PlayerId extends string,
   Options extends RuntimeRecord = RuntimeRecord,
 > = {
-  /** Latest accepted public display-event batch; snapshot data, not history. */
+  /** Latest accepted audience-scoped display-event batch; snapshot data, not history. */
   events: readonly GameEvent[];
   rng: RuntimeRngState;
   options: Options;
@@ -101,7 +101,13 @@ export type RuntimeState<
   pending: Partial<
     Record<
       PlayerId,
-      { phaseName: PhaseName; interactionId: string; values: RuntimePayload[] }
+      {
+        phaseName: PhaseName;
+        interactionId: string;
+        values: RuntimePayload[];
+        /** Concealed selections may only continue in the immediately following authority frame. */
+        concealedBasis?: { sessionId: string; version: number };
+      }
     >
   >;
   lastTransition: {

@@ -7,7 +7,10 @@ import {
   DREAMBOARD_PLUGIN_PROTOCOL_VERSION,
 } from "./protocol.js";
 import { RuntimeJsonSchema } from "../runtime-json.js";
-import { BoardProjectionSchema } from "../board-topology-schema.js";
+import {
+  BoardProjectionSchema,
+  ProjectedTileSchema,
+} from "../seat-topology-schema.js";
 import type {
   GameOutcome,
   GameplayBasis,
@@ -22,9 +25,10 @@ import type {
   PluginToHostPayload,
 } from "./protocol.js";
 
-export const GameEventDetailSchema = ReducerWireZod.GameEventDetailSchema;
+export const GameEventDetailSchema =
+  ReducerWireZod.ProjectedGameEventDetailSchema;
 export const SystemActionEventSchema = ReducerWireZod.SystemActionEventSchema;
-export const GameEventSchema = ReducerWireZod.GameEventSchema;
+export const GameEventSchema = ReducerWireZod.ProjectedGameEventSchema;
 export const SeatProjectionBundleSchema =
   ReducerWireZod.SeatProjectionBundleSchema;
 
@@ -59,6 +63,7 @@ import { InteractionDescriptorSchema } from "../interaction-schema.js";
 
 export const ZoneHandlesSnapshotSchema = z
   .object({
+    tiles: z.array(ProjectedTileSchema),
     cardIds: z.array(z.string()),
     cardViewsById: z.record(z.string(), ViewCardSchema),
     cardBacksById: z.record(z.string(), z.string()),
@@ -74,6 +79,7 @@ export const SimultaneousPhaseSnapshotSchema =
 
 export const GameplayBasisSchema = z
   .object({
+    sessionId: z.string().min(1),
     version: z.number().int().nonnegative(),
     actionSetVersion: z.string().min(1),
     perspectivePlayerId: PlayerIdSchema,

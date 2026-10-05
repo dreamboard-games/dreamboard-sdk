@@ -548,3 +548,11 @@ export type BoardLayout = "generic" | "hex" | "square";
  * Unique identifier for the player (e.g., 'player-1')
  */
 export type PlayerId = string;
+
+export type {
+  PublicTileAppearance,
+  TileFaceAudience,
+  AuthoredTileFaceAudience,
+  TileDisclosure,
+  AuthoredTileDisclosure,
+} from "./tile-disclosure.js";

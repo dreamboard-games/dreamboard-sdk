@@ -1,5 +1,6 @@
 import type { RuntimeTableRecord } from "../../model";
 import { assertJsonWithinLimits } from "../../../runtime-json";
+import { GameEventSchema } from "../../../shared/runtime-schema.js";
 import type {
   GameEvent,
   GameEventDetail,
@@ -222,8 +223,18 @@ function normalizeGameEventDetail(
       `details[${index}].value`,
       GAME_EVENT_STRING_LIMIT,
     );
+  } else if (
+    typeof detail.value === "object" &&
+    detail.value?.kind === "tile"
+  ) {
+    assertGameEventString(
+      detail.value.tileId,
+      `details[${index}].value.tileId`,
+    );
   } else if (typeof detail.value !== "boolean") {
-    failGameEvent(`details[${index}].value must be string, number, or boolean`);
+    failGameEvent(
+      `details[${index}].value must be a scalar or typed tile reference`,
+    );
   }
   return {
     label: detail.label,
@@ -232,8 +243,9 @@ function normalizeGameEventDetail(
 }
 
 function normalizeSystemActionEvent(
-  event: SystemActionEvent,
+  input: SystemActionEvent,
 ): SystemActionEvent {
+  const event = GameEventSchema.parse(input);
   assertGameEventString(
     event.procedureId,
     "procedureId",
@@ -248,6 +260,7 @@ function normalizeSystemActionEvent(
   }
   return {
     kind: "systemAction",
+    audience: event.audience,
     procedureId: event.procedureId,
     title: event.title,
     ...(event.summary !== undefined ? { summary: event.summary } : {}),

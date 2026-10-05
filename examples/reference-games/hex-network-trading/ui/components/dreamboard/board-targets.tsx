@@ -309,7 +309,7 @@ function matchesTarget(
   id: string,
 ) {
   return (
-    (target.kind === kind || (kind === "space" && target.kind === "tile")) &&
+    target.kind === kind &&
     (target.valueKind === "board-space"
       ? target.value.boardId === boardId && target.value.spaceId === id
       : target.boardId === boardId && target.value === id)

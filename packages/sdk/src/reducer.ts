@@ -24,6 +24,7 @@ export {
   many,
   type BoardTargetPredicate,
   type CardTargetPredicate,
+  type TileTargetPredicate,
   type ChoiceOptionsFactory,
   type ChoiceTargetOption,
   type ChoiceTargetPredicate,
@@ -132,7 +133,17 @@ export type {
   SquareBoardSpec,
   TileTypeSpec,
   TileSeedSpec,
+  PublicTileAppearance,
+  TileFaceAudience,
+  AuthoredTileFaceAudience,
+  TileDisclosure,
+  AuthoredTileDisclosure,
 } from "./shared/domain/contracts.js";
+
+export type {
+  SeatTileRef,
+  SeatSpaceRef,
+} from "./shared/domain/seat-reference.js";
 
 export * as z from "zod";
 export { ref } from "./reducer/manifest/field-schemas";

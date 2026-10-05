@@ -33,6 +33,7 @@ function snapshot(
           zone,
           {
             [zone === "hand" ? me : "table"]: {
+              tiles: [],
               cardIds,
               cardViewsById: Object.fromEntries(
                 cardIds

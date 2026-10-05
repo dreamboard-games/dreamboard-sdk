@@ -71,3 +71,38 @@ const wrongCost: string | undefined = edge.fields.cost;
 // @ts-expect-error Projected annotation fields are immutable.
 vertex.fields.blocked = true;
 void [edgeIsAny, vertexIsAny, cost, blocked, wrongCost];
+
+import type {
+  SeatSpaceRef,
+  SeatTileRef,
+} from "../shared/domain/seat-reference.js";
+import type { TileSpaceId } from "../shared/domain/tile-space.js";
+import type { BoardDataOf } from "./model.js";
+declare const projectedCell: BoardDataOf<
+  typeof game,
+  "map"
+>["spaces"][SeatSpaceRef];
+const projectedId: SeatSpaceRef = projectedCell.id;
+const projectedTile: SeatTileRef = projectedCell.tileRef;
+// @ts-expect-error Clients never receive the authoritative tile instance identity.
+projectedCell.tileId;
+// @ts-expect-error Seat cell references cannot be used as authoritative runtime space IDs.
+const authoritativeId: TileSpaceId = projectedCell.id;
+void [projectedId, projectedTile, authoritativeId];
+
+import type { BoardTarget } from "./targets.js";
+declare const rawCellId: TileSpaceId;
+const clientTarget: BoardTarget<typeof game> = {
+  kind: "space",
+  valueKind: "board-id",
+  boardId: "map",
+  value: projectedId,
+};
+const invalidClientTarget: BoardTarget<typeof game> = {
+  kind: "space",
+  valueKind: "board-id",
+  boardId: "map",
+  // @ts-expect-error Client board targets require seat references, never authoritative cell IDs.
+  value: rawCellId,
+};
+void [clientTarget, invalidClientTarget];

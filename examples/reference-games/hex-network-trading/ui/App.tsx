@@ -50,7 +50,11 @@ export function StormtrailBoard({ view }: { view: GameView }) {
         renderSpace={(space) => {
           const terrain = TERRAIN_STYLE[space.data.typeId];
           return (
-            <g data-stormtrail-hex={space.id}>
+            <g
+              data-stormtrail-hex={space.id}
+              data-hex-q={space.data.q}
+              data-hex-r={space.data.r}
+            >
               <polygon
                 points={space
                   .points()

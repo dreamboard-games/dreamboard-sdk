@@ -1,3 +1,7 @@
+import {
+  testReferenceBasis,
+  testGameplayBasis,
+} from "../shared/__fixtures__/reference-basis.js";
 import { asPlayerId } from "./per-player";
 import { RuntimeJsonSchema } from "../shared/runtime-json";
 const playerOne = asPlayerId("player-1");
@@ -140,8 +144,10 @@ describe("committed interaction steps", () => {
   test("commits one current value without reducing, restores it, then validates and reduces once", async () => {
     const { bundle, initialized, counts } = await fixture();
     const first = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: initialized.state,
       input: {
+        basis: testGameplayBasis(playerOne),
         kind: "interaction",
         playerId: playerOne,
         interactionId: "choose",
@@ -161,8 +167,10 @@ describe("committed interaction steps", () => {
       JSON.parse(JSON.stringify(first.state)),
     );
     const last = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: restored,
       input: {
+        basis: testGameplayBasis(playerOne),
         kind: "interaction",
         playerId: playerOne,
         interactionId: "choose",
@@ -187,7 +195,11 @@ describe("committed interaction steps", () => {
       const malformed = structuredClone(initialized.state);
       malformed.runtime.pending[playerOne] = pending;
       expect(() =>
-        bundle.project({ state: malformed, playerIds: [playerOne] }),
+        bundle.project({
+          referenceBasis: testReferenceBasis,
+          state: malformed,
+          playerIds: [playerOne],
+        }),
       ).toThrow();
     }
   });
@@ -195,8 +207,10 @@ describe("committed interaction steps", () => {
   test("rejects future/extra keys and cancels only the actor's own unsealed prefix", async () => {
     const { bundle, initialized } = await fixture();
     const bad = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: initialized.state,
       input: {
+        basis: testGameplayBasis(playerOne),
         kind: "interaction",
         playerId: playerOne,
         interactionId: "choose",
@@ -205,8 +219,10 @@ describe("committed interaction steps", () => {
     });
     expect(bad.kind).toBe("reject");
     const first = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: initialized.state,
       input: {
+        basis: testGameplayBasis(playerOne),
         kind: "interaction",
         playerId: playerOne,
         interactionId: "choose",
@@ -215,8 +231,10 @@ describe("committed interaction steps", () => {
     });
     if (first.kind !== "accept") throw new Error("first step rejected");
     const other = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: first.state,
       input: {
+        basis: testGameplayBasis(playerTwo),
         kind: "interaction.cancel",
         playerId: playerTwo,
         interactionId: "choose",
@@ -224,8 +242,10 @@ describe("committed interaction steps", () => {
     });
     expect(other.kind).toBe("reject");
     const canceled = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: first.state,
       input: {
+        basis: testGameplayBasis(playerOne),
         kind: "interaction.cancel",
         playerId: playerOne,
         interactionId: "choose",
@@ -238,8 +258,10 @@ describe("committed interaction steps", () => {
   test("does not resolve another seat's private factory and projects only that seat's prefix", async () => {
     const { bundle, initialized } = await fixture({ exclusive: true });
     const first = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: initialized.state,
       input: {
+        basis: testGameplayBasis(playerOne),
         kind: "interaction",
         playerId: playerOne,
         interactionId: "choose",
@@ -248,6 +270,7 @@ describe("committed interaction steps", () => {
     });
     if (first.kind !== "accept") throw new Error("first step rejected");
     const projection = bundle.project({
+      referenceBasis: testReferenceBasis,
       state: first.state,
       playerIds: [playerOne, playerTwo],
     });
@@ -281,8 +304,10 @@ describe("committed interaction steps", () => {
   test("preserves the pre-final prefix and RNG when authored reduction rejects", async () => {
     const { bundle, initialized } = await fixture({ rejectFinal: true });
     const first = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: initialized.state,
       input: {
+        basis: testGameplayBasis(playerOne),
         kind: "interaction",
         playerId: playerOne,
         interactionId: "choose",
@@ -292,8 +317,10 @@ describe("committed interaction steps", () => {
     if (first.kind !== "accept") throw new Error("first step rejected");
     const before = JSON.stringify(first.state);
     const rejected = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: first.state,
       input: {
+        basis: testGameplayBasis(playerOne),
         kind: "interaction",
         playerId: playerOne,
         interactionId: "choose",
@@ -308,8 +335,10 @@ describe("committed interaction steps", () => {
   test("keeps a valid prefix when the next domain empties and clears it on same-name phase entry", async () => {
     const { bundle, initialized } = await fixture();
     const first = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: initialized.state,
       input: {
+        basis: testGameplayBasis(playerOne),
         kind: "interaction",
         playerId: playerOne,
         interactionId: "choose",
@@ -318,8 +347,10 @@ describe("committed interaction steps", () => {
     });
     if (first.kind !== "accept") throw new Error("first step rejected");
     const blocked = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: first.state,
       input: {
+        basis: testGameplayBasis(playerTwo),
         kind: "interaction",
         playerId: playerTwo,
         interactionId: "block",
@@ -329,8 +360,10 @@ describe("committed interaction steps", () => {
     if (blocked.kind !== "accept") throw new Error("block rejected");
     expect(blocked.state.runtime.pending[playerOne]?.values).toEqual(["b"]);
     const reset = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: blocked.state,
       input: {
+        basis: testGameplayBasis(playerTwo),
         kind: "interaction",
         playerId: playerTwo,
         interactionId: "reset",
@@ -353,8 +386,10 @@ describe("committed interaction steps", () => {
       [playerTwo, { first: "b" }],
     ] as const) {
       const result = await bundle.dispatch({
+        referenceBasis: testReferenceBasis,
         state,
         input: {
+          basis: testGameplayBasis(playerId),
           kind: "interaction",
           playerId,
           interactionId: "submit",
@@ -371,8 +406,10 @@ describe("committed interaction steps", () => {
     expect(state.runtime.pending[playerTwo]?.values).toEqual(["b"]);
     const before = JSON.stringify(state);
     const result = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state,
       input: {
+        basis: testGameplayBasis(playerTwo),
         kind: "interaction",
         playerId: playerTwo,
         interactionId: "submit",
@@ -383,8 +420,10 @@ describe("committed interaction steps", () => {
     expect(JSON.stringify(state)).toBe(before);
     expect(state.runtime.rng).toEqual(initialized.state.runtime.rng);
     const cancelSealed = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state,
       input: {
+        basis: testGameplayBasis(playerOne),
         kind: "interaction.cancel",
         playerId: playerOne,
         interactionId: "submit",
@@ -405,8 +444,10 @@ describe("committed interaction steps", () => {
       [playerTwo, { second: "b" }],
     ] as const) {
       const result = await bundle.dispatch({
+        referenceBasis: testReferenceBasis,
         state,
         input: {
+          basis: testGameplayBasis(playerId),
           kind: "interaction",
           playerId,
           interactionId: "submit",
@@ -507,8 +548,10 @@ describe("prepared final step parameters", () => {
       });
       const interactionId = simultaneous ? "submit" : "action";
       const first = await bundle.dispatch({
+        referenceBasis: testReferenceBasis,
         state: initialized.state,
         input: {
+          basis: testGameplayBasis(playerOne),
           kind: "interaction",
           playerId: playerOne,
           interactionId,
@@ -518,8 +561,10 @@ describe("prepared final step parameters", () => {
       if (first.kind !== "accept") throw new Error("first step rejected");
       expect(first.state.runtime.pending[playerOne]?.values).toEqual([1]);
       const second = await bundle.dispatch({
+        referenceBasis: testReferenceBasis,
         state: first.state,
         input: {
+          basis: testGameplayBasis(playerOne),
           kind: "interaction",
           playerId: playerOne,
           interactionId,
@@ -654,8 +699,10 @@ for (const change of [
     ).state;
     for (const params of [{ first: "a" }, { second: "b" }] as const) {
       const result = await bundle.dispatch({
+        referenceBasis: testReferenceBasis,
         state,
         input: {
+          basis: testGameplayBasis(playerOne),
           kind: "interaction",
           playerId: playerOne,
           interactionId: "choose",
@@ -667,8 +714,10 @@ for (const change of [
     }
     const before = JSON.stringify(state);
     const changed = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state,
       input: {
+        basis: testGameplayBasis(playerTwo),
         kind: "interaction",
         playerId: playerTwo,
         interactionId: "change",
@@ -686,8 +735,10 @@ for (const change of [
     );
     if (change === "invalidate") {
       const stale = await bundle.dispatch({
+        referenceBasis: testReferenceBasis,
         state: changed.state,
         input: {
+          basis: testGameplayBasis(playerOne),
           kind: "interaction",
           playerId: playerOne,
           interactionId: "choose",

@@ -32,3 +32,11 @@ export type {
 export { cardInput } from "./inputs/cardInput";
 export { rngInput } from "./inputs/rngInput";
 export { many, type ManyOptions } from "./inputs/many";
+
+export { tileTarget } from "./inputs/tileTarget";
+export type {
+  TileTargetBuilder,
+  TileTargetPredicate,
+  TileTargetRule,
+} from "./inputs/tileTarget";
+export { tileInput } from "./inputs/tileInput";

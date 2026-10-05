@@ -54,6 +54,7 @@ export function createTestSource(initial: SourceSnapshot): TestSource {
     lifecycle.frame({
       ...snapshot.frame,
       basis: {
+        sessionId,
         version: snapshot.version,
         perspectivePlayerId: snapshot.me,
         actionSetVersion: computePluginActionSetVersion({

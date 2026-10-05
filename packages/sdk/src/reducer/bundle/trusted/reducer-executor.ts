@@ -1,6 +1,14 @@
+import { assertGameEventReferences } from "../../../shared/domain/event-admission.js";
+import { createPendingSelectionReconciler } from "./pending-selection.js";
 import { normalizeGameEvents } from "./trusted-runtime-result";
 import { evaluateStepPrefix } from "./step-prefix";
-import { concealCards, revealSubmittedCards } from "./card-concealment";
+import { concealCards } from "./card-concealment";
+import { createSeatDisclosure } from "./tile-disclosure.js";
+import {
+  decodeSeatParams,
+  selectionHasConcealedReferences,
+} from "./seat-interactions.js";
+import type { ReferenceBasis } from "../../../shared/runtime-types.js";
 import { implicitResultOf } from "./trusted-runtime-args";
 import type { DispatchTraceEntry } from "../../core/types";
 import type { RuntimePayload } from "../../model";
@@ -378,47 +386,10 @@ export function createReducerExecutor<
     };
   }
 
-  function reconcilePending(state: State): State {
-    const pending = { ...state.runtime.pending };
-    for (const [seat, choice] of Object.entries(state.runtime.pending)) {
-      const playerId = seat as PlayerId;
-      const saved = choice as NonNullable<
-        State["runtime"]["pending"][PlayerId]
-      >;
-      const interaction = scope.findInteractionInPhase(
-        state.flow.currentPhase,
-        saved.interactionId,
-      );
-      const eligibility = interactions.resolveInteractionEligibility({
-        state,
-        playerId,
-        interactionId: saved.interactionId,
-      });
-      if (
-        saved.phaseName !== state.flow.currentPhase ||
-        !interaction?.steps ||
-        !eligibility.found ||
-        !eligibility.validation.valid
-      ) {
-        delete pending[playerId];
-        continue;
-      }
-      const prefix = evaluateStepPrefix(
-        interaction.steps,
-        scope.toDomainState(state),
-        playerId,
-        saved.values,
-        scope.manifest,
-      );
-      if (prefix.values.length === 0) delete pending[playerId];
-      else
-        pending[playerId] = {
-          ...saved,
-          values: prefix.values as RuntimePayload[],
-        };
-    }
-    return { ...state, runtime: { ...state.runtime, pending } };
-  }
+  const reconcilePending = createPendingSelectionReconciler(
+    scope,
+    interactions,
+  );
 
   const MAX_PHASE_ENTRIES = 1_000;
 
@@ -430,7 +401,11 @@ export function createReducerExecutor<
     trace?: readonly DispatchTraceEntry<State, PlayerId, ReducerInput>[];
   };
 
-  function complete(initial: Accepted, entries = 0) {
+  function complete(
+    initial: Accepted,
+    entries = 0,
+    referenceBasis?: ReferenceBasis,
+  ) {
     let state = initial.state;
     let transition = initial.transition;
     let terminal = initial.terminal;
@@ -463,39 +438,71 @@ export function createReducerExecutor<
       transition = entered.transition;
     }
     const committedEvents = normalizeGameEvents(events);
+    assertGameEventReferences(committedEvents, state.table);
     return {
       type: "accept" as const,
-      state: reconcilePending({
-        ...state,
-        runtime: { ...state.runtime, events: committedEvents },
-      }),
+      state: reconcilePending(
+        {
+          ...state,
+          runtime: { ...state.runtime, events: committedEvents },
+        },
+        referenceBasis,
+      ),
       events: committedEvents,
       trace,
       ...(terminal ? { terminal } : {}),
     };
   }
 
-  function dispatch(state: State, input: ReducerInput) {
+  function dispatch(
+    state: State,
+    input: ReducerInput,
+    referenceBasis: ReferenceBasis,
+  ) {
+    if (
+      input.basis.sessionId !== referenceBasis.sessionId ||
+      input.basis.version !== referenceBasis.version ||
+      input.basis.perspectivePlayerId !== input.playerId
+    )
+      return rejectResult(
+        "STALE_REFERENCE_BASIS",
+        "The action no longer belongs to this seat frame.",
+      );
+    state = reconcilePending(state, referenceBasis);
+    const nextBasis = {
+      ...referenceBasis,
+      version: referenceBasis.version + 1,
+    };
     const pending = { ...state.runtime.pending };
     if (input.kind === "interaction.cancel") {
       const rejected = interactions.validateOrReject(state, input);
       if (rejected) return rejected;
       delete pending[input.playerId];
-      return complete({
-        state: { ...state, runtime: { ...state.runtime, pending } },
-        trace: [{ type: "acceptedClientInput", input }],
-      });
+      return complete(
+        {
+          state: { ...state, runtime: { ...state.runtime, pending } },
+          trace: [{ type: "acceptedClientInput", input }],
+        },
+        0,
+        nextBasis,
+      );
     }
-    // Seats name the cards hidden from them by position.
-    const params = revealSubmittedCards(
+    const disclosure = createSeatDisclosure(
+      state.table,
+      scope.manifest,
+      input.playerId,
+      referenceBasis,
+    );
+    const params = decodeSeatParams(
       input.params as Record<string, unknown>,
-      interactions.cardInputKeys(state, input.playerId, input.interactionId),
-      concealCards(state.table, input.playerId, scope.manifest),
+      interactions.inputCollectors(state, input.playerId, input.interactionId),
+      disclosure,
+      concealCards(state.table, input.playerId, disclosure),
     );
     if (params === null)
       return rejectResult(
-        "CARD_TARGET_NOT_ELIGIBLE",
-        "Card target is not eligible.",
+        "COMPONENT_TARGET_NOT_ELIGIBLE",
+        "Component target is not eligible.",
       );
     const decision = interactions.resolveInteractionDecision({
       state,
@@ -517,27 +524,58 @@ export function createReducerExecutor<
     };
     if (decision.stepResult) {
       if (!decision.stepResult.complete) {
+        const interaction = scope.findInteractionInPhase(
+          state.flow.currentPhase,
+          input.interactionId,
+        );
+        if (!interaction?.steps)
+          throw new Error("A step result requires authored steps.");
+        const prefix = evaluateStepPrefix(
+          interaction.steps,
+          scope.toDomainState(state),
+          input.playerId,
+          decision.stepResult.values,
+          scope.manifest,
+        );
+        const concealed = selectionHasConcealedReferences(
+          prefix.selected,
+          prefix.collectors,
+          disclosure,
+          concealCards(state.table, input.playerId, disclosure),
+        );
         pending[input.playerId] = {
+          ...(concealed ? { concealedBasis: nextBasis } : {}),
           phaseName: state.flow.currentPhase,
           interactionId: input.interactionId,
           values: decision.stepResult.values as RuntimePayload[],
         };
-        return complete({
-          state: { ...state, runtime: { ...state.runtime, pending } },
-          trace: [{ type: "acceptedClientInput", input }],
-        });
+        return complete(
+          {
+            state: { ...state, runtime: { ...state.runtime, pending } },
+            trace: [{ type: "acceptedClientInput", input }],
+          },
+          0,
+          nextBasis,
+        );
       }
       delete pending[input.playerId];
       workingState = { ...state, runtime: { ...state.runtime, pending } };
     }
     const result = reduceOnce(workingState, workingInput);
     if (result.type === "reject") return result;
-    return complete({
-      ...result,
-      transition: result.transition,
-      trace: [{ type: "acceptedClientInput", input }, ...(result.trace ?? [])],
-    });
+    return complete(
+      {
+        ...result,
+        transition: result.transition,
+        trace: [
+          { type: "acceptedClientInput", input },
+          ...(result.trace ?? []),
+        ],
+      },
+      0,
+      nextBasis,
+    );
   }
 
-  return { dispatch, complete };
+  return { dispatch, complete, reconcilePending };
 }

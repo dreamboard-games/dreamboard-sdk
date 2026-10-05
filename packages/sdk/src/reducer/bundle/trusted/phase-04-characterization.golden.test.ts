@@ -1,3 +1,7 @@
+import {
+  testReferenceBasis,
+  testGameplayBasis,
+} from "../../../shared/__fixtures__/reference-basis.js";
 import { createGame as createModel } from "../../../reducer";
 
 import { createHash } from "node:crypto";
@@ -143,8 +147,10 @@ describe("phase 4 trusted-bundle characterization", () => {
     });
 
     const accepted = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: initial,
       input: {
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         playerId: "player-1",
         interactionId: "score",
@@ -152,8 +158,10 @@ describe("phase 4 trusted-bundle characterization", () => {
       },
     });
     const rejected = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: initial,
       input: {
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         playerId: "player-1",
         interactionId: "rejectNow",
@@ -192,8 +200,10 @@ describe("phase 4 trusted-bundle characterization", () => {
     });
 
     const result = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: initial,
       input: {
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         playerId: "player-1",
         interactionId: "finish",
@@ -223,6 +233,7 @@ describe("phase 4 trusted-bundle characterization", () => {
     });
 
     const projection = bundle.project({
+      referenceBasis: testReferenceBasis,
       state: initial,
       playerIds: ["player-1", "player-2"],
     });
@@ -243,8 +254,10 @@ describe("phase 4 trusted-bundle characterization", () => {
     });
 
     const result = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: initial,
       input: {
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         playerId: "player-1",
         interactionId: "rollTwice",
@@ -291,8 +304,10 @@ describe("phase 4 trusted-bundle characterization", () => {
     });
 
     const accepted = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: initial,
       input: {
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         playerId: "player-1",
         interactionId: "rollTwice",
@@ -300,8 +315,10 @@ describe("phase 4 trusted-bundle characterization", () => {
       },
     });
     const rejected = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: initial,
       input: {
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         playerId: "player-1",
         interactionId: "rejectNow",
@@ -375,8 +392,10 @@ describe("phase 4 trusted-bundle characterization", () => {
     });
 
     const result = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: initial,
       input: {
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         playerId: "player-1",
         interactionId: "score",
@@ -406,8 +425,10 @@ describe("phase 4 trusted-bundle characterization", () => {
     });
 
     await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: initial,
       input: {
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         playerId: "player-1",
         interactionId: "finish",

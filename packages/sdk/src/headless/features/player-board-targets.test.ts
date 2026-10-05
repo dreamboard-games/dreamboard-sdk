@@ -1,3 +1,4 @@
+import { testReferenceBasis } from "../../shared/__fixtures__/reference-basis.js";
 import { createReducerTestingRuntime } from "../../testing/reducer-runtime.js";
 import { perPlayerInstanceId } from "../../shared/domain/per-player-instance.js";
 import { describe, expect, it } from "vitest";
@@ -357,14 +358,22 @@ describe("current roster board projection", () => {
       playerIds,
       rngSeed: 1,
     });
-    const projection = runtime.project({ state: initial.state, playerIds });
+    const projection = runtime.project({
+      referenceBasis: testReferenceBasis,
+      state: initial.state,
+      playerIds,
+    });
     const boards = projection.seats[playerIds[0]].boards!;
     expect(Object.keys(boards)).toEqual(
       playerIds.map((id) => perPlayerInstanceId("board", "mat", id)),
     );
     for (const playerId of playerIds) {
       const id = perPlayerInstanceId("board", "mat", playerId);
-      expect(table.boards[id]).toEqual({ baseId: "mat", relations: [] });
+      expect(table.boards[id]).toEqual({
+        visibility: "public",
+        baseId: "mat",
+        relations: [],
+      });
       expect(boards[id]).toMatchObject({
         id,
         baseId: "mat",

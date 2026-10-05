@@ -1,3 +1,4 @@
+import type { AuthoredTileDisclosure } from "../../shared/domain/tile-disclosure.js";
 import type { SchemaAuthoring, TileSpaceIds } from "./types";
 import { toManifestJson, type FieldsInput } from "./field-schemas";
 import { parseTopologyManifestJson } from "./parse-json";
@@ -470,9 +471,13 @@ type TileBoardCoordinates<L> = L extends "hex"
 type TypedTileSeed<Seed, Manifest extends GameTopologyManifest> = Seed extends {
   typeId: infer T;
 }
-  ? Omit<Seed, "typeId" | "properties" | "home" | "ownerId" | "visibility"> & {
+  ? Omit<
+      Seed,
+      "typeId" | "properties" | "home" | "ownerId" | "visibility" | "disclosure"
+    > & {
       ownerId?: never;
       visibility?: never;
+      disclosure?: SchemaAuthoring<AuthoredTileDisclosure>;
       typeId: TileTypeId<Manifest>;
       properties?: FieldsInput<
         SchemaForEntry<
@@ -485,10 +490,7 @@ type TypedTileSeed<Seed, Manifest extends GameTopologyManifest> = Seed extends {
         | { type: "detached" }
         | TileBoardHome<Seed, Manifest, T>
         | ZoneHomeFor<
-            Exclude<
-              ArrayItem<NonNullable<Manifest["zones"]>>,
-              { visibility: "hidden" | "ownerOnly" }
-            >,
+            ArrayItem<NonNullable<Manifest["zones"]>>,
             Manifest,
             Seed extends { scope: "perPlayer" } ? false : true
           >;

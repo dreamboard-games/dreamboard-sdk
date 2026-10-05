@@ -53,6 +53,7 @@ function table(): RuntimeTableRecord {
     dice: { die: { id: "die", dieTypeId: "d6", sides: 6, properties: {} } },
     tiles: {
       tile: {
+        disclosure: { face: { audience: "public" } },
         componentType: "tile",
         id: "tile",
         tileTypeId: "island",
@@ -131,30 +132,32 @@ describe("tile inventory operations", () => {
     expect(() => assertZoneConsistency(state, definitions)).not.toThrow();
   });
   test.each(["hidden", "hand"])(
-    "rejects tile moves and mixed deals into %s before any write",
+    "moves and deals tiles into %s with atomic location membership",
     (zoneId) => {
       const state = table();
-      const before = structuredClone(state);
       const to = { zoneId, hostId: zoneId === "hand" ? "alice" : "table" };
-      expect(() =>
-        moveComponentToZoneInPlace({
-          table: state,
-          definitions,
-          componentId: "tile",
-          to,
-        }),
-      ).toThrow("Tiles require public");
-      expect(state).toEqual(before);
-      expect(() =>
-        dealComponentsInPlace({
-          table: state,
-          definitions,
-          from: { zoneId: "supply" },
-          to,
-          count: 3,
-        }),
-      ).toThrow("Tiles require public");
-      expect(state).toEqual(before);
+      moveComponentToZoneInPlace({
+        table: state,
+        definitions,
+        componentId: "tile",
+        to,
+      });
+      expect(state.zones[zoneId][to.hostId]).toContain("tile");
+      expect(state.componentLocations.tile).toMatchObject({
+        type: "InZone",
+        ...to,
+      });
+      expect(() => assertZoneConsistency(state, definitions)).not.toThrow();
+      const mixed = table();
+      dealComponentsInPlace({
+        table: mixed,
+        definitions,
+        from: { zoneId: "supply" },
+        to,
+        count: 3,
+      });
+      expect(mixed.zones[zoneId][to.hostId]).toHaveLength(3);
+      expect(() => assertZoneConsistency(mixed, definitions)).not.toThrow();
     },
   );
   test.each(["space", "edge", "vertex"])(
@@ -181,7 +184,7 @@ describe("tile inventory operations", () => {
       expect(state).toEqual(before);
     },
   );
-  test("rejects tiles with unsupported restored locations or nonpublic membership", () => {
+  test("rejects unsupported tile spatial locations and admits private zone membership", () => {
     const state = table();
     state.zones.supply.table.splice(1, 1);
     state.componentLocations.tile = {
@@ -199,9 +202,7 @@ describe("tile inventory operations", () => {
       playedBy: null,
     };
     state.zones.hidden.table = ["tile"];
-    expect(() => assertZoneConsistency(state, definitions)).toThrow(
-      "Tiles require public",
-    );
+    expect(() => assertZoneConsistency(state, definitions)).not.toThrow();
   });
   test("rejects generic outgoing moves of a placed tile before touching memberships", () => {
     const placedDefinitions: ZoneDefinitions = {
@@ -229,7 +230,11 @@ describe("tile inventory operations", () => {
     };
     const state = table();
     state.zones.supply.table.splice(1, 1);
-    state.boards.islandBoard = { baseId: "islandBoard", relations: [] };
+    state.boards.islandBoard = {
+      visibility: "public",
+      baseId: "islandBoard",
+      relations: [],
+    };
     state.componentLocations.tile = {
       type: "OnBoard",
       layout: "square",

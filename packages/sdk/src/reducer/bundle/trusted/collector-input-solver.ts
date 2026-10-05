@@ -402,6 +402,7 @@ function baseValuesForDomain(
   context: SolverContext,
 ): ValueSource {
   switch (domain.type) {
+    case "tileTarget":
     case "cardTarget":
     case "boardTarget": {
       if (collector.eligibleTargets) {

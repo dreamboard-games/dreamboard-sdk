@@ -10,6 +10,7 @@ export function collectTargetDomainMetadata(collector: InputCollector): {
   targetKind?: string;
   boardId?: string;
   boardBaseId?: string;
+  boardIds?: readonly string[];
   valueKind?: "board-id" | "board-space";
   zoneId?: string;
   zoneIds?: readonly string[];
@@ -25,9 +26,14 @@ export function collectTargetDomainMetadata(collector: InputCollector): {
           (meta.zoneId === undefined ? undefined : [meta.zoneId]),
       };
     }
+    case "tile":
+      return {
+        targetKind: "tile",
+        zoneIds: collector.meta.zoneIds,
+        boardIds: collector.meta.boardIds,
+      };
     case "board-edge":
     case "board-space":
-    case "board-tile":
     case "board-vertex": {
       const meta = collector.meta ?? {};
       return {
@@ -64,6 +70,7 @@ export function collectInputMetadata<
     targetKind?: string;
     boardId?: string;
     boardBaseId?: string;
+    boardIds?: readonly string[];
     zoneId?: string;
     zoneIds?: readonly string[];
   }
@@ -134,4 +141,29 @@ export function findCardInputKeyForZone<
         .map(String)
         .includes(zoneId),
   )?.[0];
+}
+
+/** Declared reference positions; arbitrary game strings are never scanned. */
+export function collectTileInputKeys<
+  DomainState extends CollectorState,
+  Manifest extends ManifestContract<TableOfState<DomainState>>,
+>(interaction: AnyInteractionSpec<DomainState, Manifest>): ReadonlySet<string> {
+  return new Set(
+    Object.entries(interactionInputsOf(interaction))
+      .filter(([, collector]) => collector.kind === "tile")
+      .map(([key]) => key),
+  );
+}
+
+export function collectTileZoneIds<
+  DomainState extends CollectorState,
+  Manifest extends ManifestContract<TableOfState<DomainState>>,
+>(interaction: AnyInteractionSpec<DomainState, Manifest>): readonly string[] {
+  return [
+    ...new Set(
+      Object.values(interactionInputsOf(interaction)).flatMap((collector) =>
+        collector.kind === "tile" ? collector.meta.zoneIds : [],
+      ),
+    ),
+  ];
 }

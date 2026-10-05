@@ -1,3 +1,4 @@
+import { testReferenceBasis } from "./__fixtures__/reference-basis.js";
 import { perPlayerInstanceId } from "./domain/per-player-instance.js";
 import { inputTargetInDomain, inputValueKey } from "./input-domain";
 import { describe, expect, test } from "vitest";
@@ -59,7 +60,8 @@ describe("canonical interaction admission", () => {
     expect(InteractionDescriptorSchema.safeParse(invalid).success).toBe(false);
     expect(
       SeatProjectionBundleSchema.safeParse({
-        events: [],
+        referenceBasis: testReferenceBasis,
+
         seats: {},
         interactionsByRef: { pick: invalid },
       }).success,
@@ -74,14 +76,17 @@ describe("canonical interaction admission", () => {
 
   test("validates references and zones directly at the worker boundary", () => {
     const projection = {
-      events: [],
+      referenceBasis: testReferenceBasis,
+
       interactionsByRef: { pick: descriptor },
       seats: {
         p1: {
+          events: [],
           availableInteractionRefs: ["pick"],
           zones: {
             hand: {
               p1: {
+                tiles: [],
                 cardIds: ["c1"],
                 cardViewsById: {
                   c1: { id: "c1", cardType: "ranked", properties: {} },
@@ -98,13 +103,18 @@ describe("canonical interaction admission", () => {
     expect(
       SeatProjectionBundleSchema.safeParse({
         ...projection,
-        seats: { p1: { zones: { hand: projection.seats.p1.zones.hand.p1 } } },
+        seats: {
+          p1: {
+            events: [],
+            zones: { hand: projection.seats.p1.zones.hand.p1 },
+          },
+        },
       }).success,
     ).toBe(false);
     expect(
       SeatProjectionBundleSchema.safeParse({
         ...projection,
-        seats: { p1: { availableInteractionRefs: [{}] } },
+        seats: { p1: { events: [], availableInteractionRefs: [{}] } },
       }).success,
     ).toBe(false);
     expect(
@@ -112,9 +122,11 @@ describe("canonical interaction admission", () => {
         ...projection,
         seats: {
           p1: {
+            events: [],
             zones: {
               hand: {
                 p1: {
+                  tiles: [],
                   cardIds: [],
                   cardViewsById: {},
                   cardBacksById: {},

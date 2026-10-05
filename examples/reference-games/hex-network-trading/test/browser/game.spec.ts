@@ -1,19 +1,32 @@
-import { tileSpaceId } from "@dreamboard-games/sdk/reducer";
 import { test, expect, type Locator, type Page } from "@playwright/test";
 import { gameDriver } from "../helpers/browser-game";
 import { injectAxe, checkA11y } from "axe-playwright";
 
-async function boardValue(page: Page, value: string) {
-  const escaped = await page.evaluate((id) => CSS.escape(id), value);
-  return page.locator(`svg [data-value="${escaped}"]`);
+const districts = {
+  northForest: { q: 0, r: -1 },
+  southWestClay: { q: -1, r: 1 },
+  centralBarrens: { q: 0, r: 0 },
+} as const;
+function hexCell(page: Page, district: keyof typeof districts) {
+  const { q, r } = districts[district];
+  return page.locator(
+    `[data-stormtrail-hex][data-hex-q="${q}"][data-hex-r="${r}"]`,
+  );
 }
-
-async function hexCell(page: Page, tileId: string) {
+async function districtRef(page: Page, district: keyof typeof districts) {
+  const cell = hexCell(page, district);
+  await expect(cell).toBeVisible();
+  const ref = await cell.getAttribute("data-stormtrail-hex");
+  if (!ref)
+    throw new Error(`Missing projected district reference for ${district}`);
+  return ref;
+}
+async function boardValue(page: Page, district: keyof typeof districts) {
   const escaped = await page.evaluate(
     (id) => CSS.escape(id),
-    tileSpaceId(tileId, "cell"),
+    await districtRef(page, district),
   );
-  return page.locator(`[data-stormtrail-hex="${escaped}"]`);
+  return page.locator(`svg [data-value="${escaped}"]`);
 }
 
 async function choose(target: Locator, touch: boolean) {
@@ -85,10 +98,7 @@ test("Bandits saved step cancels and completes explicit no-victim choice", async
   isMobile,
 }) => {
   await page.goto("/?scenario=bandits&at=ready-to-move&as=player-1");
-  await choose(
-    await boardValue(page, tileSpaceId("northForest", "cell")),
-    isMobile,
-  );
+  await choose(await boardValue(page, "northForest"), isMobile);
   const key = '[data-interaction="moveBandits.moveBandits"]';
   await expect(page.getByLabel("Saved choices")).toBeVisible();
   await expect(
@@ -98,10 +108,7 @@ test("Bandits saved step cancels and completes explicit no-victim choice", async
   ).toBeVisible();
   await choose(page.locator(`${key}[data-action="cancel"]`), isMobile);
   await expect(page.getByText("Step 1 of 2", { exact: true })).toBeVisible();
-  await choose(
-    await boardValue(page, tileSpaceId("southWestClay", "cell")),
-    isMobile,
-  );
+  await choose(await boardValue(page, "southWestClay"), isMobile);
   await choose(
     page.locator(`${key}[data-input="targetPlayerId"][data-value="null"]`),
     isMobile,
@@ -120,12 +127,9 @@ test("saved Bandits prefix restores and seat switches preserve privacy", async (
   isMobile,
 }) => {
   await page.goto("/?scenario=bandits&at=ready-to-move&as=player-1");
-  await choose(
-    await boardValue(page, tileSpaceId("northForest", "cell")),
-    isMobile,
-  );
+  await choose(await boardValue(page, "northForest"), isMobile);
   await expect(page.getByLabel("Saved choices")).toContainText(
-    tileSpaceId("northForest", "cell"),
+    await districtRef(page, "northForest"),
   );
   await choose(
     page.getByRole("button", { name: "Save checkpoint", exact: true }),
@@ -150,7 +154,7 @@ test("saved Bandits prefix restores and seat switches preserve privacy", async (
     isMobile,
   );
   await expect(page.getByLabel("Saved choices")).toContainText(
-    tileSpaceId("northForest", "cell"),
+    await districtRef(page, "northForest"),
   );
   await choose(
     page.locator('[data-input="targetPlayerId"][data-value="player-2"]'),

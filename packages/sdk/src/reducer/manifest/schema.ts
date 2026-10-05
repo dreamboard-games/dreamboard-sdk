@@ -1,3 +1,5 @@
+import { TileDisclosureSchema } from "../../shared/domain/tile-disclosure.js";
+import { ZoneVisibilitySchema } from "../../shared/domain/manifest-schema.js";
 import { BoardRelationSchema } from "../../shared/board-topology-schema.js";
 import { RuntimeJsonSchema } from "../../shared/runtime-json.js";
 import { deriveBoardTopology } from "../../shared/board-topology.js";
@@ -122,6 +124,17 @@ export function createTableSchema(
     (id) => {
       const type = analysis.tileTypeIdByTileId.get(id)!;
       return z.strictObject({
+        disclosure: TileDisclosureSchema.superRefine((disclosure, context) => {
+          if (disclosure.face.audience === "seats")
+            for (const playerId of disclosure.face.playerIds)
+              if (!activePlayerId.safeParse(playerId).success)
+                context.addIssue({
+                  code: "custom",
+                  path: ["face", "playerIds"],
+                  message:
+                    "Tile face audience must name active roster players.",
+                });
+        }),
         componentType: z.literal("tile"),
         id: z.literal(id),
         tileTypeId: z.literal(type),
@@ -135,6 +148,10 @@ export function createTableSchema(
       id,
       schema: z.strictObject({
         baseId: z.literal(board.board.id),
+        visibility:
+          board.board.scope === "shared"
+            ? z.enum(["public", "hidden"])
+            : ZoneVisibilitySchema,
         relations: z.array(
           BoardRelationSchema.extend({
             fields: objectSchema(board.relationFieldsSchema),
@@ -464,6 +481,8 @@ export function createTableSchema(
           !tileDefinition ||
           !boardDefinition ||
           boardDefinition.layout === "generic" ||
+          (tile?.disclosure.appearance !== undefined &&
+            tile.disclosure.appearance.layout !== location.layout) ||
           tileDefinition.layout !== location.layout ||
           boardDefinition.layout !== location.layout
         )

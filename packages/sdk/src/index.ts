@@ -128,11 +128,14 @@ export {
   type BoardSpaceHostId,
 } from "./shared/domain/board-space-host.js";
 
-export {
-  tileSpaceId,
-  parseTileSpaceId,
-  type TileSpaceId,
-} from "./shared/domain/tile-space.js";
+export type {
+  SeatTileRef,
+  SeatSpaceRef,
+} from "./shared/domain/seat-reference.js";
+export type {
+  ProjectedTile,
+  SeatBoardTopology,
+} from "./shared/seat-topology-schema.js";
 export {
   boardEdgeId,
   boardVertexId,

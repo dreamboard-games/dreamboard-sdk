@@ -21,6 +21,19 @@ function setup() {
 }
 afterEach(() => vi.useRealTimers());
 describe("source request lifecycle", () => {
+  it("rejects a frame from a different authority session", () => {
+    const x = setup();
+    const value = frame(2);
+    x.frame({
+      ...value,
+      basis: { ...value.basis, sessionId: "another-session" },
+    });
+    expect(x.source.store.get().connection).toBe("failed");
+    expect(x.source.store.get().failure?.message).toContain(
+      "authority session changed",
+    );
+    x.source.dispose();
+  });
   it("never converts malformed submit params to cancellation", async () => {
     const x = setup();
     await expect(
@@ -159,6 +172,7 @@ describe("source request lifecycle", () => {
       zones: {
         hand: {
           alice: {
+            tiles: [],
             cardIds: ["card-1", "card-2", "hidden:hand:2"],
             cardViewsById: {
               "card-1": card,
@@ -222,6 +236,7 @@ describe("source request lifecycle", () => {
             zones: {
               hand: {
                 alice: {
+                  tiles: [],
                   cardIds: ["card-1"],
                   cardViewsById: { "card-1": card },
                   cardBacksById: {},

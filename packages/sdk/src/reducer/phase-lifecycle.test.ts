@@ -1,3 +1,7 @@
+import {
+  testReferenceBasis,
+  testGameplayBasis,
+} from "../shared/__fixtures__/reference-basis.js";
 import { asPlayerId } from "./per-player";
 import { createGame as createModel } from "../reducer";
 import { describe, expect, test } from "vitest";
@@ -29,7 +33,11 @@ async function lifecycleGame(
     },
   });
   const event = (name: string) =>
-    gameEvent.systemAction({ procedureId: name, title: name });
+    gameEvent.systemAction({
+      audience: { kind: "public" as const },
+      procedureId: name,
+      title: name,
+    });
   const outcome = {
     reason: { code: "COMPLETE" },
     standings: [
@@ -121,8 +129,10 @@ async function lifecycleGame(
   });
   const dispatch = () =>
     bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: initialized.state,
       input: {
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         playerId: "player-1",
         interactionId: "go",

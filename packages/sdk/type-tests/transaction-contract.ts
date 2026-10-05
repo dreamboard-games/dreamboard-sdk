@@ -145,7 +145,10 @@ export function assertZoneQueryContract(
   type _AllowedCards = Expect<Equal<(typeof cards.cardIds)[number], "red">>;
   const mixed = q.zone("hand", player);
   type _MixedComponents = Expect<
-    Equal<(typeof mixed)[number], "red" | "piece" | "d6">
+    Equal<
+      (typeof mixed)[number],
+      "red" | "piece" | "d6" | "northTile" | "southTile"
+    >
   >;
   const handCards = q.zone.cards("hand", player);
   type _CardsExcludeNonCards = Expect<

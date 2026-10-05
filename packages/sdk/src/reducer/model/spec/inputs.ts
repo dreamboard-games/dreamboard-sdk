@@ -1,3 +1,9 @@
+import type { BoardSpaceTarget } from "../../../shared/board-target.js";
+import type { TileSpaceId } from "../../../shared/domain/tile-space.js";
+import type {
+  SeatSpaceRef,
+  SeatTileRef,
+} from "../../../shared/domain/seat-reference.js";
 import type {
   InputDomain,
   InputSelection,
@@ -17,11 +23,11 @@ import type { ValidationIssue } from "./runtime-args";
 export type InputCollectorKind = InteractionInputDescriptor["kind"];
 export type TargetKind = Extract<
   InputDomain,
-  { type: "cardTarget" | "boardTarget" }
+  { type: "cardTarget" | "boardTarget" | "tileTarget" }
 >["targetKind"];
 export type BoardInputCollectorKind = Exclude<
   InputCollectorKind,
-  "form" | "card" | "rng"
+  "form" | "card" | "tile" | "rng"
 >;
 
 export type CardInputCollectorMeta = {
@@ -30,8 +36,14 @@ export type CardInputCollectorMeta = {
   readonly targetKind: "card";
 };
 
+export type TileInputCollectorMeta = {
+  readonly targetKind: "tile";
+  readonly zoneIds: readonly string[];
+  readonly boardIds: readonly string[];
+};
+
 export type BoardInputCollectorMeta = {
-  readonly targetKind: TargetKind;
+  readonly targetKind: Exclude<TargetKind, "card" | "tile">;
 } & (
   | { readonly boardId: string; readonly valueKind?: "board-id" }
   | { readonly boardBaseId: string; readonly valueKind: "board-space" }
@@ -43,14 +55,24 @@ export type RngInputCollectorMeta =
 export type InputCollectorMetaForKind<Kind extends InputCollectorKind> =
   Kind extends "card"
     ? CardInputCollectorMeta
-    : Kind extends BoardInputCollectorKind
-      ? BoardInputCollectorMeta
-      : Kind extends "rng"
-        ? RngInputCollectorMeta
-        : never;
+    : Kind extends "tile"
+      ? TileInputCollectorMeta
+      : Kind extends BoardInputCollectorKind
+        ? BoardInputCollectorMeta
+        : Kind extends "rng"
+          ? RngInputCollectorMeta
+          : never;
 
 export type InputSelectionDescriptor = InputSelection;
-export type InputDomainDescriptor = InputDomain;
+/** Trusted domains retain authoritative tile IDs until seat projection. */
+export type TileTargetDomainDescriptor = Omit<
+  Extract<InputDomain, { type: "tileTarget" }>,
+  "eligibleTargets"
+> & {
+  readonly eligibleTargets: readonly string[];
+};
+export type InputDomainDescriptor =
+  Exclude<InputDomain, { type: "tileTarget" }> | TileTargetDomainDescriptor;
 export type CardTargetDomainDescriptor = Extract<
   InputDomain,
   { type: "cardTarget" }
@@ -84,12 +106,16 @@ type DomainProjector<Domain extends InputDomainDescriptor> = (
 type InputDomainForCollectorKind<Kind extends InputCollectorKind> =
   Kind extends "card"
     ? CardTargetDomainDescriptor
-    : Kind extends BoardInputCollectorKind
-      ? BoardTargetDomainDescriptor
-      : Exclude<
-          InputDomainDescriptor,
-          CardTargetDomainDescriptor | BoardTargetDomainDescriptor
-        >;
+    : Kind extends "tile"
+      ? TileTargetDomainDescriptor
+      : Kind extends BoardInputCollectorKind
+        ? BoardTargetDomainDescriptor
+        : Exclude<
+            InputDomainDescriptor,
+            | CardTargetDomainDescriptor
+            | BoardTargetDomainDescriptor
+            | TileTargetDomainDescriptor
+          >;
 
 /**
  * Base state shape every collector is generic over. Collectors that need
@@ -188,7 +214,7 @@ type InputCollectorBase<
   ) => Value | undefined;
 } & (Kind extends "rng"
     ? { readonly domain?: never }
-    : Kind extends "card" | BoardInputCollectorKind
+    : Kind extends "card" | "tile" | BoardInputCollectorKind
       ? { readonly domain: DomainProjector<InputDomainForCollectorKind<Kind>> }
       : {
           readonly domain?: DomainProjector<InputDomainForCollectorKind<Kind>>;
@@ -244,12 +270,43 @@ type ClientParamRecord<Values> = {
   [Key in OptionalParamKeys<Values>]?: Exclude<Values[Key], undefined>;
 };
 
+type ClientBoardSpaceValue<Value> =
+  Value extends BoardSpaceTarget<infer BoardId, infer SpaceId>
+    ? BoardSpaceTarget<
+        BoardId,
+        SpaceId extends TileSpaceId ? SeatSpaceRef : SpaceId
+      >
+    : Value extends TileSpaceId
+      ? SeatSpaceRef
+      : Value;
+
+export type ClientCollectorValueOf<Collector> = Collector extends {
+  readonly kind: "tile";
+}
+  ? CollectorValueOf<Collector> extends readonly unknown[]
+    ? SeatTileRef[]
+    : SeatTileRef
+  : Collector extends { readonly kind: "board-space" }
+    ? CollectorValueOf<Collector> extends readonly (infer Space)[]
+      ? ClientBoardSpaceValue<Space>[]
+      : ClientBoardSpaceValue<CollectorValueOf<Collector>>
+    : CollectorValueOf<Collector>;
+
 export type ClientParamsOf<Collectors extends Record<string, InputCollector>> =
   ClientParamRecord<{
-    [Key in ClientCollectorKeys<Collectors>]: CollectorValueOf<Collectors[Key]>;
+    [Key in ClientCollectorKeys<Collectors>]: ClientCollectorValueOf<
+      Collectors[Key]
+    >;
   }>;
 
-/** Parsed client syntax, before authoritative target membership is checked. */
+/** Decoded submitted values available to authoritative rules before RNG sampling. */
+export type SubmittedParamsOf<
+  Collectors extends Record<string, InputCollector>,
+> = ClientParamRecord<{
+  [Key in ClientCollectorKeys<Collectors>]: CollectorValueOf<Collectors[Key]>;
+}>;
+
+/** Parsed parameter syntax after seat-reference decoding, before target membership is checked. */
 export type ClientSyntaxParamsOf<
   Collectors extends Record<string, InputCollector>,
 > = ClientParamRecord<{

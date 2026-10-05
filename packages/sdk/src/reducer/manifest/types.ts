@@ -352,6 +352,7 @@ export type InferredTileDefinitions<M> = AuthoredManifest extends M
 type InferredBoards<M> = {
   [B in Boards<M> as RuntimeBoardId<B>]: {
     baseId: Id<B>;
+    visibility: RuntimeBoardInstance["visibility"];
     relations: (Omit<
       RuntimeBoardInstance["relations"][number],
       "typeId" | "fields"
@@ -404,15 +405,11 @@ export type HostIdOfZone<M, Z> = Z extends { scope: "shared" }
                   C
                 >
               : never;
-type ZoneTileIds<M, Z> = Z extends { visibility: "hidden" | "ownerOnly" }
-  ? never
-  : ManifestIdsOf<M>["tileId"];
+type ZoneTileIds<M> = ManifestIdsOf<M>["tileId"];
 type InferredZones<M> = {
   [Z in Entries<M, "zones"> as Id<Z>]: ZoneHostMap<
     HostIdOfZone<M, Z>,
-    | ZoneCardIds<M, Z>
-    | ManifestIdsOf<M>["pieceId" | "dieId"]
-    | ZoneTileIds<M, Z>,
+    ZoneCardIds<M, Z> | ManifestIdsOf<M>["pieceId" | "dieId"] | ZoneTileIds<M>,
     Z extends { scope: infer S extends "shared" | "perPlayer" } ? S : "attached"
   >;
 };

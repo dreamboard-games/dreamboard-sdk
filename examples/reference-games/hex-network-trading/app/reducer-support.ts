@@ -280,7 +280,7 @@ export function systemEvent(options: {
   summary: string;
   details?: GameEvent["details"];
 }): GameEvent {
-  return { kind: "systemAction", ...options };
+  return { kind: "systemAction", audience: { kind: "public" }, ...options };
 }
 
 export function fourthCampOutcome(

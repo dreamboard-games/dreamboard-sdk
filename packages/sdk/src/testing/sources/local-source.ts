@@ -110,13 +110,21 @@ export function createLocalProvider<
     if (inFlight || store.get().request)
       throw new Error("A gameplay interaction is already pending.");
   }
-  function makeFrame(state: ReducerSessionState = checkpoint.state) {
-    const projection = runtime.project({ state, playerIds: [playerId] });
+  function makeFrame(
+    state: ReducerSessionState = checkpoint.state,
+    perspective = playerId,
+  ) {
+    const projection = runtime.project({
+      state,
+      playerIds: [perspective],
+      referenceBasis: { sessionId: session.sessionId, version: revision },
+    });
     const provisional = materializePluginGameplayFrame({
       currentPhase: state.domain.flow.currentPhase,
       activePlayers: projection.schedulerFlow?.activePlayerIds ?? [],
       dynamicProjection: projection,
-      perspectivePlayerId: playerId,
+      perspectivePlayerId: perspective,
+      sessionId: session.sessionId,
       version: revision,
       actionSetVersion: "pending",
     });
@@ -134,7 +142,10 @@ export function createLocalProvider<
   function publish() {
     lifecycle.frame(makeFrame());
   }
-  async function execute(input: GameInput): Promise<SubmitResult> {
+  async function execute(
+    input: GameInput,
+    authored = false,
+  ): Promise<SubmitResult> {
     assertOpen();
     if (inFlight) throw new Error("A gameplay interaction is already pending.");
     if (checkpoint.terminal)
@@ -142,7 +153,13 @@ export function createLocalProvider<
     inFlight = true;
     const generation = epoch;
     try {
-      const result = await runtime.dispatch({ state: checkpoint.state, input });
+      const result = await (
+        authored ? runtime.dispatch : runtime.dispatchClient
+      )({
+        state: checkpoint.state,
+        input,
+        referenceBasis: { sessionId: session.sessionId, version: revision },
+      });
       if (disposed || generation !== epoch)
         throw new Error("Local source lifetime changed.");
       if (result.kind === "reject")
@@ -178,11 +195,13 @@ export function createLocalProvider<
           command.type === "interaction.cancel"
             ? {
                 kind: "interaction.cancel",
+                basis: command.basis,
                 playerId,
                 interactionId: command.interactionId,
               }
             : {
                 kind: "interaction",
+                basis: command.basis,
                 playerId,
                 interactionId: command.interactionId,
                 params: command.params,
@@ -235,7 +254,8 @@ export function createLocalProvider<
         playerIds,
         path: "command.actor",
       });
-      const currentSchema = runtime.currentClientParamSchema({
+      const currentSchema = runtime.currentAuthorParamSchema({
+        referenceBasis: { sessionId: session.sessionId, version: revision },
         state: checkpoint.state,
         playerId: actor,
         interactionId: command.interactionId,
@@ -249,12 +269,16 @@ export function createLocalProvider<
         playerIds,
         path: "command",
       });
-      return execute({
-        kind: "interaction",
-        playerId: actor,
-        interactionId: command.interactionId,
-        params: params as RuntimeJson,
-      });
+      return execute(
+        {
+          kind: "interaction",
+          basis: makeFrame(checkpoint.state, actor).basis,
+          playerId: actor,
+          interactionId: command.interactionId,
+          params: params as RuntimeJson,
+        },
+        true,
+      );
     },
     switchSeat(next) {
       assertOpen();
@@ -271,7 +295,11 @@ export function createLocalProvider<
     restore(value) {
       assertOpen();
       const next = checkpointSchema.parse(value);
-      runtime.project({ state: next.state, playerIds: [...playerIds] });
+      runtime.project({
+        state: next.state,
+        playerIds: [...playerIds],
+        referenceBasis: { sessionId: session.sessionId, version: revision + 1 },
+      });
       // Production projection validates the game-specific table before this read.
       const restoredRoster = (
         next.state.domain.table as { playerOrder: string[] }
@@ -303,6 +331,7 @@ export function createLocalProvider<
         .availableInteractions) {
         if (remaining <= 0) break;
         const result = runtime.enumerateInteractionParams({
+          referenceBasis: { sessionId: session.sessionId, version: revision },
           state: checkpoint.state,
           playerId,
           interactionId: descriptor.interactionId,
@@ -313,8 +342,13 @@ export function createLocalProvider<
         for (const params of result.enumeration.assignments) {
           const probe = await runtime.dispatch({
             state: structuredClone(capturedState),
+            referenceBasis: {
+              sessionId: session.sessionId,
+              version: capturedRevision,
+            },
             input: {
               kind: "interaction",
+              basis: makeFrame(capturedState).basis,
               playerId,
               interactionId: descriptor.interactionId,
               params: params as RuntimeJson,
@@ -329,7 +363,11 @@ export function createLocalProvider<
           if (probe.kind === "reject") continue;
           const projected = projectScenarioCommandParams({
             game,
-            currentSchema: runtime.currentClientParamSchema({
+            currentSchema: runtime.currentAuthorParamSchema({
+              referenceBasis: {
+                sessionId: session.sessionId,
+                version: revision,
+              },
               state: checkpoint.state,
               playerId,
               interactionId: descriptor.interactionId,

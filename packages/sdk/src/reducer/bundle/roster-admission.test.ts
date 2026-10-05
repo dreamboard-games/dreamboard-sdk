@@ -1,3 +1,7 @@
+import {
+  testReferenceBasis,
+  testGameplayBasis,
+} from "../../shared/__fixtures__/reference-basis.js";
 import { createReducerTestingRuntime } from "../../testing/reducer-runtime.js";
 import { asPlayerId } from "../per-player.js";
 import { describe, expect, it, vi } from "vitest";
@@ -82,24 +86,33 @@ describe("session roster admission before authored callbacks", () => {
     expect(state.domain.flow.activePlayers).toEqual([]);
     for (const input of [
       {
+        basis: testGameplayBasis("outsider"),
         kind: "interaction",
         playerId: "outsider",
         interactionId: "change",
         params: {},
       },
       {
+        basis: testGameplayBasis("outsider"),
         kind: "interaction",
         playerId: "outsider",
         interactionId: "controlled",
         params: {},
       },
       {
+        basis: testGameplayBasis("outsider"),
         kind: "interaction.cancel",
         playerId: "outsider",
         interactionId: "change",
       },
     ] as const) {
-      expect(await bundle.dispatch({ state, input })).toMatchObject({
+      expect(
+        await bundle.dispatch({
+          referenceBasis: testReferenceBasis,
+          state,
+          input,
+        }),
+      ).toMatchObject({
         kind: "reject",
         errorCode: "NOT_YOUR_TURN",
       });
@@ -108,8 +121,10 @@ describe("session roster admission before authored callbacks", () => {
     expect(validation).not.toHaveBeenCalled();
     expect(actor).not.toHaveBeenCalled();
     const accepted = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state,
       input: {
+        basis: testGameplayBasis("seated"),
         kind: "interaction",
         playerId: "seated",
         interactionId: "change",
@@ -126,18 +141,36 @@ describe("session roster admission before authored callbacks", () => {
     const { bundle, state, validation, initializePrivate, actor, view } =
       await fixture();
     expect(() =>
-      bundle.project({ state, playerIds: ["seated", "outsider"] }),
+      bundle.project({
+        referenceBasis: testReferenceBasis,
+        state,
+        playerIds: ["seated", "outsider"],
+      }),
     ).toThrow("not seated");
     expect(() =>
-      bundle.project({ state, playerIds: ["seated", "seated"] }),
+      bundle.project({
+        referenceBasis: testReferenceBasis,
+        state,
+        playerIds: ["seated", "seated"],
+      }),
     ).toThrow("Duplicate player id");
     expect(validation).not.toHaveBeenCalled();
     expect(initializePrivate).not.toHaveBeenCalled();
     expect(actor).not.toHaveBeenCalled();
     expect(view).not.toHaveBeenCalled();
-    expect(bundle.project({ state, playerIds: [] }).seats).toEqual({});
     expect(
-      bundle.project({ state, playerIds: ["seated"] }).seats.seated,
+      bundle.project({
+        referenceBasis: testReferenceBasis,
+        state,
+        playerIds: [],
+      }).seats,
+    ).toEqual({});
+    expect(
+      bundle.project({
+        referenceBasis: testReferenceBasis,
+        state,
+        playerIds: ["seated"],
+      }).seats.seated,
     ).toBeDefined();
     expect(view).toHaveBeenCalledOnce();
   });
@@ -145,21 +178,35 @@ describe("session roster admission before authored callbacks", () => {
     const { game, state, validation, actor, view } = await fixture();
     const runtime = createReducerTestingRuntime(game);
     const input = {
+      basis: testGameplayBasis("outsider"),
       kind: "interaction",
       playerId: "outsider",
       interactionId: "change",
       params: {},
     } as const;
-    expect(await runtime.validateInput({ state, input })).toMatchObject({
+    expect(
+      await runtime.validateInput({
+        referenceBasis: testReferenceBasis,
+        state,
+        input,
+      }),
+    ).toMatchObject({
       valid: false,
       errorCode: "NOT_YOUR_TURN",
     });
-    expect(await runtime.dispatch({ state, input })).toMatchObject({
+    expect(
+      await runtime.dispatch({
+        referenceBasis: testReferenceBasis,
+        state,
+        input,
+      }),
+    ).toMatchObject({
       kind: "reject",
       errorCode: "NOT_YOUR_TURN",
     });
     expect(() =>
       runtime.project({
+        referenceBasis: testReferenceBasis,
         state,
         playerIds: ["outsider"],
         projectionMode: "actionsOnly",
@@ -167,6 +214,7 @@ describe("session roster admission before authored callbacks", () => {
     ).toThrow("not seated");
     expect(() =>
       runtime.explainInteraction({
+        referenceBasis: testReferenceBasis,
         state,
         playerId: "outsider",
         interactionId: "change",
@@ -177,8 +225,13 @@ describe("session roster admission before authored callbacks", () => {
     expect(view).not.toHaveBeenCalled();
     expect(
       await runtime.validateInput({
+        referenceBasis: testReferenceBasis,
         state,
-        input: { ...input, playerId: "seated" },
+        input: {
+          ...input,
+          playerId: "seated",
+          basis: testGameplayBasis("seated"),
+        },
       }),
     ).toMatchObject({ valid: true });
   });

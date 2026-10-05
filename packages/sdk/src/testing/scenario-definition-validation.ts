@@ -6,7 +6,7 @@ import type {
 import { collectReducerDefinitionIndex } from "../reducer/definition-index.js";
 import type { RuntimeJson } from "../shared/runtime-json.js";
 import * as z from "zod";
-import { createClientParamSchemasByPhase } from "../reducer/client-param-schemas.js";
+import { createAuthorParamSchemasByPhase } from "../reducer/client-param-schemas.js";
 import {
   appendScenarioPath,
   resolveScenarioSeatReferences,
@@ -302,7 +302,7 @@ function commandSchemas<Contract extends ReducerGameContractLike>(
   game: AnyReducerGameDefinition<Contract>,
   interactionId: string,
 ): readonly z.ZodTypeAny[] {
-  const schemasByPhase = createClientParamSchemasByPhase(game);
+  const schemasByPhase = createAuthorParamSchemasByPhase(game);
   const schemas = Object.values(schemasByPhase).flatMap((schemas) => {
     const schema = schemas[interactionId];
     return schema ? [schema as z.ZodTypeAny] : [];
