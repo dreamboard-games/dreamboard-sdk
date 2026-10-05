@@ -537,9 +537,26 @@ export type Card<
     readonly game: GameInstance<G, F>;
     getInteractions(): readonly AnyInteraction<G, F>[];
   };
+/** One tile presentation admitted for this seat; its reference expires with its frame. */
+export interface Tile<G, F extends Features = Record<never, never>> {
+  readonly ref: import("../shared/domain/seat-reference.js").SeatTileRef;
+  readonly data: import("../shared/seat-topology-schema.js").ProjectedTile;
+  readonly zone: IdOf<G, "zoneId">;
+  readonly hostId: ZoneHostId<G>;
+  readonly index: number;
+  readonly game: GameInstance<G, F>;
+  getInteractions(): readonly AnyInteraction<G, F>[];
+  getIsEligible(): boolean;
+  getIsSelected(): boolean;
+  getCanSelect(options?: TargetOptions<G>): boolean;
+  select(options?: TargetOptions<G>): void;
+  getSelectHandler(options?: TargetOptions<G>): () => void;
+  getTargetProps(options?: TargetOptions<G>): ActionProps;
+}
 export interface ZoneBase<G, K extends IdOf<G, "zoneId"> = IdOf<G, "zoneId">> {
   readonly id: K;
   readonly hostId: ZoneHostId<G, K>;
+  /** Number of projected cards and tiles; omitted inventory contributes nothing. */
   readonly count: number;
   readonly game: CoreInstance<G>;
   getIsEmpty(): boolean;
@@ -554,6 +571,13 @@ export type Zone<
     getCards(options?: {
       sort?: (a: Card<G, F>, b: Card<G, F>) => number;
     }): readonly Card<G, F>[];
+    getTiles(): readonly Tile<G, F>[];
+    getTile(
+      ref: import("../shared/domain/seat-reference.js").SeatTileRef,
+    ): Tile<G, F>;
+    findTile(
+      ref: import("../shared/domain/seat-reference.js").SeatTileRef,
+    ): Tile<G, F> | undefined;
     getCard<K extends SeatCardId<G>>(id: K): Card<G, F, K>;
     findCard<K extends SeatCardId<G>>(id: K): Card<G, F, K> | undefined;
   };

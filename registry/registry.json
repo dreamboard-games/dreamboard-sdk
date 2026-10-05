@@ -146,21 +146,6 @@
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",
-      "name": "hex-grid",
-      "type": "registry:component",
-      "title": "Hex Grid",
-      "description": "Pure, composable hex grid presentation. No SDK dependency.",
-      "files": [
-        {
-          "path": "items/hex-grid.tsx",
-          "type": "registry:component",
-          "target": "@components/dreamboard/hex-grid.tsx"
-        }
-      ],
-      "registryDependencies": ["@dreamboard/tokens"]
-    },
-    {
-      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
       "name": "square-grid",
       "type": "registry:component",
       "title": "Square Grid",

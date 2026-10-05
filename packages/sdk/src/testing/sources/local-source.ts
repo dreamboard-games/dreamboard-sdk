@@ -6,7 +6,7 @@ import { resolvePlayerRoster } from "../player-roster.js";
 import { createStore } from "@tanstack/store";
 import * as z from "zod";
 import { createSourceLifecycle } from "../../headless/sources/lifecycle.js";
-import { immutableCopy } from "../../headless/sources/immutable.js";
+import { immutableCopy } from "../../shared/immutable.js";
 import type {
   SourceState,
   SubmitResult,

@@ -31,7 +31,12 @@ export type RuntimeBoardTarget =
       readonly value: BoardSpaceTarget;
     };
 export type RuntimeSelectionTarget =
-  RuntimeBoardTarget | { readonly kind: "card"; readonly value: string };
+  | RuntimeBoardTarget
+  | { readonly kind: "card"; readonly value: string }
+  | {
+      readonly kind: "tile";
+      readonly value: import("../shared/domain/seat-reference.js").SeatTileRef;
+    };
 export type RuntimeTargetOptions =
   | { readonly interaction?: undefined; readonly input?: never }
   | { readonly interaction: string; readonly input?: string };
@@ -97,7 +102,12 @@ export type BoardTarget<G> = [TableOfGame<G>] extends [never]
       }[BoardIdOfTable<TableOfGame<G>>]
     : never;
 export type SelectionTarget<G> =
-  BoardTarget<G> | { readonly kind: "card"; readonly value: SeatCardId<G> };
+  | BoardTarget<G>
+  | { readonly kind: "card"; readonly value: SeatCardId<G> }
+  | {
+      readonly kind: "tile";
+      readonly value: import("../shared/domain/seat-reference.js").SeatTileRef;
+    };
 /** Input disambiguation belongs to a particular interaction. */
 export type TargetOptions<G> =
   | { readonly interaction?: undefined; readonly input?: never }

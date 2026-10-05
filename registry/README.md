@@ -62,7 +62,6 @@ import { Pile } from "@/components/dreamboard/pile";
 | `playing-card` | Rank and suit, composed from `Card`                                                                                                  |
 | `image-card`   | Face image URL and name, composed from `Card`; shows a card view or a hidden card's back                                             |
 | `pile`         | Count, label and top-card children; edges by depth, a count badge and an empty outline                                               |
-| `hex-grid`     | Precomputed polygon points, centers and labels; SVG overlay children                                                                 |
 | `square-grid`  | Precomputed cell positions and size; SVG overlay children                                                                            |
 | `seat`         | One player's name, seat colour, held-card count, score, turn and last action; marks `data-player`                                    |
 | `resources`    | Label, count and optional icon per resource                                                                                          |

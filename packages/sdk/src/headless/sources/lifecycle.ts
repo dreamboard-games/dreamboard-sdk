@@ -10,7 +10,7 @@ import type {
   PluginGameplayFrame,
   PluginSessionDescriptor,
 } from "../../shared/protocol/frame.js";
-import { immutableCopy } from "./immutable.js";
+import { immutableCopy } from "../../shared/immutable.js";
 import type {
   CommandSource,
   SourceCommand,
