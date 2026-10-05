@@ -112,6 +112,8 @@ describe("production-backed local sources", () => {
     scenario.dispose();
   });
 
+  // Full-game exploration dispatches every bounded candidate before replaying
+  // all commands, so this integration proof needs more time on hosted runners.
   it("deterministically fuzzes a full Hearts game with a bounded solver budget", async () => {
     const result = await fuzz(hearts, {
       seed: 1,
@@ -126,7 +128,7 @@ describe("production-backed local sources", () => {
       expect((await replay.apply(command)).accepted).toBe(true);
     expect(replay.checkpoint()).toEqual(result.checkpoint);
     replay.dispose();
-  }, 15_000);
+  }, 30_000);
 
   it("plays complete Hearts through typed actor commands while retaining selected view", async () => {
     const source = await localSource(hearts, {
