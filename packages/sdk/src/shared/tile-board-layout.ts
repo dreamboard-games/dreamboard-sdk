@@ -28,7 +28,14 @@ type Cell = {
   readonly center: TileLayoutPoint;
   readonly corners: readonly Corner[];
 };
-const frozenPoint = (point: TileLayoutPoint) => Object.freeze({ ...point });
+function assertFinite(values: readonly number[]): void {
+  if (!values.every(Number.isFinite))
+    throw new Error("Derived tile layout geometry must be finite.");
+}
+const frozenPoint = (point: TileLayoutPoint) => {
+  assertFinite([point.x, point.y]);
+  return Object.freeze({ ...point });
+};
 
 /** Cancel internal sides using exact lattice identities, then walk every oriented boundary. */
 function outlines(
@@ -249,14 +256,16 @@ function build(
         maxX = Math.max(maxX, point.x);
         maxY = Math.max(maxY, point.y);
       }
+  const viewBox = {
+    x: tiles.length ? minX : 0,
+    y: tiles.length ? minY : 0,
+    width: tiles.length ? maxX - minX : 0,
+    height: tiles.length ? maxY - minY : 0,
+  };
+  assertFinite([viewBox.x, viewBox.y, viewBox.width, viewBox.height]);
   return Object.freeze({
     tiles: Object.freeze(tiles),
-    viewBox: Object.freeze({
-      x: tiles.length ? minX : 0,
-      y: tiles.length ? minY : 0,
-      width: tiles.length ? maxX - minX : 0,
-      height: tiles.length ? maxY - minY : 0,
-    }),
+    viewBox: Object.freeze(viewBox),
   });
 }
 const cache = new WeakMap<

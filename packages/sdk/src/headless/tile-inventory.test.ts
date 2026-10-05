@@ -35,6 +35,7 @@ const descriptor = (key = "play.pick"): InteractionDescriptor => ({
 });
 function setup(descriptors = [descriptor()]) {
   const { basis: _basis, ...base } = frame();
+  void _basis;
   const source = createTestSource({
     me: "alice",
     players: session.players,
@@ -85,6 +86,150 @@ describe("projected tile inventory", () => {
         SeatTileRefSchema.parse(`tile-ref:sha256:${"b".repeat(64)}`),
       ),
     ).toBeUndefined();
+    game.dispose();
+  });
+  it("exposes generic tile target controls with public labels and selection", () => {
+    const { game, source } = setup();
+    const input = game.inputs.get("play.pick", "tile");
+    expect(input.getEligibleTargets()).toEqual([ref]);
+    expect(input.getTargetOptions().map((option) => option.label)).toEqual([
+      "Tile back 1",
+    ]);
+    const control = input.getControl();
+    if (control.type !== "targets") throw new Error("Expected target editor");
+    expect(control.options).toHaveLength(1);
+    control.options[0].props.onClick();
+    expect(
+      game.inputs.get("play.pick", "tile").getTargetOptions()[0].selected,
+    ).toBe(true);
+    const current = source.store.get().snapshot!;
+    source.emit({
+      ...current,
+      version: 2,
+      frame: {
+        ...current.frame,
+        zones: {
+          bag: {
+            table: {
+              cardIds: [],
+              cardViewsById: {},
+              cardBacksById: {},
+              playableByCardId: {},
+              tiles: [
+                {
+                  disclosure: "visible",
+                  ref,
+                  tileTypeId: "forest",
+                  name: "Forest",
+                  ownerId: null,
+                  fields: {},
+                  properties: {},
+                },
+              ],
+            },
+          },
+        },
+      },
+    });
+    expect(
+      game.inputs.get("play.pick", "tile").getTargetOptions()[0].label,
+    ).toBe("Forest");
+    expect(input.getTargetOptions()[0].label).toBe("Tile back 1");
+    game.inputs.get("play.pick", "tile").clear();
+    control.options[0].props.onClick();
+    expect(game.inputs.get("play.pick", "tile").getValue()).toBeUndefined();
+    game.dispose();
+  });
+  it("labels card and board domains from admitted metadata without reference heuristics", () => {
+    const card: InteractionDescriptor = {
+      ...descriptor(),
+      inputs: [
+        {
+          key: "card",
+          kind: "card",
+          domain: {
+            type: "cardTarget",
+            projection: "resolved",
+            targetKind: "card",
+            zoneIds: ["bag"],
+            eligibleTargets: ["visible-card", "hidden-card"],
+          },
+        },
+      ],
+    };
+    const board: InteractionDescriptor = {
+      ...descriptor("play.board"),
+      inputs: [
+        {
+          key: "space",
+          kind: "board-space",
+          domain: {
+            type: "boardTarget",
+            projection: "resolved",
+            targetKind: "space",
+            valueKind: "board-id",
+            boardId: "track",
+            eligibleTargets: ["named", "unnamed"],
+          },
+        },
+      ],
+    };
+    const { source, game } = setup([card, board]);
+    const current = source.store.get().snapshot!;
+    source.emit({
+      ...current,
+      version: 2,
+      frame: {
+        ...current.frame,
+        zones: {
+          bag: {
+            table: {
+              tiles: [],
+              cardIds: ["visible-card", "hidden-card"],
+              cardViewsById: {
+                "visible-card": {
+                  id: "visible-card",
+                  cardType: "face",
+                  properties: {},
+                  name: "Ace",
+                },
+              },
+              cardBacksById: {},
+              playableByCardId: {},
+            },
+          },
+        },
+        view: {
+          boards: {
+            track: {
+              id: "track",
+              baseId: "track",
+              scope: "shared",
+              layout: "generic",
+              name: "Track",
+              fields: {},
+              spaces: {
+                named: { id: "named", name: "Harbor", fields: {} },
+                unnamed: { id: "unnamed", fields: {} },
+              },
+              relations: [],
+            },
+          },
+        },
+      },
+    });
+    expect(
+      game.inputs
+        .get("play.pick", "card")
+        .getTargetOptions()
+        .map((option) => option.label),
+    ).toEqual(["Ace", "Card back 2"]);
+    expect(
+      game.inputs
+        .get("play.board", "space")
+        .getTargetOptions()
+        .map((option) => option.label),
+    ).toEqual(["Harbor", "Space 2"]);
     game.dispose();
   });
   it("counts projected cards and tiles and never fills omitted inventory gaps", () => {

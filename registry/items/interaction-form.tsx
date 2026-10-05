@@ -10,6 +10,8 @@ export interface InteractionFormProps {
   className?: string;
   /** Field labels by input key. A key reads as words otherwise: `targetPlayerId` is "Target player". */
   labels?: Readonly<Record<string, string>>;
+  /** Game-owned presentation for a saved selection; undefined uses the default. */
+  renderSelected?(input: string, value: RuntimeJson): ReactNode | undefined;
   renderInput?(
     input: ReturnType<BoundInteraction["getInputs"]>[number],
   ): ReactNode | undefined;
@@ -20,6 +22,7 @@ export function InteractionForm({
   className = "",
   labels,
   renderInput,
+  renderSelected,
 }: InteractionFormProps) {
   const interaction = useGame((game) => game.interactions.find(key));
   if (!interaction) return null;
@@ -41,7 +44,9 @@ export function InteractionForm({
             {Object.entries(step.selected).map(([input, value]) => (
               <div key={input} className="flex gap-2">
                 <dt>{label(input)}:</dt>
-                <dd className="m-0">{describe(value)}</dd>
+                <dd className="m-0 min-w-0 break-words">
+                  {renderSelected?.(input, value) ?? describe(value)}
+                </dd>
               </div>
             ))}
           </dl>

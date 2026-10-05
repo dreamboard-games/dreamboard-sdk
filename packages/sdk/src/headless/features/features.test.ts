@@ -959,3 +959,45 @@ it("renders concealed footprints in board bounds without introducing spatial tar
   );
   game.dispose();
 });
+
+it("rejects overflowing finite viewport transforms while preserving valid tile transforms", () => {
+  const { game } = setup();
+  const board = game.boards.get("island");
+  expect(() =>
+    board.getLayout({
+      hexSize: 12,
+      viewport: { x: 0, y: 0, scale: Number.MAX_VALUE },
+    }),
+  ).toThrow("transform must be finite");
+  expect(() =>
+    board.getLayout({
+      hexSize: 12,
+      viewport: { x: Number.MAX_VALUE, y: 0, scale: Number.MAX_VALUE / 2 },
+    }),
+  ).toThrow("transform must be finite");
+  const original = board.getLayout({ hexSize: 12 });
+  const transformed = board.getLayout({
+    hexSize: 12,
+    viewport: { x: 5, y: 3, scale: 2 },
+  });
+  const expected = (point: { x: number; y: number }) => ({
+    x: point.x * 2 + 5,
+    y: point.y * 2 + 3,
+  });
+  expect(transformed.getTiles()[0].center).toEqual(
+    expected(original.getTiles()[0].center),
+  );
+  expect(transformed.getTiles()[0].anchor).toEqual(
+    expected(original.getTiles()[0].anchor),
+  );
+  expect(transformed.getTiles()[0].outlines).toEqual(
+    original.getTiles()[0].outlines.map((loop) => loop.map(expected)),
+  );
+  expect(
+    transformed.pointToSpace(
+      transformed.getSpaces()[0].center.x,
+      transformed.getSpaces()[0].center.y,
+    ),
+  ).toBe(CENTER);
+  game.dispose();
+});

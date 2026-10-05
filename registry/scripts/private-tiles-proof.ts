@@ -106,6 +106,16 @@ export async function provePrivateTiles(page: Page, touch: boolean) {
   );
   await expect(page.locator("svg [data-input=cell]")).toHaveCount(2);
   await expect(page.getByLabel("Authorized frame")).toContainText("SECRET_");
+  // Capture a live handle here so this rejection isolates restore invalidation.
+  await activate(
+    page.getByRole("button", { name: "Hold tile handler", exact: true }),
+    touch,
+  );
+  const beforeRestoreRef = await page
+    .locator("[data-bag-tile]")
+    .first()
+    .getAttribute("data-value");
+  expect(beforeRestoreRef).not.toBe(oldRef);
   await action(page, "Restore checkpoint", touch);
   await hidden(page);
   await activate(
@@ -120,7 +130,7 @@ export async function provePrivateTiles(page: Page, touch: boolean) {
   await expect(page.getByLabel("Held reference result")).toHaveText("rejected");
   expect(
     await page.locator("[data-bag-tile]").first().getAttribute("data-value"),
-  ).not.toBe(oldRef);
+  ).not.toBe(beforeRestoreRef);
   await action(page, "Track bag tile", touch);
   await expect(page.locator('[data-draft="play.trackBag"]')).not.toHaveText(
     "{}",

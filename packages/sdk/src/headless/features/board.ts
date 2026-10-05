@@ -346,11 +346,15 @@ function createRuntimeBoardFeature(context: RuntimeFeatureContext) {
           board.layout === "hex"
             ? captured.geometry!.getLayout({ hexSize, origin })
             : createSquareBoardLayout(board, hexSize, origin);
-        const point = (value: Point): Point =>
-          Object.freeze({
+        const point = (value: Point): Point => {
+          const transformed = {
             x: value.x * viewport.scale + viewport.x,
             y: value.y * viewport.scale + viewport.y,
-          });
+          };
+          if (![transformed.x, transformed.y].every(Number.isFinite))
+            throw new Error("Derived layout transform must be finite.");
+          return Object.freeze(transformed);
+        };
         const tileGeometry = createTileBoardLayout(board, hexSize, origin);
         const tiles = Object.freeze(
           tileGeometry.tiles.map((tile) =>

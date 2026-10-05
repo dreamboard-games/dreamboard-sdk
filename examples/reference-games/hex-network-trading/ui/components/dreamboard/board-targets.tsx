@@ -122,7 +122,7 @@ export function BoardTargets({
     node.addEventListener("wheel", wheel, { passive: false });
     return () => node.removeEventListener("wheel", wheel);
   }, [onWheel, board]);
-  const layout = board?.getLayout({ hexSize });
+  const layout = useMemo(() => board?.getLayout({ hexSize }), [board, hexSize]);
   const transform = viewport.getTransform();
   const hitSizes = useMemo(() => {
     const selectable = layout
@@ -237,7 +237,12 @@ export function BoardTargets({
           <DropControl
             key={space.id}
             dropTarget={dropTarget("space", space.id)}
-            {...control(space, space.data.name ?? `Space ${index + 1}`)}
+            {...control(
+              space,
+              "name" in space.data && typeof space.data.name === "string"
+                ? space.data.name
+                : `Space ${index + 1}`,
+            )}
           >
             <polygon
               className="db-grid-cell"

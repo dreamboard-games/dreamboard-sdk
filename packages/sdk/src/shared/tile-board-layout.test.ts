@@ -251,3 +251,36 @@ test("flat hex footprints retain holes and separate disconnected islands", () =>
     expect(islands.outlines.map((loop) => loop.length)).toEqual([6, 6]);
   }
 });
+
+test("extreme finite options cannot publish or cache nonfinite derived geometry", () => {
+  const board = square([{ col: 0, row: 0 }]);
+  expect(() => createTileBoardLayout(board, Number.MAX_VALUE)).toThrow(
+    "must be finite",
+  );
+  expect(() =>
+    createTileBoardLayout(board, Number.MAX_VALUE / 4, {
+      x: Number.MAX_VALUE,
+      y: 0,
+    }),
+  ).toThrow("must be finite");
+  // Every corner is finite, but the span between the opposite extremes overflows.
+  const span = square([
+    { col: -1, row: 0 },
+    { col: 0, row: 0 },
+  ]);
+  if (span.layout !== "square") throw new Error("Expected square");
+  const centered = SeatBoardTopologySchema.parse({
+    ...span,
+    tiles: span.tiles.map((tile) => ({
+      ...tile,
+      placement: { layout: "square", col: 0, row: 0, rotation: 0 },
+    })),
+  });
+  expect(() =>
+    createTileBoardLayout(centered, Number.MAX_VALUE * 0.75),
+  ).toThrow("must be finite");
+  // A failed build never poisons the board's subsequent valid cache entry.
+  const valid = createTileBoardLayout(board, 10);
+  expect(valid.viewBox).toEqual({ x: 30, y: -20, width: 10, height: 10 });
+  expect(createTileBoardLayout(board, 10)).toBe(valid);
+});

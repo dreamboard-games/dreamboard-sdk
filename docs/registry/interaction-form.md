@@ -24,5 +24,6 @@ are authoritative; there is no separate SDK component import.
 - Choices are chips that show whether they are picked.
 - A later step shows "Step 2 of 3" and the choices the server saved, in words rather than raw values.
 - `renderInput` replaces one input, such as a board field with a board hint; return `undefined` to keep the default.
+- `renderSelected` presents a saved selection using game-owned labels, such as a district name for a seat-scoped space reference; return `undefined` to keep the default.
 
 Resource maps keep partial edits; Continue submits only the current step. Cancel clears the server's saved choices; Reset selection clears local ones.
