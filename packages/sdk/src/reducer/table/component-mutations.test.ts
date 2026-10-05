@@ -12,7 +12,7 @@ describe("table ops spatial helpers", () => {
   test("moveComponentToSpace and moveComponentToZone re-home cards, pieces, and dice", () => {
     const table = createSpatialTable();
 
-    const withCardInContainer = createTestTransaction(
+    const withCardInAttachedZone = createTestTransaction(
       {
         table,
       },
@@ -23,7 +23,7 @@ describe("table ops spatial helpers", () => {
     }).table;
     const withPieceOnSpace = createTestTransaction(
       {
-        table: withCardInContainer,
+        table: withCardInAttachedZone,
       },
       spatialDefinitions,
     ).moveComponentToSpace({
