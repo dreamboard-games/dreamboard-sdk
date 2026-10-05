@@ -234,16 +234,17 @@ try {
                 "slot",
               ),
         }));
-        const [ownValue, opponentValue] = await page.evaluate(
-          (values) => values.map((value) => CSS.escape(JSON.stringify(value))),
+        const [ownBoard, opponentBoard] = await page.evaluate(
+          (values) => values.map((value) => CSS.escape(value.boardId)),
           targets,
         );
-        const own = page.locator(
-          `[data-board][data-action="select"][data-value="${ownValue}"]`,
-        );
-        const opponent = page.locator(
-          `[data-board][data-action="select"][data-value="${opponentValue}"]`,
-        );
+        // Tiled space references belong to the current seat frame; never reconstruct them from inventory IDs.
+        const own = page
+          .locator(`[data-board="${ownBoard}"][data-action="select"]`)
+          .first();
+        const opponent = page
+          .locator(`[data-board="${opponentBoard}"][data-action="select"]`)
+          .first();
         await own.focus();
         await page.keyboard.press("Enter");
         await expect(own).toHaveAttribute("aria-pressed", "true");

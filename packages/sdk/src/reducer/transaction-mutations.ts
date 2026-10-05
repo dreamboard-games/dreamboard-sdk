@@ -1,3 +1,4 @@
+import { getPublicTileFootprint } from "../shared/tile-appearance.js";
 import { ZoneVisibilitySchema } from "../shared/domain/manifest-schema.js";
 import {
   TileDisclosureSchema,
@@ -494,14 +495,8 @@ export const transactionMutations = {
     )
       throw new Error("Tile face audience must name active roster players.");
     const location = state.table.componentLocations[args.tileId];
-    if (
-      location?.type === "OnBoard" &&
-      disclosure.appearance !== undefined &&
-      disclosure.appearance.layout !== location.layout
-    )
-      throw new Error(
-        "Tile public appearance must match its board placement layout.",
-      );
+    if (location?.type === "OnBoard" && disclosure.appearance)
+      getPublicTileFootprint(disclosure.appearance, location);
     state.table.tiles[args.tileId] = { ...tile, disclosure };
     return state;
   },

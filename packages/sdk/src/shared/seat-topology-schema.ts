@@ -1,3 +1,4 @@
+import { getPublicTileFootprint } from "./tile-appearance.js";
 import * as z from "zod";
 import {
   BoardSpaceSchema,
@@ -93,6 +94,18 @@ export const SeatBoardTopologySchema = z
           path: ["tiles", index],
           message: "Tile presentation must match its board layout.",
         });
+    }
+    for (const [index, tile] of board.tiles.entries()) {
+      if (tile.disclosure !== "concealed") continue;
+      try {
+        getPublicTileFootprint(tile.appearance, tile.placement);
+      } catch (error) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["tiles", index, "appearance"],
+          message: error instanceof Error ? error.message : String(error),
+        });
+      }
     }
     const cellsByTile = new Map<string, Set<string>>();
     for (const [id, space] of Object.entries<

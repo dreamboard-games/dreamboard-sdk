@@ -111,7 +111,7 @@ test("seats see hidden and face-down cards only by position and their backs", as
     const [top] = deck();
     expect(top.hidden && top.backImage).toBe("assets/back.webp");
     expect(JSON.stringify(source.inspect().frame.zones)).not.toMatch(
-      /ace|king/,
+      /"(?:ace|king)"/,
     );
 
     // The seat picks the top card by position; it arrives face up.

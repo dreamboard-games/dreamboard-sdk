@@ -1,3 +1,4 @@
+import { MAXIMUM_BOARD_COORDINATE } from "../shared/domain/board-coordinates.js";
 import { describe, expect, it } from "vitest";
 import { compileManifest } from "./manifest/compiler.js";
 import { createTestTransaction } from "./transaction-test-fixtures.js";
@@ -185,4 +186,36 @@ describe("transaction disclosure mutations", () => {
       ).toThrow();
     expect(state).toEqual(before);
   });
+});
+
+it("rejects a transformed public footprint before mutation and at restore", () => {
+  const { state, definitions } = fixture();
+  state.table.componentLocations.tile = {
+    type: "OnBoard",
+    boardId: "map",
+    layout: "hex",
+    q: MAXIMUM_BOARD_COORDINATE,
+    r: 0,
+    rotation: 0,
+  };
+  const disclosure = {
+    face: { audience: "none" },
+    appearance: { layout: "hex", cells: [{ q: 1, r: 0 }] },
+  } as const;
+  const before = structuredClone(state);
+  expect(() =>
+    transactionMutations.setTileDisclosure(state, {
+      tileId: "tile",
+      disclosure,
+    }),
+  ).toThrow(/coordinate domain/);
+  expect(state).toEqual(before);
+  const restored = {
+    ...state.table,
+    tiles: {
+      ...state.table.tiles,
+      tile: { ...state.table.tiles.tile, disclosure },
+    },
+  };
+  expect(definitions.tableSchema.safeParse(restored).success).toBe(false);
 });

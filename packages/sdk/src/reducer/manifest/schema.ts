@@ -1,3 +1,4 @@
+import { getPublicTileFootprint } from "../../shared/tile-appearance.js";
 import { TileDisclosureSchema } from "../../shared/domain/tile-disclosure.js";
 import { ZoneVisibilitySchema } from "../../shared/domain/manifest-schema.js";
 import { BoardRelationSchema } from "../../shared/board-topology-schema.js";
@@ -491,6 +492,20 @@ export function createTableSchema(
             path: ["componentLocations", id],
             message: "OnBoard requires a tile and matching tiled board layout.",
           });
+      }
+      for (const [id, tile] of Object.entries(table.tiles)) {
+        const location = table.componentLocations[id];
+        if (location?.type !== "OnBoard" || !tile.disclosure.appearance)
+          continue;
+        try {
+          getPublicTileFootprint(tile.disclosure.appearance, location);
+        } catch (error) {
+          context.addIssue({
+            code: "custom",
+            path: ["tiles", id, "disclosure", "appearance"],
+            message: error instanceof Error ? error.message : String(error),
+          });
+        }
       }
       checkPlayers(table.resources, ["resources"]);
       try {

@@ -1,3 +1,4 @@
+import { MAXIMUM_BOARD_COORDINATE } from "./domain/board-coordinates.js";
 import { describe, expect, test } from "vitest";
 import {
   BoardProjectionSchema,
@@ -153,4 +154,24 @@ describe("seat topology wire admission", () => {
       }).success,
     ).toBe(false);
   });
+});
+
+test("rejects concealed footprints outside the coordinate domain after placement", () => {
+  const value = {
+    ...board(),
+    spaces: {},
+    tiles: [
+      {
+        ...concealed,
+        appearance: { layout: "square", cells: [{ col: 1, row: 0 }] },
+        placement: {
+          layout: "square",
+          col: MAXIMUM_BOARD_COORDINATE,
+          row: 0,
+          rotation: 0,
+        },
+      },
+    ],
+  };
+  expect(BoardProjectionSchema.safeParse({ map: value }).success).toBe(false);
 });
