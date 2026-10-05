@@ -705,7 +705,6 @@ export function validateManifestAuthoring(
     }),
   );
   errors.push(...validateBoardDuplicates(manifest.boards ?? []));
-  errors.push();
   errors.push(
     ...collectDuplicateIdIssues({
       entries: (manifest.pieceTypes ?? []).map((pieceType, index) => ({
