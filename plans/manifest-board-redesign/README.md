@@ -120,18 +120,23 @@ Internal B repins the published SDK and adopts protocols, host consumers and
 actual seat delivery. See [09](09-internal-adoption.md).
 
 Private configurations fail explicitly until PR 8 supplies the complete boundary;
-no intermediate layer may accept them and expose their contents. The first five
-SDK layers remain a coherent stopping point.
+no intermediate layer may accept them and expose their contents. Intermediate
+layers are review boundaries; publication requires the complete candidate.
 
 ## Current review state
 
 The following are drafts, not landed changes:
 
+- [SDK #107](https://github.com/dreamboard-games/dreamboard-sdk/pull/107):
+  touch activation prerequisite; physical interaction proofs and hosted checks pass.
 - [SDK #104](https://github.com/dreamboard-games/dreamboard-sdk/pull/104):
-  portable field schemas, independently reviewed and browser-free checks passed.
+  portable field schemas, independently reviewed; local and hosted checks pass.
 - [SDK #105](https://github.com/dreamboard-games/dreamboard-sdk/pull/105):
-  geometry foundation; desktop and touch checks exposed an edge hit-area issue,
-  now corrected. Full UI acceptance also depends on the touch-activation fix.
+  geometry foundation; edge hit areas corrected. Full local UI and hosted checks
+  pass with the touch activation prerequisite below it in the stack.
+- [SDK #109](https://github.com/dreamboard-games/dreamboard-sdk/pull/109):
+  canonical zone membership and explicit hosts. Independent `pnpm check` and full
+  `pnpm ui test` pass; hosted checks are running.
 - [Internal #668](https://github.com/dreamboard-games/dreamboard-internal/pull/668):
   opaque manifest ownership, generated transport and compiler boundary.
 - [Internal #669](https://github.com/dreamboard-games/dreamboard-internal/pull/669):
