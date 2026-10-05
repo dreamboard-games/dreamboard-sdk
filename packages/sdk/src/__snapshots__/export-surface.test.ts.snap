@@ -35,8 +35,10 @@ exports[`public export surface > reducer export names are stable 1`] = `
   "noopDiagnosticsSink",
   "normalizeCommandParams",
   "parseBoardRefKey",
+  "parsePerPlayerInstanceId",
   "parseTopologyManifestJson",
   "perPlayerBoardRef",
+  "perPlayerInstanceId",
   "rectangle",
   "ref",
   "ring",
@@ -116,9 +118,11 @@ exports[`public export surface > root export names are stable 1`] = `
   "originsFeature",
   "panZoomFeature",
   "parseHostToPluginEnvelope",
+  "parsePerPlayerInstanceId",
   "parsePluginGameplayFrame",
   "parsePluginSessionDescriptor",
   "parsePluginToHostEnvelope",
+  "perPlayerInstanceId",
   "staticSource",
 ]
 `;

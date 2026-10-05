@@ -1,7 +1,7 @@
 import { test, expect } from "vitest";
 import type { GameTopologyManifest } from "../shared/domain/manifest.js";
 
-test("materializeManifestTable rejects player-scoped seed homes without ownerId", async () => {
+test("materializeManifestTable rejects shared seeds homed on player-scoped destinations", async () => {
   const { materializeManifestTable } = await import("./manifest/materialize");
 
   const manifest = {
@@ -65,6 +65,6 @@ test("materializeManifestTable rejects player-scoped seed homes without ownerId"
       shuffleItems: <Value>(values: readonly Value[]) => [...values],
     }),
   ).toThrow(
-    "manifest.pieceSeeds[0].home.boardId: Piece seed 'worker-a' requires ownerId because board 'player-mat' has scope 'perPlayer'. Add ownerId to resolve the player-scoped destination.",
+    "manifest.pieceSeeds[0].home.boardId: Piece seed 'worker-a' requires perPlayer scope because board 'player-mat' has scope 'perPlayer'. Use perPlayer scope to resolve the player-scoped destination.",
   );
 });
