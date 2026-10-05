@@ -224,6 +224,7 @@ describe("definition-owned board topology", () => {
       ),
       bSpace = tileSpaceId(perPlayerInstanceId("tile", "tile", "B"), "center");
     const relation = {
+      id: "session-link",
       typeId: "new-session-tag",
       fromSpaceId: bSpace,
       toSpaceId: bSpace,
@@ -268,13 +269,14 @@ describe("definition-owned board topology", () => {
     const compiled = compileManifest(source);
     const table = compiled.createInitialTable({ playerIds: ["seat"] });
     const relation = {
+      id: "route",
       typeId: "route",
       fromSpaceId: tileSpaceId("tile", "center"),
       toSpaceId: tileSpaceId("tile", "center"),
       directed: false,
       fields: {},
     };
-    const restored = (relations: (typeof relation & { id?: string })[]) => ({
+    const restored = (relations: (typeof relation)[]) => ({
       ...table,
       boards: { map: { baseId: "map", visibility: "public", relations } },
     });
@@ -296,7 +298,14 @@ describe("definition-owned board topology", () => {
     ).toBe(true);
     expect(
       compiled.tableSchema.safeParse(restored([relation, relation])).success,
-    ).toBe(true);
+    ).toBe(false);
+    const { id: _id, ...anonymous } = relation;
+    expect(
+      compiled.tableSchema.safeParse({
+        ...table,
+        boards: { map: { ...table.boards.map, relations: [anonymous] } },
+      }).success,
+    ).toBe(false);
   });
   it("emits ordinary fixed-board seeds with matching explicit topology", () => {
     const fragment = fromCoordinates({

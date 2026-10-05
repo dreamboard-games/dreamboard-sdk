@@ -1,4 +1,17 @@
 import { getPublicTileFootprint } from "../shared/tile-appearance.js";
+import type { z } from "zod";
+import type { TilePlacement } from "../shared/domain/tile-placement.js";
+import type { BoardDefinitionOf } from "./model/topology.js";
+import type { RelationInputForBoard } from "./manifest/types.js";
+import {
+  placeTileInPlace,
+  removeTileInPlace,
+  type TilePlacementAt,
+} from "./table/tile-mutations.js";
+import {
+  addRelationInPlace,
+  removeRelationInPlace,
+} from "./table/relation-mutations.js";
 import { ZoneVisibilitySchema } from "../shared/domain/manifest-schema.js";
 import {
   TileDisclosureSchema,
@@ -50,6 +63,37 @@ import {
   spendPlayerResourcesInPlace as tableSpendPlayerResourcesInPlace,
   transferPlayerResourcesInPlace as tableTransferPlayerResourcesInPlace,
 } from "./table";
+
+type PlacementAt<Layout> = Layout extends "hex" | "square"
+  ? Omit<
+      Extract<TilePlacement, { layout: Layout }>,
+      "type" | "boardId" | "layout"
+    >
+  : never;
+type BoardBase<Table, Board extends BoardIdOfTable<Table>> = Table extends {
+  boards: Record<Board, { baseId: infer Base extends string }>;
+}
+  ? Base
+  : never;
+type CompatibleTileId<
+  Table,
+  Definitions extends TopologyDefinitions,
+  Board extends BoardIdOfTable<Table>,
+> = {
+  [Tile in TileIdOfTable<Table>]: Table extends {
+    tiles: Record<Tile, { tileTypeId: infer Type }>;
+  }
+    ? Type extends keyof Definitions["tileDefinitions"]
+      ? Definitions["tileDefinitions"][Type] extends { layout: infer Layout }
+        ? BoardDefinitionOf<Table, Definitions, Board> extends {
+            layout: Layout;
+          }
+          ? Tile
+          : never
+        : never
+      : never
+    : never;
+}[TileIdOfTable<Table>];
 
 export type RotateZoneArgs<
   State extends { table: RuntimeTableRecord },
@@ -179,6 +223,39 @@ export interface TransactionMutations<
   flipCard(args: {
     cardId: CardIdOfTable<TableOfState<State>>;
     faceUp: boolean;
+  }): State;
+
+  /** Place or relocate an inventory tile without duplicating its membership. */
+  placeTile<
+    Board extends TiledBoardIdOfTable<TableOfState<State>, Definitions>,
+  >(args: {
+    boardId: Board;
+    tileId: CompatibleTileId<TableOfState<State>, Definitions, NoInfer<Board>>;
+    at: PlacementAt<
+      BoardDefinitionOf<
+        TableOfState<State>,
+        Definitions,
+        NoInfer<Board>
+      >["layout"]
+    >;
+  }): State;
+  /** Detach a placed tile only after all dependent state has been removed. */
+  removeTile<
+    Board extends TiledBoardIdOfTable<TableOfState<State>, Definitions>,
+  >(args: {
+    boardId: Board;
+    tileId: CompatibleTileId<TableOfState<State>, Definitions, NoInfer<Board>>;
+  }): State;
+  addRelation<Board extends BoardIdOfTable<TableOfState<State>>>(args: {
+    boardId: Board;
+    relation: RelationInputForBoard<
+      Definitions,
+      BoardBase<TableOfState<State>, NoInfer<Board>>
+    >;
+  }): State;
+  removeRelation(args: {
+    boardId: BoardIdOfTable<TableOfState<State>>;
+    relationId: string;
   }): State;
 
   // --- Board / component movement -------------------------------------
@@ -505,6 +582,40 @@ export const transactionMutations = {
     args: { cardId: string; faceUp: boolean },
   ): S {
     tableFlipCardInPlace(state.table, args.cardId, args.faceUp);
+    return state;
+  },
+  placeTile<S extends AnyState>(
+    state: S,
+    args: { boardId: string; tileId: string; at: TilePlacementAt },
+    definitions: ZoneDefinitions,
+  ): S {
+    placeTileInPlace({ table: state.table, definitions, ...args });
+    return state;
+  },
+  removeTile<S extends AnyState>(
+    state: S,
+    args: { boardId: string; tileId: string },
+    definitions: ZoneDefinitions,
+  ): S {
+    removeTileInPlace({ table: state.table, definitions, ...args });
+    return state;
+  },
+  addRelation<S extends AnyState>(
+    state: S,
+    args: { boardId: string; relation: unknown },
+    definitions: ZoneDefinitions & {
+      readonly tableSchema: z.ZodType<RuntimeTableRecord>;
+    },
+  ): S {
+    addRelationInPlace({ table: state.table, definitions, ...args });
+    return state;
+  },
+  removeRelation<S extends AnyState>(
+    state: S,
+    args: { boardId: string; relationId: string },
+    definitions: ZoneDefinitions,
+  ): S {
+    removeRelationInPlace({ table: state.table, definitions, ...args });
     return state;
   },
   moveComponentToSpace<S extends AnyState>(

@@ -18,6 +18,7 @@ import {
   getVertex,
 } from "./board-queries";
 import { orderedComponentIdsForLocation } from "./internal";
+import { assertTileCanLeaveBoard } from "./tile-mutations";
 
 function reindexSpaceOccupants<
   Table extends RuntimeTableRecord,
@@ -93,9 +94,7 @@ export function removeComponentFromCurrentLocation<
   assertComponent(table, componentId);
   const currentLocation = table.componentLocations[componentId];
   if (currentLocation?.type === "OnBoard")
-    throw new Error(
-      "Placed tiles require dependency-aware removal before moving.",
-    );
+    assertTileCanLeaveBoard(table, definitions, componentId);
   if (!currentLocation) {
     return;
   }

@@ -108,7 +108,7 @@ export const BoardSpaceSpecSchema = z.strictObject({
   fields: fields.optional(),
 });
 export const BoardRelationSpecSchema = z.strictObject({
-  id: id.optional(),
+  id,
   typeId: id,
   fromSpaceId: id,
   toSpaceId: id,

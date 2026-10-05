@@ -85,6 +85,7 @@ export const spatialManifest = compileManifest({
       ],
       relations: [
         {
+          id: "adjacent",
           typeId: "adjacent",
           fromSpaceId: "space-a",
           toSpaceId: "space-b",

@@ -212,7 +212,28 @@ Board queries enumerate only the tiles placed on that board; `q.tile(id)` also
 addresses detached and contained inventory. Geometric adjacency and explicit
 session relations are distinct. Relations must name current board members.
 Their `typeId` is a game-defined string; it need not occur in initial relations.
-The board's `relationFieldsSchema` validates their fields.
+The board's `relationFieldsSchema` validates their fields and applies defaults.
+Every relation has a required board-local `id` so it can be removed explicitly.
+
+Use `tx.placeTile({ boardId, tileId, at })` to place inventory or relocate a tile.
+`at` contains board-layout coordinates and rotation; the board determines its
+layout. Placement removes prior zone membership only after the candidate
+geometry passes validation. Overlap and invalid metadata leave state untouched.
+Queries inside the transaction immediately see the updated topology.
+
+Same-board movement preserves stable cells, their occupants and attached zone
+contents, and explicit relations. Occupied world edges or vertices prevent an
+actual move because those identities represent fixed lattice positions.
+`tx.removeTile({ boardId, tileId })` detaches the tile; removal and cross-board
+relocation reject cell occupants, nonempty attached zones, incident relations,
+and occupied incident edges or vertices. Generic moves to zones or detached
+state enforce the same dependency rule.
+
+Add current connections with `tx.addRelation({ boardId, relation })` and remove
+them with `tx.removeRelation({ boardId, relationId })`. Remove dependent state
+explicitly before removing its tile. Setup can draw and place tiles using the
+reducer's seeded random helpers; no second placement store or client-side random
+assignment is needed.
 
 Tile location policy and instance disclosure determine what each seat receives.
 Declare a seed `disclosure` with a face audience and an independently public

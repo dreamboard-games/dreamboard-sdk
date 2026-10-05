@@ -575,6 +575,7 @@ describe("derived board topology", () => {
             baseId: "board",
             relations: [
               {
+                id: "road",
                 typeId: "road",
                 fromSpaceId: tileSpaceId("a", "cell"),
                 toSpaceId: tileSpaceId("b", "cell"),
@@ -607,6 +608,7 @@ describe("derived board topology", () => {
               baseId: "board",
               relations: [
                 {
+                  id: "road",
                   typeId: "road",
                   fromSpaceId: tileSpaceId("a", "cell"),
                   toSpaceId: tileSpaceId("b", "cell"),

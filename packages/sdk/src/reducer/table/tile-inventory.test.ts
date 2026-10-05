@@ -14,6 +14,7 @@ import {
   moveComponentToVertexInPlace,
 } from "./component-mutations";
 import { assertZoneConsistency } from "./zones";
+import { tileSpaceId } from "../../shared/domain/tile-space";
 const definitions: ZoneDefinitions = {
   boardDefinitions: {},
   tileDefinitions: {},
@@ -204,7 +205,7 @@ describe("tile inventory operations", () => {
     state.zones.hidden.table = ["tile"];
     expect(() => assertZoneConsistency(state, definitions)).not.toThrow();
   });
-  test("rejects generic outgoing moves of a placed tile before touching memberships", () => {
+  test("rejects dependent outgoing moves of a placed tile before touching memberships", () => {
     const placedDefinitions: ZoneDefinitions = {
       ...definitions,
       boardDefinitions: {
@@ -242,6 +243,16 @@ describe("tile inventory operations", () => {
       col: 0,
       row: 0,
       rotation: 0,
+    };
+    state.zones.supply.table.splice(
+      state.zones.supply.table.indexOf("piece"),
+      1,
+    );
+    state.componentLocations.piece = {
+      type: "OnSpace",
+      boardId: "islandBoard",
+      spaceId: tileSpaceId("tile", "land"),
+      position: 0,
     };
     assertZoneConsistency(state, placedDefinitions);
     const before = structuredClone(state);

@@ -62,8 +62,7 @@ export type TrustedState<Contract extends ReducerGameContractLike> =
     runtime: TrustedSessionState<Contract>["runtime"];
   };
 
-export type TrustedManifest<Contract extends ReducerGameContractLike> =
-  ManifestContractOf<Contract>;
+export type { ManifestContractOf as TrustedManifest } from "../../model/extract.js";
 
 export type TrustedPhaseName<
   Contract extends ReducerGameContractLike,
@@ -85,7 +84,7 @@ export interface TrustedRuntimeScope<
   View extends ViewOfContract<Contract>,
 > {
   definition: TrustedDefinition<Contract, Definitions, View>;
-  manifest: TrustedManifest<Contract> & ExactManifestContractOf<Contract>;
+  manifest: ManifestContractOf<Contract> & ExactManifestContractOf<Contract>;
   diagnostics: ReducerDiagnosticsEmitter;
   registry: TrustedRuntimeRegistry<Contract, Definitions, View>;
   phaseEntries: ReadonlyArray<
@@ -112,7 +111,7 @@ export interface TrustedRuntimeScope<
   ):
     | AnyInteractionSpec<
         TrustedDomainState<Contract>,
-        TrustedManifest<Contract>
+        ManifestContractOf<Contract>
       >
     | undefined;
   interactionEntriesForPhase(
@@ -121,27 +120,30 @@ export interface TrustedRuntimeScope<
 
   buildContext(
     state: TrustedState<Contract>,
-  ): ActionContext<TrustedDomainState<Contract>, TrustedManifest<Contract>>;
+  ): ActionContext<TrustedDomainState<Contract>, ManifestContractOf<Contract>>;
   buildRuntimeArgs<Extra extends object>(
     state: TrustedState<Contract>,
     extra: Extra,
     options?: {
       q?: TableQueriesOfState<
         TrustedDomainState<Contract>,
-        TrustedManifest<Contract>
+        ManifestContractOf<Contract>
       >;
       random?: import("./rng-sampler").MutableRandomHelpers;
     },
-  ): ActionContext<TrustedDomainState<Contract>, TrustedManifest<Contract>> & {
+  ): ActionContext<
+    TrustedDomainState<Contract>,
+    ManifestContractOf<Contract>
+  > & {
     q: TableQueriesOfState<
       TrustedDomainState<Contract>,
-      TrustedManifest<Contract>
+      ManifestContractOf<Contract>
     >;
     runtime: Omit<TrustedState<Contract>["runtime"], "rng">;
     random: RandomHelpers;
   } & RuntimeArgsWithTransaction<
       TrustedDomainState<Contract>,
-      TrustedManifest<Contract>
+      ManifestContractOf<Contract>
     > &
     Extra;
 }
@@ -157,11 +159,12 @@ export function createTrustedRuntimeScope<
   type DomainState = TrustedDomainState<Contract>;
   type SessionState = TrustedSessionState<Contract>;
   type State = TrustedState<Contract>;
-  type Manifest = TrustedManifest<Contract>;
+  type Manifest = ManifestContractOf<Contract>;
   type PhaseName = TrustedPhaseName<Contract, Definitions, View>;
   // The manifest is supplied by this same Contract. Bind its conditional
   // table and identity projections once at the runtime composition boundary.
-  const manifest = definition.contract.manifest as TrustedManifest<Contract> &
+  const manifest = definition.contract
+    .manifest as ManifestContractOf<Contract> &
     ExactManifestContractOf<Contract>;
   const registry = collectTrustedRuntimeRegistry(definition);
   const { phaseEntries } = registry;
