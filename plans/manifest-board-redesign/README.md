@@ -136,7 +136,7 @@ The following are drafts, not landed changes:
   pass with the touch activation prerequisite below it in the stack.
 - [SDK #109](https://github.com/dreamboard-games/dreamboard-sdk/pull/109):
   canonical zone membership and explicit hosts. Independent `pnpm check` and full
-  `pnpm ui test` pass; hosted checks are running.
+  `pnpm ui test` and all required hosted checks pass.
 - [Internal #668](https://github.com/dreamboard-games/dreamboard-internal/pull/668):
   opaque manifest ownership, generated transport and compiler boundary.
 - [Internal #669](https://github.com/dreamboard-games/dreamboard-internal/pull/669):

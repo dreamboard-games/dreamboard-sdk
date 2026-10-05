@@ -106,6 +106,22 @@ const trailId = q
   components and is `null` for shared components. Reducers may reassign ownership
   independently. Decoding an ID must never be used to infer the current owner.
 
+### Static declarations and session state
+
+`createInitialTable({ playerIds })` requires an explicit roster. Static geometry
+tooling may explicitly pass `[]`; `maxPlayers` never supplies fabricated seats.
+Instance record factories also require `{ playerIds }`, while declaration-family
+factories remain roster-independent. Static literal arrays and `staticBoards`
+contain shared instances only; exact runtime identity schemas additionally admit
+the declared per-player family and expanded base. Identity type extractors use
+those schemas, not static arrays.
+
+Current board instances are emitted through an SDK-owned `boards` seat projection
+and materialized into the frame by the shared SDK owner. Authored views cannot
+supply or overwrite boards. Static projection remains shared definition metadata;
+UI consumers never reconstruct missing instances. This seat projection is the
+boundary that the private projection layer later filters.
+
 ### Home resolution
 
 | Seed scope  | Home target                                       | Result                                                              |
