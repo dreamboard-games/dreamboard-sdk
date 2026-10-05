@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+import { isHiddenCardId } from "../../shared/domain/cards.js";
 import { describe, expect, it } from "vitest";
 import { createGameInstance } from "../instance.js";
 import type { SourceSnapshot } from "../sources/types.js";
@@ -5,7 +7,11 @@ import { createTestSource } from "../../testing/sources/test-source.js";
 import { findCardOrigins, originsFeature } from "./origins.js";
 
 const hidden = (zone: string, count: number) =>
-  Array.from({ length: count }, (_, index) => `hidden:${zone}:${index}`);
+  Array.from(
+    { length: count },
+    (_, index) =>
+      `card-ref:sha256:${createHash("sha256").update(`${zone}:${index}`).digest("hex")}`,
+  );
 
 function snapshot(
   version: number,
@@ -37,7 +43,7 @@ function snapshot(
               cardIds,
               cardViewsById: Object.fromEntries(
                 cardIds
-                  .filter((cardId) => !cardId.startsWith("hidden:"))
+                  .filter((cardId) => !isHiddenCardId(cardId))
                   .map((cardId) => [
                     cardId,
                     { id: cardId, cardType: "ranked", properties: {} },
@@ -82,14 +88,27 @@ describe("findCardOrigins", () => {
   it("flips a card in place either way", () => {
     expect(
       origins(
-        { table: ["hidden:table:0", "two"] },
+        {
+          table: [
+            "card-ref:sha256:c9935b85d7a1529e389156422c6a2e11f0c5349bd44404072e6ef9dcf192b818",
+            "two",
+          ],
+        },
         { table: ["queen", "two"] },
       ),
     ).toEqual({ queen: { hostId: "table", zone: "table", hidden: true } });
     expect(
-      origins({ table: ["queen"] }, { table: ["hidden:table:0"] }),
+      origins(
+        { table: ["queen"] },
+        {
+          table: [
+            "card-ref:sha256:c9935b85d7a1529e389156422c6a2e11f0c5349bd44404072e6ef9dcf192b818",
+          ],
+        },
+      ),
     ).toEqual({
-      "hidden:table:0": { hostId: "table", zone: "table", hidden: false },
+      "card-ref:sha256:c9935b85d7a1529e389156422c6a2e11f0c5349bd44404072e6ef9dcf192b818":
+        { hostId: "table", zone: "table", hidden: false },
     });
   });
 
@@ -113,8 +132,10 @@ describe("findCardOrigins", () => {
         { discard: [], deck: hidden("deck", 2) },
       ),
     ).toEqual({
-      "hidden:deck:0": { hostId: "table", zone: "discard", hidden: false },
-      "hidden:deck:1": { hostId: "table", zone: "discard", hidden: false },
+      "card-ref:sha256:cb3a5a629931a71de6a229014cbb9b084d85df5e26e61d18425ece25021e304f":
+        { hostId: "table", zone: "discard", hidden: false },
+      "card-ref:sha256:ad43947797d038cf0cb57f6efb6ee2dbed3f4432936b80c227152c35bbca4a00":
+        { hostId: "table", zone: "discard", hidden: false },
     });
   });
 
@@ -138,8 +159,19 @@ describe("findCardOrigins", () => {
   it("does not count a hidden card that only changed position", () => {
     expect(
       origins(
-        { hand: ["ace", "hidden:hand:1"], table: [] },
-        { hand: ["hidden:hand:0"], table: ["ace"] },
+        {
+          hand: [
+            "ace",
+            "card-ref:sha256:4514ed8c6fb7ef85e85953833136f3bb7f4fa0a165480e870de91d815f0c9a50",
+          ],
+          table: [],
+        },
+        {
+          hand: [
+            "card-ref:sha256:ad8213301e87dbc1ca7c2bfd0127fdcda5b208190f69a3dec8c39923022f7c43",
+          ],
+          table: ["ace"],
+        },
       ),
     ).toEqual({ ace: { hostId: "alice", zone: "hand", hidden: false } });
   });
@@ -152,14 +184,20 @@ describe("findCardOrigins", () => {
       ),
     ).toEqual({
       king: { hostId: "table", zone: "deck", hidden: true },
-      "hidden:pile:0": { hostId: "table", zone: "table", hidden: false },
+      "card-ref:sha256:0246dc6431786cb412a92e368e9bec36a75a1410a74e27fe5e1eb112a420654c":
+        { hostId: "table", zone: "table", hidden: false },
     });
   });
 
   it("does not choose between hidden cards when one visible card is concealed", () => {
     expect(
       origins(
-        { table: ["queen", "hidden:table:1"] },
+        {
+          table: [
+            "queen",
+            "card-ref:sha256:da02b5f201a11bc7ad18353f046d031a6d7e95915daeafa8d1816f24495e0953",
+          ],
+        },
         { table: hidden("table", 2) },
       ),
     ).toEqual({});
@@ -193,7 +231,13 @@ describe("findCardOrigins", () => {
   it("does not prefer a flip over another possible hidden source", () => {
     expect(
       origins(
-        { table: ["hidden:table:0", "two"], deck: hidden("deck", 1) },
+        {
+          table: [
+            "card-ref:sha256:c9935b85d7a1529e389156422c6a2e11f0c5349bd44404072e6ef9dcf192b818",
+            "two",
+          ],
+          deck: hidden("deck", 1),
+        },
         { table: ["queen", "two"], deck: [] },
       ),
     ).toEqual({});
@@ -240,15 +284,37 @@ describe("findCardOrigins", () => {
   it("does not infer a reveal when another card may have been concealed in its place", () => {
     expect(
       origins(
-        { table: ["queen", "hidden:table:1"], deck: hidden("deck", 1) },
-        { table: ["hidden:table:0", "king"], deck: [] },
+        {
+          table: [
+            "queen",
+            "card-ref:sha256:da02b5f201a11bc7ad18353f046d031a6d7e95915daeafa8d1816f24495e0953",
+          ],
+          deck: hidden("deck", 1),
+        },
+        {
+          table: [
+            "card-ref:sha256:c9935b85d7a1529e389156422c6a2e11f0c5349bd44404072e6ef9dcf192b818",
+            "king",
+          ],
+          deck: [],
+        },
         "bob",
       ),
     ).toEqual({});
     expect(
       origins(
-        { table: ["queen", "hidden:table:1"] },
-        { table: ["hidden:table:0", "king"] },
+        {
+          table: [
+            "queen",
+            "card-ref:sha256:da02b5f201a11bc7ad18353f046d031a6d7e95915daeafa8d1816f24495e0953",
+          ],
+        },
+        {
+          table: [
+            "card-ref:sha256:c9935b85d7a1529e389156422c6a2e11f0c5349bd44404072e6ef9dcf192b818",
+            "king",
+          ],
+        },
         "bob",
       ),
     ).toEqual({});
@@ -351,4 +417,20 @@ describe("originsFeature", () => {
     expect(game.cards.get("ace").getOrigin()).toBeNull();
     game.dispose();
   });
+});
+
+it("does not track concealed identities when every reference rotates during a shuffle", () => {
+  const before = hidden("basis-one-deck", 3);
+  const after = hidden("basis-two-deck", 3);
+  expect(after.every((ref) => !before.includes(ref))).toBe(true);
+  expect(origins({ deck: before }, { deck: after }, "bob")).toEqual({});
+});
+
+it("infers only the public source count when a draw rotates all remaining references", () => {
+  expect(
+    origins(
+      { deck: hidden("basis-one-deck", 3), hand: [] },
+      { deck: hidden("basis-two-deck", 2), hand: ["king"] },
+    ),
+  ).toEqual({ king: { hostId: "table", zone: "deck", hidden: true } });
 });

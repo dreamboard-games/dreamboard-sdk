@@ -3,9 +3,22 @@ import { RuntimeJsonSchema } from "../runtime-json.js";
 
 /**
  * A card hidden from the seat, in a hidden zone or face down, is known only by
- * its position in its zone, never by which card it is.
+ * its public position in the issuing frame, never by which card it is.
  */
-export type HiddenCardId = `hidden:${string}`;
+export const CARD_REFERENCE_PREFIX = "card-ref:";
+export type HiddenCardId = `${typeof CARD_REFERENCE_PREFIX}sha256:${string}`;
+
+/** Concealed references are opaque and valid only in their issuing seat frame. */
+export const HiddenCardIdSchema = z
+  .string()
+  .regex(/^card-ref:sha256:[0-9a-f]{64}$/);
+export function isHiddenCardId(id: string): id is HiddenCardId {
+  return HiddenCardIdSchema.safeParse(id).success;
+}
+/** Reserve the complete namespace, including malformed references. */
+export function isCardReferenceNamespace(id: string): boolean {
+  return id.startsWith(CARD_REFERENCE_PREFIX);
+}
 
 /** The complete display data a seat may receive for a visible card. */
 export const ViewCardSchema = z.strictObject({

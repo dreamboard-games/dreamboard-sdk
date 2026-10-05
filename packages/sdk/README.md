@@ -252,8 +252,9 @@ cards: [
 ```
 
 These definitions create runtime IDs `ace-1`, `ace-2`, and `king`, all in the
-`ranked` category. Card IDs cannot start with `hidden:`; that prefix is reserved
-for the positions a seat uses to address concealed cards. When the card schema has `byCardType`, every `cardType` must
+`ranked` category. Component IDs cannot start with `card-ref:`; that prefix is reserved
+for opaque concealed-card references. These references belong to one seat and
+authority version and expire after commits or restores. When the card schema has `byCardType`, every `cardType` must
 name one of its schemas; `compileManifest` and `createGame` reject unknown categories.
 The inferred table narrows a card lookup by its runtime ID to that definition's
 card set, category, and properties. Author field schemas with `z.object`. For card categories, use

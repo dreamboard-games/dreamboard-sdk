@@ -147,13 +147,17 @@ const cardOne = game.cards.get("card-1");
 cardOne.select({ interaction: "playerTurn.pick", input: "missing" });
 // A card input names a hidden card by position, so a target may be hidden.
 const cardInput = game.interactions.get("playerTurn.pick").getInput("cardId");
-cardInput.setValue("hidden:hand:0");
+cardInput.setValue(
+  "card-ref:sha256:ad8213301e87dbc1ca7c2bfd0127fdcda5b208190f69a3dec8c39923022f7c43",
+);
 for (const target of cardInput.getEligibleTargets()) {
   // @ts-expect-error An eligible target may be hidden and have no view.
   void game.cards.get(target).view.id;
 }
 // A hidden card named by position shows its back and can still be selected.
-const hiddenCard = game.cards.get("hidden:hand:0");
+const hiddenCard = game.cards.get(
+  "card-ref:sha256:ad8213301e87dbc1ca7c2bfd0127fdcda5b208190f69a3dec8c39923022f7c43",
+);
 const hiddenBack: string | null = hiddenCard.backImage;
 const hiddenView: null = hiddenCard.view;
 hiddenCard.select({ interaction: "playerTurn.pick" });

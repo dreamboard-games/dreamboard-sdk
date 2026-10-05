@@ -17,9 +17,12 @@ export default defineScenario({
   when: [...bandits(0, tileSpaceId("northForest", "cell"), 1)],
   then: ({ expect, state, view }) => {
     expect(state().flow.currentPhase).toBe("main");
-    expect(view({ seat: 0 }).banditsHexId).toBe(
-      tileSpaceId("northForest", "cell"),
-    );
+    expect(state().table.componentLocations.bandits).toMatchObject({
+      type: "OnSpace",
+      boardId: "frontier",
+      spaceId: tileSpaceId("northForest", "cell"),
+    });
+    expect(view({ seat: 0 }).banditsHexId?.startsWith("space-ref:")).toBe(true);
     expect(state().publicState.lastSteal).toEqual({
       thiefPlayerId: "player-1",
       victimPlayerId: "player-2",

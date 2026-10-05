@@ -36,7 +36,10 @@ import { type CardConcealment } from "./bundle/trusted/card-concealment.js";
 const concealment: CardConcealment = {
   zones: [],
   canTarget: (id) => id !== "card-b",
-  seatCardId: (id) => (id === "card-a" ? "hidden:own:0" : id),
+  seatCardId: (id) =>
+    id === "card-a"
+      ? "card-ref:sha256:b36769e54cacd3a17b1bb1decc20f2ad2bcac2dd64dfdbcd61a07d503fc1da79"
+      : id,
   isHidden: (id) => id === "card-a",
   tableCardId: (id) => id,
 };
@@ -91,7 +94,9 @@ for (const value of ["card-b", ["card-a", "card-b"]]) {
     );
     expect(domainOnly?.inputs[0]).not.toHaveProperty("defaultValue");
     expect(domainOnly?.inputs[0].domain).toMatchObject({
-      eligibleTargets: ["hidden:own:0"],
+      eligibleTargets: [
+        "card-ref:sha256:b36769e54cacd3a17b1bb1decc20f2ad2bcac2dd64dfdbcd61a07d503fc1da79",
+      ],
     });
     expect(domainOnly?.step).toBeUndefined();
     expect(domainOnly?.inputs[0].domain).toMatchObject({
@@ -145,5 +150,9 @@ test("suppresses a concealed identity default while retaining the issued selecti
     concealment,
   );
   expect(projected?.inputs[0]).not.toHaveProperty("defaultValue");
-  expect(projected?.step?.selected).toEqual({ card: ["hidden:own:0"] });
+  expect(projected?.step?.selected).toEqual({
+    card: [
+      "card-ref:sha256:b36769e54cacd3a17b1bb1decc20f2ad2bcac2dd64dfdbcd61a07d503fc1da79",
+    ],
+  });
 });

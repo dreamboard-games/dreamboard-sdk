@@ -1,3 +1,4 @@
+import { CARD_REFERENCE_PREFIX } from "../../../shared/domain/cards.js";
 import type { RuntimeQueryTable, ZoneDefinitions } from "../../model/table.js";
 import type {
   HexSpace,
@@ -424,7 +425,7 @@ export function createSeatDisclosure(
       return id && boardTarget(kind, boardId, id) === ref ? id : null;
     },
     cardRef: (location: unknown, ordinal: number) =>
-      `card-ref:${token("card", location, ordinal)}`,
+      `${CARD_REFERENCE_PREFIX}${token("card", location, ordinal)}`,
   };
 }
 export type SeatDisclosure = ReturnType<typeof createSeatDisclosure>;

@@ -1,3 +1,7 @@
+import {
+  CARD_REFERENCE_PREFIX,
+  isCardReferenceNamespace,
+} from "../../shared/domain/cards.js";
 import { AuthoredTileDisclosureSchema } from "../../shared/domain/tile-disclosure.js";
 import { TileTypeSpecSchema } from "../../shared/domain/manifest-schema.js";
 import * as z from "zod";
@@ -578,9 +582,9 @@ export function validateManifestAuthoring(
     ...expandSeedIds(manifest.tileSeeds ?? []),
   ];
   for (const id of componentIds)
-    if (id.startsWith("hidden:"))
+    if (isCardReferenceNamespace(id))
       errors.push(
-        `Component id '${id}' uses the reserved concealed-id namespace 'hidden:'.`,
+        `Component id '${id}' uses the reserved concealed-id namespace '${CARD_REFERENCE_PREFIX}'.`,
       );
   errors.push(...collectManifestRecordKeyIssues(manifest));
   errors.push(
@@ -717,9 +721,9 @@ export function validateManifestAuthoring(
       const path = `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}]`;
       if (typeof card.id !== "string" || card.id.length === 0) {
         errors.push(`${path}.id: Card definition id is required.`);
-      } else if (card.id.startsWith("hidden:")) {
+      } else if (isCardReferenceNamespace(card.id)) {
         errors.push(
-          `${path}.id: The 'hidden:' prefix is reserved for concealed card positions.`,
+          `${path}.id: The '${CARD_REFERENCE_PREFIX}' prefix is reserved for concealed card positions.`,
         );
       }
       if (typeof card.cardType !== "string" || card.cardType.length === 0) {

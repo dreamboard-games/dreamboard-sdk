@@ -1,3 +1,4 @@
+import { isCardReferenceNamespace } from "../../shared/domain/cards.js";
 import { deriveBoardTopology } from "../../shared/board-topology.js";
 import {
   tileSpaceId,
@@ -384,7 +385,7 @@ export function assertZoneConsistency(
   ];
   for (const family of families)
     for (const [id, component] of Object.entries(family)) {
-      if (id.startsWith("hidden:"))
+      if (isCardReferenceNamespace(id))
         throw new Error(
           `Component id '${id}' uses the reserved hidden-card namespace.`,
         );

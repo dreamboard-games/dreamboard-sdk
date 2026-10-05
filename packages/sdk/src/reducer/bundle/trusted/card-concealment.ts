@@ -1,3 +1,4 @@
+import { isCardReferenceNamespace } from "../../../shared/domain/cards.js";
 import type { RuntimeTableRecord } from "../../model";
 import type { SeatDisclosure, SeatZoneInventory } from "./tile-disclosure.js";
 import { encodeCanonicalPluginRuntimeJson } from "../../../shared/protocol/json.js";
@@ -111,7 +112,7 @@ export function concealCards(
       (!Object.hasOwn(table.cards, id) ||
       seatIds.has(id) ||
       denied.has(id) ||
-      id.startsWith("card-ref:")
+      isCardReferenceNamespace(id)
         ? null
         : id),
   };

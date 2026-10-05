@@ -212,7 +212,7 @@ test("only card inputs name cards by position", async () => {
       },
     });
   expect(await guess("ace")).toMatchObject({ kind: "accept" });
-  expect(await guess('hidden:["deck","table",0]')).toMatchObject({
+  expect(await guess("card-ref:sha256:" + "0".repeat(64))).toMatchObject({
     kind: "reject",
   });
 
