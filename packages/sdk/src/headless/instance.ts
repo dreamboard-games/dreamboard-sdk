@@ -393,6 +393,7 @@ class CardObject {
     readonly owner: Controller,
     readonly id: string,
     readonly zone: string,
+    readonly hostId: string,
     readonly index: number,
     view: ReadonlyData<ViewCard> | undefined,
     backImage: string | undefined,
@@ -472,6 +473,7 @@ class ZoneObject {
   constructor(
     readonly owner: Controller,
     readonly id: string,
+    readonly hostId: string,
     readonly cards: readonly CardObject[],
   ) {}
   get game() {
@@ -559,7 +561,11 @@ interface RuntimeModel {
     get(key: string, name: string): InputObject;
     find(key: string, name: string): InputObject | undefined;
   };
-  readonly zones: RuntimeCollection<ZoneObject>;
+  readonly zones: {
+    get(id: string, hostId: string): ZoneObject;
+    find(id: string, hostId: string): ZoneObject | undefined;
+    getAll(): readonly ZoneObject[];
+  };
   readonly cards: Pick<RuntimeCollection<CardObject>, "get" | "find">;
   readonly events: { readonly recent: SourceSnapshot["frame"]["events"] };
 }
@@ -875,7 +881,9 @@ class Controller {
       const card = draft[input.key];
       if (input.domain.type !== "cardTarget" || typeof card !== "string")
         continue;
-      for (const zone of Object.values(zones)) {
+      for (const zone of Object.values(zones).flatMap((hosts) =>
+        Object.values(hosts),
+      )) {
         const route = zone.playableByCardId[card]?.find(
           (value) => value.interactionKey === base.interactionKey,
         );
@@ -1507,39 +1515,44 @@ class Controller {
     const zones = zonesSame
       ? previous.zones
       : (() => {
-          const objects = Object.entries(snapshot?.frame.zones ?? {}).map(
-            ([id, zone]) =>
-              this.object(
-                "zone",
-                new ZoneObject(
-                  this,
-                  id,
-                  Object.freeze(
-                    zone.cardIds.map((cardId, index) =>
-                      this.object(
-                        "card",
-                        new CardObject(
-                          this,
-                          cardId,
-                          id,
-                          index,
-                          zone.cardViewsById[cardId],
-                          zone.cardBacksById[cardId],
-                          Object.freeze(
-                            (zone.playableByCardId[cardId] ?? []).map(
-                              (descriptor) =>
-                                this.object(
-                                  "interaction",
-                                  new InteractionObject(
-                                    this,
-                                    descriptor,
-                                    drafts[descriptor.interactionKey] ?? EMPTY,
-                                    request || this.pending
-                                      ? "submitting"
-                                      : "open",
-                                    connection === "ready",
+          const objects = Object.entries(snapshot?.frame.zones ?? {}).flatMap(
+            ([id, hosts]) =>
+              Object.entries(hosts).map(([hostId, zone]) =>
+                this.object(
+                  "zone",
+                  new ZoneObject(
+                    this,
+                    id,
+                    hostId,
+                    Object.freeze(
+                      zone.cardIds.map((cardId, index) =>
+                        this.object(
+                          "card",
+                          new CardObject(
+                            this,
+                            cardId,
+                            id,
+                            hostId,
+                            index,
+                            zone.cardViewsById[cardId],
+                            zone.cardBacksById[cardId],
+                            Object.freeze(
+                              (zone.playableByCardId[cardId] ?? []).map(
+                                (descriptor) =>
+                                  this.object(
+                                    "interaction",
+                                    new InteractionObject(
+                                      this,
+                                      descriptor,
+                                      drafts[descriptor.interactionKey] ??
+                                        EMPTY,
+                                      request || this.pending
+                                        ? "submitting"
+                                        : "open",
+                                      connection === "ready",
+                                    ),
                                   ),
-                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -1549,14 +1562,12 @@ class Controller {
                 ),
               ),
           );
+          const find = (id: string, hostId: string) =>
+            objects.find((zone) => zone.id === id && zone.hostId === hostId);
           return {
-            get: (id: string) =>
-              requireLookup(
-                objects.find((zone) => zone.id === id),
-                "Zone",
-                id,
-              ),
-            find: (id: string) => objects.find((zone) => zone.id === id),
+            get: (id: string, hostId: string) =>
+              requireLookup(find(id, hostId), "Zone", id),
+            find,
             getAll: () => Object.freeze(objects),
           };
         })();

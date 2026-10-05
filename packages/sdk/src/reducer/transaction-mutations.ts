@@ -1,14 +1,12 @@
 import type {
+  ZoneDefinitions,
+  ZoneArg,
+  ZoneIdOfTable,
+  ZoneComponentsOfTable,
   BoardContainerIdOfTable,
   BoardIdOfTable,
   CardIdOfTable,
-  CompatibleHandIdForDeck,
   ComponentIdOfTable,
-  CompatibleCardIdForHandAndDeck,
-  CompatibleCardIdForTwoPlayerZones,
-  DeckCardsOfTable,
-  DeckIdOfTable,
-  HandIdOfTable,
   HiddenStateOfState,
   PhaseStateOfState,
   PlayerIdOfState,
@@ -20,36 +18,32 @@ import type {
   ResourceIdOfTable,
   RuntimeTableRecord,
   ReducerGameState,
-  SharedZoneIdOfTable,
   SpaceIdOfTable,
   TableOfState,
   TiledBoardIdOfTable,
   TiledEdgeIdOfTable,
   TiledVertexIdOfTable,
 } from "./model";
-import { asPlayerId } from "./per-player";
 import {
-  addCardToSharedZoneInPlace as tableAddCardToSharedZoneInPlace,
+  moveComponentToZoneInPlace,
+  dealComponentsInPlace,
+  rotateZoneInPlace,
+  type ZonePosition,
+} from "./table/card-mutations";
+import {
   addPlayerResourcesInPlace as tableAddPlayerResourcesInPlace,
-  dealCardsFromDeckToHandInPlace as tableDealCardsFromDeckToHandInPlace,
-  dealCardsBetweenPlayerZonesInPlace as tableDealCardsBetweenPlayerZonesInPlace,
   flipCardInPlace as tableFlipCardInPlace,
-  moveCardBetweenPlayerZonesInPlace as tableMoveCardBetweenPlayerZonesInPlace,
-  moveCardBetweenSharedZonesInPlace as tableMoveCardBetweenSharedZonesInPlace,
-  moveCardFromPlayerZoneToSharedZoneInPlace as tableMoveCardFromPlayerZoneToSharedZoneInPlace,
-  moveCardFromSharedZoneToPlayerZoneInPlace as tableMoveCardFromSharedZoneToPlayerZoneInPlace,
   moveComponentToContainerInPlace as tableMoveComponentToContainerInPlace,
   moveComponentToDetachedInPlace as tableMoveComponentToDetachedInPlace,
   moveComponentToEdgeInPlace as tableMoveComponentToEdgeInPlace,
   moveComponentToSpaceInPlace as tableMoveComponentToSpaceInPlace,
   moveComponentToVertexInPlace as tableMoveComponentToVertexInPlace,
-  removeCardFromSharedZoneInPlace as tableRemoveCardFromSharedZoneInPlace,
   setPlayerResourceInPlace as tableSetPlayerResourceInPlace,
   spendPlayerResourcesInPlace as tableSpendPlayerResourcesInPlace,
   transferPlayerResourcesInPlace as tableTransferPlayerResourcesInPlace,
 } from "./table";
 
-export type RotatePlayerZoneArgs<
+export type RotateZoneArgs<
   State extends { table: RuntimeTableRecord },
   ZoneId extends PlayerZoneIdOfTable<TableOfState<State>> = PlayerZoneIdOfTable<
     TableOfState<State>
@@ -61,8 +55,11 @@ export type RotatePlayerZoneArgs<
   zoneId: ZoneId;
   direction: "left" | "right";
   players?: readonly PlayerId[];
-  cardIdsByPlayer?: Partial<
-    Record<PlayerId, readonly CardIdOfTable<TableOfState<State>>[]>
+  componentIdsByPlayer?: Partial<
+    Record<
+      PlayerId,
+      readonly ZoneComponentsOfTable<TableOfState<State>, NoInfer<ZoneId>>[]
+    >
   >;
   position?: "top" | "bottom";
 };
@@ -133,166 +130,39 @@ export interface TransactionMutations<
     patch: StatePatch<PrivateStateOfState<State>>;
   }): State;
 
-  // --- Shared zones / decks -------------------------------------------
-
-  /**
-   * Append a card to a shared zone (deck). Defaults to placing the card at the
-   * bottom; pass `position: "top"` for top-of-deck placement (e.g. Bureaucrat-style).
-   */
-  addCardToSharedZone<
-    DeckId extends SharedZoneIdOfTable<TableOfState<State>>,
-  >(args: {
-    deckId: DeckId;
-    cardId: DeckCardsOfTable<TableOfState<State>, DeckId>[number];
-    playedBy?: PlayerIdOfTable<TableOfState<State>> | null;
-    position?: "top" | "bottom";
+  moveComponentToZone<Z extends ZoneIdOfTable<TableOfState<State>>>(args: {
+    componentId: ZoneComponentsOfTable<TableOfState<State>, NoInfer<Z>>;
+    to: ZoneArg<TableOfState<State>, Z>;
+    position?: ZonePosition;
+    playedBy?: PlayerIdOfState<State> | null;
   }): State;
-
-  /** Remove a card from a shared zone (deck). */
-  removeCardFromSharedZone<
-    DeckId extends DeckIdOfTable<TableOfState<State>>,
+  deal<
+    From extends ZoneIdOfTable<TableOfState<State>>,
+    To extends ZoneIdOfTable<TableOfState<State>>,
   >(args: {
-    deckId: DeckId;
-    cardId: DeckCardsOfTable<TableOfState<State>, DeckId>[number];
+    from: ZoneArg<TableOfState<State>, From>;
+    to: ZoneArg<TableOfState<State>, To> &
+      ([
+        Extract<
+          ZoneComponentsOfTable<TableOfState<State>, From>,
+          ZoneComponentsOfTable<TableOfState<State>, To>
+        >,
+      ] extends [never]
+        ? never
+        : unknown);
+    count: number;
   }): State;
-
-  /**
-   * Move a card between two shared zones (decks). Defaults to placing the card
-   * at the bottom of the destination; pass `position: "top"` for top placement.
-   */
-  moveCardBetweenSharedZones<
-    FromZoneId extends SharedZoneIdOfTable<TableOfState<State>>,
-    ToZoneId extends SharedZoneIdOfTable<TableOfState<State>>,
-  >(args: {
-    fromZoneId: FromZoneId;
-    toZoneId: ToZoneId;
-    cardId: DeckCardsOfTable<TableOfState<State>, FromZoneId>[number];
-    playedBy?: PlayerIdOfTable<TableOfState<State>> | null;
-    position?: "top" | "bottom";
+  rotateZone<Z extends PlayerZoneIdOfTable<TableOfState<State>>>(
+    args: RotateZoneArgs<State, Z>,
+  ): State;
+  setComponentOwner(args: {
+    componentId: ComponentIdOfTable<TableOfState<State>>;
+    ownerId: PlayerIdOfState<State> | null;
   }): State;
-
-  /**
-   * Turn a card in a shared zone face up or face down. No seat sees a
-   * face-down card: frames show only its back, under a positional id. Moving
-   * the card to another zone turns it face up.
-   */
   flipCard(args: {
     cardId: CardIdOfTable<TableOfState<State>>;
     faceUp: boolean;
   }): State;
-
-  /**
-   * Draw the top `count` cards from one perPlayer zone into another for the
-   * same player (e.g. deck → hand at the start of a turn). Companion to
-   * {@link deal} for the perPlayer → perPlayer case. Stops
-   * silently if the source runs out before `count` is reached.
-   */
-  dealCardsBetweenPlayerZones<
-    FromZoneId extends PlayerZoneIdOfTable<TableOfState<State>>,
-    ToZoneId extends PlayerZoneIdOfTable<TableOfState<State>>,
-    PlayerId extends PlayerIdOfTable<TableOfState<State>>,
-  >(args: {
-    playerId: PlayerId;
-    fromZoneId: FromZoneId;
-    toZoneId: ToZoneId;
-    count: number;
-  }): State;
-
-  /**
-   * Move a card between two perPlayer zones owned by the same player (e.g.
-   * hand → in-play → discard). Owner is preserved; visibility is recomputed
-   * from the destination zone.
-   */
-  moveCardBetweenPlayerZones<
-    FromZoneId extends PlayerZoneIdOfTable<TableOfState<State>>,
-    ToZoneId extends PlayerZoneIdOfTable<TableOfState<State>>,
-    PlayerId extends PlayerIdOfTable<TableOfState<State>>,
-  >(args: {
-    playerId: PlayerId;
-    fromZoneId: FromZoneId;
-    toZoneId: ToZoneId;
-    cardId: CompatibleCardIdForTwoPlayerZones<
-      TableOfState<State>,
-      FromZoneId,
-      ToZoneId
-    >;
-    position?: "top" | "bottom";
-  }): State;
-
-  /**
-   * Move a card from a player zone (hand) to a shared zone (deck). Defaults to
-   * placing the card at the bottom; pass `position: "top"` to topdeck.
-   */
-  moveCardFromPlayerZoneToSharedZone<
-    FromZoneId extends PlayerZoneIdOfTable<TableOfState<State>>,
-    ToZoneId extends SharedZoneIdOfTable<TableOfState<State>>,
-    PlayerId extends PlayerIdOfTable<TableOfState<State>>,
-  >(args: {
-    playerId: PlayerId;
-    fromZoneId: FromZoneId;
-    toZoneId: ToZoneId;
-    cardId: CompatibleCardIdForHandAndDeck<
-      TableOfState<State>,
-      FromZoneId,
-      ToZoneId
-    >;
-    playedBy?: PlayerIdOfTable<TableOfState<State>> | null;
-    position?: "top" | "bottom";
-  }): State;
-
-  /**
-   * Move a named card from a shared zone (supply pile, deck) to a perPlayer
-   * zone (e.g. discard). The "gain" verb in deck-builders. Distinct from
-   * {@link deal}, which draws unspecified top-N cards from a
-   * deck. Owner flips to the receiving player; visibility is recomputed.
-   */
-  moveCardFromSharedZoneToPlayerZone<
-    FromZoneId extends SharedZoneIdOfTable<TableOfState<State>>,
-    ToZoneId extends PlayerZoneIdOfTable<TableOfState<State>>,
-    PlayerId extends PlayerIdOfTable<TableOfState<State>>,
-  >(args: {
-    playerId: PlayerId;
-    fromZoneId: FromZoneId;
-    toZoneId: ToZoneId;
-    cardId: CompatibleCardIdForHandAndDeck<
-      TableOfState<State>,
-      ToZoneId,
-      FromZoneId
-    >;
-    position?: "top" | "bottom";
-  }): State;
-
-  /**
-   * Deal the top `count` cards from a shared deck into a player's hand zone.
-   *
-   * Dealing does not consume RNG. Shuffle first with `tx.shuffle({ zoneId })`
-   * when the deck needs a random order, then call `tx.deal(...)`.
-   */
-  deal<
-    FromZoneId extends DeckIdOfTable<TableOfState<State>>,
-    PlayerId extends PlayerIdOfTable<TableOfState<State>>,
-    ToZoneId extends CompatibleHandIdForDeck<TableOfState<State>, FromZoneId> &
-      HandIdOfTable<TableOfState<State>>,
-  >(args: {
-    fromZoneId: FromZoneId;
-    playerId: PlayerId;
-    toZoneId: ToZoneId;
-    count: number;
-  }): State;
-
-  /**
-   * Atomically rotate cards in a per-player zone around the table.
-   *
-   * Defaults to rotating every card currently in `zoneId` for every player in
-   * turn order. Pass `players` to use a smaller explicit order, or
-   * `cardIdsByPlayer` to rotate only selected cards such as Hearts passes.
-   */
-  rotatePlayerZone<
-    ZoneId extends PlayerZoneIdOfTable<TableOfState<State>>,
-    PlayerId extends PlayerIdOfTable<TableOfState<State>>,
-  >(
-    args: RotatePlayerZoneArgs<State, ZoneId, PlayerId>,
-  ): State;
 
   // --- Board / component movement -------------------------------------
 
@@ -411,156 +281,6 @@ type RuntimeState = ReducerGameState<
 >;
 type AnyState = Pick<RuntimeState, "table">;
 
-function computePlayerZoneVisibility(
-  table: RuntimeTableRecord,
-  zoneId: string,
-  playerId: string,
-): { faceUp: boolean; visibleTo?: string[] } {
-  const mode = table.handVisibility[zoneId];
-  if (mode === "all" || mode === "public") {
-    return { faceUp: true };
-  }
-  return { faceUp: false, visibleTo: [playerId] };
-}
-
-function readPlayerZoneCards(
-  table: RuntimeTableRecord,
-  zoneId: string,
-  playerId: string,
-): readonly string[] {
-  const zone = table.zones.perPlayer[zoneId] ?? table.hands[zoneId];
-  if (!zone) {
-    throw new Error(`Player zone '${zoneId}' does not exist.`);
-  }
-  return zone[playerId] ?? [];
-}
-
-function writePlayerZoneCards(
-  table: RuntimeTableRecord,
-  zoneId: string,
-  playerId: string,
-  cards: readonly string[],
-): void {
-  const currentZone = table.zones.perPlayer[zoneId];
-  const currentHand = table.hands[zoneId];
-  const player = asPlayerId(playerId);
-  if (currentZone) {
-    table.zones.perPlayer[zoneId] = { ...currentZone, [player]: [...cards] };
-  }
-  if (currentHand) {
-    table.hands[zoneId] = { ...currentHand, [player]: [...cards] };
-  }
-}
-
-function assertCardAllowedInPlayerZone(
-  table: RuntimeTableRecord,
-  zoneId: string,
-  cardId: string,
-): void {
-  const allowedCardSetIds = table.zones.cardSetIdsByZoneId?.[zoneId];
-  if (!allowedCardSetIds || allowedCardSetIds.length === 0) {
-    return;
-  }
-  const card = table.cards[cardId];
-  if (!card) {
-    throw new Error(`Card '${cardId}' does not exist.`);
-  }
-  if (!allowedCardSetIds.includes(card.cardSetId)) {
-    throw new Error(
-      `Card '${cardId}' from set '${card.cardSetId}' is not allowed in player zone '${zoneId}'.`,
-    );
-  }
-}
-
-function rotatePlayerZoneTableInPlace(options: {
-  table: RuntimeTableRecord;
-  zoneId: string;
-  direction: "left" | "right";
-  players?: readonly string[];
-  cardIdsByPlayer?: Partial<Record<string, readonly string[]>>;
-  position?: "top" | "bottom";
-}): void {
-  const nextTable = options.table;
-  const zoneId = options.zoneId;
-  if (!nextTable.zones.perPlayer[zoneId] && !nextTable.hands[zoneId]) {
-    throw new Error(`Player zone '${zoneId}' does not exist.`);
-  }
-  const players = [...(options.players ?? nextTable.playerOrder)];
-  if (players.length === 0) {
-    return;
-  }
-  const playerSet = new Set(nextTable.playerOrder);
-  for (const playerId of players) {
-    if (!playerSet.has(playerId)) {
-      throw new Error(
-        `Cannot rotate player zone '${zoneId}': player '${playerId}' is not in player order.`,
-      );
-    }
-  }
-
-  const selectedByPlayer = new Map<string, readonly string[]>();
-  for (const playerId of players) {
-    const sourceCards = readPlayerZoneCards(nextTable, zoneId, playerId);
-    const selected = options.cardIdsByPlayer?.[playerId] ?? sourceCards;
-    for (const cardId of selected) {
-      if (!sourceCards.includes(cardId)) {
-        throw new Error(
-          `Cannot rotate player zone '${zoneId}': card '${cardId}' is not in zone for player '${playerId}'.`,
-        );
-      }
-      assertCardAllowedInPlayerZone(nextTable, zoneId, cardId);
-    }
-    selectedByPlayer.set(playerId, [...selected]);
-  }
-
-  const removeByPlayer = new Map<string, string[]>();
-  for (const playerId of players) {
-    const selected = new Set(selectedByPlayer.get(playerId) ?? []);
-    removeByPlayer.set(
-      playerId,
-      readPlayerZoneCards(nextTable, zoneId, playerId).filter(
-        (cardId) => !selected.has(cardId),
-      ),
-    );
-  }
-
-  const additionsByPlayer = new Map<string, string[]>(
-    players.map((playerId) => [playerId, []]),
-  );
-  for (const [index, fromPlayerId] of players.entries()) {
-    const offset = options.direction === "left" ? 1 : -1;
-    const recipient =
-      players[(index + offset + players.length) % players.length];
-    additionsByPlayer
-      .get(recipient)!
-      .push(...(selectedByPlayer.get(fromPlayerId) ?? []));
-  }
-
-  for (const playerId of players) {
-    const remaining = removeByPlayer.get(playerId) ?? [];
-    const additions = additionsByPlayer.get(playerId) ?? [];
-    const nextCards =
-      options.position === "top"
-        ? [...additions, ...remaining]
-        : [...remaining, ...additions];
-    writePlayerZoneCards(nextTable, zoneId, playerId, nextCards);
-    for (const [position, cardId] of nextCards.entries()) {
-      nextTable.componentLocations[cardId] = {
-        type: "InHand",
-        handId: zoneId,
-        playerId,
-        position,
-      };
-      nextTable.ownerOfCard[cardId] = playerId;
-      nextTable.visibility[cardId] = computePlayerZoneVisibility(
-        nextTable,
-        zoneId,
-        playerId,
-      );
-    }
-  }
-}
-
 /**
  * Internal, id-type-erased signatures for the board writer family.
  *
@@ -577,6 +297,7 @@ type TableMoveComponentToEdgeInPlaceInternal = (
   componentId: string,
   boardId: string,
   edgeId: string,
+  definitions: ZoneDefinitions,
 ) => void;
 
 type TableMoveComponentToVertexInPlaceInternal = (
@@ -584,6 +305,7 @@ type TableMoveComponentToVertexInPlaceInternal = (
   componentId: string,
   boardId: string,
   vertexId: string,
+  definitions: ZoneDefinitions,
 ) => void;
 
 const moveComponentToEdgeInPlaceInternal =
@@ -592,8 +314,6 @@ const moveComponentToEdgeInPlaceInternal =
 const moveComponentToVertexInPlaceInternal =
   // eslint-disable-next-line no-restricted-syntax -- The typed transaction vertex method supplies IDs from its State; this internal adapter erases only those manifest-derived ID unions.
   tableMoveComponentToVertexInPlace as unknown as TableMoveComponentToVertexInPlaceInternal;
-const dealCardsFromDeckToHandInPlaceInternal =
-  tableDealCardsFromDeckToHandInPlace;
 
 const applyPatch = <T extends object>(
   prev: T,
@@ -664,49 +384,59 @@ export const transactionMutations = {
       privateState: { ...privateByPlayer, [args.playerId]: next },
     });
   },
-  addCardToSharedZone<S extends AnyState>(
+  moveComponentToZone<S extends AnyState>(
     state: S,
-    args: {
-      deckId: string;
-      cardId: string;
-      playedBy?: string | null;
-      position?: "top" | "bottom";
-    },
+    args: Omit<
+      Parameters<typeof moveComponentToZoneInPlace>[0],
+      "table" | "definitions"
+    >,
+    definitions: ZoneDefinitions,
   ): S {
-    tableAddCardToSharedZoneInPlace(
-      state.table,
-      args.deckId,
-      args.cardId,
-      args.playedBy ?? null,
-      args.position ?? "bottom",
-    );
+    moveComponentToZoneInPlace({ table: state.table, definitions, ...args });
     return state;
   },
-  removeCardFromSharedZone<S extends AnyState>(
+  deal<S extends AnyState>(
     state: S,
-    args: { deckId: string; cardId: string },
+    args: Omit<
+      Parameters<typeof dealComponentsInPlace>[0],
+      "table" | "definitions"
+    >,
+    definitions: ZoneDefinitions,
   ): S {
-    tableRemoveCardFromSharedZoneInPlace(state.table, args.deckId, args.cardId);
+    dealComponentsInPlace({ table: state.table, definitions, ...args });
     return state;
   },
-  moveCardBetweenSharedZones<S extends AnyState>(
+  rotateZone<S extends AnyState>(
     state: S,
-    args: {
-      fromZoneId: string;
-      toZoneId: string;
-      cardId: string;
-      playedBy?: string | null;
-      position?: "top" | "bottom";
-    },
+    args: Omit<
+      Parameters<typeof rotateZoneInPlace>[0],
+      "table" | "definitions"
+    >,
+    definitions: ZoneDefinitions,
   ): S {
-    tableMoveCardBetweenSharedZonesInPlace({
-      table: state.table,
-      fromZoneId: args.fromZoneId,
-      toZoneId: args.toZoneId,
-      cardId: args.cardId,
-      playedBy: args.playedBy ?? null,
-      position: args.position ?? "bottom",
-    });
+    rotateZoneInPlace({ table: state.table, definitions, ...args });
+    return state;
+  },
+  setComponentOwner<S extends AnyState>(
+    state: S,
+    args: { componentId: string; ownerId: string | null },
+  ): S {
+    const { componentId, ownerId } = args;
+    if (ownerId !== null && !state.table.playerOrder.includes(ownerId))
+      throw new Error("Component owner must name an active player.");
+    if (Object.hasOwn(state.table.cards, componentId))
+      state.table.ownerOfCard[componentId] = ownerId;
+    else if (Object.hasOwn(state.table.pieces, componentId))
+      state.table.pieces[componentId] = {
+        ...state.table.pieces[componentId],
+        ownerId,
+      };
+    else if (Object.hasOwn(state.table.dice, componentId))
+      state.table.dice[componentId] = {
+        ...state.table.dice[componentId],
+        ownerId,
+      };
+    else throw new Error(`Unknown component '${componentId}'.`);
     return state;
   },
   flipCard<S extends AnyState>(
@@ -716,177 +446,72 @@ export const transactionMutations = {
     tableFlipCardInPlace(state.table, args.cardId, args.faceUp);
     return state;
   },
-  dealCardsBetweenPlayerZones<S extends AnyState>(
-    state: S,
-    args: {
-      playerId: string;
-      fromZoneId: string;
-      toZoneId: string;
-      count: number;
-    },
-  ): S {
-    tableDealCardsBetweenPlayerZonesInPlace({
-      table: state.table,
-      playerId: args.playerId,
-      fromZoneId: args.fromZoneId,
-      toZoneId: args.toZoneId,
-      count: args.count,
-    });
-    return state;
-  },
-  moveCardBetweenPlayerZones<S extends AnyState>(
-    state: S,
-    args: {
-      playerId: string;
-      fromZoneId: string;
-      toZoneId: string;
-      cardId: string;
-      position?: "top" | "bottom";
-    },
-  ): S {
-    tableMoveCardBetweenPlayerZonesInPlace({
-      table: state.table,
-      playerId: args.playerId,
-      fromZoneId: args.fromZoneId,
-      toZoneId: args.toZoneId,
-      cardId: args.cardId,
-      position: args.position ?? "bottom",
-    });
-    return state;
-  },
-  moveCardFromPlayerZoneToSharedZone<S extends AnyState>(
-    state: S,
-    args: {
-      playerId: string;
-      fromZoneId: string;
-      toZoneId: string;
-      cardId: string;
-      playedBy?: string | null;
-      position?: "top" | "bottom";
-    },
-  ): S {
-    tableMoveCardFromPlayerZoneToSharedZoneInPlace({
-      table: state.table,
-      playerId: args.playerId,
-      fromZoneId: args.fromZoneId,
-      toZoneId: args.toZoneId,
-      cardId: args.cardId,
-      playedBy: args.playedBy ?? null,
-      position: args.position ?? "bottom",
-    });
-    return state;
-  },
-  moveCardFromSharedZoneToPlayerZone<S extends AnyState>(
-    state: S,
-    args: {
-      playerId: string;
-      fromZoneId: string;
-      toZoneId: string;
-      cardId: string;
-      position?: "top" | "bottom";
-    },
-  ): S {
-    tableMoveCardFromSharedZoneToPlayerZoneInPlace({
-      table: state.table,
-      playerId: args.playerId,
-      fromZoneId: args.fromZoneId,
-      toZoneId: args.toZoneId,
-      cardId: args.cardId,
-      position: args.position ?? "bottom",
-    });
-    return state;
-  },
-  deal<S extends AnyState>(
-    state: S,
-    args: {
-      fromZoneId: string;
-      playerId: string;
-      toZoneId: string;
-      count: number;
-    },
-  ): S {
-    dealCardsFromDeckToHandInPlaceInternal(
-      state.table,
-      args.fromZoneId,
-      args.playerId,
-      args.toZoneId,
-      args.count,
-    );
-    return state;
-  },
-  rotatePlayerZone<S extends AnyState>(
-    state: S,
-    args: {
-      zoneId: string;
-      direction: "left" | "right";
-      players?: readonly string[];
-      cardIdsByPlayer?: Partial<Record<string, readonly string[]>>;
-      position?: "top" | "bottom";
-    },
-  ): S {
-    rotatePlayerZoneTableInPlace({
-      table: state.table,
-      zoneId: args.zoneId,
-      direction: args.direction,
-      players: args.players,
-      cardIdsByPlayer: args.cardIdsByPlayer,
-      position: args.position ?? "bottom",
-    });
-    return state;
-  },
   moveComponentToSpace<S extends AnyState>(
     state: S,
     args: { componentId: string; boardId: string; spaceId: string },
+    definitions: ZoneDefinitions,
   ): S {
     tableMoveComponentToSpaceInPlace(
       state.table,
       args.componentId,
       args.boardId,
       args.spaceId,
+      definitions,
     );
     return state;
   },
   moveComponentToContainer<S extends AnyState>(
     state: S,
     args: { componentId: string; boardId: string; containerId: string },
+    definitions: ZoneDefinitions,
   ): S {
     tableMoveComponentToContainerInPlace(
       state.table,
       args.componentId,
       args.boardId,
       args.containerId,
+      definitions,
     );
     return state;
   },
   moveComponentToEdge<S extends AnyState>(
     state: S,
     args: { componentId: string; boardId: string; edgeId: string },
+    definitions: ZoneDefinitions,
   ): S {
     moveComponentToEdgeInPlaceInternal(
       state.table,
       args.componentId,
       args.boardId,
       args.edgeId,
+      definitions,
     );
     return state;
   },
   moveComponentToVertex<S extends AnyState>(
     state: S,
     args: { componentId: string; boardId: string; vertexId: string },
+    definitions: ZoneDefinitions,
   ): S {
     moveComponentToVertexInPlaceInternal(
       state.table,
       args.componentId,
       args.boardId,
       args.vertexId,
+      definitions,
     );
     return state;
   },
   moveComponentToDetached<S extends AnyState>(
     state: S,
     args: { componentId: string },
+    definitions: ZoneDefinitions,
   ): S {
-    tableMoveComponentToDetachedInPlace(state.table, args.componentId);
+    tableMoveComponentToDetachedInPlace(
+      state.table,
+      args.componentId,
+      definitions,
+    );
     return state;
   },
   addResources<S extends AnyState>(

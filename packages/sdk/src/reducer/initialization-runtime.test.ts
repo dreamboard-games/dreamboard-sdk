@@ -44,14 +44,8 @@ function createEmptyTable(
 ): RuntimeTableRecord {
   return {
     playerOrder: [...playerIds],
-    zones: {
-      shared: {},
-      perPlayer: {},
-      visibility: {},
-    },
-    decks: {},
-    hands: {},
-    handVisibility: {},
+    zones: {},
+
     cards: {},
     pieces: {},
     componentLocations: {},
@@ -333,7 +327,7 @@ describe("initialization runtime", () => {
       initialized.domain.table,
     );
 
-    expect(Object.keys(table.hands.hand)).toEqual(["player-1", "player-2"]);
+    expect(Object.keys(table.zones.hand)).toEqual(["player-1", "player-2"]);
     expect(Object.keys(table.resources)).toEqual(["player-1", "player-2"]);
     expect(table.resources[asPlayerId("player-1")]).toEqual({
       coins: 0,
@@ -412,38 +406,14 @@ describe("initialization runtime", () => {
         table: {
           playerOrder: ["player-1", "player-2"],
           zones: {
-            shared: {
-              "draw-deck": ["card-1"],
-            },
-            perPlayer: {
-              hand: pp<string[]>(
-                ["player-1", "player-2"],
-                { "player-2": ["card-2"] },
-                [],
-              ),
-            },
-            visibility: {
-              "draw-deck": "public",
-              hand: "ownerOnly",
-            },
-            cardSetIdsByZoneId: {
-              "draw-deck": ["main"],
-              hand: ["main"],
-            },
-          },
-          decks: {
-            "draw-deck": ["card-1"],
-          },
-          hands: {
+            "draw-deck": { table: ["card-1"] },
             hand: pp<string[]>(
               ["player-1", "player-2"],
               { "player-2": ["card-2"] },
               [],
             ),
           },
-          handVisibility: {
-            hand: "ownerOnly",
-          },
+
           cards: {
             "card-1": {
               id: "card-1",
@@ -461,16 +431,16 @@ describe("initialization runtime", () => {
           pieces: {},
           componentLocations: {
             "card-1": {
-              type: "InDeck",
-              deckId: "draw-deck",
+              type: "InZone",
+              zoneId: "draw-deck",
+              hostId: "table",
               playedBy: null,
-              position: 0,
             },
             "card-2": {
-              type: "InHand",
-              handId: "hand",
-              playerId: "player-2",
-              position: 0,
+              type: "InZone",
+              zoneId: "hand",
+              hostId: "player-2",
+              playedBy: null,
             },
           },
           ownerOfCard: {},
@@ -493,20 +463,20 @@ describe("initialization runtime", () => {
     );
 
     expect(table.playerOrder).toEqual(["player-1", "player-2"]);
-    expect(table.decks["draw-deck"]).toEqual(["card-1"]);
-    expect(table.hands.hand[asPlayerId("player-1")]).toEqual([]);
-    expect(table.hands.hand[asPlayerId("player-2")]).toEqual(["card-2"]);
+    expect(table.zones["draw-deck"].table).toEqual(["card-1"]);
+    expect(table.zones.hand[asPlayerId("player-1")]).toEqual([]);
+    expect(table.zones.hand[asPlayerId("player-2")]).toEqual(["card-2"]);
     expect(table.componentLocations["card-1"]).toEqual({
-      type: "InDeck",
-      deckId: "draw-deck",
+      type: "InZone",
+      zoneId: "draw-deck",
+      hostId: "table",
       playedBy: null,
-      position: 0,
     });
     expect(table.componentLocations["card-2"]).toEqual({
-      type: "InHand",
-      handId: "hand",
-      playerId: "player-2",
-      position: 0,
+      type: "InZone",
+      zoneId: "hand",
+      hostId: "player-2",
+      playedBy: null,
     });
   });
 
@@ -527,7 +497,7 @@ describe("initialization runtime", () => {
 
   test("phase entry shuffles with seeded entropy", async () => {
     const game = createBootstrapGame((tx) => {
-      tx.shuffle({ zoneId: "draw-deck" });
+      tx.shuffle({ zone: { zoneId: "draw-deck" } });
     });
     const bundle = createReducerTestingRuntime(game);
 
@@ -541,7 +511,7 @@ describe("initialization runtime", () => {
     const table = game.contract.manifest.tableSchema.parse(
       initialized.domain.table,
     );
-    const order = table.zones.shared["draw-deck"];
+    const order = table.zones["draw-deck"].table;
 
     expect(order).toHaveLength(BOOTSTRAP_CARD_IDS.length);
     expect([...order].sort()).toEqual([...BOOTSTRAP_CARD_IDS].sort());
@@ -558,9 +528,8 @@ describe("initialization runtime", () => {
     const game = createBootstrapGame((tx) => {
       for (const playerId of tx.q.player.order())
         tx.deal({
-          fromZoneId: "draw-deck",
-          toZoneId: "hand",
-          playerId,
+          from: { zoneId: "draw-deck" },
+          to: { zoneId: "hand", hostId: playerId },
           count: 1,
         });
     });
@@ -577,9 +546,9 @@ describe("initialization runtime", () => {
       initialized.domain.table,
     );
 
-    expect(table.zones.shared["draw-deck"]).toEqual(["card-3", "card-4"]);
-    expect(table.hands.hand[asPlayerId("player-1")]).toEqual(["card-1"]);
-    expect(table.hands.hand[asPlayerId("player-2")]).toEqual(["card-2"]);
+    expect(table.zones["draw-deck"].table).toEqual(["card-3", "card-4"]);
+    expect(table.zones.hand[asPlayerId("player-1")]).toEqual(["card-1"]);
+    expect(table.zones.hand[asPlayerId("player-2")]).toEqual(["card-2"]);
     expect(initialized.runtime.rng.trace).toEqual([]);
   });
 
@@ -588,41 +557,15 @@ describe("initialization runtime", () => {
       table: {
         playerOrder: ["player-1", "player-2"],
         zones: {
-          shared: {
-            "draw-deck": ["card-1", "card-2", "card-3"],
-            supply: ["piece-1", "die-1"],
-          },
-          perPlayer: {
-            hand: pp<string[]>(
-              ["player-1", "player-2"],
-              { "player-1": [], "player-2": [] },
-              [],
-            ),
-          },
-          visibility: {
-            "draw-deck": "public",
-            supply: "public",
-            hand: "ownerOnly",
-          },
-          cardSetIdsByZoneId: {
-            "draw-deck": ["main"],
-            hand: ["main"],
-          },
-        },
-        decks: {
-          "draw-deck": ["card-1", "card-2", "card-3"],
-          supply: ["piece-1", "die-1"],
-        },
-        hands: {
+          "draw-deck": { table: ["card-1", "card-2", "card-3"] },
+          supply: { table: ["piece-1", "die-1"] },
           hand: pp<string[]>(
             ["player-1", "player-2"],
             { "player-1": [], "player-2": [] },
             [],
           ),
         },
-        handVisibility: {
-          hand: "ownerOnly",
-        },
+
         cards: {
           "card-1": {
             id: "card-1",
@@ -652,34 +595,34 @@ describe("initialization runtime", () => {
         },
         componentLocations: {
           "card-1": {
-            type: "InDeck",
-            deckId: "draw-deck",
+            type: "InZone",
+            zoneId: "draw-deck",
+            hostId: "table",
             playedBy: null,
-            position: 0,
           },
           "card-2": {
-            type: "InDeck",
-            deckId: "draw-deck",
+            type: "InZone",
+            zoneId: "draw-deck",
+            hostId: "table",
             playedBy: null,
-            position: 1,
           },
           "card-3": {
-            type: "InDeck",
-            deckId: "draw-deck",
+            type: "InZone",
+            zoneId: "draw-deck",
+            hostId: "table",
             playedBy: null,
-            position: 2,
           },
           "piece-1": {
             type: "InZone",
             zoneId: "supply",
+            hostId: "table",
             playedBy: null,
-            position: 0,
           },
           "die-1": {
             type: "InZone",
             zoneId: "supply",
+            hostId: "table",
             playedBy: null,
-            position: 1,
           },
         },
         ownerOfCard: {},
@@ -738,13 +681,30 @@ describe("initialization runtime", () => {
     };
 
     const random = createTestRandom(initialState.runtime.rng.seed);
-    const tx = createReducerTransaction(initialState, random);
-    tx.shuffle({ zoneId: "draw-deck" });
+    const tx = createReducerTransaction(initialState, random, {
+      zoneDefinitions: {
+        "draw-deck": {
+          scope: "shared",
+          visibility: "public",
+          allowedCardSetIds: ["main"],
+        },
+        hand: {
+          scope: "perPlayer",
+          visibility: "ownerOnly",
+          allowedCardSetIds: ["main"],
+        },
+        supply: {
+          scope: "shared",
+          visibility: "public",
+          allowedCardSetIds: [],
+        },
+      },
+    });
+    tx.shuffle({ zone: { zoneId: "draw-deck" } });
     for (const playerId of tx.q.player.order())
       tx.deal({
-        fromZoneId: "draw-deck",
-        toZoneId: "hand",
-        playerId,
+        from: { zoneId: "draw-deck" },
+        to: { zoneId: "hand", hostId: playerId },
         count: 1,
       });
     for (const componentId of ["piece-1", "die-1"] as const)
@@ -760,13 +720,13 @@ describe("initialization runtime", () => {
 
     expect(nextState.runtime.rng.cursor).toBe(2);
     expect(nextState.runtime.rng.trace).toHaveLength(2);
-    expect(nextState.table.hands.hand[asPlayerId("player-1")]).toHaveLength(1);
-    expect(nextState.table.hands.hand[asPlayerId("player-2")]).toHaveLength(1);
-    expect(nextState.table.hands.hand[asPlayerId("player-1")]).not.toEqual(
-      nextState.table.hands.hand[asPlayerId("player-2")],
+    expect(nextState.table.zones.hand[asPlayerId("player-1")]).toHaveLength(1);
+    expect(nextState.table.zones.hand[asPlayerId("player-2")]).toHaveLength(1);
+    expect(nextState.table.zones.hand[asPlayerId("player-1")]).not.toEqual(
+      nextState.table.zones.hand[asPlayerId("player-2")],
     );
-    expect(nextState.table.decks["draw-deck"]).toHaveLength(1);
-    expect(nextState.table.zones.shared.supply).toEqual([]);
+    expect(nextState.table.zones["draw-deck"].table).toHaveLength(1);
+    expect(nextState.table.zones.supply.table).toEqual([]);
     expect(nextState.table.componentLocations["piece-1"]).toEqual({
       type: "OnSpace",
       boardId: "main-board",
@@ -786,30 +746,10 @@ describe("initialization runtime", () => {
       table: {
         playerOrder: ["player-1"],
         zones: {
-          shared: {
-            "draw-deck": ["card-1"],
-          },
-          perPlayer: {
-            hand: pp<string[]>(["player-1"], { "player-1": [] }, []),
-          },
-          visibility: {
-            "draw-deck": "public",
-            hand: "ownerOnly",
-          },
-          cardSetIdsByZoneId: {
-            "draw-deck": ["main"],
-            hand: ["special"],
-          },
-        },
-        decks: {
-          "draw-deck": ["card-1"],
-        },
-        hands: {
+          "draw-deck": { table: ["card-1"] },
           hand: pp<string[]>(["player-1"], { "player-1": [] }, []),
         },
-        handVisibility: {
-          hand: "ownerOnly",
-        },
+
         cards: {
           "card-1": {
             id: "card-1",
@@ -821,10 +761,10 @@ describe("initialization runtime", () => {
         pieces: {},
         componentLocations: {
           "card-1": {
-            type: "InDeck",
-            deckId: "draw-deck",
+            type: "InZone",
+            zoneId: "draw-deck",
+            hostId: "table",
             playedBy: null,
-            position: 0,
           },
         },
         ownerOfCard: {},
@@ -876,15 +816,40 @@ describe("initialization runtime", () => {
     };
 
     expect(() =>
-      createTestTransaction(initialState).deal({
-        fromZoneId: "draw-deck",
-        toZoneId: "hand",
-        playerId: "player-1",
+      createTestTransaction(initialState, {
+        zoneDefinitions: {
+          "draw-deck": {
+            scope: "shared",
+            visibility: "public",
+            allowedCardSetIds: ["main"],
+          },
+          hand: {
+            scope: "perPlayer",
+            visibility: "ownerOnly",
+            allowedCardSetIds: ["special"],
+          },
+        },
+      }).deal({
+        from: { zoneId: "draw-deck" },
+        to: { zoneId: "hand", hostId: "player-1" },
         count: 1,
       }),
-    ).toThrow("cannot enter zone 'hand'");
+    ).toThrow("cannot enter this zone");
     expect(() =>
-      createTestTransaction(initialState).moveComponentToContainer({
+      createTestTransaction(initialState, {
+        zoneDefinitions: {
+          "draw-deck": {
+            scope: "shared",
+            visibility: "public",
+            allowedCardSetIds: ["main"],
+          },
+          hand: {
+            scope: "perPlayer",
+            visibility: "ownerOnly",
+            allowedCardSetIds: ["special"],
+          },
+        },
+      }).moveComponentToContainer({
         componentId: "card-1",
         boardId: "main-board",
         containerId: "restricted-row",

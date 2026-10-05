@@ -1,5 +1,5 @@
 import { createReducerTransaction, createReducerEdit } from "./transaction";
-import type { RuntimeTableRecord } from "./model";
+import type { RuntimeTableRecord, ZoneDefinitions } from "./model";
 import { createMutableRandomHelpers } from "./bundle/trusted/rng-sampler";
 
 export const createTestRandom = (seed = 42) =>
@@ -7,11 +7,13 @@ export const createTestRandom = (seed = 42) =>
 
 export function createTestTransaction<
   State extends { table: RuntimeTableRecord },
->(state: State) {
-  return createReducerTransaction(state, createTestRandom());
+>(state: State, definitions: ZoneDefinitions = { zoneDefinitions: {} }) {
+  return createReducerTransaction(state, createTestRandom(), definitions);
 }
 
-export function createTestEdit<State extends { table: RuntimeTableRecord }>() {
-  const edit = createReducerEdit<State>();
+export function createTestEdit<State extends { table: RuntimeTableRecord }>(
+  definitions: ZoneDefinitions = { zoneDefinitions: {} },
+) {
+  const edit = createReducerEdit<State>(definitions);
   return <Draft extends State>(state: Draft) => edit(state, createTestRandom());
 }

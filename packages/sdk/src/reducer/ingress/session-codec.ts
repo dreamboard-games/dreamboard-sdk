@@ -1,3 +1,4 @@
+import { assertZoneConsistency } from "../table/zones";
 import { collectReducerDefinitionIndex } from "../definition-index";
 import * as z from "zod";
 import * as ContractZod from "../../shared/runtime-schema";
@@ -28,26 +29,10 @@ const runtimeComponentLocationSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("Detached") }).strict(),
   z
     .object({
-      type: z.literal("InDeck"),
-      deckId: z.string(),
-      playedBy: z.string().nullable(),
-      position: z.number().int().nullable().optional(),
-    })
-    .strict(),
-  z
-    .object({
-      type: z.literal("InHand"),
-      handId: z.string(),
-      playerId: z.string(),
-      position: z.number().int().nullable().optional(),
-    })
-    .strict(),
-  z
-    .object({
       type: z.literal("InZone"),
       zoneId: z.string(),
-      playedBy: z.string().nullable().optional(),
-      position: z.number().int().nullable().optional(),
+      hostId: z.string(),
+      playedBy: z.string().nullable(),
     })
     .strict(),
   z
@@ -97,31 +82,7 @@ const runtimeComponentLocationSchema = z.discriminatedUnion("type", [
 const currentRuntimeTableSchema = z
   .object({
     playerOrder: z.array(z.string()),
-    zones: z
-      .object({
-        shared: z.record(z.string(), z.array(z.string())),
-        perPlayer: z.record(
-          z.string(),
-          z.record(z.string().min(1), z.array(z.string())),
-        ),
-        visibility: z.record(
-          z.string(),
-          z.enum(["all", "ownerOnly", "public", "hidden"]),
-        ),
-        cardSetIdsByZoneId: z
-          .record(z.string(), z.array(z.string()))
-          .optional(),
-      })
-      .strict(),
-    decks: z.record(z.string(), z.array(z.string())),
-    hands: z.record(
-      z.string(),
-      z.record(z.string().min(1), z.array(z.string())),
-    ),
-    handVisibility: z.record(
-      z.string(),
-      z.enum(["all", "ownerOnly", "public", "hidden"]),
-    ),
+    zones: z.record(z.string(), z.record(z.string(), z.array(z.string()))),
     cards: z.record(
       z.string(),
       z
@@ -343,11 +304,13 @@ export function createIngressRuntimeCodec<
         rawState,
         "state",
       );
-      const table = safeParseOrThrow(
-        tableSchema,
+      const rawTable = safeParseOrThrow(
+        currentRuntimeTableSchema,
         envelope.domain.table,
         "domain.table",
       );
+      assertZoneConsistency(rawTable, definition.contract.manifest);
+      const table = safeParseOrThrow(tableSchema, rawTable, "domain.table");
       const playerIds = [...table.playerOrder] as PlayerId[];
       const privateState = Object.fromEntries(
         playerIds.map((playerId) => [

@@ -59,13 +59,15 @@ function snapshot(version = 1): SourceSnapshot {
       availableInteractions: [discard],
       zones: {
         hand: {
-          cardIds: ["red", "blue"],
-          cardViewsById: {
-            red: { id: "red", cardType: "ranked", properties: {} },
-            blue: { id: "blue", cardType: "ranked", properties: {} },
+          alice: {
+            cardIds: ["red", "blue"],
+            cardViewsById: {
+              red: { id: "red", cardType: "ranked", properties: {} },
+              blue: { id: "blue", cardType: "ranked", properties: {} },
+            },
+            cardBacksById: {},
+            playableByCardId: { red: [discard], blue: [discard] },
           },
-          cardBacksById: {},
-          playableByCardId: { red: [discard], blue: [discard] },
         },
       },
     },

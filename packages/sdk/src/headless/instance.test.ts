@@ -407,19 +407,21 @@ describe("headless instance", () => {
     x.emit(2, undefined, {
       zones: {
         hand: {
-          cardIds: ["ace", "hidden"],
-          cardViewsById: {
-            ace: { id: "ace", cardType: "ranked", properties: { rank: "A" } },
-          },
-          cardBacksById: {},
-          playableByCardId: {
-            ace: [
-              action([target]),
-              action([target], {
-                interactionKey: "play.other",
-                interactionId: "other",
-              }),
-            ],
+          alice: {
+            cardIds: ["ace", "hidden"],
+            cardViewsById: {
+              ace: { id: "ace", cardType: "ranked", properties: { rank: "A" } },
+            },
+            cardBacksById: {},
+            playableByCardId: {
+              ace: [
+                action([target]),
+                action([target], {
+                  interactionKey: "play.other",
+                  interactionId: "other",
+                }),
+              ],
+            },
           },
         },
       },
@@ -441,17 +443,19 @@ describe("headless instance", () => {
     x.emit(2, undefined, {
       zones: {
         hand: {
-          cardIds: ["ace"],
-          cardViewsById: { ace: card },
-          cardBacksById: {},
-          playableByCardId: {},
+          alice: {
+            cardIds: ["ace"],
+            cardViewsById: { ace: card },
+            cardBacksById: {},
+            playableByCardId: {},
+          },
         },
       },
     });
     const game = createGameInstance()({ source: x.source });
     const view = game.cards.get("ace").view;
     expect(view).toBe(
-      x.source.store.get().snapshot!.frame.zones.hand.cardViewsById.ace,
+      x.source.store.get().snapshot!.frame.zones.hand.alice.cardViewsById.ace,
     );
     expect(Object.isFrozen(view)).toBe(true);
     expect(Object.isFrozen(view.properties)).toBe(true);
@@ -814,12 +818,14 @@ it("per-card descriptor identity resolves against the latest frame and drop writ
   x.emit(2, [blocked], {
     zones: {
       hand: {
-        cardIds: ["ace"],
-        cardViewsById: {
-          ace: { id: "ace", cardType: "ranked", properties: { rank: "A" } },
+        alice: {
+          cardIds: ["ace"],
+          cardViewsById: {
+            ace: { id: "ace", cardType: "ranked", properties: { rank: "A" } },
+          },
+          cardBacksById: {},
+          playableByCardId: { ace: [route] },
         },
-        cardBacksById: {},
-        playableByCardId: { ace: [route] },
       },
     },
   });
@@ -954,10 +960,14 @@ it("reconciles with the selected card's narrow domain, not the broad global desc
   const x = setup([broad]);
   const zones = (route: InteractionDescriptor) => ({
     hand: {
-      cardIds: ["ace"],
-      cardViewsById: { ace: { id: "ace", cardType: "ranked", properties: {} } },
-      cardBacksById: {},
-      playableByCardId: { ace: [route] },
+      alice: {
+        cardIds: ["ace"],
+        cardViewsById: {
+          ace: { id: "ace", cardType: "ranked", properties: {} },
+        },
+        cardBacksById: {},
+        playableByCardId: { ace: [route] },
+      },
     },
   });
   x.emit(2, [broad], { zones: zones(broad) });
@@ -1163,8 +1173,8 @@ it("distinguishes required lookups from presence checks across a phase change", 
   expect(() => game.players.next("missing")).toThrow(
     'Next player after "missing"',
   );
-  expect(() => game.zones.get("missing")).toThrow('Zone "missing"');
-  expect(game.zones.find("missing")).toBeUndefined();
+  expect(() => game.zones.get("missing", "alice")).toThrow('Zone "missing"');
+  expect(game.zones.find("missing", "alice")).toBeUndefined();
   expect(() => game.cards.get("missing")).toThrow('Card "missing"');
   expect(game.cards.find("missing")).toBeUndefined();
   expect(() => action.getInput("missing")).toThrow(
@@ -1295,4 +1305,52 @@ it("keeps connected instance projections live and nonenumerable", () => {
     game.dispose();
     source.dispose();
   }
+});
+
+it("keeps public instances of the same zone distinct across hosts", () => {
+  const x = setup();
+  const hand = (id: string) => ({
+    cardIds: [id],
+    cardViewsById: { [id]: { id, cardType: "ranked", properties: {} } },
+    cardBacksById: {},
+    playableByCardId: {},
+  });
+  const snapshot = x.source.store.get().snapshot!;
+  x.source.emit({
+    ...snapshot,
+    version: 2,
+    players: [...snapshot.players, { playerId: "table", displayName: "Table" }],
+    frame: {
+      ...snapshot.frame,
+      zones: {
+        hand: { alice: hand("ace"), bob: hand("king"), table: hand("queen") },
+      },
+    },
+  });
+  const game = createGameInstance()({ source: x.source });
+  expect(game.zones.get("hand", "alice").hostId).toBe("alice");
+  expect(
+    game.zones
+      .get("hand", "bob")
+      .getCards()
+      .map((card) => card.id),
+  ).toEqual(["king"]);
+  expect(game.zones.getAll().map((zone) => [zone.id, zone.hostId])).toEqual([
+    ["hand", "alice"],
+    ["hand", "bob"],
+    ["hand", "table"],
+  ]);
+  expect(
+    game.zones
+      .get("hand", "table")
+      .getCards()
+      .map((card) => card.id),
+  ).toEqual(["queen"]);
+  expect(game.cards.get("ace").hostId).toBe("alice");
+  expect(game.cards.get("king").hostId).toBe("bob");
+  const captured = game.zones.get("hand", "bob");
+  x.emit(3, [], { zones: { hand: { alice: hand("ace") } } });
+  expect(game.zones.find("hand", "bob")).toBeUndefined();
+  expect(captured.getCards().map((card) => card.id)).toEqual(["king"]);
+  game.dispose();
 });

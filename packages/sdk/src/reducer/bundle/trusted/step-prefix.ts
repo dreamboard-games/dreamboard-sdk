@@ -1,3 +1,4 @@
+import type { ZoneDefinitions } from "../../model";
 import type { StepDefinition } from "../../authoring/steps";
 import type {
   CollectorState,
@@ -25,8 +26,9 @@ export function evaluateStepPrefix<State extends CollectorState>(
   state: State,
   playerId: PlayerIdOfState<State>,
   values: readonly unknown[],
+  definitions: ZoneDefinitions,
 ): StepPrefix {
-  const q = createStateQueries(state);
+  const q = createStateQueries(state, definitions);
   const selected: Record<string, unknown> = {};
   const collectors: Record<string, InputCollector> = {};
   const validValues: unknown[] = [];

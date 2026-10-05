@@ -22,11 +22,11 @@ type TestPlayerZoneId = "hand" | "in-play" | "discard";
 type TestPlayerRecord<Value> = Record<TestPlayerId, Value>;
 type TestTable = Omit<
   RuntimeTableRecord,
-  "playerOrder" | "cards" | "hands" | "resources"
+  "playerOrder" | "cards" | "zones" | "resources"
 > & {
   playerOrder: TestPlayerId[];
   cards: Record<TestCardId, RuntimeCardData>;
-  hands: Record<TestPlayerZoneId, TestPlayerRecord<TestCardId[]>>;
+  zones: Record<TestPlayerZoneId, TestPlayerRecord<TestCardId[]>>;
   resources: TestPlayerRecord<RuntimeRecord>;
 };
 function testPlayerRecord<Value>(): TestPlayerRecord<Value> {
@@ -44,10 +44,6 @@ function buildContract() {
       boardLayouts: [] as const,
       cardSetIds: ["cards"] as const,
       cardTypes: ["action"] as const,
-      deckIds: [] as const,
-      handIds: playerZoneIds,
-      sharedZoneIds: [] as const,
-      playerZoneIds,
       zoneIds: playerZoneIds,
       cardIds,
       resourceIds: [] as const,
@@ -66,16 +62,6 @@ function buildContract() {
       vertexTypeIds: [] as const,
       spaceIds: [] as const,
       spaceTypeIds: [] as const,
-      handVisibilityById: {
-        hand: "ownerOnly",
-        "in-play": "public",
-        discard: "public",
-      } as const,
-      zoneVisibilityById: {
-        hand: "ownerOnly",
-        "in-play": "public",
-        discard: "public",
-      } as const,
       cardSetIdByCardId: {
         "card-1": "cards",
         "card-2": "cards",
@@ -83,12 +69,6 @@ function buildContract() {
       cardTypeByCardId: {
         "card-1": "action",
         "card-2": "action",
-      },
-      cardSetIdsBySharedZoneId: {},
-      cardSetIdsByPlayerZoneId: {
-        hand: ["cards"],
-        "in-play": ["cards"],
-        discard: ["cards"],
       },
     },
     ids: {
@@ -98,10 +78,6 @@ function buildContract() {
       cardSetId: createManifestStringLiteralSchema(["cards"] as const),
       cardType: createManifestStringLiteralSchema(["action"] as const),
       cardId: createManifestStringLiteralSchema(cardIds),
-      deckId: z.never(),
-      handId: createManifestStringLiteralSchema(playerZoneIds),
-      sharedZoneId: z.never(),
-      playerZoneId: createManifestStringLiteralSchema(playerZoneIds),
       zoneId: createManifestStringLiteralSchema(playerZoneIds),
       resourceId: z.never(),
       pieceTypeId: z.never(),
@@ -120,15 +96,29 @@ function buildContract() {
       spaceId: z.never(),
       spaceTypeId: z.never(),
     },
+    zoneDefinitions: {
+      hand: {
+        scope: "perPlayer",
+        visibility: "ownerOnly",
+        allowedCardSetIds: ["cards"],
+      },
+      "in-play": {
+        scope: "perPlayer",
+        visibility: "public",
+        allowedCardSetIds: ["cards"],
+      },
+      discard: {
+        scope: "perPlayer",
+        visibility: "public",
+        allowedCardSetIds: ["cards"],
+      },
+    } as const,
     defaults: {
-      zones: () => ({ shared: {}, perPlayer: {}, visibility: {} }),
-      decks: () => ({}),
-      hands: () => ({
+      zones: () => ({
         hand: testPlayerRecord<TestCardId[]>(),
         "in-play": testPlayerRecord<TestCardId[]>(),
         discard: testPlayerRecord<TestCardId[]>(),
       }),
-      handVisibility: () => ({}),
       ownerOfCard: () => ({}),
       visibility: () => ({}),
       resources: () => testPlayerRecord<RuntimeRecord>(),
@@ -140,7 +130,6 @@ function buildContract() {
     TestTable,
     (typeof phaseNames)[number],
     TestPlayerId,
-    never,
     TestPlayerZoneId,
     TestCardId
   >;
@@ -254,11 +243,9 @@ describe("interaction input id types", () => {
       reduce({ input, tx }) {
         const playerId: TestPlayerId = input.playerId;
         const cardId: TestCardId = input.params.cardId;
-        tx.moveCardBetweenPlayerZones({
-          playerId,
-          fromZoneId: "hand",
-          toZoneId: "in-play",
-          cardId,
+        tx.moveComponentToZone({
+          componentId: cardId,
+          to: { zoneId: "in-play", hostId: playerId },
         });
         return;
       },
@@ -276,8 +263,8 @@ describe("interaction input id types", () => {
     const input = formInput.forState<TestGameState>();
     const selectedCards = input.choiceList<TestCardId>({
       choices: ({ q, playerId }) =>
-        q.zone
-          .playerCards(playerId, "hand")
+        q
+          .zone("hand", playerId)
           .map((cardId) => ({ value: cardId, label: cardId })),
       defaultValue: [],
     });
@@ -301,11 +288,9 @@ describe("interaction input id types", () => {
       reduce({ input, tx }) {
         const playerId: TestPlayerId = input.playerId;
         const cardId: TestCardId = input.params.cardId;
-        tx.moveCardBetweenPlayerZones({
-          playerId,
-          fromZoneId: "hand",
-          toZoneId: "in-play",
-          cardId,
+        tx.moveComponentToZone({
+          componentId: cardId,
+          to: { zoneId: "in-play", hostId: playerId },
         });
         return;
       },

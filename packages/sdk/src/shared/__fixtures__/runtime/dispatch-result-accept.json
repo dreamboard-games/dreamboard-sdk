@@ -4,11 +4,7 @@
     "domain": {
       "table": {
         "playerOrder": ["player-1", "player-2"],
-        "zones": {
-          "shared": {},
-          "perPlayer": {},
-          "visibility": {}
-        }
+        "zones": {}
       },
       "publicState": {
         "turnCount": 1

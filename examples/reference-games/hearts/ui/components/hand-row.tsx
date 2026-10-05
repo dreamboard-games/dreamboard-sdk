@@ -25,13 +25,16 @@ function renderCard(card: HandCard, state: CardState) {
 
 export function HandRow({ recipientName }: { recipientName: string }) {
   const game = useGame();
+  const me = game.me;
+  if (!me) return null;
   const passing = game.phase.is("passing");
   const play = game.interactions.find("playing.playCard");
-  const selected = game.zones.find("hand")?.getSelectedCardIds() ?? [];
+  const selected = game.zones.find("hand", me.id)?.getSelectedCardIds() ?? [];
   return (
     <section className="grid gap-3" aria-label="Your cards">
       <HandDrawer
         zoneId="hand"
+        hostId={me.id}
         label={`Your hand · ${game.view?.hand.length ?? 0} cards`}
         className="hearts-hand"
         sort={sortCards}

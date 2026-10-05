@@ -48,11 +48,11 @@ type TestPlayerZoneId = "hand";
 type TestPlayerRecord<Value> = Record<TestPlayerId, Value>;
 type TestTable = Omit<
   RuntimeTableRecord,
-  "playerOrder" | "cards" | "hands" | "resources"
+  "playerOrder" | "cards" | "zones" | "resources"
 > & {
   playerOrder: TestPlayerId[];
   cards: Record<TestCardId, RuntimeCardData>;
-  hands: Record<TestPlayerZoneId, TestPlayerRecord<TestCardId[]>>;
+  zones: Record<TestPlayerZoneId, TestPlayerRecord<TestCardId[]>>;
   resources: TestPlayerRecord<RuntimeRecord>;
 };
 function testPlayerRecord<Value>(): TestPlayerRecord<Value> {
@@ -68,16 +68,19 @@ const cardIds = ["card-1", "card-2"] as const;
 const playerZoneIds = ["hand"] as const;
 
 const manifest = {
+  zoneDefinitions: {
+    hand: {
+      scope: "perPlayer",
+      visibility: "ownerOnly",
+      allowedCardSetIds: ["cards"],
+    },
+  } as const,
   literals: {
     playerIds,
     phaseNames,
     boardLayouts: [] as const,
     cardSetIds: ["cards"] as const,
     cardTypes: ["action"] as const,
-    deckIds: [] as const,
-    handIds: playerZoneIds,
-    sharedZoneIds: [] as const,
-    playerZoneIds,
     zoneIds: playerZoneIds,
     cardIds,
     resourceIds: [] as const,
@@ -96,12 +99,8 @@ const manifest = {
     vertexTypeIds: [] as const,
     spaceIds: [] as const,
     spaceTypeIds: [] as const,
-    handVisibilityById: { hand: "ownerOnly" } as const,
-    zoneVisibilityById: { hand: "ownerOnly" } as const,
     cardSetIdByCardId: { "card-1": "cards", "card-2": "cards" },
     cardTypeByCardId: { "card-1": "action", "card-2": "action" },
-    cardSetIdsBySharedZoneId: {},
-    cardSetIdsByPlayerZoneId: { hand: ["cards"] },
   },
   ids: {
     playerId: createManifestStringLiteralSchema(playerIds),
@@ -110,10 +109,6 @@ const manifest = {
     cardSetId: createManifestStringLiteralSchema(["cards"] as const),
     cardType: createManifestStringLiteralSchema(["action"] as const),
     cardId: createManifestStringLiteralSchema(cardIds),
-    deckId: z.never(),
-    handId: createManifestStringLiteralSchema(playerZoneIds),
-    sharedZoneId: z.never(),
-    playerZoneId: createManifestStringLiteralSchema(playerZoneIds),
     zoneId: createManifestStringLiteralSchema(playerZoneIds),
     resourceId: z.never(),
     pieceTypeId: z.never(),
@@ -133,10 +128,7 @@ const manifest = {
     spaceTypeId: z.never(),
   },
   defaults: {
-    zones: () => ({ shared: {}, perPlayer: {}, visibility: {} }),
-    decks: () => ({}),
-    hands: () => ({ hand: testPlayerRecord<TestCardId[]>() }),
-    handVisibility: () => ({}),
+    zones: () => ({ hand: testPlayerRecord<TestCardId[]>() }),
     ownerOfCard: () => ({}),
     visibility: () => ({}),
     resources: () => testPlayerRecord<RuntimeRecord>(),
@@ -148,7 +140,6 @@ const manifest = {
   TestTable,
   (typeof phaseNames)[number],
   TestPlayerId,
-  never,
   TestPlayerZoneId,
   TestCardId
 >;
@@ -211,23 +202,24 @@ export function markReady(tx: Tx, playerId: PlayerId): void {
 
 // Direct transaction methods preserve manifest identities without an ops layer.
 export function mutateTypedDraft(tx: Tx, playerId: PlayerId): GameState {
-  const draft: GameState = tx.moveCardBetweenPlayerZones({
-    playerId,
-    fromZoneId: "hand",
-    toZoneId: "hand",
-    cardId: "card-1",
+  const draft: GameState = tx.moveComponentToZone({
+    to: { zoneId: "hand", hostId: playerId },
+    componentId: "card-1",
   });
-  tx.rotatePlayerZone({
+  tx.rotateZone({
     zoneId: "hand",
     direction: "left",
-    cardIdsByPlayer: { [playerId]: ["card-2"] },
+    componentIdsByPlayer: { [playerId]: ["card-2"] },
   });
-  tx.moveCardBetweenPlayerZones({
-    playerId,
-    fromZoneId: "hand",
-    toZoneId: "hand",
+  tx.moveComponentToZone({
+    to: { zoneId: "hand", hostId: playerId },
     // @ts-expect-error Card IDs stay constrained to this manifest.
-    cardId: "unknown-card",
+    componentId: "unknown-card",
+  });
+  tx.moveComponentToZone({
+    // @ts-expect-error Per-player destinations require an explicit active host.
+    to: { zoneId: "hand" },
+    componentId: "card-1",
   });
   // @ts-expect-error A transaction has no immutable-op escape hatch.
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: A transaction has no immutable-op escape hatch.
@@ -575,10 +567,18 @@ const seatView = game.view(({ state, playerId, q, ...args }) => {
   args.shared;
   // @ts-expect-error Derived values are ordinary memoized functions.
   args.derived;
+  const handIds = q.zone("hand", playerId);
+  type _ZonePreservesComponentIds = Expect<
+    Equal<(typeof handIds)[number], TestCardId>
+  >;
+  // @ts-expect-error Per-player zone reads require the branded host identity.
+  q.zone("hand");
+  // @ts-expect-error Literal seat strings cannot bypass the PlayerId boundary.
+  q.zone("hand", "player-1");
   return {
     me: playerId,
     current: state.publicState.currentPlayerId,
-    hand: q.zone.playerCards(playerId, "hand"),
+    hand: q.zone.cards("hand", playerId),
   };
 });
 type _SeatViewInference = Expect<

@@ -1,3 +1,4 @@
+import { assertZoneConsistency } from "../../table/zones";
 import { implicitResultOf } from "./trusted-runtime-args";
 import { safeParseOrThrow } from "../../parse-utils";
 import { createStateQueries } from "../../table-queries";
@@ -187,8 +188,12 @@ export function createLifecycleRunner<
       tableWithManifestDefaults,
       "table",
     ) as State["table"];
+    assertZoneConsistency(parsedTable, scope.definition.contract.manifest);
     const initialPhase = resolveInitialPhase();
-    const initialQueries = createStateQueries({ table: parsedTable });
+    const initialQueries = createStateQueries(
+      { table: parsedTable },
+      scope.definition.contract.manifest,
+    );
     return {
       initialPhase,
       state: {
@@ -273,38 +278,7 @@ export function createLifecycleRunner<
         table.playerOrder && table.playerOrder.length > 0
           ? table.playerOrder
           : playerIds,
-      zones: {
-        ...defaultZones,
-        ...tableZones,
-        shared: {
-          ...(defaultZones.shared ?? {}),
-          ...(tableZones.shared ?? {}),
-        },
-        perPlayer: {
-          ...(defaultZones.perPlayer ?? {}),
-          ...(tableZones.perPlayer ?? {}),
-        },
-        visibility: {
-          ...(defaultZones.visibility ?? {}),
-          ...(tableZones.visibility ?? {}),
-        },
-        cardSetIdsByZoneId: {
-          ...(defaultZones.cardSetIdsByZoneId ?? {}),
-          ...(tableZones.cardSetIdsByZoneId ?? {}),
-        },
-      },
-      decks: {
-        ...manifest.defaults.decks(playerIds),
-        ...table.decks,
-      },
-      hands: {
-        ...manifest.defaults.hands(playerIds),
-        ...table.hands,
-      },
-      handVisibility: {
-        ...manifest.defaults.handVisibility(playerIds),
-        ...table.handVisibility,
-      },
+      zones: { ...defaultZones, ...tableZones },
       ownerOfCard: {
         ...manifest.defaults.ownerOfCard(playerIds),
         ...table.ownerOfCard,

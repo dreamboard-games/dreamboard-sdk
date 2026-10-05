@@ -5,7 +5,7 @@ import { RuntimeJsonSchema } from "../runtime-json.js";
  * A card hidden from the seat, in a hidden zone or face down, is known only by
  * its position in its zone, never by which card it is.
  */
-export type HiddenCardId = `hidden:${string}:${number}`;
+export type HiddenCardId = `hidden:${string}`;
 
 /** The complete display data a seat may receive for a visible card. */
 export const ViewCardSchema = z.strictObject({

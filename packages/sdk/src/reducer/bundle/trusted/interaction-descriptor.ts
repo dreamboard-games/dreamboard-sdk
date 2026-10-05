@@ -261,6 +261,7 @@ export function buildInteractionDescriptor<
             saved.phaseName === phaseName
             ? saved.values
             : [],
+          scope.definition.contract.manifest,
         )
       : undefined);
   const projectedInteraction = prefix
@@ -279,7 +280,9 @@ export function buildInteractionDescriptor<
     inputs: interactionInputs,
     interactionId: String(interactionId),
   });
-  const queries = options.projection?.q ?? createStateQueries(domainState);
+  const queries =
+    options.projection?.q ??
+    createStateQueries(domainState, scope.definition.contract.manifest);
 
   const shouldMaterializeInputDomains =
     decision.available || decision.code === FrameworkErrorCodes.NO_LEGAL_INPUT;
@@ -287,6 +290,7 @@ export function buildInteractionDescriptor<
     ? enrichResourceInputPresentation(
         collectInteractionInputs(projectedInteraction, domainState, playerId, {
           queries,
+          definitions: scope.definition.contract.manifest,
         }),
         scope.definition.contract.manifest,
       )

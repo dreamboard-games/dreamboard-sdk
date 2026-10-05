@@ -1,3 +1,4 @@
+import type { ZoneDefinitions } from "../../model";
 import { createStateQueries } from "../../table-queries";
 import type {
   AnyInteractionSpec,
@@ -42,6 +43,7 @@ export type CollectorInputSolverOptions<
   readonly interaction: AnyInteractionSpec<DomainState, Manifest>;
   readonly domainState: DomainState;
   readonly playerId: PlayerId;
+  readonly definitions: ZoneDefinitions;
   readonly queries?: TableQueriesOfState<DomainState>;
   /** Values already selected by a trusted caller, such as a card projection. */
   readonly initialValues?: Readonly<Record<string, unknown>>;
@@ -233,7 +235,10 @@ function createSolverContext<
   let queriesLazy: TableQueriesOfState<DomainState> | null =
     options.queries ?? null;
   const queries = () =>
-    (queriesLazy ??= createStateQueries(options.domainState));
+    (queriesLazy ??= createStateQueries(
+      options.domainState,
+      options.definitions,
+    ));
   return {
     interaction: options.interaction,
     domainState: options.domainState,

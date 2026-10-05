@@ -19,11 +19,16 @@ import { createPortal } from "react-dom";
 import { backImageOf, cardSpring, useMoving, type CardState } from "./card";
 import { CardControl } from "./card-control";
 import { CardArrival } from "./card-arrival";
-import { useCardMotion, type CardPlacement } from "./card-motion";
+import {
+  useCardMotion,
+  type CardPlacement,
+  type CardZone,
+} from "./card-motion";
 import { cardDragScale, cardPickup } from "./card";
 import "./tokens.css";
 export interface HandProps {
   zoneId: ZoneId;
+  hostId: Card["hostId"];
   label?: string;
   className?: string;
   sort?(left: Card, right: Card): number;
@@ -42,14 +47,16 @@ const sameIds = (left: readonly CardId[], right: readonly CardId[]) =>
   left.every((id, index) => id === right[index]);
 
 /**
- * A fanned hand over the selected seat's zone. A tap opens the card's action
+ * A fanned hand over one explicitly addressed zone host. A tap opens the card's action
  * menu, or toggles it when its only action picks several cards; a hold or a
  * resting mouse previews it; a card with somewhere to land drags. The hand
  * scrolls sideways when the fan is wider than it, and cards arriving with an
- * origin come from the element marked `data-zone` or `data-player` for it.
+ * origin come from the element marked `data-zone` and `data-zone-host`,
+ * or `data-player`, for it.
  */
 export function Hand({
   zoneId,
+  hostId,
   label = "Hand",
   className = "",
   sort,
@@ -59,7 +66,7 @@ export function Hand({
   const ids = useGame(
     (game) =>
       game.zones
-        .find(zoneId)
+        .find(zoneId, hostId)
         ?.getCards({ sort })
         .map((card) => card.id) ?? EMPTY,
     { compare: sameIds },
@@ -68,7 +75,7 @@ export function Hand({
   const choosing = useGame(
     (game) =>
       game.zones
-        .find(zoneId)
+        .find(zoneId, hostId)
         ?.getCards()
         .some((card) => card.getIsEligible()) ?? false,
   );
@@ -76,7 +83,8 @@ export function Hand({
   const [scroller, setScroller] = useState<HTMLElement | null>(null);
   const table = useCardMotion();
   const snapshot = useGame((game) => game.snapshot);
-  const drawTarget = table.drop?.zone === zoneId;
+  const drawTarget =
+    table.drop?.zone.zoneId === zoneId && table.drop.zone.hostId === hostId;
   const drawOver =
     drawTarget && table.drop?.over && table.drop.snapshot === snapshot;
   const probe = useRef<HTMLDivElement>(null);
@@ -145,7 +153,9 @@ export function Hand({
   }
   useLayoutEffect(() => {
     if (!ready) return;
-    return table.registerHand(zoneId, () => placement(ids.length, nextFan));
+    return table.registerHand({ zoneId, hostId }, () =>
+      placement(ids.length, nextFan),
+    );
   });
 
   const dragged = overlay ? ids.indexOf(overlay.cardId) : -1;
@@ -156,6 +166,7 @@ export function Hand({
         ref={setScroller}
         aria-label={label}
         data-zone={zoneId}
+        data-zone-host={hostId}
         data-draw-target={drawTarget || undefined}
         data-draw-over={drawOver || undefined}
         className={`db-hand ${className}`}
@@ -176,6 +187,8 @@ export function Hand({
                 key={id}
                 cardId={id}
                 zoneId={zoneId}
+                hostId={hostId}
+                gameUI={scroller?.closest("[data-game-ui]") ?? null}
                 index={index}
                 x={fan.cards[index].x + lift / 2}
                 y={fan.cards[index].y + lift}
@@ -220,8 +233,9 @@ export function Hand({
 /** A card arriving from elsewhere starts there, turning face up if it was hidden. */
 function entryFrom(
   card: Card | undefined,
-  zoneId: ZoneId,
+  zone: CardZone,
   table: ReturnType<typeof useCardMotion>,
+  gameUI: Element | null,
 ): {
   box: CardPlacement | null;
   hidden: boolean;
@@ -229,19 +243,28 @@ function entryFrom(
 } | null {
   const origin = card?.getOrigin();
   if (!origin) return null;
-  if ("zone" in origin && origin.zone === zoneId)
+  if (
+    "zone" in origin &&
+    origin.zone === zone.zoneId &&
+    origin.hostId === zone.hostId
+  )
     return origin.hidden ? { box: null, hidden: true } : null;
   const released =
-    "zone" in origin ? table.getDrawOrigin(origin.zone, zoneId) : null;
+    "zone" in origin
+      ? table.getDrawOrigin(
+          { zoneId: origin.zone, hostId: origin.hostId },
+          zone,
+        )
+      : null;
   if (released)
     return {
       box: released.from,
       destination: released.to,
       hidden: origin.hidden,
     };
-  const from = document.querySelector(
+  const from = gameUI?.querySelector(
     "zone" in origin
-      ? `[data-zone="${CSS.escape(origin.zone)}"]`
+      ? `[data-zone="${CSS.escape(origin.zone)}"][data-zone-host="${CSS.escape(origin.hostId)}"]`
       : `[data-player="${CSS.escape(origin.player)}"]`,
   );
   if (from) {
@@ -254,6 +277,8 @@ function entryFrom(
 interface HandCardProps {
   cardId: CardId;
   zoneId: ZoneId;
+  hostId: Card["hostId"];
+  gameUI: Element | null;
   index: number;
   x: number;
   y: number;
@@ -267,6 +292,8 @@ interface HandCardProps {
 const HandCard = memo(function HandCard({
   cardId,
   zoneId,
+  hostId,
+  gameUI,
   index,
   x,
   y,
@@ -279,7 +306,9 @@ const HandCard = memo(function HandCard({
 }: HandCardProps) {
   const card = useGame((game) => game.cards.find(cardId));
   const table = useCardMotion();
-  const [arrival, setArrival] = useState(() => entryFrom(card, zoneId, table));
+  const [arrival, setArrival] = useState(() =>
+    entryFrom(card, { zoneId, hostId }, table, gameUI),
+  );
   const finishArrival = useCallback(() => setArrival(null), []);
   const moving = useMoving();
   if (!card) return null;

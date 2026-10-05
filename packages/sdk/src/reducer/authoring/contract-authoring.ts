@@ -4,10 +4,9 @@ import { InteractionSteps } from "./steps";
 import type { ViewDefinition } from "../model";
 import type { z } from "zod";
 import type {
+  ZoneIdOfTable,
   CardIdOfManifest,
   BoardIdOfTable,
-  DeckIdOfTable,
-  HandIdOfTable,
   BoardStateOfTable,
   SpaceIdOfTable,
   InputCollector,
@@ -210,9 +209,7 @@ type BoundCardCollector<
  * filter them. The target rule is built internally.
  */
 type BoundCardInput<Contract extends ContractWithPhases> = <
-  const ZoneIds extends readonly (
-    DeckIdOfTable<BoundTable<Contract>> | HandIdOfTable<BoundTable<Contract>>
-  )[],
+  const ZoneIds extends readonly ZoneIdOfTable<BoundTable<Contract>>[],
 >(options: {
   from: ZoneIds;
   where?: BoundWhere<Contract, CardIdOfManifest<BoundManifest<Contract>>>;

@@ -41,7 +41,6 @@ export type ReducerGameContract<
     string,
     string,
     string,
-    string,
     string
   >,
   PublicSchema extends SchemaLike<object>,
@@ -135,29 +134,9 @@ export type PhaseMapOf<Contract> = {
 export type AnyPhaseDefinitionForContract<Contract> =
   PhaseMapOf<Contract>[PhaseNameOfContract<Contract>];
 
-/**
- * Helpers below accept heterogeneous phase maps (each phase binds its own
- * `PhaseStateSchema` + per-phase registries). TypeScript requires the
- * constraint to use a shape compatible with contract-bound state types in a
- * contravariant `initialState` position, so we erase the registry-bound
- * state/manifest generics with `any`. The only purpose of the constraint is
- * to guarantee `Definitions[Name]` is a `PhaseDefinition` so the `extends`
- * check below can infer `PhaseStateSchema`.
- */
-
-/* eslint-disable @typescript-eslint/no-explicit-any -- Conditional type extraction matches all authored callback parameter types; no runtime any is exposed. */
+/** Extract phase state schemas without coupling to phase callbacks or registries. */
 export type PhaseStateMapOfDefinitions<
-  Definitions extends Record<
-    string,
-    PhaseDefinition<
-      SchemaLike<object>,
-      any,
-      any,
-      Record<string, InputCollector>,
-      InteractionMap<any, any>,
-      any
-    >
-  >,
+  Definitions extends Record<string, { state: SchemaLike<object> }>,
 > = Partial<{
   [Name in keyof Definitions & string]: Definitions[Name] extends {
     state: infer PhaseStateSchema extends SchemaLike<object>;
@@ -167,17 +146,7 @@ export type PhaseStateMapOfDefinitions<
 }>;
 
 export type PhaseStateOfDefinitions<
-  Definitions extends Record<
-    string,
-    PhaseDefinition<
-      SchemaLike<object>,
-      any,
-      any,
-      Record<string, InputCollector>,
-      InteractionMap<any, any>,
-      any
-    >
-  >,
+  Definitions extends Record<string, { state: SchemaLike<object> }>,
 > = {
   [Name in keyof Definitions & string]: Definitions[Name] extends {
     state: infer PhaseStateSchema extends SchemaLike<object>;
@@ -185,8 +154,6 @@ export type PhaseStateOfDefinitions<
     ? z.infer<PhaseStateSchema>
     : never;
 }[keyof Definitions & string];
-
-/* eslint-enable @typescript-eslint/no-explicit-any */
 
 export type ResolvedGameStateOf<
   Contract,

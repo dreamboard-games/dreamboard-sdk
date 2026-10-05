@@ -1,4 +1,4 @@
-import { createInputTestState } from "./input-test-fixtures";
+import { createInputTestState, inputDefinitions } from "./input-test-fixtures";
 import { createStateQueries } from "./table-queries";
 import { describe, expect, test } from "vitest";
 import {
@@ -11,7 +11,7 @@ import {
 import type { CollectorState } from "./model/spec";
 
 const state = createInputTestState();
-const q = createStateQueries(state);
+const q = createStateQueries(state, inputDefinitions);
 const ctx = { state, playerId: "player-1", q };
 
 describe("target rules", () => {

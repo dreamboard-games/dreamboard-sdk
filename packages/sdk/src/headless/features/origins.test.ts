@@ -32,17 +32,19 @@ function snapshot(
         Object.entries(zones).map(([zone, cardIds]) => [
           zone,
           {
-            cardIds,
-            cardViewsById: Object.fromEntries(
-              cardIds
-                .filter((cardId) => !cardId.startsWith("hidden:"))
-                .map((cardId) => [
-                  cardId,
-                  { id: cardId, cardType: "ranked", properties: {} },
-                ]),
-            ),
-            cardBacksById: {},
-            playableByCardId: {},
+            [zone === "hand" ? me : "table"]: {
+              cardIds,
+              cardViewsById: Object.fromEntries(
+                cardIds
+                  .filter((cardId) => !cardId.startsWith("hidden:"))
+                  .map((cardId) => [
+                    cardId,
+                    { id: cardId, cardType: "ranked", properties: {} },
+                  ]),
+              ),
+              cardBacksById: {},
+              playableByCardId: {},
+            },
           },
         ]),
       ),
@@ -64,7 +66,7 @@ describe("findCardOrigins", () => {
         { deck: hidden("deck", 3), hand: ["ace"] },
         { deck: hidden("deck", 2), hand: ["ace", "king"] },
       ),
-    ).toEqual({ king: { zone: "deck", hidden: true } });
+    ).toEqual({ king: { hostId: "table", zone: "deck", hidden: true } });
   });
 
   it("follows a visible card to another zone", () => {
@@ -73,7 +75,7 @@ describe("findCardOrigins", () => {
         { hand: ["ace", "king"], table: [] },
         { hand: ["king"], table: ["ace"] },
       ),
-    ).toEqual({ ace: { zone: "hand", hidden: false } });
+    ).toEqual({ ace: { hostId: "alice", zone: "hand", hidden: false } });
   });
 
   it("flips a card in place either way", () => {
@@ -82,10 +84,12 @@ describe("findCardOrigins", () => {
         { table: ["hidden:table:0", "two"] },
         { table: ["queen", "two"] },
       ),
-    ).toEqual({ queen: { zone: "table", hidden: true } });
+    ).toEqual({ queen: { hostId: "table", zone: "table", hidden: true } });
     expect(
       origins({ table: ["queen"] }, { table: ["hidden:table:0"] }),
-    ).toEqual({ "hidden:table:0": { zone: "table", hidden: false } });
+    ).toEqual({
+      "hidden:table:0": { hostId: "table", zone: "table", hidden: false },
+    });
   });
 
   it("deals from the deck while other seats' cards leave the frame", () => {
@@ -95,9 +99,9 @@ describe("findCardOrigins", () => {
         { deck: hidden("deck", 4), hand: ["ace", "king", "queen"] },
       ),
     ).toEqual({
-      ace: { zone: "deck", hidden: true },
-      king: { zone: "deck", hidden: true },
-      queen: { zone: "deck", hidden: true },
+      ace: { hostId: "table", zone: "deck", hidden: true },
+      king: { hostId: "table", zone: "deck", hidden: true },
+      queen: { hostId: "table", zone: "deck", hidden: true },
     });
   });
 
@@ -108,8 +112,8 @@ describe("findCardOrigins", () => {
         { discard: [], deck: hidden("deck", 2) },
       ),
     ).toEqual({
-      "hidden:deck:0": { zone: "discard", hidden: false },
-      "hidden:deck:1": { zone: "discard", hidden: false },
+      "hidden:deck:0": { hostId: "table", zone: "discard", hidden: false },
+      "hidden:deck:1": { hostId: "table", zone: "discard", hidden: false },
     });
   });
 
@@ -136,7 +140,7 @@ describe("findCardOrigins", () => {
         { hand: ["ace", "hidden:hand:1"], table: [] },
         { hand: ["hidden:hand:0"], table: ["ace"] },
       ),
-    ).toEqual({ ace: { zone: "hand", hidden: false } });
+    ).toEqual({ ace: { hostId: "alice", zone: "hand", hidden: false } });
   });
 
   it("lets a shown card take a hidden departure before a hidden card does", () => {
@@ -146,8 +150,8 @@ describe("findCardOrigins", () => {
         { deck: [], table: [], pile: hidden("pile", 1), hand: ["king"] },
       ),
     ).toEqual({
-      king: { zone: "deck", hidden: true },
-      "hidden:pile:0": { zone: "table", hidden: false },
+      king: { hostId: "table", zone: "deck", hidden: true },
+      "hidden:pile:0": { hostId: "table", zone: "table", hidden: false },
     });
   });
 
@@ -229,7 +233,7 @@ describe("findCardOrigins", () => {
         },
         { hand: ["king"], deck: [], reserve: [], table: ["ace"] },
       ),
-    ).toEqual({ ace: { zone: "hand", hidden: false } });
+    ).toEqual({ ace: { hostId: "alice", zone: "hand", hidden: false } });
   });
 
   it("does not infer a reveal when another card may have been concealed in its place", () => {
@@ -273,7 +277,7 @@ describe("originsFeature", () => {
       }),
     );
     const origin = game.cards.get("king").getOrigin();
-    expect(origin).toEqual({ zone: "deck", hidden: true });
+    expect(origin).toEqual({ hostId: "table", zone: "deck", hidden: true });
     expect(game.cards.get("king").getOrigin()).toBe(origin);
     expect(game.cards.get("ace").getOrigin()).toBeNull();
     source.emit(

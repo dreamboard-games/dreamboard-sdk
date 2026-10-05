@@ -4,13 +4,8 @@ import type {
   BoardIdOfTable,
   ComponentLocationOfTable,
   ComponentIdOfTable,
-  DeckIdOfTable,
-  HandIdOfTable,
-  PlayerIdOfTable,
   ResolvedContainerLocation,
-  ResolvedDeckLocation,
   ResolvedEdgeLocation,
-  ResolvedHandLocation,
   ResolvedSlotLocation,
   ResolvedSpaceLocation,
   ResolvedVertexLocation,
@@ -44,49 +39,6 @@ export function getComponentLocation<
   ) as ComponentLocationOfTable<Table, ComponentId>;
 }
 
-export function getComponentDeckLocation<
-  Table extends RuntimeTableRecord,
-  ComponentId extends ComponentIdOfTable<NoInfer<Table>>,
->(
-  table: Table,
-  componentId: ComponentId,
-): ResolvedDeckLocation<Table, ComponentId> | null {
-  const location = getComponentLocation(table, componentId);
-  if (location.type !== "InDeck") {
-    return null;
-  }
-
-  return {
-    componentId,
-    deckId: location.deckId as DeckIdOfTable<Table>,
-    cards: table.decks[location.deckId as DeckIdOfTable<Table>],
-    location,
-  } as ResolvedDeckLocation<Table, ComponentId>;
-}
-
-export function getComponentHandLocation<
-  Table extends RuntimeTableRecord,
-  ComponentId extends ComponentIdOfTable<NoInfer<Table>>,
->(
-  table: Table,
-  componentId: ComponentId,
-): ResolvedHandLocation<Table, ComponentId> | null {
-  const location = getComponentLocation(table, componentId);
-  if (location.type !== "InHand") {
-    return null;
-  }
-
-  // eslint-disable-next-line no-restricted-syntax -- The InHand discriminant selects the hand and player in this Table; the facade restores their dependent card/location types.
-  return {
-    componentId,
-    handId: location.handId as HandIdOfTable<Table>,
-    playerId: location.playerId as PlayerIdOfTable<Table>,
-    cards:
-      table.hands[location.handId as HandIdOfTable<Table>]?.[location.playerId],
-    location,
-  } as unknown as ResolvedHandLocation<Table, ComponentId>;
-}
-
 export function getComponentZoneLocation<
   Table extends RuntimeTableRecord,
   ComponentId extends ComponentIdOfTable<NoInfer<Table>>,
@@ -102,6 +54,7 @@ export function getComponentZoneLocation<
   return {
     componentId,
     zoneId: location.zoneId,
+    hostId: location.hostId,
     location,
   } as ResolvedZoneLocation<Table, ComponentId>;
 }

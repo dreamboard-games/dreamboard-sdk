@@ -6,36 +6,45 @@ import {
   getComponentsOnSpace,
   getComponentsOnVertex,
 } from "./index";
-import { createSpatialTable } from "./table-test-fixtures";
+import { createSpatialTable, spatialDefinitions } from "./table-test-fixtures";
 
 describe("table ops spatial helpers", () => {
   test("moveComponentToSpace and moveComponentToContainer re-home cards, pieces, and dice", () => {
     const table = createSpatialTable();
 
-    const withCardInContainer = createTestTransaction({
-      table,
-    }).moveComponentToContainer({
+    const withCardInContainer = createTestTransaction(
+      {
+        table,
+      },
+      spatialDefinitions,
+    ).moveComponentToContainer({
       componentId: "card-1",
       boardId: "main-board",
       containerId: "market-row",
     }).table;
-    const withPieceOnSpace = createTestTransaction({
-      table: withCardInContainer,
-    }).moveComponentToSpace({
+    const withPieceOnSpace = createTestTransaction(
+      {
+        table: withCardInContainer,
+      },
+      spatialDefinitions,
+    ).moveComponentToSpace({
       componentId: "piece-1",
       boardId: "main-board",
       spaceId: "space-a",
     }).table;
-    const withDieOnSpace = createTestTransaction({
-      table: withPieceOnSpace,
-    }).moveComponentToSpace({
+    const withDieOnSpace = createTestTransaction(
+      {
+        table: withPieceOnSpace,
+      },
+      spatialDefinitions,
+    ).moveComponentToSpace({
       componentId: "die-1",
       boardId: "main-board",
       spaceId: "space-a",
     }).table;
 
-    expect(withDieOnSpace.decks["draw-deck"]).toEqual([]);
-    expect(withDieOnSpace.zones.shared.supply).toEqual([]);
+    expect(withDieOnSpace.zones["draw-deck"].table).toEqual([]);
+    expect(withDieOnSpace.zones.supply.table).toEqual([]);
     expect(withDieOnSpace.componentLocations["card-1"]).toEqual({
       type: "InContainer",
       boardId: "main-board",
@@ -64,24 +73,33 @@ describe("table ops spatial helpers", () => {
 
   test("moveComponentToDetached re-homes pieces and reindexes old occupants", () => {
     const table = createSpatialTable();
-    const withPieceOnSpace = createTestTransaction({
-      table,
-    }).moveComponentToSpace({
+    const withPieceOnSpace = createTestTransaction(
+      {
+        table,
+      },
+      spatialDefinitions,
+    ).moveComponentToSpace({
       componentId: "piece-1",
       boardId: "main-board",
       spaceId: "space-a",
     }).table;
-    const withDieOnSpace = createTestTransaction({
-      table: withPieceOnSpace,
-    }).moveComponentToSpace({
+    const withDieOnSpace = createTestTransaction(
+      {
+        table: withPieceOnSpace,
+      },
+      spatialDefinitions,
+    ).moveComponentToSpace({
       componentId: "die-1",
       boardId: "main-board",
       spaceId: "space-a",
     }).table;
 
-    const detached = createTestTransaction({
-      table: withDieOnSpace,
-    }).moveComponentToDetached({ componentId: "piece-1" }).table;
+    const detached = createTestTransaction(
+      {
+        table: withDieOnSpace,
+      },
+      spatialDefinitions,
+    ).moveComponentToDetached({ componentId: "piece-1" }).table;
 
     expect(detached.componentLocations["piece-1"]).toEqual({
       type: "Detached",
@@ -129,23 +147,32 @@ describe("table ops spatial helpers", () => {
         ),
     ).toThrow("Unknown vertex");
 
-    const withPieceOnEdge = createTestTransaction({
-      table,
-    }).moveComponentToEdge({
+    const withPieceOnEdge = createTestTransaction(
+      {
+        table,
+      },
+      spatialDefinitions,
+    ).moveComponentToEdge({
       componentId: "piece-1",
       boardId: "square-board",
       edgeId: "square-edge:a1-a2",
     }).table;
-    const withDieOnEdge = createTestTransaction({
-      table: withPieceOnEdge,
-    }).moveComponentToEdge({
+    const withDieOnEdge = createTestTransaction(
+      {
+        table: withPieceOnEdge,
+      },
+      spatialDefinitions,
+    ).moveComponentToEdge({
       componentId: "die-1",
       boardId: "square-board",
       edgeId: "square-edge:a1-a2",
     }).table;
-    const withPieceOnVertex = createTestTransaction({
-      table: withDieOnEdge,
-    }).moveComponentToVertex({
+    const withPieceOnVertex = createTestTransaction(
+      {
+        table: withDieOnEdge,
+      },
+      spatialDefinitions,
+    ).moveComponentToVertex({
       componentId: "piece-1",
       boardId: "square-board",
       vertexId: "square-vertex:center",
@@ -203,9 +230,12 @@ describe("table ops spatial helpers", () => {
       position: 0,
     };
 
-    const moved = createTestTransaction({
-      table,
-    }).moveComponentToSpace({
+    const moved = createTestTransaction(
+      {
+        table,
+      },
+      spatialDefinitions,
+    ).moveComponentToSpace({
       componentId: "piece-1",
       boardId: "main-board",
       spaceId: "space-a",

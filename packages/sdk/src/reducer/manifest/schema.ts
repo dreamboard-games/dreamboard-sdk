@@ -5,6 +5,8 @@ import {
   schemaForCardType,
 } from "./field-schemas";
 import { fieldReferenceContext } from "./materialize";
+import { assertZoneConsistency } from "../table/zones";
+import type { ZoneDefinitions, RuntimeTableRecord } from "../model";
 import type { ManifestIds } from "../model";
 
 import type { analyzeManifest } from "./materialize";
@@ -23,12 +25,14 @@ function arrayEntries(value: unknown): IterableIterator<[number, unknown]> {
 }
 type Analysis = ReturnType<typeof analyzeManifest>;
 export type RuntimeManifestIds = {
-  [
-    K in keyof ManifestIds<string, string, string, string, string>
-  ]: z.ZodType<string>;
+  [K in keyof ManifestIds<string, string, string, string>]: z.ZodType<string>;
 };
 type Ids = RuntimeManifestIds;
-export function createTableSchema(analysis: Analysis, ids: Ids) {
+export function createTableSchema(
+  analysis: Analysis,
+  ids: Ids,
+  definitions: ZoneDefinitions,
+) {
   const unknownRecordSchema = z.record(z.string(), z.unknown());
   const resolveStatic = createFieldValidatorResolver((boardId) =>
     fieldReferenceContext(analysis, "manifest", boardId),
@@ -68,7 +72,7 @@ export function createTableSchema(analysis: Analysis, ids: Ids) {
         properties,
       });
     },
-  );
+  ).strict();
   const pieceStateByIdSchema = shape(
     analysis.pieceIds,
     (id) => id,
@@ -83,7 +87,7 @@ export function createTableSchema(analysis: Analysis, ids: Ids) {
         properties: objectSchema(analysis.pieceTypeSchemasById.get(type)),
       });
     },
-  );
+  ).strict();
   const dieStateByIdSchema = shape(
     analysis.dieIds,
     (id) => id,
@@ -103,19 +107,7 @@ export function createTableSchema(analysis: Analysis, ids: Ids) {
         properties: objectSchema(analysis.dieTypeSchemasById.get(type)),
       });
     },
-  );
-  const sharedZoneSchema = shape(
-    analysis.sharedZones,
-    (zone) => zone.id,
-    () => z.array(ids.cardId),
-  );
-  const playerZoneSchema = shape(
-    analysis.playerZones,
-    (zone) => zone.id,
-    () => z.record(ids.playerId, z.array(ids.cardId)),
-  );
-  const zoneIdSchema = ids.zoneId;
-  const playerZoneIdSchema = ids.playerZoneId;
+  ).strict();
   const slotVariants = analysis.strictSlotHosts.flatMap((host) =>
     host.slotIds.map((slotId) =>
       z.object({
@@ -337,47 +329,21 @@ export function createTableSchema(analysis: Analysis, ids: Ids) {
   return z
     .object({
       playerOrder: z.array(ids.playerId),
-      zones: z.object({
-        shared: sharedZoneSchema,
-        perPlayer: playerZoneSchema,
-        visibility: z.record(
-          zoneIdSchema,
-          z.enum(["all", "ownerOnly", "public", "hidden"]),
-        ),
-        cardSetIdsByZoneId: z
-          .record(zoneIdSchema, z.array(ids.cardSetId))
-          .optional(),
-      }),
-      decks: sharedZoneSchema,
-      hands: playerZoneSchema,
-      handVisibility: z.record(
-        playerZoneIdSchema,
-        z.enum(["all", "ownerOnly", "public", "hidden"]),
-      ),
+      zones: z.record(z.string(), z.record(z.string(), z.array(z.string()))),
       cards: cardStateByIdSchema,
       pieces: pieceStateByIdSchema,
       componentLocations: z.record(
         z.string(),
         z.union([
           z.object({ type: z.literal("Detached") }),
-          z.object({
-            type: z.literal("InDeck"),
-            deckId: ids.deckId,
-            playedBy: ids.playerId.nullable(),
-            position: z.number().int().nullable().optional(),
-          }),
-          z.object({
-            type: z.literal("InHand"),
-            handId: ids.handId,
-            playerId: ids.playerId,
-            position: z.number().int().nullable().optional(),
-          }),
-          z.object({
-            type: z.literal("InZone"),
-            zoneId: z.string(),
-            playedBy: ids.playerId.nullable().optional(),
-            position: z.number().int().nullable().optional(),
-          }),
+          z
+            .object({
+              type: z.literal("InZone"),
+              zoneId: ids.zoneId,
+              hostId: z.string(),
+              playedBy: ids.playerId.nullable(),
+            })
+            .strict(),
           z.object({
             type: z.literal("OnSpace"),
             boardId: ids.boardId,
@@ -426,6 +392,7 @@ export function createTableSchema(analysis: Analysis, ids: Ids) {
       }),
       dice: dieStateByIdSchema,
     })
+    .strict()
     .superRefine((table, context) => {
       const players = new Set(table.playerOrder);
       if (players.size !== table.playerOrder.length) {
@@ -601,13 +568,14 @@ export function createTableSchema(analysis: Analysis, ids: Ids) {
         }
       }
       checkPlayers(table.resources, ["resources"]);
-      for (const [id, players] of Object.entries(
-        table.hands as Record<string, Record<string, unknown>>,
-      ))
-        checkPlayers(players, ["hands", id]);
-      for (const [id, players] of Object.entries(
-        table.zones.perPlayer as Record<string, Record<string, unknown>>,
-      ))
-        checkPlayers(players, ["zones", "perPlayer", id]);
+      try {
+        assertZoneConsistency(table as RuntimeTableRecord, definitions);
+      } catch (error) {
+        context.addIssue({
+          code: "custom",
+          path: ["zones"],
+          message: error instanceof Error ? error.message : String(error),
+        });
+      }
     });
 }

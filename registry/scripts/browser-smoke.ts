@@ -3,6 +3,7 @@ import { proveCardDrag } from "./card-drag-proof.ts";
 import {
   proveDraw,
   proveDrawTouchActivation,
+  proveHostDraw,
   proveReducedCardMotion,
 } from "./draw-proof.ts";
 import { proveCardControl } from "./card-control-proof.ts";
@@ -242,6 +243,8 @@ try {
         );
       }
       // Gesture proofs run on a portrait phone and a desktop.
+      if (story.id.endsWith("host-hands") && name !== "landscape")
+        await proveHostDraw(page, touch);
       if (story.id.endsWith("card-drag-drop") && name !== "landscape")
         await proveCardDrag(page, touch);
       if (story.id.endsWith("fanned-hand") && name !== "landscape") {

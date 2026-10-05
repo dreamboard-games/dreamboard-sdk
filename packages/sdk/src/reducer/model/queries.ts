@@ -5,14 +5,14 @@ import type {
 } from "../../shared/domain/cards.js";
 import type { ViewSlotOccupant } from "../../shared/domain/slots.js";
 import type {
+  ZoneIdOfTable,
+  ZoneComponentsOfTable,
+  ZoneHostsOfTable,
+  ZoneScopeOfTable,
   BoardContainerIdOfTable,
   BoardIdOfTable,
   CardIdOfTable,
   ComponentIdOfTable,
-  DeckCardsOfTable,
-  DeckIdOfTable,
-  HandCardsOfTable,
-  HandIdOfTable,
   PlayerIdOfTable,
   ResourceAmountsOfTable,
   ResourceBalancesOfTable,
@@ -31,6 +31,14 @@ import type {
   RuntimeTableRecord,
 } from "./table";
 
+type ScopedZoneHostArgs<Table, Scope> = Scope extends "shared"
+  ? [hostId?: "table"]
+  : [hostId: PlayerIdOfTable<Table>];
+type ZoneHostArgs<Table, Z extends ZoneIdOfTable<Table>> = ScopedZoneHostArgs<
+  Table,
+  ZoneScopeOfTable<Table, Z>
+>;
+
 type BoardRecord<
   Table extends RuntimeTableRecord,
   BoardId extends BoardIdOfTable<Table>,
@@ -48,23 +56,15 @@ type CardsByIdOfTable<
   [Id in CardIds[number]]: ViewCardOfTable<Table, Id>;
 }>;
 
-type DeckCardsForZone<
+type CardCollectionOfTable<
   Table extends RuntimeTableRecord,
-  ZoneId extends DeckIdOfTable<Table>,
-> = ZoneId extends infer Each extends DeckIdOfTable<Table>
-  ? DeckCardsOfTable<Table, Each>
-  : never;
-
-type HandCardsForZone<
-  Table extends RuntimeTableRecord,
-  ZoneId extends HandIdOfTable<Table>,
-> = ZoneId extends infer Each extends HandIdOfTable<Table>
-  ? HandCardsOfTable<Table, Each>
-  : never;
-
-type CardCollectionOfTable<Table extends RuntimeTableRecord> = CardCollection<
-  CardIdOfTable<Table> & string,
-  ViewCardOfTable<Table, CardIdOfTable<Table>>
+  Z extends ZoneIdOfTable<Table>,
+> = CardCollection<
+  Extract<ZoneComponentsOfTable<Table, Z>, CardIdOfTable<Table>>,
+  ViewCardOfTable<
+    Table,
+    Extract<ZoneComponentsOfTable<Table, Z>, CardIdOfTable<Table>>
+  >
 >;
 
 type SlotOccupantOfTable<Table extends RuntimeTableRecord> = ViewSlotOccupant<
@@ -114,38 +114,6 @@ export type ComponentLocationByTypeOfTable<
   Type extends RuntimeComponentLocation["type"],
 > = Extract<ComponentLocationOfTable<Table, ComponentId>, { type: Type }>;
 
-export type ResolvedDeckLocation<
-  Table extends RuntimeTableRecord,
-  ComponentId extends ComponentIdOfTable<Table>,
-> = {
-  [DeckId in DeckIdOfTable<Table>]: {
-    componentId: ComponentId;
-    deckId: DeckId;
-    cards: DeckCardsOfTable<Table, DeckId>;
-    location: ComponentLocationByTypeOfTable<Table, ComponentId, "InDeck"> & {
-      deckId: DeckId;
-    };
-  };
-}[DeckIdOfTable<Table>];
-
-export type ResolvedHandLocation<
-  Table extends RuntimeTableRecord,
-  ComponentId extends ComponentIdOfTable<Table>,
-> = {
-  [HandId in HandIdOfTable<Table>]: {
-    [PlayerId in PlayerIdOfTable<Table>]: {
-      componentId: ComponentId;
-      handId: HandId;
-      playerId: PlayerId;
-      cards: HandCardsOfTable<Table, HandId>;
-      location: ComponentLocationByTypeOfTable<Table, ComponentId, "InHand"> & {
-        handId: HandId;
-        playerId: PlayerId;
-      };
-    };
-  }[PlayerIdOfTable<Table>];
-}[HandIdOfTable<Table>];
-
 export type ResolvedZoneLocation<
   Table extends RuntimeTableRecord,
   ComponentId extends ComponentIdOfTable<Table>,
@@ -162,6 +130,7 @@ export type ResolvedZoneLocation<
       ? {
           componentId: ComponentId;
           zoneId: ZoneId;
+          hostId: string;
           location: Location;
         }
       : never
@@ -292,35 +261,23 @@ export type TableQueries<Table extends RuntimeTableRecord> = {
     ComponentIdOfTable<Table>
   >;
   zone: {
-    sharedCards: <ZoneId extends DeckIdOfTable<Table>>(
-      zoneId: ZoneId,
-    ) => DeckCardsForZone<Table, ZoneId>;
-    sharedCardCollection: <ZoneId extends DeckIdOfTable<Table>>(
-      zoneId: ZoneId,
-    ) => CardCollectionOfTable<Table>;
-    allSharedCards: () => {
-      readonly [Z in DeckIdOfTable<Table>]: DeckCardsOfTable<Table, Z>;
-    };
-    playerCards: <
-      PlayerId extends PlayerIdOfTable<Table>,
-      ZoneId extends HandIdOfTable<Table>,
-    >(
-      playerId: PlayerId,
-      zoneId: ZoneId,
-    ) => HandCardsForZone<Table, ZoneId>;
-    playerCardCollection: <
-      PlayerId extends PlayerIdOfTable<Table>,
-      ZoneId extends HandIdOfTable<Table>,
-    >(
-      playerId: PlayerId,
-      zoneId: ZoneId,
-    ) => CardCollectionOfTable<Table>;
-    allPlayerCards: <ZoneId extends HandIdOfTable<Table>>(
-      zoneId: ZoneId,
-    ) => {
-      readonly [P in PlayerIdOfTable<Table>]: HandCardsOfTable<Table, ZoneId>;
-    };
+    <Z extends ZoneIdOfTable<Table>>(
+      zoneId: Z,
+      ...host: ZoneHostArgs<Table, Z>
+    ): readonly ZoneComponentsOfTable<Table, Z>[];
+    cards<Z extends ZoneIdOfTable<Table>>(
+      zoneId: Z,
+      ...host: ZoneHostArgs<Table, Z>
+    ): CardCollectionOfTable<Table, Z>;
   };
+  zones<Z extends ZoneIdOfTable<Table>>(
+    zoneId: Z,
+  ): Readonly<
+    Record<
+      ZoneHostsOfTable<Table, Z>,
+      readonly ZoneComponentsOfTable<Table, Z>[]
+    >
+  >;
   card: {
     get: <CardId extends CardIdOfTable<Table>>(
       cardId: CardId,
@@ -401,12 +358,6 @@ export type TableQueries<Table extends RuntimeTableRecord> = {
     location: <ComponentId extends ComponentIdOfTable<Table>>(
       componentId: ComponentId,
     ) => ComponentLocationOfTable<Table, ComponentId>;
-    deck: <ComponentId extends ComponentIdOfTable<Table>>(
-      componentId: ComponentId,
-    ) => ResolvedDeckLocation<Table, ComponentId> | null;
-    hand: <ComponentId extends ComponentIdOfTable<Table>>(
-      componentId: ComponentId,
-    ) => ResolvedHandLocation<Table, ComponentId> | null;
     zone: <ComponentId extends ComponentIdOfTable<Table>>(
       componentId: ComponentId,
     ) => ResolvedZoneLocation<Table, ComponentId> | null;

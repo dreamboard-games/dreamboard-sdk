@@ -379,3 +379,53 @@ export async function proveReducedCardMotion(page: Page) {
   ).toBe(true);
   await page.emulateMedia({ reducedMotion: "no-preference" });
 }
+
+/** Two public hosts of one zone keep pickup and drop targets separate. */
+export async function proveHostDraw(page: Page, touch: boolean) {
+  const own = page.locator(
+    '.db-hand[data-zone="hand"][data-zone-host="player-1"]',
+  );
+  const other = page.locator(
+    '.db-hand[data-zone="hand"][data-zone-host="player-2"]',
+  );
+  const pile = page.getByRole("button", { name: "Deck actions" });
+  await expect(own.locator(".db-hand-card")).toHaveCount(1);
+  await expect(other.locator(".db-hand-card")).toHaveCount(1);
+  const from = await pile.boundingBox();
+  const to = await own.boundingBox();
+  if (!from || !to) throw new Error("Host draw controls are not mounted.");
+  const origin = { x: from.x + from.width / 2, y: from.y + from.height / 2 };
+  const target = { x: to.x + to.width / 2, y: to.y + to.height / 2 };
+  const cdp = touch ? await page.context().newCDPSession(page) : null;
+  try {
+    if (cdp) {
+      await cdp.send("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [{ ...origin, id: 1 }],
+      });
+      await cdp.send("Input.dispatchTouchEvent", {
+        type: "touchMove",
+        touchPoints: [{ ...target, id: 1 }],
+      });
+    } else {
+      await page.mouse.move(origin.x, origin.y);
+      await page.mouse.down();
+      await page.mouse.move(target.x, target.y, { steps: 8 });
+    }
+    await expect(own).toHaveAttribute("data-draw-over", "true");
+    await expect(own.locator(".db-draw-insertion")).toHaveCount(1);
+    await expect(other).not.toHaveAttribute("data-draw-target", "true");
+    await expect(other.locator(".db-draw-insertion")).toHaveCount(0);
+    if (cdp)
+      await cdp.send("Input.dispatchTouchEvent", {
+        type: "touchEnd",
+        touchPoints: [],
+      });
+    else await page.mouse.up();
+    await expect(own.locator(".db-hand-card")).toHaveCount(2);
+    await expect(other.locator(".db-hand-card")).toHaveCount(1);
+    await expect(page.locator("[data-draw-overlay]")).toHaveCount(0);
+  } finally {
+    await cdp?.detach();
+  }
+}

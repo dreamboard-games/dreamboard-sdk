@@ -52,7 +52,7 @@ export type {
 export type {
   ReducerTransaction,
   ReducerTransactionOutcome,
-  RotatePlayerZoneArgs,
+  RotateZoneArgs,
 } from "./reducer/transaction";
 export {
   asPlayerId,

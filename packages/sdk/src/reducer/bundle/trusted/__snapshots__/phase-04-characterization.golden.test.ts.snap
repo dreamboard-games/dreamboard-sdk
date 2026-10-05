@@ -4,7 +4,7 @@ exports[`phase 4 trusted-bundle characterization > dispatch accept/reject outcom
 {
   "accepted": {
     "kind": "accept",
-    "stateDigest": "18ae9973285470dd77dc56cc1967d697eb4c140f0830be96e4e7357ba6f75cc8",
+    "stateDigest": "25d55e1834460b3f061fc2947a491a05a71545eb53f0a1661e249ed3b0592c12",
     "traceKinds": [
       "acceptedClientInput",
     ],
@@ -95,7 +95,7 @@ exports[`phase 4 trusted-bundle characterization > seeded roll traces and state 
     "cursor=0;bound=6;value=2",
     "cursor=1;bound=6;value=4",
   ],
-  "stateDigest": "7961b6973de15f6e2960ad7f5ecba036004e2a11b44b7de234cf367404bba74b",
+  "stateDigest": "17c15428d96e24510f076f9e1b5db7e2864ca933b319d2b01a5fe779a3f99e60",
   "traceKinds": [
     "acceptedClientInput",
     "rngConsumption",

@@ -64,7 +64,6 @@ export function createGame<
     string,
     string,
     string,
-    string,
     string
   >,
   PublicSchema extends SchemaLike<object>,
@@ -104,7 +103,6 @@ export function createGame(
         RuntimeTableRecord,
         ReducerManifestContract<
           RuntimeTableRecord,
-          string,
           string,
           string,
           string,

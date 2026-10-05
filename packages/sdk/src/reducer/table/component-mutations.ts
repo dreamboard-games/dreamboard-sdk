@@ -1,12 +1,11 @@
+import { resolveZone, assertComponent } from "./zones";
 import type {
   BoardContainerIdOfTable,
   BoardIdOfTable,
   ComponentIdOfTable,
-  PlayerIdOfTable,
-  PlayerZoneIdOfTable,
   RuntimeComponentLocation,
   RuntimeTableRecord,
-  SharedZoneIdOfTable,
+  ZoneDefinitions,
   SpaceIdOfTable,
   TiledBoardIdOfTable,
   TiledEdgeIdOfTable,
@@ -21,12 +20,7 @@ import {
   getVertex,
 } from "./board-queries";
 import { assertCardAllowedInContainer } from "./card-validation";
-import {
-  ensureArray,
-  orderedComponentIdsForLocation,
-  syncPlayerZoneWithHand,
-  syncSharedZoneWithDeck,
-} from "./internal";
+import { orderedComponentIdsForLocation } from "./internal";
 
 function reindexSpaceOccupants<
   Table extends RuntimeTableRecord,
@@ -131,55 +125,13 @@ function reindexSlotOccupants<Table extends RuntimeTableRecord>(
   });
 }
 
-function removeComponentFromCurrentLocation<
+export function removeComponentFromCurrentLocation<
   Table extends RuntimeTableRecord,
   ComponentId extends ComponentIdOfTable<Table>,
->(table: Table, componentId: ComponentId): void {
+>(table: Table, componentId: ComponentId, definitions: ZoneDefinitions): void {
+  assertComponent(table, componentId);
   const currentLocation = table.componentLocations[componentId];
   if (!currentLocation) {
-    return;
-  }
-
-  if (currentLocation.type === "InDeck") {
-    const nextCards = ensureArray(table.decks[currentLocation.deckId]).filter(
-      (candidate) => candidate !== componentId,
-    );
-    syncSharedZoneWithDeck(
-      table,
-      currentLocation.deckId as SharedZoneIdOfTable<Table>,
-      nextCards,
-    );
-    nextCards.forEach((cardId, index) => {
-      const location = table.componentLocations[cardId];
-      if (location?.type === "InDeck") {
-        table.componentLocations[cardId] = {
-          ...location,
-          position: index,
-        };
-      }
-    });
-    return;
-  }
-
-  if (currentLocation.type === "InHand") {
-    const nextCards = ensureArray(
-      table.hands[currentLocation.handId]?.[currentLocation.playerId],
-    ).filter((candidate) => candidate !== componentId);
-    syncPlayerZoneWithHand(
-      table,
-      currentLocation.handId as PlayerZoneIdOfTable<Table>,
-      currentLocation.playerId as PlayerIdOfTable<Table>,
-      nextCards,
-    );
-    nextCards.forEach((cardId, index) => {
-      const location = table.componentLocations[cardId];
-      if (location?.type === "InHand") {
-        table.componentLocations[cardId] = {
-          ...location,
-          position: index,
-        };
-      }
-    });
     return;
   }
 
@@ -194,25 +146,12 @@ function removeComponentFromCurrentLocation<
   }
 
   if (currentLocation.type === "InZone") {
-    if (currentLocation.zoneId in table.zones.shared) {
-      const nextComponents = ensureArray(
-        table.zones.shared[currentLocation.zoneId],
-      ).filter((candidate) => candidate !== componentId);
-      syncSharedZoneWithDeck(
-        table,
-        currentLocation.zoneId as SharedZoneIdOfTable<Table>,
-        nextComponents,
+    const { ids } = resolveZone(table, definitions, currentLocation);
+    if (!ids || ids.filter((id) => id === componentId).length !== 1)
+      throw new Error(
+        `Zone membership disagrees with location for '${componentId}'.`,
       );
-      nextComponents.forEach((currentComponentId, index) => {
-        const location = table.componentLocations[currentComponentId];
-        if (location?.type === "InZone") {
-          table.componentLocations[currentComponentId] = {
-            ...location,
-            position: index,
-          };
-        }
-      });
-    }
+    ids.splice(ids.indexOf(componentId), 1);
     delete table.componentLocations[componentId];
     return;
   }
@@ -269,9 +208,10 @@ export function moveComponentToSpaceInPlace<
   componentId: ComponentId,
   boardId: BoardId,
   spaceId: SpaceId,
+  definitions: ZoneDefinitions,
 ): void {
   const position = getComponentsOnSpace(table, boardId, spaceId).length;
-  removeComponentFromCurrentLocation(table, componentId);
+  removeComponentFromCurrentLocation(table, componentId, definitions);
   table.componentLocations[componentId] = {
     type: "OnSpace",
     boardId,
@@ -290,10 +230,11 @@ export function moveComponentToContainerInPlace<
   componentId: ComponentId,
   boardId: BoardId,
   containerId: ContainerId,
+  definitions: ZoneDefinitions,
 ): void {
   assertCardAllowedInContainer(table, boardId, containerId, componentId);
   const position = getComponentsInContainer(table, boardId, containerId).length;
-  removeComponentFromCurrentLocation(table, componentId);
+  removeComponentFromCurrentLocation(table, componentId, definitions);
   table.componentLocations[componentId] = {
     type: "InContainer",
     boardId,
@@ -305,8 +246,8 @@ export function moveComponentToContainerInPlace<
 export function moveComponentToDetachedInPlace<
   Table extends RuntimeTableRecord,
   ComponentId extends ComponentIdOfTable<Table>,
->(table: Table, componentId: ComponentId): void {
-  removeComponentFromCurrentLocation(table, componentId);
+>(table: Table, componentId: ComponentId, definitions: ZoneDefinitions): void {
+  removeComponentFromCurrentLocation(table, componentId, definitions);
   table.componentLocations[componentId] = { type: "Detached" };
 }
 
@@ -320,10 +261,11 @@ export function moveComponentToEdgeInPlace<
   componentId: ComponentId,
   boardId: BoardId,
   edgeId: EdgeId,
+  definitions: ZoneDefinitions,
 ): void {
   getEdge(table, boardId, edgeId);
   const position = getComponentsOnEdge(table, boardId, edgeId).length;
-  removeComponentFromCurrentLocation(table, componentId);
+  removeComponentFromCurrentLocation(table, componentId, definitions);
   table.componentLocations[componentId] = {
     type: "OnEdge",
     boardId,
@@ -342,10 +284,11 @@ export function moveComponentToVertexInPlace<
   componentId: ComponentId,
   boardId: BoardId,
   vertexId: VertexId,
+  definitions: ZoneDefinitions,
 ): void {
   getVertex(table, boardId, vertexId);
   const position = getComponentsOnVertex(table, boardId, vertexId).length;
-  removeComponentFromCurrentLocation(table, componentId);
+  removeComponentFromCurrentLocation(table, componentId, definitions);
   table.componentLocations[componentId] = {
     type: "OnVertex",
     boardId,

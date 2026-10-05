@@ -13,6 +13,8 @@ import hexComplete from "../../examples/reference-games/hex-network-trading/test
 import depot from "../../examples/reference-games/hex-network-trading/test/scenarios/depot-trades.scenario";
 import trade from "../../examples/reference-games/hex-network-trading/test/scenarios/bilateral-trade.scenario";
 import { GameProvider, useDropArea, useGame } from "../typecheck/game";
+import { DrawPile } from "../items/draw-pile";
+import { hostHandGame } from "./host-hand-game";
 import { Hand } from "../items/hand";
 import { Card, CardBack } from "../items/card";
 import { BoardTargets } from "../items/board-targets";
@@ -80,13 +82,24 @@ function ScenarioModel({
       {dropZones.map((interaction) => (
         <DropZone key={interaction} interaction={interaction} />
       ))}
+      {model.me && model.interactions.find("play.draw") && (
+        <DrawPile
+          zoneId="deck"
+          hostId="table"
+          destinationZoneId="hand"
+          destinationHostId={model.me.id}
+          interaction="play.draw"
+          label="Deck"
+        />
+      )}
       {model.zones
         .getAll()
         .filter((zone) => !zone.getIsEmpty())
         .map((zone) => (
           <Hand
-            key={zone.id}
+            key={JSON.stringify([zone.id, zone.hostId])}
             zoneId={zone.id}
+            hostId={zone.hostId}
             renderCard={(card, state) =>
               card.hidden ? <CardBack /> : <Card state={state}>{card.id}</Card>
             }
@@ -103,6 +116,7 @@ function ScenarioModel({
   );
 }
 const fixtures = {
+  hostHands: () => localSource(hostHandGame, { players: 2, seed: 1 }),
   cardDrop: () => localSource(cardDropGame, { players: 2, seed: 1 }),
   genericBoards: () => localSource(genericBoardGame, { players: 2, seed: 1 }),
   playerBoards: () => localSource(playerBoardGame, { players: 2, seed: 1 }),
@@ -212,6 +226,7 @@ const meta = { title: "Actual scenarios", component: Scenario } satisfies Meta<
 >;
 export default meta;
 type Story = StoryObj<typeof meta>;
+export const HostHands: Story = { args: { kind: "hostHands" } };
 export const HeartsPassing: Story = { args: { kind: "hearts" } };
 export const HexBanditsCheckpoint: Story = { args: { kind: "hex" } };
 

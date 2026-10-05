@@ -95,7 +95,10 @@ export const SeatFrameSchema = z
       })
       .strict(),
     availableInteractions: z.array(InteractionDescriptorSchema),
-    zones: z.record(z.string(), ZoneHandlesSnapshotSchema),
+    zones: z.record(
+      z.string(),
+      z.record(z.string(), ZoneHandlesSnapshotSchema),
+    ),
   })
   .strict();
 

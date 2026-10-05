@@ -1,22 +1,27 @@
-import type { RuntimeTableRecord } from "../../model";
+import type { RuntimeTableRecord, ZoneDefinitions } from "../../model";
 import type { RuntimeJson } from "../../../shared/runtime-json";
-import { getAllSharedZoneCards, getPlayerZoneCards } from "../../table";
+import { getZoneComponents } from "../../table/zone-queries";
 import type { InteractionDescriptorShape } from "./interaction-types";
 
-export type SeatZone = readonly [zoneId: string, cardIds: readonly string[]];
+export type SeatZone = readonly [
+  zoneId: string,
+  hostId: string,
+  cardIds: readonly string[],
+];
 
 /**
  * The cards a seat cannot see: every card in a hidden zone and each face-down
  * card not shown to it. The seat knows each one by its position,
- * `hidden:<zone>:<index>`, so neither a face-down card nor a hidden deck's
+ * an opaque reference to its zone, host and position, so neither a face-down card nor a hidden deck's
  * order reveals which card it is. Card ids are otherwise the table's own.
  */
 export type CardConcealment = {
-  /** Every zone the seat's frame lists: its own player zones and all shared zones. */
+  /** The seat's own player zones, public player zones, and all shared zones. */
   zones: readonly SeatZone[];
   /** The id the seat knows a card by. */
   seatCardId(cardId: string): string;
   isHidden(cardId: string): boolean;
+  canTarget(cardId: string): boolean;
   /**
    * The card a submitted id names, or `null` when it is the table id of a
    * card hidden from the seat.
@@ -27,40 +32,60 @@ export type CardConcealment = {
 export function concealCards(
   table: RuntimeTableRecord,
   playerId: string,
-  playerZoneIds: readonly string[],
+  definitions: ZoneDefinitions,
 ): CardConcealment {
-  const zones = [
-    ...playerZoneIds.map((zoneId): SeatZone => [
-      zoneId,
-      getPlayerZoneCards(table, playerId, zoneId),
-    ]),
-    ...Object.entries(getAllSharedZoneCards(table)),
-  ];
+  const zones: SeatZone[] = [];
   const seatIds = new Map<string, string>();
   const tableIds = new Map<string, string>();
-  for (const [zoneId, cardIds] of zones) {
-    const hiddenZone =
-      (table.zones.visibility[zoneId] ?? table.handVisibility[zoneId]) ===
-      "hidden";
-    cardIds.forEach((cardId, index) => {
-      const visibility = table.visibility[cardId];
-      if (
-        !hiddenZone &&
-        (!visibility ||
-          visibility.faceUp ||
-          visibility.visibleTo?.includes(playerId))
-      )
-        return;
-      const seatId = `hidden:${zoneId}:${index}`;
-      seatIds.set(cardId, seatId);
-      tableIds.set(seatId, cardId);
-    });
+  const denied = new Set<string>();
+  for (const [zoneId, definition] of Object.entries(
+    definitions.zoneDefinitions,
+  )) {
+    const hosts = definition.scope === "shared" ? ["table"] : table.playerOrder;
+    for (const hostId of hosts) {
+      const accessible =
+        definition.scope === "shared" ||
+        hostId === playerId ||
+        definition.visibility === "public";
+      const cardIds = getZoneComponents(table, definitions, {
+        zoneId,
+        hostId,
+      }).filter((id) => Object.hasOwn(table.cards, id));
+      if (accessible) zones.push([zoneId, hostId, cardIds]);
+      const hiddenZone =
+        definition.visibility === "hidden" ||
+        (definition.visibility === "ownerOnly" && hostId !== playerId);
+      cardIds.forEach((cardId, index) => {
+        if (!accessible) denied.add(cardId);
+        const visibility = table.visibility[cardId];
+        if (
+          accessible &&
+          !hiddenZone &&
+          (!visibility ||
+            visibility.faceUp ||
+            visibility.visibleTo?.includes(playerId))
+        )
+          return;
+        const seatId = `hidden:${JSON.stringify([zoneId, hostId, index])}`;
+        if (Object.hasOwn(table.cards, seatId))
+          throw new Error(
+            "Card id conflicts with the reserved concealed-id namespace.",
+          );
+        seatIds.set(cardId, seatId);
+        if (accessible) tableIds.set(seatId, cardId);
+      });
+    }
   }
   return {
     zones,
     seatCardId: (cardId) => seatIds.get(cardId) ?? cardId,
     isHidden: (cardId) => seatIds.has(cardId),
-    tableCardId: (id) => tableIds.get(id) ?? (seatIds.has(id) ? null : id),
+    canTarget: (cardId) => !denied.has(cardId),
+    tableCardId: (id) =>
+      tableIds.get(id) ??
+      (seatIds.has(id) || denied.has(id) || id.startsWith("hidden:")
+        ? null
+        : id),
   };
 }
 
@@ -85,34 +110,40 @@ export function concealDescriptor(
   cardKeys: ReadonlySet<string>,
   concealment: CardConcealment,
 ): InteractionDescriptorShape {
+  const denied = (value: unknown): boolean =>
+    typeof value === "string"
+      ? !concealment.canTarget(value)
+      : Array.isArray(value) && value.some(denied);
   const conceal = (value: unknown) => mapCards(value, concealment.seatCardId);
   return {
     ...descriptor,
-    inputs: descriptor.inputs.map((input) =>
-      input.domain.type === "cardTarget"
-        ? {
-            ...input,
-            domain: {
-              ...input.domain,
-              eligibleTargets: input.domain.eligibleTargets.map(
-                concealment.seatCardId,
-              ),
-            },
-            ...(input.defaultValue === undefined
-              ? {}
-              : { defaultValue: conceal(input.defaultValue) }),
-          }
-        : input,
-    ),
+    inputs: descriptor.inputs.map((input) => {
+      if (input.domain.type !== "cardTarget") return input;
+      const { defaultValue, ...rest } = input;
+      return {
+        ...rest,
+        domain: {
+          ...input.domain,
+          eligibleTargets: input.domain.eligibleTargets
+            .filter(concealment.canTarget)
+            .map(concealment.seatCardId),
+        },
+        ...(defaultValue === undefined || denied(defaultValue)
+          ? {}
+          : { defaultValue: conceal(defaultValue) }),
+      };
+    }),
     ...(descriptor.step
       ? {
           step: {
             ...descriptor.step,
             selected: Object.fromEntries(
-              Object.entries(descriptor.step.selected).map(([key, value]) => [
-                key,
-                cardKeys.has(key) ? conceal(value) : value,
-              ]),
+              Object.entries(descriptor.step.selected)
+                .filter(([key, value]) => !cardKeys.has(key) || !denied(value))
+                .map(([key, value]) => [
+                  key,
+                  cardKeys.has(key) ? conceal(value) : value,
+                ]),
             ),
           },
         }

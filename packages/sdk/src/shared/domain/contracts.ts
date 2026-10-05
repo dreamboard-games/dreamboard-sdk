@@ -486,7 +486,7 @@ export type HostGameplaySeatView = {
    * Zone handles for this player, keyed by zone id.
    */
   zones: {
-    [key: string]: ZoneHandles;
+    [key: string]: Record<string, ZoneHandles>;
   };
 };
 

@@ -75,7 +75,7 @@ export function validateCardPlay(options: {
     };
   }
 
-  const hand = q.zone.playerCards(playerId, "hand") as readonly CardId[];
+  const hand = q.zone("hand", playerId);
   const card = cardProperties(q, cardId);
   const isLead = phase.plays.length === 0;
   const isFirstTrick = state.publicState.tricksCompleted === 0;
@@ -140,9 +140,9 @@ export function legalCardIds(options: {
   readonly playerId: PlayerId;
   readonly q: Q;
 }): readonly CardId[] {
-  return (
-    options.q.zone.playerCards(options.playerId, "hand") as readonly CardId[]
-  ).filter((cardId) => validateCardPlay({ ...options, cardId }) === null);
+  return options.q
+    .zone("hand", options.playerId)
+    .filter((cardId) => validateCardPlay({ ...options, cardId }) === null);
 }
 
 export function trickWinner(options: {

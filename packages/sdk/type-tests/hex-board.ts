@@ -22,7 +22,7 @@ const manifest = compileManifest({
     },
   ],
 } as const);
-const q = createTableQueries(manifest.createInitialTable());
+const q = createTableQueries(manifest.createInitialTable(), manifest);
 q.board("island").neighbors("home");
 q.board("island").neighbors("1,0");
 // @ts-expect-error Explicit coordinates exclude absent axial spaces.
@@ -68,7 +68,7 @@ const pair = compileManifest({
     },
   ],
 } as const);
-const publicQueries = createTableQueries(pair.createInitialTable());
+const publicQueries = createTableQueries(pair.createInitialTable(), pair);
 const first = publicQueries.board("first");
 const second = publicQueries.board("second");
 first.verticesOf(first.edgeAt("0,0", 0));
@@ -99,7 +99,9 @@ const links = compileManifest({
     },
   ],
 } as const);
-const track = createTableQueries(links.createInitialTable()).board("track");
+const track = createTableQueries(links.createInitialTable(), links).board(
+  "track",
+);
 track.relatedSpaces("start", "route");
 // @ts-expect-error Bound relation kinds stay manifest scoped.
 track.relatedSpaces("start", "unknown");

@@ -62,7 +62,10 @@ const tuple = boardTarget
   .build();
 // @ts-expect-error Scalar space collectors cannot consume player-space tuples.
 boardInput.space({ target: tuple });
-const q = createTableQueries(game.contract.manifest.createInitialTable());
+const q = createTableQueries(
+  game.contract.manifest.createInitialTable(),
+  game.contract.manifest,
+);
 q.slot.occupants({ kind: "piece", id: "pawn" }, "pocket");
 q.slot.dieOccupants("battle", "face");
 // @ts-expect-error Die IDs cannot be passed as piece hosts.

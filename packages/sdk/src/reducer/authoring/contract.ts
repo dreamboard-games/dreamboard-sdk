@@ -40,7 +40,6 @@ export type ReducerGameContractInput<
     string,
     string,
     string,
-    string,
     string
   >,
   PublicSchema extends SchemaLike<object>,
@@ -63,7 +62,6 @@ export type DefinedGameContract<
   Table extends RuntimeTableRecord,
   Manifest extends ReducerManifestContract<
     Table,
-    string,
     string,
     string,
     string,
@@ -137,7 +135,6 @@ export function defineGameContract<
   Table extends RuntimeTableRecord,
   const Manifest extends ReducerManifestContract<
     Table,
-    string,
     string,
     string,
     string,

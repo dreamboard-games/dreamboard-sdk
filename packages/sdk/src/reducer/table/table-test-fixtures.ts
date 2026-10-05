@@ -5,29 +5,11 @@ export function createSpatialTable() {
   const table = {
     playerOrder: ["player-1", "player-2"],
     zones: {
-      shared: {
-        "draw-deck": ["card-1"],
-        "special-deck": [],
-        supply: ["piece-1", "die-1"],
-      },
-      perPlayer: {},
-      visibility: {
-        "draw-deck": "public",
-        "special-deck": "public",
-        supply: "public",
-      },
-      cardSetIdsByZoneId: {
-        "draw-deck": ["main"],
-        "special-deck": ["special"],
-      },
+      "draw-deck": { table: ["card-1"] },
+      "special-deck": { table: [] },
+      supply: { table: ["piece-1", "die-1"] },
     },
-    decks: {
-      "draw-deck": ["card-1"],
-      "special-deck": [],
-      supply: ["piece-1", "die-1"],
-    },
-    hands: {},
-    handVisibility: {},
+
     cards: {
       "card-1": {
         id: "card-1",
@@ -45,22 +27,22 @@ export function createSpatialTable() {
     },
     componentLocations: {
       "card-1": {
-        type: "InDeck",
-        deckId: "draw-deck",
+        type: "InZone",
+        zoneId: "draw-deck",
+        hostId: "table",
         playedBy: null,
-        position: 0,
       },
       "piece-1": {
         type: "InZone",
         zoneId: "supply",
+        hostId: "table",
         playedBy: null,
-        position: 0,
       },
       "die-1": {
         type: "InZone",
         zoneId: "supply",
+        hostId: "table",
         playedBy: null,
-        position: 1,
       },
     },
     ownerOfCard: {
@@ -310,3 +292,19 @@ export function createSpatialTable() {
   const runtimeTable: RuntimeTableRecord = table;
   return { ...runtimeTable, boards: table.boards };
 }
+
+export const spatialDefinitions = {
+  zoneDefinitions: {
+    "draw-deck": {
+      scope: "shared",
+      visibility: "public",
+      allowedCardSetIds: ["main"],
+    },
+    "special-deck": {
+      scope: "shared",
+      visibility: "public",
+      allowedCardSetIds: ["special"],
+    },
+    supply: { scope: "shared", visibility: "public", allowedCardSetIds: [] },
+  },
+} as const;

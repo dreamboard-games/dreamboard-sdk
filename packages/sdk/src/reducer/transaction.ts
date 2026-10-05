@@ -12,14 +12,9 @@ import {
   transactionMutations,
   type TransactionMutations,
 } from "./transaction-mutations";
-import type {
-  DeckIdOfState,
-  PlayerZoneIdOfState,
-  PlayerIdOfTable,
-  TableOfState,
-  StringKeyOf,
-} from "./model";
-import { shufflePlayerZoneCards } from "./table";
+import type { TableOfState, StringKeyOf } from "./model";
+import { resolveZone, type ZoneInput } from "./table/zones";
+import type { ZoneDefinitions, ZoneArg } from "./model";
 
 export type TransactionRandom = {
   roll(sides: number): number;
@@ -37,7 +32,7 @@ type TransitionTarget<State> =
   IsAny<State> extends true ? string : PhaseNameOfState<State>;
 import { cloneRuntimeTable } from "./table/clone";
 
-export type { RotatePlayerZoneArgs } from "./transaction-mutations";
+export type { RotateZoneArgs } from "./transaction-mutations";
 
 /**
  * Result builders on the transaction. A mutation callback ends with one of
@@ -73,14 +68,7 @@ export type ReducerTransaction<
     readonly state: State;
     readonly q: TableQueriesOfState<State>;
     roll(dieId: StringKeyOf<TableOfState<State>["dice"]>): number;
-    shuffle(
-      args:
-        | { zoneId: DeckIdOfState<State> }
-        | {
-            zoneId: PlayerZoneIdOfState<State>;
-            playerId: PlayerIdOfTable<TableOfState<State>>;
-          },
-    ): void;
+    shuffle(args: { zone: ZoneArg<TableOfState<State>> }): void;
   };
 
 export type ReducerEdit<State extends { table: RuntimeTableRecord }> = <
@@ -98,8 +86,9 @@ type TransactionContext<State extends { table: RuntimeTableRecord }> = {
   methodCache: Record<string, (...args: readonly unknown[]) => State>;
   events: GameEvent[];
   random: TransactionRandom;
+  definitions: ZoneDefinitions;
   rollMethod?: (dieId: string) => number;
-  shuffleMethod?: (args: { zoneId: string; playerId?: string }) => void;
+  shuffleMethod?: (args: { zone: ZoneInput }) => void;
   outcome?: ReducerTransactionOutcome<State>;
 };
 
@@ -159,12 +148,12 @@ function runInternal<State extends { table: RuntimeTableRecord }>(
   key: keyof TransactionMutations<State>,
   args: readonly unknown[],
 ): State {
-  // eslint-disable-next-line no-restricted-syntax -- The transaction surface forwards each typed method to the identically keyed mutation with the same State and arguments.
+  // eslint-disable-next-line no-restricted-syntax -- The transaction surface forwards each typed method to the identically keyed mutation with the same State and arguments, followed by the explicit compiled definition context.
   const mutate = transactionMutations[key] as unknown as (
     state: State,
     ...args: readonly unknown[]
   ) => State;
-  mutate(context.currentState, ...args);
+  mutate(context.currentState, ...args, context.definitions);
   invalidate(context);
   return context.currentState;
 }
@@ -184,7 +173,10 @@ function createReducerTransactionSurface<
       enumerable: true,
       get(this: unknown) {
         const context = getTransactionContext<State>(this);
-        context.currentQueries ??= createStateQueries(context.currentState);
+        context.currentQueries ??= createStateQueries(
+          context.currentState,
+          context.definitions,
+        );
         return context.currentQueries;
       },
     },
@@ -240,52 +232,26 @@ function createReducerTransactionSurface<
     enumerable: true,
     get(this: unknown) {
       const context = getTransactionContext<State>(this);
-      return (context.shuffleMethod ??= (args: {
-        zoneId: string;
-        playerId?: string;
-      }) => {
+      return (context.shuffleMethod ??= (args: { zone: ZoneInput }) => {
         const table = context.currentState.table;
-        if (args.playerId !== undefined) {
-          const cards = shufflePlayerZoneCards(
-            table,
-            args.zoneId,
-            args.playerId,
-          );
-          const shuffled = context.random.shuffle(cards, "shufflePlayerZone");
-          shufflePlayerZoneCards(table, args.zoneId, args.playerId, shuffled);
-          for (const [position, cardId] of shuffled.entries()) {
-            const location = table.componentLocations[cardId];
-            table.componentLocations[cardId] = {
-              ...location,
-              type: "InHand",
-              handId: args.zoneId,
-              playerId: args.playerId,
-              position,
-            };
-          }
-        } else {
-          const cards = table.decks[args.zoneId];
-          if (!cards)
-            throw new Error(
-              `Cannot shuffle unknown shared zone '${args.zoneId}'.`,
-            );
-          const shuffled = context.random.shuffle(cards, "shuffleSharedZone");
-          table.decks[args.zoneId] = shuffled;
-          table.zones.shared[args.zoneId] = [...shuffled];
-          for (const [position, cardId] of shuffled.entries()) {
-            const location = table.componentLocations[cardId];
-            table.componentLocations[cardId] = {
-              ...location,
-              type: "InDeck",
-              deckId: args.zoneId,
-              position,
-              playedBy:
-                location?.type === "InDeck" || location?.type === "InZone"
-                  ? (location.playedBy ?? null)
-                  : null,
-            };
-          }
-        }
+        const { ids, definition } = resolveZone(
+          table,
+          context.definitions,
+          args.zone,
+        );
+        const shuffled = context.random.shuffle(
+          [...ids],
+          definition.scope === "shared"
+            ? "shuffleSharedZone"
+            : "shufflePlayerZone",
+        );
+        if (
+          shuffled.length !== ids.length ||
+          new Set(shuffled).size !== ids.length ||
+          shuffled.some((id) => !ids.includes(id))
+        )
+          throw new Error("Shuffle must preserve zone membership.");
+        ids.splice(0, ids.length, ...shuffled);
         invalidate(context);
       });
     },
@@ -300,6 +266,7 @@ function createReducerTransactionFromSurface<
   initialState: State,
   surface: object,
   random: TransactionRandom,
+  definitions: ZoneDefinitions,
 ): ReducerTransaction<State> {
   const transaction = Object.create(surface) as ReducerTransaction<State> &
     TransactionHost<State>;
@@ -313,6 +280,7 @@ function createReducerTransactionFromSurface<
       methodCache: {},
       events: [],
       random,
+      definitions,
     } satisfies TransactionContext<State>,
   });
   return transaction;
@@ -320,20 +288,25 @@ function createReducerTransactionFromSurface<
 
 export function createReducerTransaction<
   State extends { table: RuntimeTableRecord },
->(initialState: State, random: TransactionRandom): ReducerTransaction<State> {
+>(
+  initialState: State,
+  random: TransactionRandom,
+  definitions: ZoneDefinitions,
+): ReducerTransaction<State> {
   return createReducerTransactionFromSurface(
     initialState,
     createReducerTransactionSurface<State>(),
     random,
+    definitions,
   );
 }
 
-export function createReducerEdit<
-  State extends { table: RuntimeTableRecord },
->(): ReducerEdit<State> {
+export function createReducerEdit<State extends { table: RuntimeTableRecord }>(
+  definitions: ZoneDefinitions,
+): ReducerEdit<State> {
   const surface = createReducerTransactionSurface<State>();
   return <DraftState extends State>(
     state: DraftState,
     random: TransactionRandom,
-  ) => createReducerTransactionFromSurface(state, surface, random);
+  ) => createReducerTransactionFromSurface(state, surface, random, definitions);
 }

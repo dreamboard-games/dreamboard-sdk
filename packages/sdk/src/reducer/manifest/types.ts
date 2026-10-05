@@ -19,6 +19,7 @@ import type {
   RuntimeGenericBoardState,
   RuntimeHexBoardState,
   RuntimeSquareBoardState,
+  ZoneDefinition,
 } from "../model";
 import type { PlayerId } from "../per-player";
 import type { RuntimeIdsFromCount } from "./identity-types.js";
@@ -81,7 +82,7 @@ type Cards<M> =
       ? Entry<C>
       : never
     : never;
-type Zone<M, Scope> = Id<Extract<Entries<M, "zones">, { scope: Scope }>>;
+export type Zone<M, Scope> = Id<Extract<Entries<M, "zones">, { scope: Scope }>>;
 type Boards<M> = Entries<M, "boards">;
 type RuntimeBoardId<B> = B extends { id: infer I extends string }
   ? B extends { scope: "perPlayer" }
@@ -96,10 +97,6 @@ export type ManifestIdsOf<M> = {
   cardSetId: Id<Entries<M, "cardSets">>;
   cardType: CardTypeOf<Cards<M>>;
   cardId: CardIds<Cards<M>>;
-  deckId: Zone<M, "shared">;
-  handId: Zone<M, "perPlayer">;
-  sharedZoneId: Zone<M, "shared">;
-  playerZoneId: Zone<M, "perPlayer">;
   zoneId: Id<Entries<M, "zones">>;
   resourceId: Id<Entries<M, "resources">>;
   pieceTypeId: Id<Entries<M, "pieceTypes">>;
@@ -321,6 +318,21 @@ type SeedSlotLocation<
         }
     : never
   : never;
+type AllowedCardSets<M, Z> = Z extends {
+  allowedCardSetIds: readonly (infer S)[];
+}
+  ? [S] extends [never]
+    ? Id<CardSets<M>>
+    : S
+  : Id<CardSets<M>>;
+type ZoneCardIds<M, Z> =
+  CardSets<M> extends infer Set
+    ? Set extends { id: infer SetId; cards: infer Cards }
+      ? SetId extends AllowedCardSets<M, Z>
+        ? CardIds<Entry<Cards>>
+        : never
+      : never
+    : never;
 type ManifestComponentLocation<M> =
   | Exclude<RuntimeComponentLocation, { type: "InSlot" }>
   | SeedSlotLocation<
@@ -335,8 +347,7 @@ export type ManifestTable<M> = AuthoredManifest extends M
   : Omit<
       RuntimeTableRecord,
       | "playerOrder"
-      | "decks"
-      | "hands"
+      | "zones"
       | "cards"
       | "pieces"
       | "dice"
@@ -346,11 +357,12 @@ export type ManifestTable<M> = AuthoredManifest extends M
     > & {
       boards: InferredBoards<M>;
       playerOrder: PlayerId[];
-      decks: Record<ManifestIdsOf<M>["deckId"], ManifestIdsOf<M>["cardId"][]>;
-      hands: Record<
-        ManifestIdsOf<M>["handId"],
-        Record<PlayerId, ManifestIdsOf<M>["cardId"][]>
-      >;
+      zones: {
+        [Z in Entries<M, "zones"> as Id<Z>]: Record<
+          Z extends { scope: "shared" } ? "table" : PlayerId,
+          (ZoneCardIds<M, Z> | ManifestIdsOf<M>["pieceId" | "dieId"])[]
+        >;
+      };
       cards: InferredCards<M>;
       pieces: InferredPieces<M>;
       dice: InferredDice<M>;
@@ -368,18 +380,22 @@ export type CompiledManifest<M> = Omit<
     ManifestTable<M>,
     string,
     PlayerId,
-    ManifestIdsOf<M>["deckId"],
-    ManifestIdsOf<M>["handId"],
+    ManifestIdsOf<M>["zoneId"],
     ManifestIdsOf<M>["cardId"]
   >,
-  "ids" | "literals" | "records" | "staticBoards"
+  "ids" | "literals" | "records" | "staticBoards" | "zoneDefinitions"
 > & {
   readonly [compiledManifest]: true;
+  readonly zoneDefinitions: {
+    readonly [Z in Entries<M, "zones"> as Id<Z>]: Omit<
+      ZoneDefinition,
+      "scope"
+    > & { readonly scope: Get<Z, "scope"> };
+  };
   staticBoards: Pick<InferredBoards<M>, "byId" | "hex" | "square">;
   literals: Omit<
     ReducerManifestContract<
       RuntimeTableRecord,
-      string,
       string,
       string,
       string,

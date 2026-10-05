@@ -21,10 +21,6 @@ function buildMinimalManifest() {
       phaseNames: ["phase-1"] as const,
       cardSetIds: [] as const,
       cardTypes: [] as const,
-      deckIds: [] as const,
-      handIds: [] as const,
-      sharedZoneIds: [] as const,
-      playerZoneIds: [] as const,
       zoneIds: [] as const,
       cardIds: [] as const,
       resourceIds,
@@ -41,12 +37,8 @@ function buildMinimalManifest() {
       vertexTypeIds: [] as const,
       spaceIds: [] as const,
       spaceTypeIds: [] as const,
-      handVisibilityById: {} as const,
-      zoneVisibilityById: {} as const,
       cardSetIdByCardId: {} as const,
       cardTypeByCardId: {} as const,
-      cardSetIdsBySharedZoneId: {} as const,
-      cardSetIdsByPlayerZoneId: {} as const,
     },
     ids: {
       boardLayout: z.enum(["hex", "square", "network", "track"]),
@@ -55,10 +47,6 @@ function buildMinimalManifest() {
       cardSetId: createManifestStringLiteralSchema([] as const),
       cardType: createManifestStringLiteralSchema([] as const),
       cardId: createManifestStringLiteralSchema([] as const),
-      deckId: createManifestStringLiteralSchema([] as const),
-      handId: createManifestStringLiteralSchema([] as const),
-      sharedZoneId: createManifestStringLiteralSchema([] as const),
-      playerZoneId: createManifestStringLiteralSchema([] as const),
       zoneId: createManifestStringLiteralSchema([] as const),
       resourceId: createManifestStringLiteralSchema(resourceIds),
       pieceTypeId: createManifestStringLiteralSchema([] as const),
@@ -77,11 +65,9 @@ function buildMinimalManifest() {
       spaceId: createManifestStringLiteralSchema([] as const),
       spaceTypeId: createManifestStringLiteralSchema([] as const),
     },
+    zoneDefinitions: {},
     defaults: {
-      zones: () => ({ shared: {}, perPlayer: {}, visibility: {} }),
-      decks: () => ({}),
-      hands: () => ({}),
-      handVisibility: () => ({}),
+      zones: () => ({}),
       ownerOfCard: () => ({}),
       visibility: () => ({}),
       resources: () => Object.fromEntries([].map((id) => [id, {}])),
@@ -95,11 +81,9 @@ function buildMinimalManifest() {
 describe("sparse map helpers", () => {
   test("sparseCounts accepts sparse enum-keyed payloads and rejects unknown keys", () => {
     const schema = sparseCounts(z.enum(["brick", "grain", "lumber"] as const));
-
     expect(schema.parse({ lumber: 1 })).toEqual({ lumber: 1 });
     expect(schema.safeParse({ stone: 2 }).success).toBe(false);
   });
-
   test("normalizeCommandParams filters stray sparse-map keys before parsing", () => {
     const schema = z.object({
       give: sparseCounts(z.enum(["brick", "grain", "lumber"] as const)),
@@ -109,20 +93,17 @@ describe("sparse map helpers", () => {
       ),
       targetPlayerIds: z.array(z.string()),
     });
-
     const normalized = normalizeCommandParams(schema, {
       give: { lumber: 1, stone: 2 },
       want: { brick: 1, coal: 3 },
       targetPlayerIds: ["player-2"],
     });
-
     expect(normalized).toEqual({
       give: { lumber: 1 },
       want: { brick: 1 },
       targetPlayerIds: ["player-2"],
     });
   });
-
   test("defineInteraction rejects raw enum-keyed z.record params and accepts sparse helpers", () => {
     const manifest = buildMinimalManifest();
     const contract = defineGameContract({
@@ -134,7 +115,6 @@ describe("sparse map helpers", () => {
         hidden: z.object({}),
       },
     });
-
     expect(contract.phaseNames).toEqual(["phase-1"]);
     expect(() =>
       defineInteraction<typeof contract>()({
@@ -152,7 +132,6 @@ describe("sparse map helpers", () => {
         },
       }),
     ).toThrow(/enum-keyed z\.record/);
-
     expect(() =>
       defineInteraction<typeof contract>()({
         inputs: {

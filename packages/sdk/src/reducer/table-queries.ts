@@ -1,20 +1,21 @@
+import {
+  getZoneComponents,
+  getZoneCardCollection,
+  getZones,
+} from "./table/zone-queries";
 import { requireLookup } from "../shared/lookup.js";
 import { bindBoardQueries } from "./table/board-queries";
 import type {
+  ZoneDefinitions,
   BoardIdOfTable,
   CardIdOfTable,
   ComponentDataOfTable,
   ComponentIdOfTable,
-  DeckIdOfTable,
-  HandIdOfTable,
-  PlayerIdOfTable,
   RuntimeTableRecord,
   TableQueries,
   TableQueriesOfState,
 } from "./model";
 import {
-  getAllPlayerZoneCards,
-  getAllSharedZoneCards,
   getCard,
   getCardsById,
   getCardOwner,
@@ -22,9 +23,7 @@ import {
   getSlotOccupants,
   getSlotOccupantsByHost,
   getComponentContainerLocation,
-  getComponentDeckLocation,
   getComponentEdgeLocation,
-  getComponentHandLocation,
   getComponentLocation,
   getComponentSlotLocation,
   getComponentSpaceLocation,
@@ -37,42 +36,28 @@ import {
   getPlayerResourceAmount,
   getPlayerResourceTotal,
   getPlayerResources,
-  getPlayerZoneCardCollection,
-  getPlayerZoneCards,
-  getSharedZoneCardCollection,
-  getSharedZoneCards,
 } from "./table";
 
 export function createTableQueries<Table extends RuntimeTableRecord>(
   table: Table,
+  definitions: ZoneDefinitions,
 ): TableQueries<Table> {
   return {
     board: <BoardId extends BoardIdOfTable<Table>>(boardId: BoardId) =>
       bindBoardQueries(table, boardId),
-    zone: {
-      sharedCards: <ZoneId extends DeckIdOfTable<Table>>(zoneId: ZoneId) =>
-        getSharedZoneCards(table, zoneId),
-      sharedCardCollection: <ZoneId extends DeckIdOfTable<Table>>(
-        zoneId: ZoneId,
-      ) => getSharedZoneCardCollection(table, zoneId),
-      allSharedCards: () => getAllSharedZoneCards(table),
-      playerCards: <
-        PlayerId extends PlayerIdOfTable<Table>,
-        ZoneId extends HandIdOfTable<Table>,
-      >(
-        playerId: PlayerId,
-        zoneId: ZoneId,
-      ) => getPlayerZoneCards(table, playerId, zoneId),
-      playerCardCollection: <
-        PlayerId extends PlayerIdOfTable<Table>,
-        ZoneId extends HandIdOfTable<Table>,
-      >(
-        playerId: PlayerId,
-        zoneId: ZoneId,
-      ) => getPlayerZoneCardCollection(table, playerId, zoneId),
-      allPlayerCards: <ZoneId extends HandIdOfTable<Table>>(zoneId: ZoneId) =>
-        getAllPlayerZoneCards(table, zoneId),
-    },
+    // Query construction boundary: compiled definitions admit hosts and canonical
+    // memberships supply component IDs; the card path filters own card entries.
+    // eslint-disable-next-line no-restricted-syntax -- Construction boundary binding admitted runtime memberships to exact table IDs.
+    zone: Object.assign(
+      (zoneId: string, hostId?: string) =>
+        getZoneComponents(table, definitions, { zoneId, hostId }),
+      {
+        cards: (zoneId: string, hostId?: string) =>
+          getZoneCardCollection(table, definitions, { zoneId, hostId }),
+      },
+    ) as unknown as TableQueries<Table>["zone"],
+    zones: ((zoneId: string) =>
+      getZones(table, definitions, zoneId)) as TableQueries<Table>["zones"],
     card: {
       get: <CardId extends CardIdOfTable<Table>>(cardId: CardId) =>
         getCard(table, cardId),
@@ -113,21 +98,19 @@ export function createTableQueries<Table extends RuntimeTableRecord>(
         componentId: ComponentId,
       ) =>
         requireLookup(
-          table.cards[componentId] ??
-            table.pieces[componentId] ??
-            table.dice[componentId],
+          Object.hasOwn(table.cards, componentId)
+            ? table.cards[componentId]
+            : Object.hasOwn(table.pieces, componentId)
+              ? table.pieces[componentId]
+              : Object.hasOwn(table.dice, componentId)
+                ? table.dice[componentId]
+                : undefined,
           "Component",
           componentId,
         ) as ComponentDataOfTable<Table, ComponentId>,
       location: <ComponentId extends ComponentIdOfTable<Table>>(
         componentId: ComponentId,
       ) => getComponentLocation(table, componentId),
-      deck: <ComponentId extends ComponentIdOfTable<Table>>(
-        componentId: ComponentId,
-      ) => getComponentDeckLocation(table, componentId),
-      hand: <ComponentId extends ComponentIdOfTable<Table>>(
-        componentId: ComponentId,
-      ) => getComponentHandLocation(table, componentId),
       zone: <ComponentId extends ComponentIdOfTable<Table>>(
         componentId: ComponentId,
       ) => getComponentZoneLocation(table, componentId),
@@ -152,9 +135,11 @@ export function createTableQueries<Table extends RuntimeTableRecord>(
 
 export function createStateQueries<State extends { table: RuntimeTableRecord }>(
   state: State,
+  definitions: ZoneDefinitions,
 ): TableQueriesOfState<State> {
   // eslint-disable-next-line no-restricted-syntax -- Queries are constructed from this State.table; the conditional TableOfState type denotes that same table.
   return createTableQueries(
     state.table,
+    definitions,
   ) as unknown as TableQueriesOfState<State>;
 }

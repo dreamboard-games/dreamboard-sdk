@@ -1,3 +1,4 @@
+import { asPlayerId } from "../src/reducer/per-player.js";
 import type { z } from "zod";
 import type { definition } from "./authoring-model-types.js";
 import { createGameInstance } from "../src/headless/instance.js";
@@ -51,7 +52,7 @@ const boardId: "island" = board.id;
 board.getLabel();
 board.getLayout({ hexSize: 12, viewport: game.viewport.getTransform() });
 board.game.boards.get("island").getLabel();
-const card = game.zones.get("hand").getCards()[0];
+const card = game.zones.get("hand", asPlayerId("player-1")).getCards()[0];
 game.drag.begin(card.id, { interaction: "playerTurn.pick" });
 card.getBadge();
 const origin = card.getOrigin();
@@ -64,9 +65,9 @@ if (origin && "zone" in origin) {
 // @ts-expect-error Origins name the game's own zones.
 const unknownZone: CardOrigin<Game> = { zone: "nowhere", hidden: false };
 // @ts-expect-error Disabled origin API is absent.
-bare.zones.get("hand").getCards()[0].getOrigin;
+bare.zones.get("hand", asPlayerId("player-1")).getCards()[0].getOrigin;
 const selected: readonly ("card-1" | "card-2" | HiddenCardId)[] = game.zones
-  .get("hand")
+  .get("hand", asPlayerId("player-1"))
   .getSelectedCardIds();
 game.getSnapshot().viewport.getTransform();
 game.getSnapshot().drag.getDropTargets();
@@ -78,7 +79,7 @@ bare.drag;
 game.drag.begin("missing");
 // @ts-expect-error Disabled per-zone APIs are absent.
 // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Disabled per-zone APIs are absent.
-bare.zones.get("hand").getSelectedCardIds();
+bare.zones.get("hand", asPlayerId("player-1")).getSelectedCardIds();
 // @ts-expect-error Board identities remain model-bound.
 game.boards.get("unknown");
 // @ts-expect-error Drag interaction identities remain model-bound.

@@ -21,10 +21,7 @@ function createModel() {
         boardLayouts: emptyIds,
         cardSetIds: ["cards"] as const,
         cardTypes: ["action"] as const,
-        deckIds: emptyIds,
         handIds,
-        sharedZoneIds: emptyIds,
-        playerZoneIds: handIds,
         zoneIds: handIds,
         cardIds,
         resourceIds: emptyIds,
@@ -43,12 +40,8 @@ function createModel() {
         vertexTypeIds: emptyIds,
         spaceIds: emptyIds,
         spaceTypeIds: emptyIds,
-        handVisibilityById: { hand: "ownerOnly" } as const,
-        zoneVisibilityById: { hand: "ownerOnly" } as const,
         cardSetIdByCardId: { "card-1": "cards", "card-2": "cards" },
         cardTypeByCardId: { "card-1": "action", "card-2": "action" },
-        cardSetIdsBySharedZoneId: {},
-        cardSetIdsByPlayerZoneId: { hand: ["cards"] },
       },
       ids: {
         playerId: literalIds(playerIds),
@@ -57,10 +50,6 @@ function createModel() {
         cardSetId: literalIds(["cards"] as const),
         cardType: literalIds(["action"] as const),
         cardId: literalIds(cardIds),
-        deckId: z.never(),
-        handId: literalIds(handIds),
-        sharedZoneId: z.never(),
-        playerZoneId: literalIds(handIds),
         zoneId: literalIds(handIds),
         resourceId: z.never(),
         pieceTypeId: z.never(),
@@ -79,11 +68,15 @@ function createModel() {
         spaceId: z.never(),
         spaceTypeId: z.never(),
       },
+      zoneDefinitions: {
+        hand: {
+          scope: "perPlayer",
+          visibility: "ownerOnly",
+          allowedCardSetIds: ["cards"],
+        },
+      } as const,
       defaults: {
-        zones: () => ({ shared: {}, perPlayer: {}, visibility: {} }),
-        decks: () => ({}),
-        hands: () => ({ hand: Object.fromEntries([].map((id) => [id, []])) }),
-        handVisibility: () => ({}),
+        zones: () => ({}),
         ownerOfCard: () => ({}),
         visibility: () => ({}),
         resources: () => Object.fromEntries([].map((id) => [id, {}])),
@@ -123,7 +116,6 @@ describe("createGame", () => {
         ).State,
     ).toThrow(/compile-time carrier/);
   });
-
   test("fused card input builds a card collector with the declared zones", () => {
     const play = createGame(createModel()).phase("play");
     const fused = play.inputs.card({
@@ -143,7 +135,6 @@ describe("createGame", () => {
     expect(typeof fused.eligibleTargets).toBe("function");
     expect(typeof fused.validateTarget).toBe("function");
   });
-
   test("assemble is the bound assembler", () => {
     const game = createGame(createModel());
     const definition = game.assemble({

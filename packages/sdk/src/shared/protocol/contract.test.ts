@@ -63,17 +63,19 @@ function baseFrame() {
     availableInteractions: [claimDescriptor],
     zones: {
       hand: {
-        cardIds: ["card-1"],
-        cardViewsById: {
-          "card-1": {
-            id: "card-1",
-            cardType: "ranked",
-            properties: { rank: "A" },
+        "player-1": {
+          cardIds: ["card-1"],
+          cardViewsById: {
+            "card-1": {
+              id: "card-1",
+              cardType: "ranked",
+              properties: { rank: "A" },
+            },
           },
-        },
-        cardBacksById: {},
-        playableByCardId: {
-          "card-1": [claimDescriptor],
+          cardBacksById: {},
+          playableByCardId: {
+            "card-1": [claimDescriptor],
+          },
         },
       },
     },
@@ -97,20 +99,22 @@ describe("shared plugin runtime contract", () => {
               "player-1": {
                 zones: {
                   hand: {
-                    cardIds: ["card-1"],
-                    cardViewsById: {
-                      "card-1": {
-                        id: "card-1",
-                        cardType: "ranked",
-                        name: undefined,
-                        properties: {
-                          label: undefined,
-                          nested: { optional: undefined, value: 2 },
+                    "player-1": {
+                      cardIds: ["card-1"],
+                      cardViewsById: {
+                        "card-1": {
+                          id: "card-1",
+                          cardType: "ranked",
+                          name: undefined,
+                          properties: {
+                            label: undefined,
+                            nested: { optional: undefined, value: 2 },
+                          },
                         },
                       },
+                      cardBacksById: {},
+                      playableByCardId: {},
                     },
-                    cardBacksById: {},
-                    playableByCardId: {},
                   },
                 },
               },
@@ -119,13 +123,13 @@ describe("shared plugin runtime contract", () => {
         },
       ]),
     );
-    expect(frame.zones.hand.cardViewsById["card-1"]).toEqual({
+    expect(frame.zones.hand["player-1"].cardViewsById["card-1"]).toEqual({
       id: "card-1",
       cardType: "ranked",
       properties: { nested: { value: 2 } },
     });
   });
-  test("strict frame and protocol schemas accept version 8 gameplay frames", () => {
+  test("strict frame and protocol schemas accept version 9 gameplay frames", () => {
     const frame = PluginGameplayFrameSchema.parse(baseFrame());
     expect(frame.basis.version).toBe(42);
 
@@ -140,12 +144,12 @@ describe("shared plugin runtime contract", () => {
       },
     } satisfies PluginProtocolEnvelope<unknown>);
 
-    expect(envelope.version).toBe(8);
+    expect(envelope.version).toBe(9);
     expect(() =>
       PluginGameplayFrameSchema.parse({ ...baseFrame(), syncId: 9 }),
     ).toThrow();
     expect(() =>
-      HostToPluginEnvelopeSchema.parse({ ...envelope, version: 5 }),
+      HostToPluginEnvelopeSchema.parse({ ...envelope, version: 8 }),
     ).toThrow();
   });
 
@@ -224,17 +228,19 @@ describe("shared plugin runtime contract", () => {
             availableInteractionRefs: ["claim-ref"],
             zones: {
               hand: {
-                cardIds: ["card-1"],
-                cardViewsById: {
-                  "card-1": {
-                    id: "card-1",
-                    cardType: "ranked",
-                    properties: { rank: "A" },
+                "player-1": {
+                  cardIds: ["card-1"],
+                  cardViewsById: {
+                    "card-1": {
+                      id: "card-1",
+                      cardType: "ranked",
+                      properties: { rank: "A" },
+                    },
                   },
-                },
-                cardBacksById: {},
-                playableByCardId: {
-                  "card-1": ["claim-ref"],
+                  cardBacksById: {},
+                  playableByCardId: {
+                    "card-1": ["claim-ref"],
+                  },
                 },
               },
             },
@@ -255,7 +261,7 @@ describe("shared plugin runtime contract", () => {
     });
     expect(frame.availableInteractions).toEqual([claimDescriptor]);
     expect(frame).not.toHaveProperty("guidance");
-    expect(frame.zones.hand?.playableByCardId["card-1"]).toEqual([
+    expect(frame.zones.hand?.["player-1"]?.playableByCardId["card-1"]).toEqual([
       claimDescriptor,
     ]);
     expect(digestPluginGameplayFrame(frame)).toMatch(/^sha256:[a-f0-9]{64}$/);

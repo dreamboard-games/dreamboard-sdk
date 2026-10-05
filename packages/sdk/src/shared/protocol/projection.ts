@@ -88,25 +88,30 @@ function hydrateZones(
   registry: Readonly<Record<string, InteractionDescriptor>>,
   value: NonNullable<ReducerSeatProjectionBundle["seats"][string]["zones"]>,
   path: string,
-): Record<string, ZoneHandlesSnapshot> {
+): Record<string, Record<string, ZoneHandlesSnapshot>> {
   return Object.fromEntries(
-    Object.entries(value).map(([zoneId, zone]) => [
+    Object.entries(value).map(([zoneId, hosts]) => [
       zoneId,
-      {
-        cardIds: zone.cardIds,
-        cardViewsById: zone.cardViewsById,
-        cardBacksById: zone.cardBacksById,
-        playableByCardId: Object.fromEntries(
-          Object.entries(zone.playableByCardId).map(([cardId, refs]) => [
-            cardId,
-            hydrateInteractionRefs(
-              registry,
-              refs,
-              `${path}.${zoneId}.playableByCardId.${cardId}`,
+      Object.fromEntries(
+        Object.entries(hosts).map(([hostId, zone]) => [
+          hostId,
+          {
+            cardIds: zone.cardIds,
+            cardViewsById: zone.cardViewsById,
+            cardBacksById: zone.cardBacksById,
+            playableByCardId: Object.fromEntries(
+              Object.entries(zone.playableByCardId).map(([cardId, refs]) => [
+                cardId,
+                hydrateInteractionRefs(
+                  registry,
+                  refs,
+                  `${path}.${zoneId}.${hostId}.playableByCardId.${cardId}`,
+                ),
+              ]),
             ),
-          ]),
-        ),
-      },
+          },
+        ]),
+      ),
     ]),
   );
 }

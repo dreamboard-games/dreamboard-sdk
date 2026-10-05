@@ -110,9 +110,7 @@ export function createReducerTestingRuntime<
           concealCards(
             combinedState.table,
             playerId,
-            scope.definition.contract.manifest.literals.playerZoneIds.map(
-              String,
-            ),
+            scope.definition.contract.manifest,
           ),
         ),
       },

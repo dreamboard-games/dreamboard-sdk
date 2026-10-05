@@ -80,18 +80,26 @@ describe("canonical interaction admission", () => {
           availableInteractionRefs: ["pick"],
           zones: {
             hand: {
-              cardIds: ["c1"],
-              cardViewsById: {
-                c1: { id: "c1", cardType: "ranked", properties: {} },
+              p1: {
+                cardIds: ["c1"],
+                cardViewsById: {
+                  c1: { id: "c1", cardType: "ranked", properties: {} },
+                },
+                cardBacksById: {},
+                playableByCardId: { c1: ["pick"] },
               },
-              cardBacksById: {},
-              playableByCardId: { c1: ["pick"] },
             },
           },
         },
       },
     };
     expect(SeatProjectionBundleSchema.parse(projection)).toEqual(projection);
+    expect(
+      SeatProjectionBundleSchema.safeParse({
+        ...projection,
+        seats: { p1: { zones: { hand: projection.seats.p1.zones.hand.p1 } } },
+      }).success,
+    ).toBe(false);
     expect(
       SeatProjectionBundleSchema.safeParse({
         ...projection,
@@ -105,10 +113,12 @@ describe("canonical interaction admission", () => {
           p1: {
             zones: {
               hand: {
-                cardIds: [],
-                cardViewsById: {},
-                cardBacksById: {},
-                playableByCardId: { c1: [123] },
+                p1: {
+                  cardIds: [],
+                  cardViewsById: {},
+                  cardBacksById: {},
+                  playableByCardId: { c1: [123] },
+                },
               },
             },
           },

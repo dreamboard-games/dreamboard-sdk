@@ -60,10 +60,9 @@ function faceDownGame() {
           reveal: play.interaction({
             inputs: { cardId: play.inputs.card({ from: ["deck"] }) },
             reduce({ tx, input }) {
-              tx.moveCardBetweenSharedZones({
-                fromZoneId: "deck",
-                toZoneId: "table",
-                cardId: input.params.cardId,
+              tx.moveComponentToZone({
+                componentId: input.params.cardId,
+                to: { zoneId: "table" },
               });
             },
           }),
@@ -100,10 +99,10 @@ test("seats see hidden and face-down cards only by position and their backs", as
   const source = await localSource(game, { players: 2, seed: 1 });
   const instance = createGameInstance<typeof game>()({ source });
   try {
-    const deck = () => instance.zones.get("deck").getCards();
+    const deck = () => instance.zones.get("deck", "table").getCards();
     expect(deck().map((card) => [card.id, card.hidden])).toEqual([
-      ["hidden:deck:0", true],
-      ["hidden:deck:1", true],
+      ['hidden:["deck","table",0]', true],
+      ['hidden:["deck","table",1]', true],
     ]);
     const [top] = deck();
     expect(top.hidden && top.backImage).toBe("assets/back.webp");
@@ -114,11 +113,11 @@ test("seats see hidden and face-down cards only by position and their backs", as
     // The seat picks the top card by position; it arrives face up.
     top.select({ interaction: "play.reveal" });
     await expect
-      .poll(() => instance.zones.get("table").getCards()[0]?.hidden)
+      .poll(() => instance.zones.get("table", "table").getCards()[0]?.hidden)
       .toBe(false);
-    const [revealed] = instance.zones.get("table").getCards();
+    const [revealed] = instance.zones.get("table", "table").getCards();
     const name = revealed.hidden ? null : revealed.view.id;
-    expect(source.inspect().frame.zones.deck.cardViewsById).toEqual({});
+    expect(source.inspect().frame.zones.deck.table.cardViewsById).toEqual({});
     expect(revealed.view).toMatchObject({
       id: name,
       cardType: "cards",
@@ -130,19 +129,19 @@ test("seats see hidden and face-down cards only by position and their backs", as
     // Face down, neither seat sees it; the next flip turns it back up.
     revealed.select({ interaction: "play.flip" });
     await expect
-      .poll(() => instance.zones.get("table").getCards()[0]?.id)
-      .toBe("hidden:table:0");
+      .poll(() => instance.zones.get("table", "table").getCards()[0]?.id)
+      .toBe('hidden:["table","table",0]');
     source.switchSeat("player-2");
-    expect(instance.zones.get("table").getCards()[0]?.id).toBe(
-      "hidden:table:0",
+    expect(instance.zones.get("table", "table").getCards()[0]?.id).toBe(
+      'hidden:["table","table",0]',
     );
     source.switchSeat("player-1");
     instance.zones
-      .get("table")
+      .get("table", "table")
       .getCards()[0]
       .select({ interaction: "play.flip" });
     await expect
-      .poll(() => instance.zones.get("table").getCards()[0]?.id)
+      .poll(() => instance.zones.get("table", "table").getCards()[0]?.id)
       .toBe(name);
   } finally {
     instance.dispose();
@@ -168,7 +167,9 @@ test("a seat cannot name a card hidden from it by its id", async () => {
     kind: "reject",
     errorCode: "CARD_TARGET_NOT_ELIGIBLE",
   });
-  expect(await reveal("hidden:deck:1")).toMatchObject({ kind: "accept" });
+  expect(await reveal('hidden:["deck","table",1]')).toMatchObject({
+    kind: "accept",
+  });
   // Tests know the table and may still name the card itself.
   expect(
     await source.apply({
@@ -195,20 +196,22 @@ test("only card inputs name cards by position", async () => {
       },
     });
   expect(await guess("ace")).toMatchObject({ kind: "accept" });
-  expect(await guess("hidden:deck:0")).toMatchObject({ kind: "reject" });
+  expect(await guess('hidden:["deck","table",0]')).toMatchObject({
+    kind: "reject",
+  });
 
   // A step keeps showing the card it picked by position, and a form value as is.
   await source.apply({
     actor: { seat: 0 },
     interactionId: "pick",
-    params: { cardId: "hidden:deck:1" },
+    params: { cardId: 'hidden:["deck","table",1]' },
   });
   const pick = source
     .inspect()
     .frame.availableInteractions.find(
       (descriptor) => descriptor.interactionId === "pick",
     );
-  expect(pick?.step?.selected).toEqual({ cardId: "hidden:deck:1" });
+  expect(pick?.step?.selected).toEqual({ cardId: 'hidden:["deck","table",1]' });
   expect(
     await source.apply({
       actor: { seat: 0 },

@@ -82,7 +82,7 @@ const ownCard = play.inputs.card({
     id: "own-card",
     errorCode: "NOT_YOUR_CARD",
     test: ({ q, playerId, targetId }) =>
-      q.zone.playerCards(playerId, "hand").includes(targetId),
+      q.zone("hand", playerId).includes(targetId),
   },
 });
 
@@ -95,11 +95,10 @@ export default play.define({
       inputs: { cardId: ownCard },
       reduce({ tx, input, q }) {
         // tx.state.phase.leadCardId and input.params.cardId are inferred.
-        tx.moveCardFromPlayerZoneToSharedZone({
-          playerId: input.playerId,
-          fromZoneId: "hand",
-          toZoneId: "trick",
-          cardId: input.params.cardId,
+        tx.moveComponentToZone({
+          componentId: input.params.cardId,
+          to: { zoneId: "trick" },
+          playedBy: input.playerId,
         });
         tx.patchPhaseState({ leadCardId: input.params.cardId });
         const next = q.player.nextInOrder(input.playerId);
@@ -107,7 +106,7 @@ export default play.define({
           tx.patchPublicState({ currentPlayerId: next });
           tx.setActivePlayers([next]);
         }
-        if (tx.q.zone.playerCards(input.playerId, "hand").length === 0) {
+        if (tx.q.zone("hand", input.playerId).length === 0) {
           return tx.transition("setup");
         }
       },
@@ -168,7 +167,7 @@ export default game.assemble({
   phases: { setup, play },
   view: game.view(({ state, playerId, q }) => ({
     me: playerId,
-    hand: q.zone.playerCards(playerId, "hand"),
+    hand: q.zone("hand", playerId),
     current: state.publicState.currentPlayerId,
   })),
 });
@@ -251,7 +250,7 @@ Initialization returns
 `{ state, terminal?, events? }`, preserving outcomes and events from initial
 phase entry and returned transitions.
 
-Mutation callbacks use `tx.roll(dieId)`, `tx.shuffle({ zoneId, playerId? })`,
+Mutation callbacks use `tx.roll(dieId)`, `tx.shuffle({ zone: { zoneId, hostId } })`,
 `tx.deal({ fromZoneId, toZoneId, playerId, count })` and
 `tx.flipCard({ cardId, faceUp })` directly. Return
 `tx.transition(phaseName)` to enter a phase, including reentering the current
@@ -342,8 +341,8 @@ Visible cards share one complete `ViewCard` shape: `id`, `cardType`, and JSON
 contain these objects directly. Headless `card.view` preserves the manifest's
 card identity, category, and property inference and is deeply readonly; table-only
 `cardSetId` and `componentType` are absent. Concealed cards have a positional
-`hidden:<zone>:<index>` identity, no view, and an optional separate `cardBacksById` entry.
-This wire format requires plugin protocol version 8 and reducer contract `0.9.0`.
+opaque seat identity, no view, and an optional separate `cardBacksById` entry.
+This wire format requires plugin protocol version 9 and reducer contract `0.10.0`.
 
 Card sets contain their authored `cards`, `cardSchema`, and `defaultHome` directly.
 Standard playing cards are game-owned definitions with ordinary suit/rank

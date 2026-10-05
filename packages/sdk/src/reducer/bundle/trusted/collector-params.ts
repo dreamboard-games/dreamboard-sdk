@@ -1,3 +1,4 @@
+import type { ZoneDefinitions } from "../../model";
 import {
   inputValueInDomain,
   inputValueKey,
@@ -103,10 +104,12 @@ export function validateCollectorTargets<
   domainState: DomainState,
   playerId: PlayerId,
   params: Record<string, unknown>,
+  definitions: ZoneDefinitions,
 ): ReducerValidationResult {
   const collectors = interactionInputsOf(interaction);
   let queriesLazy: ReturnType<typeof createStateQueries> | null = null;
-  const queries = () => (queriesLazy ??= createStateQueries(domainState));
+  const queries = () =>
+    (queriesLazy ??= createStateQueries(domainState, definitions));
   for (const [key, collector] of Object.entries(collectors)) {
     const issue = validateCollectorValue(
       collector,

@@ -205,7 +205,7 @@ export function createTrustedRuntimeScope<
     return phaseRegistryByName(phaseName)?.interactions ?? [];
   }
 
-  const createTransaction = createReducerEdit<DomainState>();
+  const createTransaction = createReducerEdit<DomainState>(manifest);
 
   function buildContext(state: State): ActionContext<DomainState, Manifest> {
     return buildTrustedContext<Contract>(state, manifest);

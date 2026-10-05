@@ -7,23 +7,15 @@ import type { ViewSlotOccupant } from "../../shared/domain/slots.js";
 import type {
   CardIdOfTable,
   ComponentIdOfTable,
-  DeckCardsOfTable,
-  DeckIdOfTable,
-  HandCardsOfTable,
-  HandIdOfTable,
   PlayerIdOfTable,
-  PlayerZoneIdOfTable,
   RuntimeComponentLocation,
   RuntimeTableRecord,
-  SharedZoneIdOfTable,
   SlotHostOfTable,
   SlotIdOfTable,
 } from "../model";
-import {
-  assertZoneScope,
-  ensureArray,
-  orderedComponentIdsForLocation,
-} from "./internal";
+import { orderedComponentIdsForLocation } from "./internal";
+import { resolveZone, type ZoneInput } from "./zones";
+import type { ZoneDefinitions } from "../model";
 
 type ViewSlotOccupantForTable<Table extends RuntimeTableRecord> =
   ViewSlotOccupant<
@@ -90,99 +82,44 @@ function componentData<Table extends RuntimeTableRecord>(
   return undefined;
 }
 
-type DeckCardsForZone<
-  Table extends RuntimeTableRecord,
-  ZoneId extends DeckIdOfTable<Table>,
-> = ZoneId extends infer Each extends DeckIdOfTable<Table>
-  ? DeckCardsOfTable<Table, Each>
-  : never;
-
-type HandCardsForZone<
-  Table extends RuntimeTableRecord,
-  ZoneId extends HandIdOfTable<Table>,
-> = ZoneId extends infer Each extends HandIdOfTable<Table>
-  ? HandCardsOfTable<Table, Each>
-  : never;
-
-export function getSharedZoneCards<
-  Table extends RuntimeTableRecord,
-  ZoneId extends SharedZoneIdOfTable<Table>,
->(table: Table, zoneId: ZoneId): DeckCardsForZone<Table, ZoneId> {
-  assertZoneScope(table, zoneId, "shared", "getSharedZoneCards", "zoneId");
-  return [
-    ...ensureArray(table.zones.shared[zoneId] ?? table.decks[zoneId]),
-  ] as DeckCardsForZone<Table, ZoneId>;
+export function getZoneComponents(
+  table: RuntimeTableRecord,
+  definitions: ZoneDefinitions,
+  zone: ZoneInput,
+): readonly string[] {
+  return [...resolveZone(table, definitions, zone).ids];
 }
-
-export function getPlayerZoneCards<
-  Table extends RuntimeTableRecord,
-  ZoneId extends PlayerZoneIdOfTable<Table>,
-  PlayerId extends PlayerIdOfTable<Table>,
->(
-  table: Table,
-  playerId: PlayerId,
-  zoneId: ZoneId,
-): HandCardsForZone<Table, ZoneId> {
-  assertZoneScope(table, zoneId, "perPlayer", "getPlayerZoneCards", "zoneId");
-  const cards =
-    table.zones.perPlayer[zoneId]?.[playerId as string] ??
-    table.hands[zoneId]?.[playerId as string];
-  // eslint-disable-next-line no-restricted-syntax -- The checked player-zone key selects cards from this Table; copying them preserves its zone-specific card ID union.
-  return [
-    ...ensureArray(cards as readonly string[] | undefined),
-  ] as unknown as HandCardsForZone<Table, ZoneId>;
+export function getZones(
+  table: RuntimeTableRecord,
+  definitions: ZoneDefinitions,
+  zoneId: string,
+): Readonly<Record<string, readonly string[]>> {
+  const definition = Object.hasOwn(definitions.zoneDefinitions, zoneId)
+    ? definitions.zoneDefinitions[zoneId]
+    : undefined;
+  if (!definition) throw new Error(`Unknown zone '${zoneId}'.`);
+  return Object.fromEntries(
+    (definition.scope === "shared" ? ["table"] : table.playerOrder).map(
+      (hostId) => [
+        hostId,
+        getZoneComponents(table, definitions, { zoneId, hostId }),
+      ],
+    ),
+  );
 }
-
-function collectZoneIds(
-  ...sources: ReadonlyArray<Record<string, unknown> | undefined>
-): string[] {
-  const seen = new Set<string>();
-  for (const source of sources) {
-    if (!source) continue;
-    for (const key of Object.keys(source)) {
-      seen.add(key);
-    }
-  }
-  return [...seen];
-}
-
-export function getAllSharedZoneCards<Table extends RuntimeTableRecord>(
-  table: Table,
-): {
-  readonly [Z in SharedZoneIdOfTable<Table>]: DeckCardsOfTable<Table, Z>;
-} {
-  const zoneIds = collectZoneIds(table.zones.shared, table.decks);
-  const result: Record<string, readonly unknown[]> = {};
-  for (const zoneId of zoneIds) {
-    result[zoneId] = getSharedZoneCards(
-      table,
-      zoneId as SharedZoneIdOfTable<Table>,
-    );
-  }
-  return result as {
-    readonly [Z in SharedZoneIdOfTable<Table>]: DeckCardsOfTable<Table, Z>;
-  };
-}
-
-export function getAllPlayerZoneCards<
-  Table extends RuntimeTableRecord,
-  ZoneId extends PlayerZoneIdOfTable<Table>,
->(
-  table: Table,
-  zoneId: ZoneId,
-): {
-  readonly [P in PlayerIdOfTable<Table>]: HandCardsOfTable<Table, ZoneId>;
-} {
-  const result: Record<string, readonly unknown[]> = {};
-  for (const playerId of table.playerOrder) {
-    result[playerId] = getPlayerZoneCards(
-      table,
-      playerId as PlayerIdOfTable<Table>,
-      zoneId,
-    );
-  }
-  return result as {
-    readonly [P in PlayerIdOfTable<Table>]: HandCardsOfTable<Table, ZoneId>;
+export function getZoneCardCollection(
+  table: RuntimeTableRecord,
+  definitions: ZoneDefinitions,
+  zone: ZoneInput,
+): CardCollection {
+  const cardIds = getZoneComponents(table, definitions, zone).filter((id) =>
+    Object.hasOwn(table.cards, id),
+  );
+  return {
+    cardIds,
+    cardsById: Object.fromEntries(
+      cardIds.map((id) => [id, getCard(table, id)]),
+    ),
   };
 }
 
@@ -219,44 +156,6 @@ export function getCardsById<
   return Object.fromEntries(
     cardIds.map((cardId) => [cardId, getCard(table, cardId)]),
   );
-}
-
-export function getSharedZoneCardCollection<
-  Table extends RuntimeTableRecord,
-  ZoneId extends SharedZoneIdOfTable<Table>,
->(
-  table: Table,
-  zoneId: ZoneId,
-): CardCollection<
-  CardIdOfTable<Table> & string,
-  ViewCardOfTable<Table, CardIdOfTable<Table>>
-> {
-  const cardIds = getSharedZoneCards(table, zoneId);
-
-  return {
-    cardIds: cardIds as readonly (CardIdOfTable<Table> & string)[],
-    cardsById: getCardsById(table, cardIds as readonly CardIdOfTable<Table>[]),
-  };
-}
-
-export function getPlayerZoneCardCollection<
-  Table extends RuntimeTableRecord,
-  ZoneId extends PlayerZoneIdOfTable<Table>,
-  PlayerId extends PlayerIdOfTable<Table>,
->(
-  table: Table,
-  playerId: PlayerId,
-  zoneId: ZoneId,
-): CardCollection<
-  CardIdOfTable<Table> & string,
-  ViewCardOfTable<Table, CardIdOfTable<Table>>
-> {
-  const cardIds = getPlayerZoneCards(table, playerId, zoneId);
-
-  return {
-    cardIds: cardIds,
-    cardsById: getCardsById(table, cardIds as readonly CardIdOfTable<Table>[]),
-  };
 }
 
 export function getSlotOccupants<

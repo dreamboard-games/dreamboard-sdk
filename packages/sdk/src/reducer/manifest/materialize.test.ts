@@ -1,4 +1,5 @@
 import { compileManifest } from "./compiler";
+import * as z from "zod";
 import { expect, test } from "vitest";
 import type { GameTopologyManifest } from "../../shared/domain/manifest.js";
 import { materializeManifestTable } from "./materialize";
@@ -125,153 +126,163 @@ test("materializeManifestTable keeps runtime board topology board-local", () => 
 });
 
 test("materializeManifestTable assigns every accepted shared card home explicitly", () => {
-  const table = materializeManifestTable({
-    manifest: {
-      ...EMPTY_MANIFEST,
-      cardSets: [
-        {
-          id: "market",
-          name: "Market",
-          defaultHome: { type: "zone", zoneId: "shared-deck" },
-          cardSchema: { type: "object", properties: {}, required: [] },
-          cards: [
+  const table = z
+    .object({
+      cards: z.record(z.string(), z.unknown()),
+      zones: z.record(z.string(), z.record(z.string(), z.array(z.string()))),
+      componentLocations: z.record(
+        z.string(),
+        z.record(z.string(), z.unknown()),
+      ),
+    })
+    .parse(
+      materializeManifestTable({
+        manifest: {
+          ...EMPTY_MANIFEST,
+          cardSets: [
             {
-              id: "omitted",
-              cardType: "omitted",
-              name: "Omitted",
-              count: 1,
-              properties: {},
-            },
-            {
-              id: "detached",
-              cardType: "detached",
-              name: "Detached",
-              count: 1,
-              home: { type: "detached" },
-              properties: {},
-            },
-            {
-              id: "zone-card",
-              cardType: "zone-card",
-              name: "Zone",
-              count: 1,
-              home: { type: "zone", zoneId: "shared-deck" },
-              properties: {},
-            },
-            {
-              id: "space-card",
-              cardType: "space-card",
-              name: "Space",
-              count: 1,
-              home: { type: "space", boardId: "square-board", spaceId: "a1" },
-              properties: {},
-            },
-            {
-              id: "container-card",
-              cardType: "container-card",
-              name: "Container",
-              count: 1,
-              home: {
-                type: "container",
-                boardId: "square-board",
-                containerId: "display-row",
-              },
-              properties: {},
-            },
-            {
-              id: "edge-card",
-              cardType: "edge-card",
-              name: "Edge",
-              count: 1,
-              home: {
-                type: "edge",
-                boardId: "square-board",
-                ref: { spaces: ["a1", "a2"] },
-              },
-              properties: {},
-            },
-            {
-              id: "vertex-card",
-              cardType: "vertex-card",
-              name: "Vertex",
-              count: 1,
-              home: {
-                type: "vertex",
-                boardId: "square-board",
-                ref: { spaces: ["a1", "a2", "b1", "b2"] },
-              },
-              properties: {},
-            },
-            {
-              id: "slot-card",
-              cardType: "slot-card",
-              name: "Slot",
-              count: 1,
-              home: {
-                type: "slot",
-                host: { kind: "piece", id: "holder-a" },
-                slotId: "pocket",
-              },
-              properties: {},
-            },
-          ],
-        },
-      ],
-      zones: [
-        {
-          id: "shared-deck",
-          name: "Shared Deck",
-          scope: "shared",
-          allowedCardSetIds: ["market"],
-        },
-        {
-          id: "compatible-only",
-          name: "Compatible Only",
-          scope: "shared",
-          allowedCardSetIds: ["market"],
-        },
-      ],
-      boards: [
-        {
-          id: "square-board",
-          name: "Square Board",
-          layout: "square",
-          scope: "shared",
-          spaces: [
-            { id: "a1", row: 0, col: 0 },
-            { id: "a2", row: 0, col: 1 },
-            { id: "b1", row: 1, col: 0 },
-            { id: "b2", row: 1, col: 1 },
-          ],
-          relations: [],
-          containers: [
-            {
-              id: "display-row",
-              name: "Display Row",
-              host: { type: "board" },
+              id: "market",
+              name: "Market",
+              defaultHome: { type: "zone", zoneId: "shared-deck" },
+              cardSchema: { type: "object", properties: {}, required: [] },
+              cards: [
+                {
+                  id: "omitted",
+                  cardType: "omitted",
+                  name: "Omitted",
+                  count: 1,
+                  properties: {},
+                },
+                {
+                  id: "detached",
+                  cardType: "detached",
+                  name: "Detached",
+                  count: 1,
+                  home: { type: "detached" },
+                  properties: {},
+                },
+                {
+                  id: "zone-card",
+                  cardType: "zone-card",
+                  name: "Zone",
+                  count: 1,
+                  home: { type: "zone", zoneId: "shared-deck" },
+                  properties: {},
+                },
+                {
+                  id: "space-card",
+                  cardType: "space-card",
+                  name: "Space",
+                  count: 1,
+                  home: {
+                    type: "space",
+                    boardId: "square-board",
+                    spaceId: "a1",
+                  },
+                  properties: {},
+                },
+                {
+                  id: "container-card",
+                  cardType: "container-card",
+                  name: "Container",
+                  count: 1,
+                  home: {
+                    type: "container",
+                    boardId: "square-board",
+                    containerId: "display-row",
+                  },
+                  properties: {},
+                },
+                {
+                  id: "edge-card",
+                  cardType: "edge-card",
+                  name: "Edge",
+                  count: 1,
+                  home: {
+                    type: "edge",
+                    boardId: "square-board",
+                    ref: { spaces: ["a1", "a2"] },
+                  },
+                  properties: {},
+                },
+                {
+                  id: "vertex-card",
+                  cardType: "vertex-card",
+                  name: "Vertex",
+                  count: 1,
+                  home: {
+                    type: "vertex",
+                    boardId: "square-board",
+                    ref: { spaces: ["a1", "a2", "b1", "b2"] },
+                  },
+                  properties: {},
+                },
+                {
+                  id: "slot-card",
+                  cardType: "slot-card",
+                  name: "Slot",
+                  count: 1,
+                  home: {
+                    type: "slot",
+                    host: { kind: "piece", id: "holder-a" },
+                    slotId: "pocket",
+                  },
+                  properties: {},
+                },
+              ],
             },
           ],
-          edges: [],
-          vertices: [],
+          zones: [
+            {
+              id: "shared-deck",
+              name: "Shared Deck",
+              scope: "shared",
+              allowedCardSetIds: ["market"],
+            },
+            {
+              id: "compatible-only",
+              name: "Compatible Only",
+              scope: "shared",
+              allowedCardSetIds: ["market"],
+            },
+          ],
+          boards: [
+            {
+              id: "square-board",
+              name: "Square Board",
+              layout: "square",
+              scope: "shared",
+              spaces: [
+                { id: "a1", row: 0, col: 0 },
+                { id: "a2", row: 0, col: 1 },
+                { id: "b1", row: 1, col: 0 },
+                { id: "b2", row: 1, col: 1 },
+              ],
+              relations: [],
+              containers: [
+                {
+                  id: "display-row",
+                  name: "Display Row",
+                  host: { type: "board" },
+                },
+              ],
+              edges: [],
+              vertices: [],
+            },
+          ],
+          pieceTypes: [
+            {
+              id: "holder",
+              name: "Holder",
+              slots: [{ id: "pocket" }],
+            },
+          ],
+          pieceSeeds: [{ id: "holder-a", typeId: "holder" }],
         },
-      ],
-      pieceTypes: [
-        {
-          id: "holder",
-          name: "Holder",
-          slots: [{ id: "pocket" }],
-        },
-      ],
-      pieceSeeds: [{ id: "holder-a", typeId: "holder" }],
-    },
-    playerIds: ["player-1", "player-2"],
-    shuffleItems: (values) => [...values].reverse(),
-  }) as {
-    cards: Record<string, unknown>;
-    zones: { shared: Record<string, string[]> };
-    decks: Record<string, string[]>;
-    componentLocations: Record<string, Record<string, unknown>>;
-  };
+        playerIds: ["player-1", "player-2"],
+        shuffleItems: (values) => [...values].reverse(),
+      }),
+    );
 
   expect(Object.keys(table.componentLocations)).toEqual([
     "omitted",
@@ -285,19 +296,19 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
     "holder-a",
   ]);
   expect(table.componentLocations.omitted).toEqual({
-    type: "InDeck",
-    deckId: "shared-deck",
+    type: "InZone",
+    zoneId: "shared-deck",
+    hostId: "table",
     playedBy: null,
-    position: 0,
   });
   expect(table.componentLocations.detached).toEqual({
     type: "Detached",
   });
   expect(table.componentLocations["zone-card"]).toEqual({
-    type: "InDeck",
-    deckId: "shared-deck",
+    type: "InZone",
+    zoneId: "shared-deck",
+    hostId: "table",
     playedBy: null,
-    position: 1,
   });
   expect(table.componentLocations["space-card"]).toMatchObject({
     type: "OnSpace",
@@ -324,9 +335,8 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
     host: { kind: "piece", id: "holder-a" },
     slotId: "pocket",
   });
-  expect(table.zones.shared["shared-deck"]).toEqual(["omitted", "zone-card"]);
-  expect(table.decks["shared-deck"]).toEqual(["omitted", "zone-card"]);
-  expect(table.zones.shared["compatible-only"]).toEqual([]);
+  expect(table.zones["shared-deck"].table).toEqual(["omitted", "zone-card"]);
+  expect(table.zones["compatible-only"].table).toEqual([]);
 });
 
 test("materializeManifestTable rejects unsafe manifest keys before materialization", () => {

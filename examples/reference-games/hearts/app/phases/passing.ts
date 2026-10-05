@@ -31,20 +31,23 @@ export default passing.define({
   },
   resolve({ tx, submissions, q }) {
     const order = q.player.order();
-    const cardIdsByPlayer: Partial<
+    const componentIdsByPlayer: Partial<
       Record<(typeof order)[number], readonly CardId[]>
     > = {};
 
     for (const submission of Object.values(submissions)) {
-      cardIdsByPlayer[submission.playerId] = submission.params.cardIds;
+      componentIdsByPlayer[submission.playerId] = submission.params.cardIds;
     }
 
-    tx.rotatePlayerZone({
+    tx.rotateZone({
       zoneId: "hand",
       direction: "left",
       players: order,
-      cardIdsByPlayer,
+      componentIdsByPlayer,
     });
+    for (const playerId of q.player.order())
+      for (const componentId of tx.q.zone("hand", playerId))
+        tx.setComponentOwner({ componentId, ownerId: playerId });
 
     tx.setActivePlayers([]);
     return tx.transition("playing");

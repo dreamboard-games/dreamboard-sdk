@@ -4,12 +4,26 @@ import { describe, expect, test } from "vitest";
 import { createStateQueries } from "../reducer";
 import type { RuntimeTableRecord } from "../reducer/model";
 import { asPlayerId, type PlayerId } from "./per-player";
-import { createSpatialTable } from "./table/table-test-fixtures";
+import {
+  createSpatialTable,
+  spatialDefinitions,
+} from "./table/table-test-fixtures";
 import {
   getCloneRuntimeTableCallCount,
   resetCloneRuntimeTableCallCount,
 } from "./table/clone";
 
+const definitions = {
+  zoneDefinitions: {
+    hand: {
+      scope: "perPlayer",
+      visibility: "ownerOnly",
+      allowedCardSetIds: [],
+    },
+    played: { scope: "perPlayer", visibility: "public", allowedCardSetIds: [] },
+    draw: { scope: "shared", visibility: "public", allowedCardSetIds: [] },
+  },
+} as const;
 type TestState = {
   table: RuntimeTableRecord;
   flow: { currentPhase: "draft"; activePlayers: PlayerId[] };
@@ -29,31 +43,6 @@ function createState(): TestState {
     table: {
       playerOrder: players,
       zones: {
-        shared: {},
-        perPlayer: {
-          hand: Object.fromEntries(
-            players.map((id) => [
-              id,
-              id === player("player-1")
-                ? ["card-a", "card-b"]
-                : id === player("player-2")
-                  ? ["card-c"]
-                  : ["card-d"],
-            ]),
-          ),
-          played: Object.fromEntries(players.map((id) => [id, []])),
-        },
-        visibility: {
-          hand: "ownerOnly",
-          played: "public",
-        },
-        cardSetIdsByZoneId: {
-          hand: ["main"],
-          played: ["main"],
-        },
-      },
-      decks: {},
-      hands: {
         hand: Object.fromEntries(
           players.map((id) => [
             id,
@@ -66,10 +55,7 @@ function createState(): TestState {
         ),
         played: Object.fromEntries(players.map((id) => [id, []])),
       },
-      handVisibility: {
-        hand: "ownerOnly",
-        played: "public",
-      },
+
       cards: {
         "card-a": {
           id: "card-a",
@@ -100,28 +86,28 @@ function createState(): TestState {
       dice: {},
       componentLocations: {
         "card-a": {
-          type: "InHand",
-          handId: "hand",
-          playerId: "player-1",
-          position: 0,
+          type: "InZone",
+          zoneId: "hand",
+          hostId: "player-1",
+          playedBy: null,
         },
         "card-b": {
-          type: "InHand",
-          handId: "hand",
-          playerId: "player-1",
-          position: 1,
+          type: "InZone",
+          zoneId: "hand",
+          hostId: "player-1",
+          playedBy: null,
         },
         "card-c": {
-          type: "InHand",
-          handId: "hand",
-          playerId: "player-2",
-          position: 0,
+          type: "InZone",
+          zoneId: "hand",
+          hostId: "player-2",
+          playedBy: null,
         },
         "card-d": {
-          type: "InHand",
-          handId: "hand",
-          playerId: "player-3",
-          position: 0,
+          type: "InZone",
+          zoneId: "hand",
+          hostId: "player-3",
+          playedBy: null,
         },
       },
       ownerOfCard: {
@@ -172,17 +158,15 @@ describe("reducer transactions", () => {
   test("seeded methods are bound, preserve shuffled metadata, and share the isolated draft", () => {
     const state = createState();
     const cards = ["card-a", "card-b"];
-    state.table.decks.draw = [...cards];
-    state.table.zones.shared.draw = [...cards];
-    state.table.hands.hand = Object.fromEntries(
+    state.table.zones.draw = { table: [...cards] };
+    state.table.zones.hand = Object.fromEntries(
       state.table.playerOrder.map((id) => [id, []]),
     );
-    state.table.zones.perPlayer.hand = state.table.hands.hand;
-    for (const [position, cardId] of cards.entries()) {
+    for (const cardId of cards) {
       state.table.componentLocations[cardId] = {
-        type: "InDeck",
-        deckId: "draw",
-        position,
+        type: "InZone",
+        zoneId: "draw",
+        hostId: "table",
         playedBy: "player-2",
       };
     }
@@ -198,10 +182,10 @@ describe("reducer transactions", () => {
     deepFreeze(state);
     const random = createTestRandom();
     resetCloneRuntimeTableCallCount();
-    const tx = createReducerTransaction(state, random);
+    const tx = createReducerTransaction(state, random, definitions);
     expect(getCloneRuntimeTableCallCount()).toBe(1);
     const cachedQ = tx.q;
-    expect(cachedQ.zone.sharedCards("draw")).toEqual(cards);
+    expect(cachedQ.zone("draw")).toEqual(cards);
     expect(tx.roll).toBe(tx.roll);
     expect(tx.shuffle).toBe(tx.shuffle);
     const { roll, shuffle } = tx;
@@ -209,91 +193,79 @@ describe("reducer transactions", () => {
     expect(rolled).toBeGreaterThanOrEqual(1);
     expect(rolled).toBeLessThanOrEqual(6);
     expect(tx.state.table.dice.d6.value).toBe(rolled);
-    shuffle({ zoneId: "draw" });
-    const shuffled = [...tx.q.zone.sharedCards("draw")];
+    shuffle({ zone: { zoneId: "draw" } });
+    const shuffled = [...tx.q.zone("draw")];
     expect([...shuffled].sort()).toEqual(cards);
-    for (const [position, cardId] of shuffled.entries()) {
+    for (const cardId of shuffled) {
       expect(tx.state.table.componentLocations[cardId]).toEqual({
-        type: "InDeck",
-        deckId: "draw",
-        position,
+        type: "InZone",
+        zoneId: "draw",
+        hostId: "table",
         playedBy: "player-2",
       });
       expect(tx.state.table.ownerOfCard[cardId]).toBe("player-1");
     }
     tx.deal({
-      fromZoneId: "draw",
-      toZoneId: "hand",
-      playerId: player("player-1"),
+      from: { zoneId: "draw" },
+      to: { zoneId: "hand", hostId: player("player-1") },
       count: 2,
     });
-    expect(tx.q.zone.sharedCards("draw")).toEqual([]);
-    expect(tx.q.zone.playerCards(player("player-1"), "hand")).toEqual(shuffled);
-    shuffle({ zoneId: "hand", playerId: player("player-1") });
-    expect(
-      [...tx.q.zone.playerCards(player("player-1"), "hand")].sort(),
-    ).toEqual(cards);
+    expect(tx.q.zone("draw")).toEqual([]);
+    expect(tx.q.zone("hand", player("player-1"))).toEqual(shuffled);
+    shuffle({ zone: { zoneId: "hand", hostId: player("player-1") } });
+    expect([...tx.q.zone("hand", player("player-1"))].sort()).toEqual(cards);
     expect(getCloneRuntimeTableCallCount()).toBe(1);
     expect(state).toEqual(before);
-    const sibling = createReducerTransaction(state, createTestRandom());
+    const sibling = createReducerTransaction(
+      state,
+      createTestRandom(),
+      definitions,
+    );
     expect(sibling.roll("d6")).toBe(rolled);
-    sibling.shuffle({ zoneId: "draw" });
-    expect(sibling.q.zone.sharedCards("draw")).toEqual(shuffled);
-    expect(sibling.q.zone.playerCards(player("player-1"), "hand")).toEqual([]);
+    sibling.shuffle({ zone: { zoneId: "draw" } });
+    expect(sibling.q.zone("draw")).toEqual(shuffled);
+    expect(sibling.q.zone("hand", player("player-1"))).toEqual([]);
   });
 
   test("tx.q refreshes after each operation without mutating the callback q", () => {
     const state = createState();
-    const callbackQ = createStateQueries(state);
-    const tx = createTestEdit<TestState>()(state);
+    const callbackQ = createStateQueries(state, definitions);
+    const tx = createTestEdit<TestState>(definitions)(state);
 
-    tx.moveCardBetweenPlayerZones({
-      playerId: player("player-1"),
-      fromZoneId: "hand",
-      toZoneId: "played",
-      cardId: "card-a",
+    tx.moveComponentToZone({
+      componentId: "card-a",
+      to: { zoneId: "played", hostId: player("player-1") },
     });
 
-    expect(callbackQ.zone.playerCards(player("player-1"), "hand")).toEqual([
+    expect(callbackQ.zone("hand", player("player-1"))).toEqual([
       "card-a",
       "card-b",
     ]);
-    expect(tx.q.zone.playerCards(player("player-1"), "hand")).toEqual([
-      "card-b",
-    ]);
-    expect(tx.q.zone.playerCards(player("player-1"), "played")).toEqual([
-      "card-a",
-    ]);
+    expect(tx.q.zone("hand", player("player-1"))).toEqual(["card-b"]);
+    expect(tx.q.zone("played", player("player-1"))).toEqual(["card-a"]);
     expect(tx.state.publicState.picked).toBeNull();
 
     tx.patchPublicState({ picked: "card-a" });
     expect(tx.state.publicState.picked).toBe("card-a");
   });
 
-  test("tx.rotatePlayerZone rotates selected cards and refreshes ownership", () => {
-    const tx = createTestEdit<TestState>()(createState());
+  test("tx.rotateZone rotates selected cards while preserving ownership", () => {
+    const tx = createTestEdit<TestState>(definitions)(createState());
 
-    tx.rotatePlayerZone({
+    tx.rotateZone({
       zoneId: "hand",
       direction: "left",
-      cardIdsByPlayer: {
+      componentIdsByPlayer: {
         [player("player-1")]: ["card-a"],
         [player("player-2")]: ["card-c"],
         [player("player-3")]: ["card-d"],
       },
     });
 
-    expect(tx.q.zone.playerCards(player("player-1"), "hand")).toEqual([
-      "card-b",
-      "card-d",
-    ]);
-    expect(tx.q.zone.playerCards(player("player-2"), "hand")).toEqual([
-      "card-a",
-    ]);
-    expect(tx.q.zone.playerCards(player("player-3"), "hand")).toEqual([
-      "card-c",
-    ]);
-    expect(tx.q.card.owner("card-a")).toBe(player("player-2"));
+    expect(tx.q.zone("hand", player("player-1"))).toEqual(["card-b", "card-d"]);
+    expect(tx.q.zone("hand", player("player-2"))).toEqual(["card-a"]);
+    expect(tx.q.zone("hand", player("player-3"))).toEqual(["card-c"]);
+    expect(tx.q.card.owner("card-a")).toBe(player("player-1"));
     expect(tx.q.card.visibility("card-a")).toEqual({
       faceUp: false,
       visibleTo: ["player-2"],
@@ -303,7 +275,7 @@ describe("reducer transactions", () => {
   test("tx mutations clone the table once and retain one draft state", () => {
     const state = deepFreeze(createState());
     resetCloneRuntimeTableCallCount();
-    const tx = createTestEdit<TestState>()(state);
+    const tx = createTestEdit<TestState>(definitions)(state);
 
     const afterAdd = tx.addResources({
       playerId: player("player-1"),
@@ -313,11 +285,9 @@ describe("reducer transactions", () => {
       playerId: player("player-1"),
       amounts: { coins: 1 },
     });
-    const afterMove = tx.moveCardBetweenPlayerZones({
-      playerId: player("player-1"),
-      fromZoneId: "hand",
-      toZoneId: "played",
-      cardId: "card-a",
+    const afterMove = tx.moveComponentToZone({
+      componentId: "card-a",
+      to: { zoneId: "played", hostId: player("player-1") },
     });
 
     expect(afterAdd).toBe(afterSpend);
@@ -325,18 +295,16 @@ describe("reducer transactions", () => {
     expect(afterMove).toBe(tx.state);
     expect(getCloneRuntimeTableCallCount()).toBe(1);
     expect(
-      createStateQueries(state).zone.playerCards(player("player-1"), "hand"),
+      createStateQueries(state, definitions).zone("hand", player("player-1")),
     ).toEqual(["card-a", "card-b"]);
-    expect(tx.q.zone.playerCards(player("player-1"), "hand")).toEqual([
-      "card-b",
-    ]);
+    expect(tx.q.zone("hand", player("player-1"))).toEqual(["card-b"]);
     expect(tx.q.player.resource(player("player-1"), "coins")).toBe(4);
   });
 
   test("one spatial transaction refreshes queries and isolates its sibling", () => {
     const state = deepFreeze({ table: createSpatialTable() });
     const before = structuredClone(state);
-    const edit = createTestEdit<typeof state>();
+    const edit = createTestEdit<typeof state>(spatialDefinitions);
     const tx = edit(state);
     const sibling = edit(state);
     const siblingBefore = structuredClone(sibling.state);
@@ -388,8 +356,8 @@ describe("reducer transactions", () => {
 
   test("independent transactions isolate mutations and refresh cached queries", () => {
     const state = deepFreeze(createState());
-    const first = createTestEdit<TestState>()(state);
-    const second = createTestEdit<TestState>()(state);
+    const first = createTestEdit<TestState>(definitions)(state);
+    const second = createTestEdit<TestState>(definitions)(state);
     const secondBefore = structuredClone(second.state);
     const firstDraft = first.state;
     const initialQueries = first.q;
@@ -428,7 +396,7 @@ describe("reducer transactions", () => {
   });
 
   test("edit factories reuse the transaction method surface", () => {
-    const edit = createTestEdit<TestState>();
+    const edit = createTestEdit<TestState>(definitions);
     const first = edit(createState());
     const second = edit(createState());
 
@@ -451,19 +419,16 @@ describe("reducer transactions", () => {
 
   test("transactions rotate whole hands to the right", () => {
     const state = createState();
-    const tx = createTestEdit<TestState>()(state);
-    const next = tx.rotatePlayerZone({
+    const tx = createTestEdit<TestState>(definitions)(state);
+    const next = tx.rotateZone({
       zoneId: "hand",
       direction: "right",
       players: [player("player-1"), player("player-2"), player("player-3")],
     });
-    const q = createStateQueries(next);
+    const q = createStateQueries(next, definitions);
 
-    expect(q.zone.playerCards(player("player-1"), "hand")).toEqual(["card-c"]);
-    expect(q.zone.playerCards(player("player-2"), "hand")).toEqual(["card-d"]);
-    expect(q.zone.playerCards(player("player-3"), "hand")).toEqual([
-      "card-a",
-      "card-b",
-    ]);
+    expect(q.zone("hand", player("player-1"))).toEqual(["card-c"]);
+    expect(q.zone("hand", player("player-2"))).toEqual(["card-d"]);
+    expect(q.zone("hand", player("player-3"))).toEqual(["card-a", "card-b"]);
   });
 });

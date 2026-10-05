@@ -47,9 +47,11 @@ test("local seat switching keeps private hands separate without reinitialization
   const source = await createDevelopmentSource(new URLSearchParams());
   try {
     const checkpoint = source.checkpoint();
-    const first = source.inspect().frame.zones.hand.cardIds;
+    const first = source.inspect().frame.zones.hand["player-1"].cardIds;
+    expect(source.inspect().frame.zones.hand["player-2"]).toBeUndefined();
     source.switchSeat("player-2");
-    const second = source.inspect().frame.zones.hand.cardIds;
+    const second = source.inspect().frame.zones.hand["player-2"].cardIds;
+    expect(source.inspect().frame.zones.hand["player-1"]).toBeUndefined();
     expect(first).toHaveLength(13);
     expect(second).toHaveLength(13);
     expect(first.some((id) => second.includes(id))).toBe(false);

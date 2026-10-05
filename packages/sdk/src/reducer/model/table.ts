@@ -18,17 +18,24 @@ export type Brand<Value, Name extends string> = Value & {
   readonly __brand: Name;
 };
 
-export type RuntimeHandVisibilityMode =
-  "all" | "ownerOnly" | "public" | "hidden";
-export type RuntimeDeckMap = Record<string, string[]>;
-// Records contain exactly the active roster; playerOrder owns traversal order.
-export type RuntimeHandMap = Record<string, Record<string, string[]>>;
-export type RuntimeZoneMap = {
-  shared: Record<string, string[]>;
-  perPlayer: Record<string, Record<string, string[]>>;
-  visibility: Record<string, RuntimeHandVisibilityMode>;
-  cardSetIdsByZoneId?: Record<string, readonly string[]>;
+/** Static definitions belong to the compiled manifest, never a session checkpoint. */
+export type ZoneDefinition = {
+  readonly scope: "shared" | "perPlayer";
+  readonly visibility: "public" | "ownerOnly" | "hidden";
+  readonly allowedCardSetIds: readonly string[];
 };
+export type ZoneDefinitions = {
+  readonly zoneDefinitions: Readonly<Record<string, ZoneDefinition>>;
+};
+export type ZoneRef<
+  ZoneId extends string = string,
+  HostId extends string = string,
+> = {
+  readonly zoneId: ZoneId;
+  readonly hostId: HostId;
+};
+/** Membership arrays are the sole owner of zone order. */
+export type RuntimeZoneMap = Record<string, Record<string, string[]>>;
 export type RuntimeOwnerMap = Record<string, string | null>;
 export type RuntimeResourceMap = Record<string, RuntimeRecord>;
 export type RuntimeBoardSpaceState = {
@@ -184,22 +191,10 @@ export type RuntimeSlotHostRef =
 export type RuntimeComponentLocation =
   | { type: "Detached" }
   | {
-      type: "InDeck";
-      deckId: string;
-      playedBy: string | null;
-      position?: number | null;
-    }
-  | {
-      type: "InHand";
-      handId: string;
-      playerId: string;
-      position?: number | null;
-    }
-  | {
       type: "InZone";
       zoneId: string;
-      playedBy?: string | null;
-      position?: number | null;
+      hostId: string;
+      playedBy: string | null;
     }
   | {
       type: "OnSpace";
@@ -239,9 +234,6 @@ export type RuntimeVisibilityMap = Record<string, RuntimeCardVisibility>;
 export type RuntimeTableRecord = {
   playerOrder: string[];
   zones: RuntimeZoneMap;
-  decks: RuntimeDeckMap;
-  hands: RuntimeHandMap;
-  handVisibility: Record<string, RuntimeHandVisibilityMode>;
   cards: Record<string, RuntimeCardData>;
   pieces: Record<string, RuntimePieceData>;
   componentLocations: RuntimeComponentLocationMap;

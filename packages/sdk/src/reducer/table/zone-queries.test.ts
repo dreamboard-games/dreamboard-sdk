@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { createStateQueries, createTableQueries } from "../../reducer";
-import { type PlayerId } from "../per-player";
+import { asPlayerId } from "../per-player";
+import type { ZoneDefinitions } from "../model";
 import {
   getAdjacentSpaces,
   getBoard,
@@ -8,9 +9,7 @@ import {
   getCardOwner,
   getCardVisibility,
   getComponentContainerLocation,
-  getComponentDeckLocation,
   getComponentEdgeLocation,
-  getComponentHandLocation,
   getComponentLocation,
   getComponentSlotLocation,
   getComponentSpaceLocation,
@@ -20,10 +19,9 @@ import {
   getEdge,
   getHexBoard,
   getIncidentEdges,
+  getZoneComponents,
   getPlayerOrder,
   getPlayerResources,
-  getPlayerZoneCards,
-  getSharedZoneCards,
   getSlotOccupants,
   getSlotOccupantsByHost,
   getSpace,
@@ -32,6 +30,26 @@ import {
   getVertex,
 } from "./index";
 import { createSpatialTable } from "./table-test-fixtures";
+const definitions = {
+  zoneDefinitions: {
+    "draw-deck": {
+      scope: "shared",
+      visibility: "public",
+      allowedCardSetIds: ["main"],
+    },
+    "special-deck": {
+      scope: "shared",
+      visibility: "public",
+      allowedCardSetIds: ["special"],
+    },
+    supply: { scope: "shared", visibility: "public", allowedCardSetIds: [] },
+    "player-hand": {
+      scope: "perPlayer",
+      visibility: "ownerOnly",
+      allowedCardSetIds: ["main"],
+    },
+  },
+} satisfies ZoneDefinitions;
 
 describe("table ops spatial helpers", () => {
   test("raw read helpers expose cards, players, and resolved component locations", () => {
@@ -48,15 +66,10 @@ describe("table ops spatial helpers", () => {
       faceUp: false,
       visibleTo: ["player-1"],
     };
-    table.hands["player-hand"] = Object.fromEntries(
+    table.zones["player-hand"] = Object.fromEntries(
       ["player-1", "player-2"]
-        .map((id) => id as PlayerId)
-        .map((id) => [id, id === ("player-1" as PlayerId) ? ["card-2"] : []]),
-    );
-    table.zones.perPlayer["player-hand"] = Object.fromEntries(
-      ["player-1", "player-2"]
-        .map((id) => id as PlayerId)
-        .map((id) => [id, id === ("player-1" as PlayerId) ? ["card-2"] : []]),
+        .map(asPlayerId)
+        .map((id) => [id, id === asPlayerId("player-1") ? ["card-2"] : []]),
     );
     table.pieces["piece-2"] = {
       id: "piece-2",
@@ -90,10 +103,10 @@ describe("table ops spatial helpers", () => {
       properties: {},
     };
     table.componentLocations["card-2"] = {
-      type: "InHand",
-      handId: "player-hand",
-      playerId: "player-1",
-      position: 0,
+      type: "InZone",
+      zoneId: "player-hand",
+      hostId: "player-1",
+      playedBy: null,
     };
     table.componentLocations["piece-2"] = {
       type: "OnSpace",
@@ -138,37 +151,46 @@ describe("table ops spatial helpers", () => {
     expect(getComponentLocation(table, "piece-7")).toEqual({
       type: "Detached",
     });
-    expect(getComponentDeckLocation(table, "card-1")).toEqual({
+    expect(getComponentZoneLocation(table, "card-1")).toEqual({
       componentId: "card-1",
-      deckId: "draw-deck",
-      cards: ["card-1"],
+      zoneId: "draw-deck",
+      hostId: "table",
       location: {
-        type: "InDeck",
-        deckId: "draw-deck",
+        type: "InZone",
+        zoneId: "draw-deck",
+        hostId: "table",
         playedBy: null,
-        position: 0,
       },
     });
-    expect(getComponentHandLocation(table, "card-2")).toEqual({
+    expect(getComponentZoneLocation(table, "card-2")).toEqual({
       componentId: "card-2",
-      handId: "player-hand",
-      playerId: "player-1",
-      cards: ["card-2"],
+      zoneId: "player-hand",
+      hostId: "player-1",
       location: {
-        type: "InHand",
-        handId: "player-hand",
-        playerId: "player-1",
-        position: 0,
+        type: "InZone",
+        zoneId: "player-hand",
+        hostId: "player-1",
+        playedBy: null,
       },
     });
+    expect(
+      getZoneComponents(table, definitions, { zoneId: "draw-deck" }),
+    ).toEqual(["card-1"]);
+    expect(
+      getZoneComponents(table, definitions, {
+        zoneId: "player-hand",
+        hostId: "player-1",
+      }),
+    ).toEqual(["card-2"]);
     expect(getComponentZoneLocation(table, "piece-1")).toEqual({
       componentId: "piece-1",
       zoneId: "supply",
+      hostId: "table",
       location: {
         type: "InZone",
         zoneId: "supply",
+        hostId: "table",
         playedBy: null,
-        position: 0,
       },
     });
     expect(getComponentSpaceLocation(table, "piece-2")).toMatchObject({
@@ -266,21 +288,16 @@ describe("table ops spatial helpers", () => {
     };
     table.ownerOfCard["card-2"] = "player-2";
     table.visibility["card-2"] = { faceUp: true };
-    table.hands["player-hand"] = Object.fromEntries(
+    table.zones["player-hand"] = Object.fromEntries(
       ["player-1", "player-2"]
-        .map((id) => id as PlayerId)
-        .map((id) => [id, id === ("player-1" as PlayerId) ? ["card-2"] : []]),
-    );
-    table.zones.perPlayer["player-hand"] = Object.fromEntries(
-      ["player-1", "player-2"]
-        .map((id) => id as PlayerId)
-        .map((id) => [id, id === ("player-1" as PlayerId) ? ["card-2"] : []]),
+        .map(asPlayerId)
+        .map((id) => [id, id === asPlayerId("player-1") ? ["card-2"] : []]),
     );
     table.componentLocations["card-2"] = {
-      type: "InHand",
-      handId: "player-hand",
-      playerId: "player-1",
-      position: 0,
+      type: "InZone",
+      zoneId: "player-hand",
+      hostId: "player-1",
+      playedBy: null,
     };
     table.pieces["piece-8"] = {
       id: "piece-8",
@@ -295,7 +312,7 @@ describe("table ops spatial helpers", () => {
       position: 0,
     };
 
-    const q = createTableQueries(table);
+    const q = createTableQueries(table, definitions);
 
     expect(q.board("main-board").state).toBe(getBoard(table, "main-board"));
     expect(q.board("hex-board").state).toBe(getHexBoard(table, "hex-board"));
@@ -329,10 +346,10 @@ describe("table ops spatial helpers", () => {
     expect(q.board("square-board").distance("cell-a1", "cell-b2")).toBe(
       getSpaceDistance(table, "square-board", "cell-a1", "cell-b2"),
     );
-    expect(q.zone.sharedCards("draw-deck")).toEqual(
-      getSharedZoneCards(table, "draw-deck"),
+    expect(q.zone("draw-deck")).toEqual(
+      getZoneComponents(table, definitions, { zoneId: "draw-deck" }),
     );
-    expect(q.zone.sharedCardCollection("draw-deck")).toEqual({
+    expect(q.zone.cards("draw-deck")).toEqual({
       cardIds: ["card-1"],
       cardsById: {
         "card-1": {
@@ -342,10 +359,13 @@ describe("table ops spatial helpers", () => {
         },
       },
     });
-    expect(q.zone.playerCards("player-1", "player-hand")).toEqual(
-      getPlayerZoneCards(table, "player-1", "player-hand"),
+    expect(q.zone("player-hand", "player-1")).toEqual(
+      getZoneComponents(table, definitions, {
+        zoneId: "player-hand",
+        hostId: "player-1",
+      }),
     );
-    expect(q.zone.playerCardCollection("player-1", "player-hand")).toEqual({
+    expect(q.zone.cards("player-hand", "player-1")).toEqual({
       cardIds: ["card-2"],
       cardsById: {
         "card-2": {
@@ -408,8 +428,8 @@ describe("table ops spatial helpers", () => {
     expect(q.component.location("card-2")).toEqual(
       getComponentLocation(table, "card-2"),
     );
-    expect(q.component.hand("card-2")).toEqual(
-      getComponentHandLocation(table, "card-2"),
+    expect(q.component.zone("card-2")).toEqual(
+      getComponentZoneLocation(table, "card-2"),
     );
   });
 
@@ -420,11 +440,11 @@ describe("table ops spatial helpers", () => {
       flow: { activePlayers: ["player-1"] },
     };
 
-    const q = createStateQueries(state);
+    const q = createStateQueries(state, definitions);
 
     expect(q.board("hex-board").state).toBe(getHexBoard(table, "hex-board"));
-    expect(q.zone.sharedCards("draw-deck")).toEqual(
-      getSharedZoneCards(table, "draw-deck"),
+    expect(q.zone("draw-deck")).toEqual(
+      getZoneComponents(table, definitions, { zoneId: "draw-deck" }),
     );
     expect(q.player.order()).toEqual(getPlayerOrder(table));
   });

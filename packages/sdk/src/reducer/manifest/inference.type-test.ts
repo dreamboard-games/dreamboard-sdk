@@ -50,16 +50,16 @@ const table = compiled.createInitialTable();
 const points: number = table.cards[card].properties.points;
 // @ts-expect-error Card property enums remain narrow.
 const badColor: "green" = table.cards[card].properties.color;
-// @ts-expect-error Unknown decks are not part of the manifest.
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Negative compiler proof: Unknown decks are not part of the manifest.
-const missingDeck = compiled.defaults.decks().missing;
+// @ts-expect-error Unknown zones are not part of the manifest.
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Negative compiler proof: Unknown zones are not part of the manifest.
+const missingZone = compiled.defaults.zones().missing;
 const game = createGame({
   manifest,
   state: { public: z.object({}), private: z.object({}), hidden: z.object({}) },
   phases: { play: z.object({}) },
 });
 const input = game.phase("play");
-void [invalidCard, points, badColor, input, missingDeck];
+void [invalidCard, points, badColor, input, missingZone];
 
 import type { ManifestIdsOf } from "./types";
 const seed: ManifestIdsOf<{

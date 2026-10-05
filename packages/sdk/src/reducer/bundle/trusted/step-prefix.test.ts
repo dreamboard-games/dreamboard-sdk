@@ -1,3 +1,4 @@
+import { inputDefinitions } from "../../input-test-fixtures";
 import { describe, expect, test } from "vitest";
 import { InteractionSteps } from "../../authoring/steps";
 import { formInput, boardInput, boardTarget, rngInput } from "../../inputs";
@@ -25,22 +26,33 @@ describe("ordered committed prefix evaluation", () => {
       )
       .input("last", choice([null]));
     expect(
-      evaluateStepPrefix(steps, state, "player-1", ["a", "a"]).values,
+      evaluateStepPrefix(steps, state, "player-1", ["a", "a"], inputDefinitions)
+        .values,
     ).toEqual(["a", "a"]);
     expect(
-      evaluateStepPrefix(steps, { ...state, allowed: false }, "player-1", [
-        "a",
-        "a",
-      ]).values,
+      evaluateStepPrefix(
+        steps,
+        { ...state, allowed: false },
+        "player-1",
+        ["a", "a"],
+        inputDefinitions,
+      ).values,
     ).toEqual(["a"]);
     expect(
-      evaluateStepPrefix(steps, state, "player-1", ["bad", "a"]).values,
+      evaluateStepPrefix(
+        steps,
+        state,
+        "player-1",
+        ["bad", "a"],
+        inputDefinitions,
+      ).values,
     ).toEqual([]);
     const emptyNext = evaluateStepPrefix(
       steps,
       { ...state, allowed: false },
       "player-1",
       ["a"],
+      inputDefinitions,
     );
     expect(emptyNext.issue).toBeUndefined();
     expect(emptyNext.current?.key).toBe("second");
@@ -52,23 +64,43 @@ describe("ordered committed prefix evaluation", () => {
       choice([null]),
     );
     expect(
-      evaluateStepPrefix(optional, state, "player-1", [null]).complete,
+      evaluateStepPrefix(optional, state, "player-1", [null], inputDefinitions)
+        .complete,
     ).toBe(true);
     expect(
-      evaluateStepPrefix(optional, state, "player-1", [undefined]).complete,
+      evaluateStepPrefix(
+        optional,
+        state,
+        "player-1",
+        [undefined],
+        inputDefinitions,
+      ).complete,
     ).toBe(false);
     const steps = new InteractionSteps<typeof state>().input(
       "cards",
       many(choice(["a", "b", "c"]), { min: 2, max: 2, distinct: true }),
     );
     expect(
-      evaluateStepPrefix(steps, state, "player-1", [["a", "b"]]).complete,
+      evaluateStepPrefix(
+        steps,
+        state,
+        "player-1",
+        [["a", "b"]],
+        inputDefinitions,
+      ).complete,
     ).toBe(true);
     expect(
-      evaluateStepPrefix(steps, state, "player-1", [["a", "a"]]).values,
+      evaluateStepPrefix(
+        steps,
+        state,
+        "player-1",
+        [["a", "a"]],
+        inputDefinitions,
+      ).values,
     ).toEqual([]);
     expect(
-      evaluateStepPrefix(steps, state, "player-1", [["a"]]).values,
+      evaluateStepPrefix(steps, state, "player-1", [["a"]], inputDefinitions)
+        .values,
     ).toEqual([]);
   });
 
@@ -107,24 +139,37 @@ describe("ordered committed prefix evaluation", () => {
     };
     const steps = new InteractionSteps<typeof state>().input("space", scoped);
     expect(
-      evaluateStepPrefix(steps, state, "player-1", [
-        { boardId: "home", playerId: "player-1", spaceId: "slot" },
-      ]).selected,
+      evaluateStepPrefix(
+        steps,
+        state,
+        "player-1",
+        [{ boardId: "home", playerId: "player-1", spaceId: "slot" }],
+        inputDefinitions,
+      ).selected,
     ).toEqual({
       space: { boardId: "home", playerId: "player-1", spaceId: "slot" },
     });
     expect(
-      evaluateStepPrefix(steps, state, "player-1", ["slot"]).complete,
+      evaluateStepPrefix(steps, state, "player-1", ["slot"], inputDefinitions)
+        .complete,
     ).toBe(false);
     expect(
-      evaluateStepPrefix(steps, state, "player-1", [
-        { boardId: "home", playerId: "player-2", spaceId: "slot" },
-      ]).complete,
+      evaluateStepPrefix(
+        steps,
+        state,
+        "player-1",
+        [{ boardId: "home", playerId: "player-2", spaceId: "slot" }],
+        inputDefinitions,
+      ).complete,
     ).toBe(false);
     expect(
-      evaluateStepPrefix(steps, state, "player-1", [
-        { boardId: "other", playerId: "player-1", spaceId: "slot" },
-      ]).complete,
+      evaluateStepPrefix(
+        steps,
+        state,
+        "player-1",
+        [{ boardId: "other", playerId: "player-1", spaceId: "slot" }],
+        inputDefinitions,
+      ).complete,
     ).toBe(false);
   });
 
@@ -147,8 +192,8 @@ describe("ordered committed prefix evaluation", () => {
       // @ts-expect-error A dynamic collector must also reject RNG at runtime.
       () => rng,
     );
-    expect(() => evaluateStepPrefix(dynamic, state, "player-1", [])).toThrow(
-      "RNG",
-    );
+    expect(() =>
+      evaluateStepPrefix(dynamic, state, "player-1", [], inputDefinitions),
+    ).toThrow("RNG");
   });
 });

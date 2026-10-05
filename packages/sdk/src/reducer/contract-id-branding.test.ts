@@ -19,10 +19,6 @@ function buildMinimalManifest() {
       phaseNames: ["phase-1"] as const,
       cardSetIds: ["deck-set"] as const,
       cardTypes: ["standard"] as const,
-      deckIds: ["deck"] as const,
-      handIds: ["hand"] as const,
-      sharedZoneIds: ["discard"] as const,
-      playerZoneIds: ["hand"] as const,
       zoneIds,
       cardIds,
       resourceIds: [] as const,
@@ -39,12 +35,8 @@ function buildMinimalManifest() {
       vertexTypeIds: [] as const,
       spaceIds: [] as const,
       spaceTypeIds: [] as const,
-      handVisibilityById: { hand: "ownerOnly" } as const,
-      zoneVisibilityById: { hand: "ownerOnly", discard: "public" } as const,
       cardSetIdByCardId: {},
       cardTypeByCardId: {},
-      cardSetIdsBySharedZoneId: {},
-      cardSetIdsByPlayerZoneId: {},
     },
     ids: {
       boardLayout: z.enum(["hex", "square", "network", "track"]),
@@ -53,10 +45,6 @@ function buildMinimalManifest() {
       cardSetId: createManifestStringLiteralSchema(["deck-set"] as const),
       cardType: createManifestStringLiteralSchema(["standard"] as const),
       cardId: createManifestStringLiteralSchema(cardIds),
-      deckId: createManifestStringLiteralSchema(["deck"] as const),
-      handId: createManifestStringLiteralSchema(["hand"] as const),
-      sharedZoneId: createManifestStringLiteralSchema(["discard"] as const),
-      playerZoneId: createManifestStringLiteralSchema(["hand"] as const),
       zoneId: createManifestStringLiteralSchema(zoneIds),
       resourceId: createManifestStringLiteralSchema([] as const),
       pieceTypeId: createManifestStringLiteralSchema([] as const),
@@ -75,11 +63,20 @@ function buildMinimalManifest() {
       spaceId: createManifestStringLiteralSchema([] as const),
       spaceTypeId: createManifestStringLiteralSchema([] as const),
     },
+    zoneDefinitions: {
+      hand: {
+        scope: "perPlayer",
+        visibility: "ownerOnly",
+        allowedCardSetIds: ["deck-set"],
+      },
+      discard: {
+        scope: "shared",
+        visibility: "public",
+        allowedCardSetIds: ["deck-set"],
+      },
+    } as const,
     defaults: {
-      zones: () => ({ shared: {}, perPlayer: {}, visibility: {} }),
-      decks: () => ({}),
-      hands: () => ({}),
-      handVisibility: () => ({}),
+      zones: () => ({}),
       ownerOfCard: () => ({}),
       visibility: () => ({}),
       resources: () => Object.fromEntries([].map((id) => [id, {}])),
@@ -112,7 +109,6 @@ describe("defineGameContract id branding validation", () => {
       }),
     ).not.toThrow();
   });
-
   test("rejects a top-level field named as a manifest id that uses raw z.string()", () => {
     const manifest = buildMinimalManifest();
     expect(() =>
@@ -129,7 +125,6 @@ describe("defineGameContract id branding validation", () => {
       }),
     ).toThrow(/state\.public\.currentPlayerId/);
   });
-
   test("rejects a nullable raw string for a manifest id field", () => {
     const manifest = buildMinimalManifest();
     expect(() =>
@@ -146,7 +141,6 @@ describe("defineGameContract id branding validation", () => {
       }),
     ).toThrow(/pendingCardId/);
   });
-
   test("rejects z.array(z.string()) when the field name is a plural manifest id", () => {
     const manifest = buildMinimalManifest();
     expect(() =>
@@ -163,7 +157,6 @@ describe("defineGameContract id branding validation", () => {
       }),
     ).toThrow(/cardIds/);
   });
-
   test("allows raw z.string() for fields that are not manifest-scoped ids", () => {
     const manifest = buildMinimalManifest();
     expect(() =>
@@ -182,7 +175,6 @@ describe("defineGameContract id branding validation", () => {
       }),
     ).not.toThrow();
   });
-
   test("rejects a field whose suffix matches a manifest id (e.g. knowerPlayerId)", () => {
     const manifest = buildMinimalManifest();
     expect(() =>
