@@ -109,7 +109,7 @@ filenames remain source material; this table owns execution order and
 | 3   | `codex/zone-locations`          | One zone model, ordering owner and movement API             | [03](03-zone-locations.md)        |
 | 4   | `codex/per-player-inventory`    | Roster inventory and runtime identity/target codec          | [05](05-per-player-inventory.md)  |
 | 5   | `codex/attached-zones`          | Host lifecycle, containment invariants and access           | [04](04-attached-zones.md)        |
-| 6   | `codex/tile-inventory`          | Definitions, instances, seeds and canonical locations       | [Private tiles](private-tiles.md) |
+| 6   | `codex/tile-inventory`          | Definitions, instances, seeds and canonical locations       | [Inventory](06-tile-inventory.md) |
 | 7   | `codex/board-topology`          | Derived topology, default placement and game migration      | [06](06-tile-catalog.md)          |
 | 8   | `codex/private-tile-projection` | Seat boards, event disclosure, refs and ingress             | [Private tiles](private-tiles.md) |
 | 9   | `codex/tile-transactions`       | Placement, draw/reveal, dependency rejection and seeded RNG | [07](07-place-tiles.md)           |
