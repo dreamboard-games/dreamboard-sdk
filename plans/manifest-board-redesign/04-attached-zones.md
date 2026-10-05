@@ -116,6 +116,10 @@ type HostIdOfZone<M, Z> =
 ### Visibility
 
 - `public` and `hidden` mean what they mean for table zones.
+- A hidden zone on a shared board or its space exposes backs and counts to all
+  seats. On a per-player board or its space, only the replication seat has that
+  concealed access; on a component, only its current owner does. An ownerless
+  component exposes no hidden zone. Hidden access never implies face visibility.
 - `ownerOnly`: the owner is the player of a per-player board instance, or the
   component's owner. Reject `ownerOnly` on zones attached to shared boards or
   spaces of shared boards (there is no owner).
@@ -123,6 +127,11 @@ type HostIdOfZone<M, Z> =
   with no current owner grants no seat owner-only access. Ownership transfer
   changes access immediately without changing contained component ownership;
   do not capture the host owner in card visibility when a component moves.
+
+The existing headless zone facade presents cards, so its count and empty-state
+helpers describe projected cards. Reducer zone queries include every component.
+Tile presentation and disclosure counts are introduced deliberately in the later
+private-tile layers; this layer does not widen the card facade implicitly.
 
 ### Homes
 

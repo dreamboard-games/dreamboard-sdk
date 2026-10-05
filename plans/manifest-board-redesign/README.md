@@ -137,6 +137,10 @@ The following are drafts, not landed changes:
 - [SDK #109](https://github.com/dreamboard-games/dreamboard-sdk/pull/109):
   canonical zone membership and explicit hosts. Independent `pnpm check` and full
   `pnpm ui test` and all required hosted checks pass.
+- [SDK #110](https://github.com/dreamboard-games/dreamboard-sdk/pull/110):
+  actual-roster inventory, canonical board targets and SDK-owned current board
+  projection. Independent `pnpm check` passes (835 SDK tests and packed consumers);
+  final full UI and hosted checks are running. Attached zones are in progress.
 - [Internal #668](https://github.com/dreamboard-games/dreamboard-internal/pull/668):
   opaque manifest ownership, generated transport and compiler boundary.
 - [Internal #669](https://github.com/dreamboard-games/dreamboard-internal/pull/669):
