@@ -148,7 +148,7 @@ The following are drafts, not landed changes:
 - [SDK #112](https://github.com/dreamboard-games/dreamboard-sdk/pull/112):
   game-owned tile inventory and public containment. Independent `pnpm check`
   passes (879 SDK tests and packed consumers), as does full `pnpm ui test`.
-  Hosted checks are running. Derived board topology is in progress.
+  All required hosted checks pass. Derived board topology is in progress.
 - [Internal #668](https://github.com/dreamboard-games/dreamboard-internal/pull/668):
   opaque manifest ownership, generated transport and compiler boundary.
 - [Internal #669](https://github.com/dreamboard-games/dreamboard-internal/pull/669):
