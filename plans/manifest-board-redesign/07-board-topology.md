@@ -21,6 +21,9 @@ placement map, last-board field or derived-geometry checkpoint cache is allowed.
 One shared derivation combines definitions, admitted instances and canonical
 locations. It computes placed spaces, board-scoped world edges/vertices and
 geometric adjacency. Explicit session relations remain distinct from geometry.
+Relation `typeId` is an open game-defined tag, not an enum inferred from setup
+relations. A board with no initial relations can gain one during play. Its
+`relationFieldsSchema` validates relation data; current topology admits endpoints.
 Derive client geometry only from permitted seat data; private configurations
 remain rejected until PR 8 supplies that data boundary.
 
