@@ -24,6 +24,13 @@ geometric adjacency. Explicit session relations remain distinct from geometry.
 Derive client geometry only from permitted seat data; private configurations
 remain rejected until PR 8 supplies that data boundary.
 
+Board metadata is immutable compiled definition data. Remove mutable board-field
+transactions. `q.board(id).state` is a derived, readonly topology query result;
+it is not the persisted board instance. The flat `SeatProjection.boards` map is
+the sole topology delivery owner. Remove `staticBoards`, `boardStatic()`, the
+static projection DTO/schema and its frame merge path rather than keeping an
+empty compatibility channel.
+
 ## Stable spaces and attached zones
 
 A tiled space ID is the canonical encoded tuple of tile instance ID and local

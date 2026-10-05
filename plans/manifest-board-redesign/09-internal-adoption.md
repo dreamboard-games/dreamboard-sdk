@@ -130,6 +130,13 @@ Then fix consumers of the changed SDK surfaces:
 | Board target value kinds (05)                         | Host runtime parsing of board targets                                                                                                                                        |
 
 Shared static delivery may contain only explicitly public definitions/shells.
+Layer 07 removes the old `boardStatic()` method, static projection schema and
+frame merge path. Delete the corresponding worker operation, session model
+field and browser/screenshot plumbing. The host consumes the flat current
+`SeatProjection.boards` map. Do not recreate the old geometry delivery path or
+keep null compatibility methods. Audit the obsolete `board_static` persistence
+column separately from the runtime cut; no reader should depend on it.
+
 Seat boards and audience-filtered events must pass through gameplay workers,
 hosted frames, browser gameplay and screenshots consistently. Inspect actual
 hosted payloads and UI messages with the private-tile fixture.

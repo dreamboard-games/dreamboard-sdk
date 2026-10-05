@@ -144,8 +144,11 @@ The following are drafts, not landed changes:
 - [SDK #111](https://github.com/dreamboard-games/dreamboard-sdk/pull/111):
   attached zones, live host access and atomic containment admission. Independent
   `pnpm check` passes (851 SDK tests and packed consumers), as does full
-  `pnpm ui test`. Hosted checks are running on the final fixture cleanup.
-  Tile inventory is in progress.
+  `pnpm ui test`. All required hosted checks pass.
+- [SDK #112](https://github.com/dreamboard-games/dreamboard-sdk/pull/112):
+  game-owned tile inventory and public containment. Independent `pnpm check`
+  passes (879 SDK tests and packed consumers), as does full `pnpm ui test`.
+  Hosted checks are running. Derived board topology is in progress.
 - [Internal #668](https://github.com/dreamboard-games/dreamboard-internal/pull/668):
   opaque manifest ownership, generated transport and compiler boundary.
 - [Internal #669](https://github.com/dreamboard-games/dreamboard-internal/pull/669):
