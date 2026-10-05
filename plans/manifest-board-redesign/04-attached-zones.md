@@ -78,15 +78,13 @@ else builds host strings. Decoding proves syntax, never current membership.
 | `{ pieceType }` / `{ dieType }` | component ID                        |
 
 ```ts
-export const zoneHost = {
-  table: "table" as const,
-  player: (playerId: PlayerId) => playerId,
-  board: (boardId: RuntimeBoardId) => boardId,
-  space: (boardId: RuntimeBoardId, spaceId: string) =>
-    boardSpaceHostId(boardId, spaceId),
-  component: (componentId: ComponentId) => componentId,
-};
+q.zone("market-row", boardId);
+q.zone("cargo", shipId);
+q.zone("harbor-stock", boardSpaceHostId(boardId, "north-harbor"));
 ```
+
+Pass simple host IDs directly. Only a board-space host needs an encoder; identity
+wrappers for players, boards and components add no boundary.
 
 Do not reserve arbitrary separators such as `#` or `:`. Keep the shared codec
 prefix reservation at authored identity admission; encoded tuple boundaries
@@ -127,6 +125,11 @@ type HostIdOfZone<M, Z> =
   with no current owner grants no seat owner-only access. Ownership transfer
   changes access immediately without changing contained component ownership;
   do not capture the host owner in card visibility when a component moves.
+
+Placement into a public or owner-only zone initializes the card face up; placement
+into a hidden zone initializes it face down. Zone access and card face state are
+independent: an explicit subsequent face-down setting remains concealed even for
+an owner allowed to access the zone.
 
 The existing headless zone facade presents cards, so its count and empty-state
 helpers describe projected cards. Reducer zone queries include every component.
