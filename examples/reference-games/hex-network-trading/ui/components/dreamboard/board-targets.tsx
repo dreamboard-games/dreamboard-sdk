@@ -311,8 +311,7 @@ function matchesTarget(
   return (
     (target.kind === kind || (kind === "space" && target.kind === "tile")) &&
     (target.valueKind === "board-space"
-      ? target.value.boardId === boardId &&
-        target.value.spaceId === id
+      ? target.value.boardId === boardId && target.value.spaceId === id
       : target.boardId === boardId && target.value === id)
   );
 }
