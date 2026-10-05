@@ -175,3 +175,10 @@ test("rejects concealed footprints outside the coordinate domain after placement
   };
   expect(BoardProjectionSchema.safeParse({ map: value }).success).toBe(false);
 });
+
+test("rejects a visible tile with no projected cells", () => {
+  expect(
+    BoardProjectionSchema.safeParse({ map: { ...board(), spaces: {} } })
+      .success,
+  ).toBe(false);
+});

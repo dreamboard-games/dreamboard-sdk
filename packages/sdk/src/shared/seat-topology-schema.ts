@@ -128,6 +128,13 @@ export const SeatBoardTopologySchema = z
           message: "A projected cell must belong to a visible tile.",
         });
     }
+    for (const [index, tile] of board.tiles.entries())
+      if (tile.disclosure === "visible" && !cellsByTile.get(tile.ref)?.size)
+        ctx.addIssue({
+          code: "custom",
+          path: ["tiles", index],
+          message: "A visible tile requires at least one projected cell.",
+        });
   });
 export const BoardProjectionSchema = identityRecord(SeatBoardTopologySchema);
 export type SeatBoardTopology = ReadonlyRuntimeData<
