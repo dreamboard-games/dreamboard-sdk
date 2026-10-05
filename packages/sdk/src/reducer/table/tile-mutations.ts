@@ -1,3 +1,4 @@
+import { getPublicTileFootprint } from "../../shared/tile-appearance.js";
 import type { RuntimeTableRecord, ZoneDefinitions } from "../model";
 import { deriveBoardTopology } from "../../shared/board-topology";
 import {
@@ -162,10 +163,7 @@ export function placeTileInPlace(
   )
     throw new Error(`Invalid source location for tile '${tileId}'.`);
   const appearance = table.tiles[tileId].disclosure.appearance;
-  if (appearance && appearance.layout !== definition.layout)
-    throw new Error(
-      `Tile '${tileId}' appearance layout does not match board '${boardId}'.`,
-    );
+  if (appearance) getPublicTileFootprint(appearance, placement);
   const sameBoard = source.type === "OnBoard" && source.boardId === boardId;
   const candidate = candidateWithLocation(table, tileId, placement);
   deriveBoardTopology(candidate, definitions, boardId);
