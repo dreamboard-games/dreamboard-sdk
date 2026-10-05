@@ -1,5 +1,4 @@
 import { createReducerEdit } from "../../transaction";
-import { createStateQueries } from "../../table-queries";
 import type { TrustedRuntimeInput } from "../../core/types";
 import { createReducerDiagnosticsEmitter } from "../../diagnostics";
 import type {
@@ -127,14 +126,23 @@ export interface TrustedRuntimeScope<
     state: TrustedState<Contract>,
     extra: Extra,
     options?: {
-      q?: TableQueriesOfState<TrustedDomainState<Contract>>;
+      q?: TableQueriesOfState<
+        TrustedDomainState<Contract>,
+        TrustedManifest<Contract>
+      >;
       random?: import("./rng-sampler").MutableRandomHelpers;
     },
   ): ActionContext<TrustedDomainState<Contract>, TrustedManifest<Contract>> & {
-    q: ReturnType<typeof createStateQueries<TrustedDomainState<Contract>>>;
+    q: TableQueriesOfState<
+      TrustedDomainState<Contract>,
+      TrustedManifest<Contract>
+    >;
     runtime: Omit<TrustedState<Contract>["runtime"], "rng">;
     random: RandomHelpers;
-  } & RuntimeArgsWithTransaction<TrustedDomainState<Contract>> &
+  } & RuntimeArgsWithTransaction<
+      TrustedDomainState<Contract>,
+      TrustedManifest<Contract>
+    > &
     Extra;
 }
 
@@ -205,7 +213,7 @@ export function createTrustedRuntimeScope<
     return phaseRegistryByName(phaseName)?.interactions ?? [];
   }
 
-  const createTransaction = createReducerEdit<DomainState>(manifest);
+  const createTransaction = createReducerEdit<DomainState, Manifest>(manifest);
 
   function buildContext(state: State): ActionContext<DomainState, Manifest> {
     return buildTrustedContext<Contract>(state, manifest);
@@ -215,7 +223,7 @@ export function createTrustedRuntimeScope<
     state: State,
     extra: Extra,
     options?: {
-      q?: TableQueriesOfState<DomainState>;
+      q?: TableQueriesOfState<DomainState, Manifest>;
       random?: import("./rng-sampler").MutableRandomHelpers;
     },
   ) {

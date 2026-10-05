@@ -4,7 +4,7 @@ exports[`phase 4 trusted-bundle characterization > dispatch accept/reject outcom
 {
   "accepted": {
     "kind": "accept",
-    "stateDigest": "0e3df5bb0eecb981304f19778e2ab922feebda236e2ec03790c8f7cc33b6ccb2",
+    "stateDigest": "03e1eb820f05820ea6ab4c69299ffe11ba98d5fad81b417eb6a75472b8a95a06",
     "traceKinds": [
       "acceptedClientInput",
     ],
@@ -36,7 +36,7 @@ exports[`phase 4 trusted-bundle characterization > lifecycle transition and phas
 
 exports[`phase 4 trusted-bundle characterization > seat projection digest stays golden 1`] = `
 {
-  "digest": "18d76e57c233741398ccf999488723032a053013719c3be8a09894f0345d24a7",
+  "digest": "2b187dd398eab48bdcbee97d338f86d7be5a57cc55ced0293bb0c00e049e3648",
   "schedulerFlow": {
     "activePlayerIds": [
       "player-1",
@@ -54,13 +54,7 @@ exports[`phase 4 trusted-bundle characterization > seat projection digest stays 
         "finish:8fc27907c7572b42",
         "rollTwice:13b486fcf782a631",
       ],
-      "boards": {
-        "byId": {},
-        "hex": {},
-        "network": {},
-        "square": {},
-        "track": {},
-      },
+      "boards": {},
       "resources": {
         "player-1": {},
         "player-2": {},
@@ -80,13 +74,7 @@ exports[`phase 4 trusted-bundle characterization > seat projection digest stays 
         "finish:f998e541dabf73d4",
         "rollTwice:f588c74da36a06ce",
       ],
-      "boards": {
-        "byId": {},
-        "hex": {},
-        "network": {},
-        "square": {},
-        "track": {},
-      },
+      "boards": {},
       "resources": {
         "player-1": {},
         "player-2": {},
@@ -109,7 +97,7 @@ exports[`phase 4 trusted-bundle characterization > seeded roll traces and state 
     "cursor=0;bound=6;value=2",
     "cursor=1;bound=6;value=4",
   ],
-  "stateDigest": "61df8815fdf8253e46cd096149ea7a1883dcbccc05b6c52dda70025df6d6f053",
+  "stateDigest": "63afa366f0aebe5f1a9a92a0cc09151787391a3d64b02bdb51a68b34c6faf393",
   "traceKinds": [
     "acceptedClientInput",
     "rngConsumption",

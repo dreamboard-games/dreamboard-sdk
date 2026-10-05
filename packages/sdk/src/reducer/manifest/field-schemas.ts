@@ -1,13 +1,14 @@
+import type { ReadonlyRuntimeData } from "../../shared/runtime-json.js";
+import type { PerPlayerInstanceId } from "../../shared/domain/per-player-instance.js";
 import * as z from "zod";
 import type {
   FieldSchemaJson,
   JsonValue,
 } from "../../shared/domain/contracts.js";
-import type { ManifestIdsOf } from "./types.js";
+import type { ManifestIdsOf, TileSpaceIds } from "./types.js";
 import type {
-  HexSpaceId,
-  HexEdgeId,
-  HexVertexId,
+  BoardEdgeId,
+  BoardVertexId,
 } from "../../shared/domain/board-identities.js";
 
 export const FIELD_REF_KEY = "x-dreamboard-ref";
@@ -54,51 +55,66 @@ export type CardSchema =
 type RefFamily<T> = {
   [F in FieldRefFamily]: T extends z.core.$brand<`dreamboard:${F}`> ? F : never;
 }[FieldRefFamily];
-type BoardSpaceId<B> = B extends { layout: "hex" }
-  ? HexSpaceId<B>
+type BoardSpaceId<M, B> = B extends { layout: "hex" | "square" }
+  ? TileSpaceIds<M, B["layout"]>
   : B extends { spaces: readonly (infer S)[] }
     ? S extends { id: infer I extends string }
       ? I
       : never
     : never;
-type BoardEdgeId<B> = B extends { layout: "hex"; id: infer I extends string }
-  ? HexEdgeId<I>
-  : B extends { layout: "square" }
-    ? `square-edge:${string}`
-    : never;
-type BoardVertexId<B> = B extends { layout: "hex"; id: infer I extends string }
-  ? HexVertexId<I>
-  : B extends { layout: "square" }
-    ? `square-vertex:${string}`
-    : never;
-type FamilyIds<M, B> = Omit<
-  ManifestIdsOf<M>,
-  "spaceId" | "edgeId" | "vertexId"
-> & {
-  spaceId: [B] extends [never] ? ManifestIdsOf<M>["spaceId"] : BoardSpaceId<B>;
-  edgeId: [B] extends [never] ? ManifestIdsOf<M>["edgeId"] : BoardEdgeId<B>;
-  vertexId: [B] extends [never]
-    ? ManifestIdsOf<M>["vertexId"]
-    : BoardVertexId<B>;
-};
+type RuntimeBoardIdentity<B> = B extends { id: infer I extends string }
+  ? B extends { scope: "perPlayer" }
+    ? PerPlayerInstanceId<"board", I>
+    : I
+  : never;
+type ScopedBoardEdgeId<B> = B extends { layout: "hex" | "square" }
+  ? BoardEdgeId<RuntimeBoardIdentity<B>>
+  : never;
+type ScopedBoardVertexId<B> = B extends { layout: "hex" | "square" }
+  ? BoardVertexId<RuntimeBoardIdentity<B>>
+  : never;
+type ReferenceId<F extends FieldRefFamily, M, B> = F extends "spaceId"
+  ? [B] extends [never]
+    ? ManifestIdsOf<M>["spaceId"]
+    : BoardSpaceId<M, B>
+  : F extends "edgeId"
+    ? [B] extends [never]
+      ? ManifestIdsOf<M>["edgeId"]
+      : ScopedBoardEdgeId<B>
+    : F extends "vertexId"
+      ? [B] extends [never]
+        ? ManifestIdsOf<M>["vertexId"]
+        : ScopedBoardVertexId<B>
+      : ManifestIdsOf<M>[F];
 export type ResolveFields<T, M, B = never> = T extends unknown
   ? [RefFamily<T>] extends [never]
-    ? T extends readonly unknown[]
-      ? { [K in keyof T]: ResolveFields<T[K], M, B> }
-      : T extends object
+    ? T extends string | number | boolean | null | undefined
+      ? T
+      : T extends readonly unknown[]
         ? { [K in keyof T]: ResolveFields<T[K], M, B> }
-        : T
-    : FamilyIds<M, B>[RefFamily<T>]
+        : T extends object
+          ? { [K in keyof T]: ResolveFields<T[K], M, B> }
+          : JsonValue
+    : ReferenceId<RefFamily<T>, M, B>
   : never;
 export type FieldsInput<S, M, B = never> = [S] extends [never]
   ? Record<string, JsonValue>
-  : S extends z.ZodType
-    ? ResolveFields<z.input<S>, M, B>
+  : S extends FieldSchema
+    ? {
+        [K in keyof z.input<S>]: ReadonlyRuntimeData<
+          ResolveFields<z.input<S>[K], M, B>
+        >;
+      }
     : Record<string, JsonValue>;
 export type FieldsOutput<S, M, B = never> = [S] extends [never]
   ? Record<string, JsonValue>
-  : S extends z.ZodType
-    ? ResolveFields<z.output<S>, M, B>
+  : S extends FieldSchema
+    ? {
+        [K in keyof z.output<S>]: Exclude<
+          ResolveFields<z.output<S>[K], M, B>,
+          undefined
+        >;
+      }
     : Record<string, JsonValue>;
 
 /** Reject checks whose meaning cannot survive a JSON round trip. */

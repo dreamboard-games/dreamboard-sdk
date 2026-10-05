@@ -1,3 +1,4 @@
+import { tileSpaceId } from "../../shared/domain/tile-space.js";
 import * as z from "zod";
 import { compileManifest } from "../manifest/compiler";
 import { createTableQueries } from "../table-queries";
@@ -27,8 +28,6 @@ const manifest = compileManifest({
       name: "Map",
       layout: "hex",
       scope: "shared",
-      shape: { kind: "hexagon", radius: 0 },
-      spaces: { "0,0": { id: "origin" } },
     },
   ],
   tileTypes: [
@@ -56,7 +55,8 @@ const tileId = perPlayerInstanceId("tile", "terrain-1", "alice");
 const q = createTableQueries(table, manifest);
 const charges: number = q.tile(tileId).properties.charges;
 const componentCharges: number = q.component.data(tileId).properties.charges;
-const tileLocation: "Detached" | "InZone" = q.component.location(tileId).type;
+const tileLocation: "Detached" | "InZone" | "OnBoard" =
+  q.component.location(tileId).type;
 type ExactId = Assert<
   Equal<
     TileIdOfTable<typeof table>,
@@ -89,7 +89,7 @@ tx.moveComponentToSpace({
   // @ts-expect-error Inventory tiles cannot use OnSpace component locations.
   componentId: tileId,
   boardId: "map",
-  spaceId: "origin",
+  spaceId: tileSpaceId(tileId, "center"),
 });
 tx.moveComponentToEdge({
   // @ts-expect-error Inventory tiles cannot use OnEdge component locations.

@@ -1,0 +1,73 @@
+import { z } from "zod";
+import { createGame } from "../reducer.js";
+import type { CoreInstance, FeatureContext } from "./model.js";
+import { boardFeature } from "./features/board.js";
+
+const model = createGame({
+  manifest: {
+    players: { minPlayers: 1, maxPlayers: 1 },
+    cardSets: [],
+    boards: [{ id: "map", name: "Map", layout: "square", scope: "shared" }],
+    tileTypes: [
+      {
+        id: "cell",
+        name: "Cell",
+        layout: "square",
+        cells: [{ id: "cell", at: { col: 0, row: 0 } }],
+        edgeFieldsSchema: z.object({ cost: z.number() }),
+        vertexFieldsSchema: z.object({ blocked: z.boolean() }),
+        edges: [{ cellId: "cell", side: 0, fields: { cost: 2 } }],
+        vertices: [{ cellId: "cell", corner: 0, fields: { blocked: false } }],
+      },
+    ],
+    tileSeeds: [
+      {
+        id: "tile",
+        typeId: "cell",
+        home: {
+          type: "board",
+          boardId: "map",
+          layout: "square",
+          col: 0,
+          row: 0,
+          rotation: 0,
+        },
+      },
+    ],
+  },
+  phases: { play: z.object({}) },
+  state: { public: z.object({}), private: z.object({}), hidden: z.object({}) },
+});
+const play = model.phase("play");
+const game = model.assemble({
+  initialPhase: "play",
+  phases: {
+    play: play.define({
+      kind: "player",
+      initialState: () => ({}),
+      interactions: {},
+    }),
+  },
+  view: model.view(() => ({})),
+});
+declare const core: CoreInstance<typeof game>;
+declare const context: FeatureContext<typeof game>;
+const feature = boardFeature(core, context);
+type Layout = ReturnType<typeof feature.board.getLayout>;
+declare const edge: NonNullable<ReturnType<Layout["getEdges"]>[number]["data"]>;
+declare const vertex: NonNullable<
+  ReturnType<Layout["getVertices"]>[number]["data"]
+>;
+const edgeIsAny: 0 extends 1 & typeof edge ? true : false = false;
+const vertexIsAny: 0 extends 1 & typeof vertex ? true : false = false;
+const cost: number | undefined = edge.fields.cost;
+const blocked: boolean | undefined = vertex.fields.blocked;
+// @ts-expect-error Edge annotation fields preserve exact declared names.
+edge.fields.unknown;
+// @ts-expect-error Vertex annotation fields preserve exact declared names.
+vertex.fields.unknown;
+// @ts-expect-error Edge annotation values preserve declared scalar types.
+const wrongCost: string | undefined = edge.fields.cost;
+// @ts-expect-error Projected annotation fields are immutable.
+vertex.fields.blocked = true;
+void [edgeIsAny, vertexIsAny, cost, blocked, wrongCost];

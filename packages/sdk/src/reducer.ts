@@ -107,7 +107,7 @@ export {
   ring,
   spiral,
   fromCoordinates,
-} from "./shared/hex-board";
+} from "./reducer/manifest/hex-tiles";
 
 /** Public worker ABI and wire schemas. */
 export {
@@ -154,3 +154,18 @@ export {
   parseBoardSpaceHostId,
   type BoardSpaceHostId,
 } from "./shared/domain/board-space-host.js";
+
+export {
+  tileSpaceId,
+  parseTileSpaceId,
+  type TileSpaceId,
+} from "./shared/domain/tile-space.js";
+export {
+  boardEdgeId,
+  boardVertexId,
+  parseBoardElementId,
+} from "./shared/domain/board-element.js";
+export type {
+  BoardEdgeId,
+  BoardVertexId,
+} from "./shared/domain/board-identities.js";

@@ -1,43 +1,18 @@
+import { boardEdgeId, boardVertexId } from "./domain/board-element.js";
 import { MAXIMUM_BOARD_COORDINATE } from "./domain/board-coordinates.js";
-import type { HexEdgeId, HexVertexId } from "./domain/board-identities.js";
-import type {
-  HexShape,
-  HexCoordinate,
-  HexOrientation,
-} from "./domain/contracts.js";
+import type { BoardEdgeId, BoardVertexId } from "./domain/board-identities.js";
 import {
   defineHex,
   Grid,
   Orientation,
-  fromCoordinates as coordinatesTraversal,
-  rectangle as rectangleTraversal,
   ring as ringTraversal,
-  spiral as spiralTraversal,
   line as lineTraversal,
   type Point,
 } from "honeycomb-grid";
 
-export type { HexShape } from "./domain/contracts.js";
-export type AxialCoordinate = Readonly<HexCoordinate>;
-export const hexagon = (
-  options: Omit<Extract<HexShape, { kind: "hexagon" | "spiral" }>, "kind">,
-) => ({ kind: "hexagon" as const, ...options });
-export const spiral = (
-  options: Omit<Extract<HexShape, { kind: "hexagon" | "spiral" }>, "kind">,
-) => ({ kind: "spiral" as const, ...options });
-export const ring = (
-  options: Omit<Extract<HexShape, { kind: "ring" }>, "kind">,
-) => ({ kind: "ring" as const, ...options });
-export const rectangle = (
-  options: Omit<Extract<HexShape, { kind: "rectangle" }>, "kind">,
-) => ({ kind: "rectangle" as const, ...options });
-export const fromCoordinates = <
-  const Coordinates extends readonly AxialCoordinate[],
->(
-  coordinates: Coordinates,
-) => ({ kind: "coordinates" as const, coordinates });
-
-export type HexBoardOrientation = HexOrientation;
+export type AxialCoordinate = { readonly q: number; readonly r: number };
+export type HexBoardOrientation =
+  import("./board-topology-schema.js").HexBoardTopology["orientation"];
 export type HexBoardSpace<Id extends string = string> = AxialCoordinate & {
   id: Id;
 };
@@ -94,58 +69,15 @@ function hexClass(orientation: HexBoardOrientation, dimensions = 1) {
   });
 }
 
-/** Generate axial coordinates with the library's traversers. Shapes remain JSON. */
-export function hexShapeCoordinates(
-  shape: HexShape,
-  orientation: HexBoardOrientation = "pointy",
-): AxialCoordinate[] {
-  const integer = (value: number, name: string, minimum: number) => {
-    if (!Number.isSafeInteger(value) || value < minimum)
-      throw new Error(`${name} must be a safe integer >= ${minimum}.`);
-  };
-  const coordinate = (value: AxialCoordinate) => {
-    integer(value.q, "q", Number.MIN_SAFE_INTEGER);
-    integer(value.r, "r", Number.MIN_SAFE_INTEGER);
-  };
-  if (shape.kind === "coordinates") {
-    shape.coordinates.forEach(coordinate);
-    if (
-      new Set(shape.coordinates.map(coordinateKey)).size !==
-      shape.coordinates.length
-    )
-      throw new Error("Hex shape contains duplicate coordinates.");
-  } else if (shape.kind === "rectangle") {
-    integer(shape.width, "width", 1);
-    integer(shape.height, "height", 1);
-    if (shape.start) coordinate(shape.start);
-  } else {
-    integer(shape.radius, "radius", 0);
-    if (shape.center) coordinate(shape.center);
-  }
-  const Tile = hexClass(orientation);
-  const traversal =
-    shape.kind === "coordinates"
-      ? coordinatesTraversal(...shape.coordinates)
-      : shape.kind === "rectangle"
-        ? rectangleTraversal(shape)
-        : shape.kind === "ring"
-          ? ringTraversal({
-              radius: shape.radius,
-              center: shape.center ?? { q: 0, r: 0 },
-            })
-          : spiralTraversal({ radius: shape.radius, start: shape.center });
-  return new Grid(Tile, traversal).toArray().map(({ q, r }) => ({ q, r }));
-}
-
 export type HexTopologyEdge<BoardId extends string> = {
-  id: HexEdgeId<BoardId>;
+  id: BoardEdgeId<BoardId>;
   spaceIds: string[];
-  vertexIds: [HexVertexId<BoardId>, HexVertexId<BoardId>];
+  vertexIds: [BoardVertexId<BoardId>, BoardVertexId<BoardId>];
 };
 export type HexTopologyVertex<BoardId extends string> = {
-  id: HexVertexId<BoardId>;
+  id: BoardVertexId<BoardId>;
   spaceIds: string[];
-  edgeIds: HexEdgeId<BoardId>[];
+  edgeIds: BoardEdgeId<BoardId>[];
 };
 
 /** One immutable topology for materialization, rules, layout, and hit testing. */
@@ -182,25 +114,24 @@ export function createHexTopology<
   const spacesByCoordinate = new Map(
     spaces.map((space) => [coordinateKey(space), space]),
   );
-  const cornersBySpace = new Map<SpaceId, HexVertexId<BoardId>[]>();
-  const edgesBySpace = new Map<SpaceId, HexEdgeId<BoardId>[]>();
-  const edgesById = new Map<HexEdgeId<BoardId>, HexTopologyEdge<BoardId>>();
+  const cornersBySpace = new Map<SpaceId, BoardVertexId<BoardId>[]>();
+  const edgesBySpace = new Map<SpaceId, BoardEdgeId<BoardId>[]>();
+  const edgesById = new Map<BoardEdgeId<BoardId>, HexTopologyEdge<BoardId>>();
   const verticesById = new Map<
-    HexVertexId<BoardId>,
+    BoardVertexId<BoardId>,
     HexTopologyVertex<BoardId>
   >();
-  const vertexPoints = new Map<HexVertexId<BoardId>, Point>();
+  const vertexPoints = new Map<BoardVertexId<BoardId>, Point>();
   const Tile = hexClass(orientation);
   const cornerId = (space: AxialCoordinate, corner: number) =>
-    `${boardId}:vertex:${vertexKey(space, corner)}` as HexVertexId<BoardId>;
+    boardVertexId("hex", boardId, vertexKey(space, corner));
   for (const space of spaces) {
     const cornerIds = Array.from({ length: 6 }, (_, corner) =>
       cornerId(space, corner),
     );
     cornersBySpace.set(space.id, cornerIds);
     const edgeIds = Array.from({ length: 6 }, (_, side) => {
-      const id =
-        `${boardId}:edge:${edgeKey(space, side)}` as HexEdgeId<BoardId>;
+      const id = boardEdgeId("hex", boardId, edgeKey(space, side));
       let edge = edgesById.get(id);
       if (!edge) {
         edge = {
@@ -208,7 +139,7 @@ export function createHexTopology<
           spaceIds: [],
           vertexIds: [cornerIds[(side + 5) % 6], cornerIds[side]].sort(
             compare,
-          ) as [HexVertexId<BoardId>, HexVertexId<BoardId>],
+          ) as [BoardVertexId<BoardId>, BoardVertexId<BoardId>],
         };
         edgesById.set(id, edge);
       }
@@ -367,25 +298,25 @@ export function createHexTopology<
         throw new Error("Spaces do not share exactly one vertex.");
       return vertex.id;
     },
-    incidentEdges(vertexId: HexVertexId<BoardId>) {
+    incidentEdges(vertexId: BoardVertexId<BoardId>) {
       const vertex = verticesById.get(vertexId);
       if (!vertex) throw new Error(`Unknown vertex '${vertexId}'.`);
       return [...vertex.edgeIds];
     },
-    incidentVertices(edgeId: HexEdgeId<BoardId>) {
+    incidentVertices(edgeId: BoardEdgeId<BoardId>) {
       const edge = edgesById.get(edgeId);
       if (!edge) throw new Error(`Unknown edge '${edgeId}'.`);
       return [...edge.vertexIds] as [
-        HexVertexId<BoardId>,
-        HexVertexId<BoardId>,
+        BoardVertexId<BoardId>,
+        BoardVertexId<BoardId>,
       ];
     },
-    spacesAt(vertexId: HexVertexId<BoardId>) {
+    spacesAt(vertexId: BoardVertexId<BoardId>) {
       const vertex = verticesById.get(vertexId);
       if (!vertex) throw new Error(`Unknown vertex '${vertexId}'.`);
       return [...vertex.spaceIds] as SpaceId[];
     },
-    spacesAlong(edgeId: HexEdgeId<BoardId>) {
+    spacesAlong(edgeId: BoardEdgeId<BoardId>) {
       const edge = edgesById.get(edgeId);
       if (!edge) throw new Error(`Unknown edge '${edgeId}'.`);
       return [...edge.spaceIds] as SpaceId[];
@@ -535,31 +466,4 @@ export function createHexTopologyCache() {
     });
     return value;
   };
-}
-
-export function resolveHexSpaces(
-  board: import("./domain/contracts.js").HexBoardSpec,
-): import("./domain/contracts.js").HexSpaceSpec[] {
-  const excluded = new Set((board.exclude ?? []).map(coordinateKey));
-  const coordinates = hexShapeCoordinates(
-    board.shape,
-    board.orientation,
-  ).filter((coordinate) => !excluded.has(coordinateKey(coordinate)));
-  const known = new Set(coordinates.map(coordinateKey));
-  for (const key of Object.keys(board.spaces ?? {})) {
-    if (!known.has(key))
-      throw new Error(
-        `Hex board '${board.id}' overrides coordinate '${key}' outside its shape.`,
-      );
-  }
-  return coordinates
-    .map((coordinate) => {
-      const key = coordinateKey(coordinate) as `${number},${number}`;
-      return {
-        ...coordinate,
-        ...board.spaces?.[key],
-        id: board.spaces?.[key]?.id ?? key,
-      };
-    })
-    .sort((a, b) => compare(a.id, b.id));
 }

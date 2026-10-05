@@ -6,7 +6,11 @@ import {
   getComponentsOnSpace,
   getComponentsOnVertex,
 } from "./index";
-import { createSpatialTable, spatialDefinitions } from "./table-test-fixtures";
+import {
+  createSpatialTable,
+  spatialDefinitions,
+  spatialElements,
+} from "./table-test-fixtures";
 
 describe("table ops spatial helpers", () => {
   test("moveComponentToSpace and moveComponentToZone re-home cards, pieces, and dice", () => {
@@ -69,7 +73,12 @@ describe("table ops spatial helpers", () => {
       }),
     ).toEqual(["card-1"]);
     expect(
-      getComponentsOnSpace(withDieOnSpace, "main-board", "space-a"),
+      getComponentsOnSpace(
+        withDieOnSpace,
+        spatialDefinitions,
+        "main-board",
+        "space-a",
+      ),
     ).toEqual(["piece-1", "die-1"]);
   });
 
@@ -106,9 +115,14 @@ describe("table ops spatial helpers", () => {
     expect(detached.componentLocations["piece-1"]).toEqual({
       type: "Detached",
     });
-    expect(getComponentsOnSpace(detached, "main-board", "space-a")).toEqual([
-      "die-1",
-    ]);
+    expect(
+      getComponentsOnSpace(
+        detached,
+        spatialDefinitions,
+        "main-board",
+        "space-a",
+      ),
+    ).toEqual(["die-1"]);
     expect(detached.componentLocations["die-1"]).toEqual({
       type: "OnSpace",
       boardId: "main-board",
@@ -123,7 +137,8 @@ describe("table ops spatial helpers", () => {
     expect(
       () =>
         void Reflect.apply(
-          createTestTransaction({ table }).moveComponentToEdge,
+          createTestTransaction({ table }, spatialDefinitions)
+            .moveComponentToEdge,
           undefined,
           [
             {
@@ -137,7 +152,8 @@ describe("table ops spatial helpers", () => {
     expect(
       () =>
         void Reflect.apply(
-          createTestTransaction({ table }).moveComponentToVertex,
+          createTestTransaction({ table }, spatialDefinitions)
+            .moveComponentToVertex,
           undefined,
           [
             {
@@ -157,7 +173,7 @@ describe("table ops spatial helpers", () => {
     ).moveComponentToEdge({
       componentId: "piece-1",
       boardId: "square-board",
-      edgeId: "square-edge:a1-a2",
+      edgeId: spatialElements().squareEdge,
     }).table;
     const withDieOnEdge = createTestTransaction(
       {
@@ -167,7 +183,7 @@ describe("table ops spatial helpers", () => {
     ).moveComponentToEdge({
       componentId: "die-1",
       boardId: "square-board",
-      edgeId: "square-edge:a1-a2",
+      edgeId: spatialElements().squareEdge,
     }).table;
     const withPieceOnVertex = createTestTransaction(
       {
@@ -177,17 +193,23 @@ describe("table ops spatial helpers", () => {
     ).moveComponentToVertex({
       componentId: "piece-1",
       boardId: "square-board",
-      vertexId: "square-vertex:center",
+      vertexId: spatialElements().squareVertex,
     }).table;
 
     expect(
-      getComponentsOnEdge(withDieOnEdge, "square-board", "square-edge:a1-a2"),
+      getComponentsOnEdge(
+        withDieOnEdge,
+        spatialDefinitions,
+        "square-board",
+        spatialElements().squareEdge,
+      ),
     ).toEqual(["piece-1", "die-1"]);
     expect(
       getComponentsOnVertex(
         withPieceOnVertex,
+        spatialDefinitions,
         "square-board",
-        "square-vertex:center",
+        spatialElements().squareVertex,
       ),
     ).toEqual(["piece-1"]);
   });
@@ -226,6 +248,7 @@ describe("table ops spatial helpers", () => {
       playedBy: null,
     };
     const definitions = {
+      ...spatialDefinitions,
       zoneDefinitions: {
         ...spatialDefinitions.zoneDefinitions,
         worker: {

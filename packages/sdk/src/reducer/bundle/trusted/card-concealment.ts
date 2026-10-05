@@ -42,9 +42,15 @@ export function concealCards(
   for (const [zoneId, definition] of Object.entries(
     definitions.zoneDefinitions,
   )) {
-    const hosts = enumerateZoneHosts(table, definition);
+    const hosts = enumerateZoneHosts(table, definitions, definition);
     for (const hostId of hosts) {
-      const accessible = resolveZoneAccess(table, definition, hostId, playerId);
+      const accessible = resolveZoneAccess(
+        table,
+        definitions,
+        definition,
+        hostId,
+        playerId,
+      );
       const cardIds = getZoneComponents(table, definitions, {
         zoneId,
         hostId,

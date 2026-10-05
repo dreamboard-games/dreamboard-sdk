@@ -11,21 +11,17 @@ pnpm check
 pnpm dev
 ```
 
-Open the URL printed by `dreamboard-dev`. Click Add one to play the counter,
-switch seats to inspect player perspectives, and use Reset to start again.
-Only the first seat can increment in this example. Refresh after source edits to
-rebuild. The host saves the session in browser storage and offers Save checkpoint
-and Restore checkpoint. Once loaded, play can continue without internet; reloading
-still needs the local development server.
+Open the URL printed by Vite. Click Add one to play the counter and refresh to
+start again. Open `/?scenario=increment&at=incremented` to begin at the authored
+scenario checkpoint. The local entry runs the reducer and UI in your browser.
 
-The template already pins compatible published SDK and dev-host versions and
+The template pins its published SDK version and
 owns its TypeScript settings. No dependency conversion or parent repository is
 needed. Keep the generated `pnpm-lock.yaml` in your project. Change `name` in
 `package.json` to name your game package.
 
 The command uses the current starter on `main`. To reproduce a specific version,
-replace `#main` with a Git tag or commit containing this starter. Keep the SDK and
-dev-host pins together when upgrading; the host must support the same SDK.
+replace `#main` with a Git tag or commit containing this starter.
 
 ## Project layout
 
@@ -33,6 +29,7 @@ dev-host pins together when upgrading; the host must support the same SDK.
 - `app/game.ts` owns the rules and player view; `app/index.ts` exports the reducer bundle.
 - `ui/index.tsx` connects the UI to the host using `iframeSource()`.
 - `ui/game.tsx` provides the typed React binding and the counter component.
+- `ui/dev.tsx` starts the local UI with the source owned by `ui/development-source.ts`.
 - `test/` contains rule tests and the named increment scenario.
 
 `pnpm check` runs TypeScript and Vitest. `pnpm build` builds the standalone local
@@ -43,8 +40,7 @@ Dreamboard UI bundle: the hosted entry is `ui/index.tsx` and imports only erased
 game types, while the host executes `app/index.ts` separately.
 
 This starter supports advanced local authoring. It does not upload to Studio or
-publish a hosted Playtest. See the [local authoring guide](https://github.com/dreamboard-games/dreamboard/blob/main/docs/quickstart.mdx)
-for host behavior and asset limitations.
+publish a hosted Playtest.
 
 ## SDK repository verification
 

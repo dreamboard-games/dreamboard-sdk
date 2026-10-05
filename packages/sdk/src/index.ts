@@ -45,7 +45,6 @@ export type {
   PluginGameplayFrame,
   PluginPlayerSummary,
   PluginSessionDescriptor,
-  ReducerBoardStaticProjection,
   ReducerSeatProjectionBundle,
   SimultaneousPhaseSnapshot,
   SystemActionEvent,
@@ -80,7 +79,6 @@ export {
   materializePluginGameplayFrame,
 } from "./shared/protocol/projection.js";
 export {
-  BoardStaticProjectionSchema,
   GameEventDetailSchema,
   GameEventSchema,
   GameOutcomeSchema,
@@ -129,3 +127,18 @@ export {
   parseBoardSpaceHostId,
   type BoardSpaceHostId,
 } from "./shared/domain/board-space-host.js";
+
+export {
+  tileSpaceId,
+  parseTileSpaceId,
+  type TileSpaceId,
+} from "./shared/domain/tile-space.js";
+export {
+  boardEdgeId,
+  boardVertexId,
+  parseBoardElementId,
+} from "./shared/domain/board-element.js";
+export type {
+  BoardEdgeId,
+  BoardVertexId,
+} from "./shared/domain/board-identities.js";

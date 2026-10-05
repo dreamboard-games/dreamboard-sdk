@@ -42,7 +42,7 @@ function createTable(playerIds = ["player-1", "player-2"]) {
     ownerOfCard: {},
     visibility: {},
     resources: Object.fromEntries(ids.map((id) => [id, {}])),
-    boards: { byId: {}, hex: {}, network: {}, square: {}, track: {} },
+    boards: {},
     dice: {
       "die-1": {
         id: "die-1",

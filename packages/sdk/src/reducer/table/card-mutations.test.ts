@@ -130,7 +130,10 @@ describe("canonical zone mutations", () => {
       "toString",
     ]);
     expect(Object.hasOwn(table.visibility, "toString")).toBe(false);
-    const q = createTableQueries<RuntimeTableRecord>(table, manifest);
+    const q = createTableQueries<RuntimeTableRecord, typeof manifest>(
+      table,
+      manifest,
+    );
     expect(q.component.data("toString")).toEqual({
       id: "toString",
       pieceTypeId: "token",

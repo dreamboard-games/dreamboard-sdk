@@ -4,6 +4,7 @@ import { safeParseOrThrow } from "../../parse-utils";
 import { createStateQueries } from "../../table-queries";
 import type {
   GameEvent,
+  ExactManifestContractOf,
   GameOutcome,
   PhaseMapOf,
   ReducerGameContractLike,
@@ -190,10 +191,10 @@ export function createLifecycleRunner<
     ) as State["table"];
     assertZoneConsistency(parsedTable, scope.definition.contract.manifest);
     const initialPhase = resolveInitialPhase();
-    const initialQueries = createStateQueries(
-      { table: parsedTable },
-      scope.definition.contract.manifest,
-    );
+    const initialQueries = createStateQueries<
+      { table: State["table"] },
+      ExactManifestContractOf<Contract>
+    >({ table: parsedTable }, scope.manifest);
     return {
       initialPhase,
       state: {

@@ -7,6 +7,7 @@ import type {
 import {
   ids,
   literals,
+  manifestContract,
   type EdgeId,
   type PieceId,
   type PlayerId,
@@ -28,7 +29,7 @@ export type Q = typeof stormtrail.types.Queries;
  * Any open transaction over the game state. Phase reducers hand in their
  * phase-scoped `tx`; the op methods are bivariant so it is assignable here.
  */
-export type Tx = ReducerTransaction<GameState>;
+export type Tx = ReducerTransaction<GameState, string, typeof manifestContract>;
 
 export const TRAIL_COST: ResourceCounts = { timber: 1, brick: 1 };
 export const CAMP_COST: ResourceCounts = {

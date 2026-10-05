@@ -41,10 +41,10 @@ export const touchesStartingCamp: Predicate<EdgeId> = {
   id: "touches-starting-camp",
   errorCode: "SETUP_TRAIL_NOT_ADJACENT",
   message: "The starting trail must touch the camp just placed.",
-  test: ({ state, targetId }) => {
+  test: ({ state, q, targetId }) => {
     const intersectionId = state.publicState.setup?.pendingIntersectionId;
     return intersectionId
-      ? edgeTouchesIntersection(targetId, intersectionId)
+      ? edgeTouchesIntersection(q, targetId, intersectionId)
       : false;
   },
 };

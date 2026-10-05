@@ -6,6 +6,7 @@ import type {
   PlayerIdOfState,
   ReducerGameContractLike,
   RuntimeTableRecord,
+  ZoneDefinitions,
   ReducerAccept,
   TableQueriesOfState,
 } from "../../model";
@@ -58,8 +59,9 @@ const implicitResultSymbol = Symbol("dreamboard.implicitResult");
 
 export type RuntimeArgsWithTransaction<
   DomainState extends { table: RuntimeTableRecord },
+  Definitions extends ZoneDefinitions,
 > = {
-  tx: ReducerTransaction<DomainState>;
+  tx: ReducerTransaction<DomainState, string, Definitions>;
   [implicitResultSymbol]: () => ReducerAccept<DomainState>;
 };
 
@@ -69,7 +71,9 @@ export type RuntimeArgsWithTransaction<
  */
 export function implicitResultOf<
   DomainState extends { table: RuntimeTableRecord },
->(args: RuntimeArgsWithTransaction<DomainState>): ReducerAccept<DomainState> {
+>(args: {
+  [implicitResultSymbol]: () => ReducerAccept<DomainState>;
+}): ReducerAccept<DomainState> {
   return args[implicitResultSymbol]();
 }
 
@@ -79,13 +83,19 @@ export function buildRuntimeArgs<
 >(
   state: TrustedState<Contract>,
   manifest: ManifestContractOf<Contract>,
-  createTransaction: ReducerEdit<BaseGameStateOfContract<Contract>>,
+  createTransaction: ReducerEdit<
+    BaseGameStateOfContract<Contract>,
+    ManifestContractOf<Contract>
+  >,
   toDomainState: (
     state: TrustedState<Contract>,
   ) => BaseGameStateOfContract<Contract>,
   extra: Extra,
   options: {
-    q?: TableQueriesOfState<BaseGameStateOfContract<Contract>>;
+    q?: TableQueriesOfState<
+      BaseGameStateOfContract<Contract>,
+      ManifestContractOf<Contract>
+    >;
     random?: import("./rng-sampler").MutableRandomHelpers;
   } = {},
 ) {
@@ -101,7 +111,9 @@ export function buildRuntimeArgs<
   };
   // The transaction clones the table, so open it only when a callback reads
   // `tx`. Views, actor selectors, and rules never pay for it.
-  let transaction: ReducerTransaction<DomainState> | undefined;
+  let transaction:
+    | ReducerTransaction<DomainState, string, ManifestContractOf<Contract>>
+    | undefined;
   Object.defineProperty(args, "tx", {
     enumerable: true,
     get: () => {
@@ -119,5 +131,6 @@ export function buildRuntimeArgs<
         ? transaction.accept()
         : { type: "accept", state: domainState, events: [] },
   });
-  return args as typeof args & RuntimeArgsWithTransaction<DomainState>;
+  return args as typeof args &
+    RuntimeArgsWithTransaction<DomainState, ManifestContractOf<Contract>>;
 }

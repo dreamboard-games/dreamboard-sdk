@@ -1,20 +1,20 @@
 # Hex board geometry
 
-Hex manifests use JSON shapes and `honeycomb-grid` 4.1.5 for coordinates,
-traversal, corners, distance, and hit testing. Hex templates and hand-built
-cube-coordinate IDs are removed. Square and generic boards also use inline manifest data; all template merging is removed.
+Hex boards derive geometry from tile instances whose canonical location is
+`OnBoard`. Immutable tile definitions describe local cells and annotations;
+board definitions describe layout and orientation. Generic boards retain static
+spaces. Runtime boards store only their definition base ID and explicit relations.
 
 ```ts
 import {
-  hexagon,
   compileManifest,
   createTableQueries,
+  tileSpaceId,
 } from "@dreamboard-games/sdk/reducer";
 
 const contract = compileManifest({
   players: { minPlayers: 1, maxPlayers: 1 },
   cardSets: [],
-  zones: [],
   boards: [
     {
       id: "island",
@@ -22,65 +22,92 @@ const contract = compileManifest({
       layout: "hex",
       scope: "shared",
       orientation: "pointy",
-      shape: hexagon({ radius: 2 }),
-      exclude: [{ q: 2, r: 0 }],
-      spaces: { "0,0": { id: "capital", typeId: "city" } },
+    },
+  ],
+  tileTypes: [
+    {
+      id: "district",
+      name: "District",
+      layout: "hex",
+      cells: [
+        { id: "capital", at: { q: 0, r: 0 } },
+        { id: "forest", at: { q: 1, r: 0 } },
+      ],
+    },
+  ],
+  tileSeeds: [
+    {
+      id: "district",
+      typeId: "district",
+      home: {
+        type: "board",
+        boardId: "island",
+        layout: "hex",
+        q: 0,
+        r: 0,
+        rotation: 0,
+      },
     },
   ],
 } as const);
-const table = contract.createInitialTable({ playerIds: [] });
+const table = contract.createInitialTable({ playerIds: ["player-1"] });
 const board = createTableQueries(table, contract).board("island");
-const neighbors = board.neighbors("capital");
-const edge = board.edge("capital", neighbors[0]!);
+const capital = tileSpaceId("district", "capital");
+const neighbors = board.neighbors(capital);
+const edge = board.edge(capital, neighbors[0]!);
 const layout = board.getLayout({ hexSize: 40 });
 ```
 
-Shapes are `hexagon({ radius, center? })`, `spiral({ radius, center? })`,
-`ring({ radius, center? })`, `rectangle({ width, height, start? })`, and
-`fromCoordinates([{ q, r }, ...])`. Hexagon and spiral cover the center through
-the outer ring. Orientation is `pointy` or `flat`. Rectangles use the library's
-offset rectangle traversal. Overrides apply after exclusions; an override outside
-the resulting shape is an error. Default space IDs are axial `q,r` strings.
+For regular fixed boards, `hexagon`, `spiral`, `ring`, `rectangle`, and
+`fromCoordinates` return ordinary `tileTypes` and `tileSeeds` collections to
+spread into a manifest. Pass `boardId`, `tileTypeId`, and `tileId` explicitly.
+For example, `hexagon({ boardId: "island", tileTypeId: "terrain", tileId:
+"island-terrain", radius: 2 })` creates one multi-cell tile placed at the origin.
+These helpers do not introduce a separate runtime board model.
 
-Explicit coordinate lists retain exact space-ID types, including overrides.
-Dynamic shapes retain named override literals plus the axial string format;
-the compiler does not enumerate their coordinates in TypeScript. All geometry
-queries validate actual space membership. Edge and vertex IDs are branded by
-board identity; obtain them through queries instead of constructing strings.
-Per-player instances reuse their base board's topology identities.
+Cell identity combines the tile instance and its local cell ID. It is independent
+of placement, so relocation preserves cell and attached-zone identity. Tile
+queries address the complete game inventory; board queries include only current
+placements on that exact board. Obtain world edge and vertex IDs from queries.
+They combine the runtime board instance and lattice coordinates, so per-player
+boards never share world-element identities.
 
-`spaceEdges(space)` and `spaceVertices(space)` use axial direction order on both
-orientations: `(1,0)`, `(0,1)`, `(-1,1)`, `(-1,0)`, `(0,-1)`, `(1,-1)`.
-Side N faces direction N; corner N lies between directions N and (N+1)%6.
-Side N connects corners (N+5)%6 and N. Relative to the former honeycomb order,
-pointy corner indices move back one; flat corner indices move back two and flat
-side indices move forward one.
-Shared elements have one ID regardless of which incident space is queried. Authored metadata can use
-`ref: { spaces: [a, b] }` / `ref: { spaces: [a, b, c] }`, or boundary refs
-`{ space, side }` / `{ space, corner }`.
+Hex rotation follows axial direction order: `(1,0)`, `(0,1)`, `(-1,1)`,
+`(-1,0)`, `(0,-1)`, `(1,-1)`. Rotation 1 maps `(q,r)` to `(-r,q+r)`;
+translation follows rotation. Rotations must be integers from 0 through 5.
+Overlapping cells are rejected, including overlaps within one tile definition.
 
-`neighbors`, `ring`, and `line` use geometry. Ring and line ignore holes;
-ring and line return only present cells. `spacesAt(vertex)`, `spacesAlong(edge)`,
-`edgesOf(vertex)`, and `verticesOf(edge)` return exact incidence,
-including boundary cells and holes.
+`spaceEdges(space)` and `spaceVertices(space)` use that same direction order for
+both orientations. Side N faces direction N; corner N lies between directions N
+and (N+1)%6. Side N connects corners (N+5)%6 and N. Tile annotations identify a
+local `cellId` and `side` or `corner`; rotation transforms their world address.
+Adjacent cells share one world element. Conflicting fields, types or labels on
+that element are rejected rather than resolved by declaration order.
 
-`getLayout({ hexSize, origin? })` returns a viewBox object, space centers and corners,
-edge endpoint lines, vertex centers, and `pointToSpace({ x, y })`. Points use
-layout coordinates before any SVG/DOM transform. Hit testing outside the board
-or inside an excluded cell returns `undefined`. These values contain no React or
-interaction eligibility; renderers compose their own visuals and target props.
+`neighbors`, `ring`, and `line` use geometry. Ring and line ignore holes and
+return only present cells. `spacesAt(vertex)`, `spacesAlong(edge)`,
+`edgesOf(vertex)`, and `verticesOf(edge)` return exact incidence, including
+boundary cells and holes. Explicit session relations remain distinct from this
+adjacency and must refer to current spaces.
+
+`getLayout({ hexSize, origin? })` returns a viewBox object, space centers and
+corners, edge endpoint lines, vertex centers, and `pointToSpace({ x, y })`.
+Points use layout coordinates before any SVG/DOM transform. Hit testing outside
+the board or inside a hole returns `undefined`. These values contain no React
+or interaction eligibility; renderers compose visuals and target props.
 
 Hex `distance(a, b)` returns the shortest route through present adjacent spaces,
 or `Infinity` when disconnected. `gridDistance(a, b)` measures the axial lattice
-ignoring missing cells. Edges and vertices use board-prefixed lattice coordinate
-identities, so adding or removing neighbours does not rename existing elements.
+ignoring missing cells. Adding or removing neighbours does not rename existing
+world edges or vertices.
 
-Topology caching stores geometry only and compares current board coordinates on
-each lookup. Component state, authored metadata and interaction decoration remain
-owned by the current frame or table. Layout caching retains only the latest size
-and origin; board mutation therefore cannot reuse stale geometry.
+The shared topology derivation serves reducer queries and seat projection.
+Clients consume only the projected topology. Checkpoints do not store spaces,
+edges, vertices or a second placement map. Cached topology must reflect current
+placements and relations, including after clone and restore.
 
 Axial coordinates must be safe integers within
-`±Math.floor(Number.MAX_SAFE_INTEGER / 4)`. This conservative bound keeps
-neighbour offsets, cube-coordinate sums and pairwise differences exact;
-unsupported extreme coordinates are rejected before building topology.
+`±Math.floor(Number.MAX_SAFE_INTEGER / 4)`. Rotated and translated coordinates
+must also satisfy this bound. It keeps neighbour offsets, cube-coordinate sums
+and pairwise differences exact; unsupported extremes reject before topology is
+constructed.

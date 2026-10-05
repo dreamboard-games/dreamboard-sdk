@@ -1,4 +1,7 @@
-import { perPlayerInstanceId } from "@dreamboard-games/sdk/reducer";
+import {
+  perPlayerInstanceId,
+  tileSpaceId,
+} from "@dreamboard-games/sdk/reducer";
 import { expect, type Locator, type Page } from "@playwright/test";
 
 type Point = { x: number; y: number };
@@ -11,10 +14,13 @@ export async function proveCardDrag(page: Page, touch: boolean) {
   const card = cards.first();
   await expect(cards).toHaveCount(2);
   const boardId = perPlayerInstanceId("board", "mat", "player-2");
-  const escapedBoardId = await page.evaluate((id) => CSS.escape(id), boardId);
-  const destination = page.locator(
-    `svg [data-board="${escapedBoardId}"][data-action="select"][aria-label="0,0"]`,
+  const spaceId = tileSpaceId(
+    perPlayerInstanceId("tile", "cell", "player-2"),
+    "cell",
   );
+  const destination = page
+    .locator("svg")
+    .getByRole("button", { name: spaceId, exact: true });
   const discard = page.locator('[aria-label="Drop for play.discard"]');
   const drafts = page.getByTestId("scenario-drafts");
   const active = page.getByTestId("scenario-drag");
@@ -99,14 +105,14 @@ export async function proveCardDrag(page: Page, touch: boolean) {
     .toEqual({
       "play.place": {
         card: cardId,
-        space: { boardId, spaceId: "0,0" },
+        space: { boardId, spaceId },
       },
     });
   await page
     .locator('[data-action="submit"][data-interaction="play.place"]')
     .click();
   await expect(view).toContainText(
-    `"placed":${JSON.stringify({ boardId, spaceId: "0,0" })}`,
+    `"placed":${JSON.stringify({ boardId, spaceId })}`,
   );
 
   // Drop on an area that runs a card-only interaction.

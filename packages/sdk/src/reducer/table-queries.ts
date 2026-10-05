@@ -12,7 +12,7 @@ import type {
   CardIdOfTable,
   ComponentDataOfTable,
   ComponentIdOfTable,
-  RuntimeTableRecord,
+  RuntimeQueryTable,
   TableQueries,
   TableQueriesOfState,
 } from "./model";
@@ -35,10 +35,10 @@ import {
   getPlayerResources,
 } from "./table";
 
-export function createTableQueries<Table extends RuntimeTableRecord>(
-  table: Table,
-  definitions: ZoneDefinitions,
-): TableQueries<Table> {
+export function createTableQueries<
+  Table extends RuntimeQueryTable,
+  Definitions extends ZoneDefinitions,
+>(table: Table, definitions: Definitions): TableQueries<Table, Definitions> {
   return {
     tile: <Id extends TileIdOfTable<Table>>(tileId: Id) =>
       requireLookup(
@@ -47,7 +47,7 @@ export function createTableQueries<Table extends RuntimeTableRecord>(
         tileId,
       ) as Table["tiles"][Id],
     board: <BoardId extends BoardIdOfTable<Table>>(boardId: BoardId) =>
-      bindBoardQueries(table, boardId),
+      bindBoardQueries(table, definitions, boardId),
     // Query construction boundary: compiled definitions admit hosts and canonical
     // memberships supply component IDs; the card path filters own card entries.
     // eslint-disable-next-line no-restricted-syntax -- Construction boundary binding admitted runtime memberships to exact table IDs.
@@ -58,7 +58,7 @@ export function createTableQueries<Table extends RuntimeTableRecord>(
         cards: (zoneId: string, hostId?: string) =>
           getZoneCardCollection(table, definitions, { zoneId, hostId }),
       },
-    ) as unknown as TableQueries<Table>["zone"],
+    ) as unknown as TableQueries<Table, Definitions>["zone"],
     zones: ((zoneId: string) =>
       getZones(table, definitions, zoneId)) as TableQueries<Table>["zones"],
     card: {
@@ -109,24 +109,27 @@ export function createTableQueries<Table extends RuntimeTableRecord>(
       ) => getComponentZoneLocation(table, componentId),
       space: <ComponentId extends ComponentIdOfTable<Table>>(
         componentId: ComponentId,
-      ) => getComponentSpaceLocation(table, componentId),
+      ) => getComponentSpaceLocation(table, definitions, componentId),
       edge: <ComponentId extends ComponentIdOfTable<Table>>(
         componentId: ComponentId,
-      ) => getComponentEdgeLocation(table, componentId),
+      ) => getComponentEdgeLocation(table, definitions, componentId),
       vertex: <ComponentId extends ComponentIdOfTable<Table>>(
         componentId: ComponentId,
-      ) => getComponentVertexLocation(table, componentId),
+      ) => getComponentVertexLocation(table, definitions, componentId),
     },
   };
 }
 
-export function createStateQueries<State extends { table: RuntimeTableRecord }>(
+export function createStateQueries<
+  State extends { table: RuntimeQueryTable },
+  Definitions extends ZoneDefinitions,
+>(
   state: State,
-  definitions: ZoneDefinitions,
-): TableQueriesOfState<State> {
+  definitions: Definitions,
+): TableQueriesOfState<State, Definitions> {
   // eslint-disable-next-line no-restricted-syntax -- Queries are constructed from this State.table; the conditional TableOfState type denotes that same table.
   return createTableQueries(
     state.table,
     definitions,
-  ) as unknown as TableQueriesOfState<State>;
+  ) as unknown as TableQueriesOfState<State, Definitions>;
 }

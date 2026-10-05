@@ -41,9 +41,9 @@ type ExpectedInput = {
   n?: number | undefined;
   optional?: string | undefined;
   nullable: string | null;
-  array: "space"[];
-  record: Record<string, "zone">;
-  nested: { value: number };
+  array: readonly "space"[];
+  record: { readonly [key: string]: "zone" };
+  nested: { readonly value: number };
 };
 type InputProof = Assert<
   Equal<FieldsInput<typeof fields, typeof manifest>, ExpectedInput>
@@ -119,8 +119,8 @@ type GeometryProof = Assert<
   Equal<
     FieldsOutput<typeof geometry, HexManifest>,
     {
-      edge: import("../../shared/domain/board-identities").HexEdgeId<"hex">;
-      vertex: import("../../shared/domain/board-identities").HexVertexId<"hex">;
+      edge: import("../../shared/domain/board-identities").BoardEdgeId<"hex">;
+      vertex: import("../../shared/domain/board-identities").BoardVertexId<"hex">;
     }
   >
 >;
@@ -168,19 +168,20 @@ const definedNumber: number = definedGameState.table.pieces.piece.properties.n;
 // @ts-expect-error Defined JSON retains authored output shape in createGame.
 const definedString: string = definedGameState.table.pieces.piece.properties.n;
 void [definedNumber, definedString];
-// @ts-expect-error Correlated authored field references cannot bypass checking via createGame.
+const invalidReferenceManifest = {
+  ...manifest,
+  pieceTypes: [
+    {
+      id: "piece",
+      name: "Piece",
+      fieldsSchema: z.object({ target: ref.pieceId() }),
+    },
+  ],
+  pieceSeeds: [{ typeId: "piece", fields: { target: "unknown" } }],
+} as const;
 createGame({
-  manifest: {
-    ...manifest,
-    pieceTypes: [
-      {
-        id: "piece",
-        name: "Piece",
-        fieldsSchema: z.object({ target: ref.pieceId() }),
-      },
-    ],
-    pieceSeeds: [{ typeId: "piece", fields: { target: "unknown" } }],
-  },
+  // @ts-expect-error Correlated authored field references cannot bypass checking via createGame.
+  manifest: invalidReferenceManifest,
   state: stateSchemas,
   phases: { play: z.object({}) },
 });
@@ -202,3 +203,13 @@ const noSchema = compileManifest(manifest).createInitialTable({
 const arbitraryJson: import("../../shared/domain/contracts").JsonValue =
   noSchema.anyAuthoredField;
 void arbitraryJson;
+
+const customBrandSchema = z.object({ label: z.string().brand<"game-label">() });
+type CustomBrandOutput = Assert<
+  Equal<
+    FieldsOutput<typeof customBrandSchema, typeof manifest>["label"],
+    z.output<typeof customBrandSchema>["label"]
+  >
+>;
+void customBrandSchema;
+export type CustomBrandOutputProof = CustomBrandOutput;

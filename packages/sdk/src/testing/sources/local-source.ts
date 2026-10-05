@@ -116,7 +116,6 @@ export function createLocalProvider<
       currentPhase: state.domain.flow.currentPhase,
       activePlayers: projection.schedulerFlow?.activePlayerIds ?? [],
       dynamicProjection: projection,
-      staticProjection: runtime.boardStatic(),
       perspectivePlayerId: playerId,
       version: revision,
       actionSetVersion: "pending",

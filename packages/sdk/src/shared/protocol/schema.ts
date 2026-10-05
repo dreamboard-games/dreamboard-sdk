@@ -7,6 +7,7 @@ import {
   DREAMBOARD_PLUGIN_PROTOCOL_VERSION,
 } from "./protocol.js";
 import { RuntimeJsonSchema } from "../runtime-json.js";
+import { BoardProjectionSchema } from "../board-topology-schema.js";
 import type {
   GameOutcome,
   GameplayBasis,
@@ -21,8 +22,6 @@ import type {
   PluginToHostPayload,
 } from "./protocol.js";
 
-export const BoardStaticProjectionSchema =
-  ReducerWireZod.BoardStaticProjectionSchema;
 export const GameEventDetailSchema = ReducerWireZod.GameEventDetailSchema;
 export const SystemActionEventSchema = ReducerWireZod.SystemActionEventSchema;
 export const GameEventSchema = ReducerWireZod.GameEventSchema;
@@ -84,10 +83,26 @@ export const GameplayBasisSchema = z
 export const GameOutcomeSchema =
   ReducerWireZod.GameOutcomeSchema satisfies z.ZodType<GameOutcome>;
 
+const ProjectedViewSchema = z
+  .record(z.string(), RuntimeJsonSchema)
+  .superRefine((view, context) => {
+    if (!Object.hasOwn(view, "boards")) return;
+    const boards = BoardProjectionSchema.safeParse(view.boards);
+    if (!boards.success) {
+      for (const issue of boards.error.issues) {
+        context.addIssue({
+          code: "custom",
+          path: ["boards", ...issue.path],
+          message: issue.message,
+        });
+      }
+    }
+  });
+
 export const SeatFrameSchema = z
   .object({
     events: z.array(GameEventSchema).max(32),
-    view: z.record(z.string(), RuntimeJsonSchema).nullable(),
+    view: ProjectedViewSchema.nullable(),
     flow: z
       .object({
         currentPhase: z.string().nullable(),

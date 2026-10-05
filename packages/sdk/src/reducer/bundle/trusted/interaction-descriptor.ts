@@ -234,7 +234,10 @@ export function buildInteractionDescriptor<
   >,
   decision: InteractionDecision,
   options: {
-    projection?: ProjectionContext<TrustedDomainState<Contract>>;
+    projection?: ProjectionContext<
+      TrustedDomainState<Contract>,
+      TrustedManifest<Contract>
+    >;
     includeDiagnosticReasons?: boolean;
     stepPrefix?: StepPrefix;
   } = {},
@@ -261,7 +264,7 @@ export function buildInteractionDescriptor<
             saved.phaseName === phaseName
             ? saved.values
             : [],
-          scope.definition.contract.manifest,
+          scope.manifest,
         )
       : undefined);
   const projectedInteraction = prefix
@@ -282,7 +285,10 @@ export function buildInteractionDescriptor<
   });
   const queries =
     options.projection?.q ??
-    createStateQueries(domainState, scope.definition.contract.manifest);
+    createStateQueries<TrustedDomainState<Contract>, TrustedManifest<Contract>>(
+      domainState,
+      scope.manifest,
+    );
 
   const shouldMaterializeInputDomains =
     decision.available || decision.code === FrameworkErrorCodes.NO_LEGAL_INPUT;
@@ -290,9 +296,9 @@ export function buildInteractionDescriptor<
     ? enrichResourceInputPresentation(
         collectInteractionInputs(projectedInteraction, domainState, playerId, {
           queries,
-          definitions: scope.definition.contract.manifest,
+          definitions: scope.manifest,
         }),
-        scope.definition.contract.manifest,
+        scope.manifest,
       )
     : [];
   const baseDescriptor = {

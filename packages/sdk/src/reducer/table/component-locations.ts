@@ -1,3 +1,4 @@
+import type { ZoneDefinitions } from "../model/table.js";
 import { requireLookup } from "../../shared/lookup.js";
 import type {
   BoardIdOfTable,
@@ -7,8 +8,7 @@ import type {
   ResolvedSpaceLocation,
   ResolvedVertexLocation,
   ResolvedZoneLocation,
-  RuntimeTableRecord,
-  SpaceIdOfTable,
+  RuntimeQueryTable,
   TiledBoardIdOfTable,
   TiledEdgeIdOfTable,
   TiledVertexIdOfTable,
@@ -22,7 +22,7 @@ import {
 } from "./board-queries";
 
 export function getComponentLocation<
-  Table extends RuntimeTableRecord,
+  Table extends RuntimeQueryTable,
   ComponentId extends ComponentIdOfTable<NoInfer<Table>>,
 >(
   table: Table,
@@ -36,7 +36,7 @@ export function getComponentLocation<
 }
 
 export function getComponentZoneLocation<
-  Table extends RuntimeTableRecord,
+  Table extends RuntimeQueryTable,
   ComponentId extends ComponentIdOfTable<NoInfer<Table>>,
 >(
   table: Table,
@@ -56,36 +56,40 @@ export function getComponentZoneLocation<
 }
 
 export function getComponentSpaceLocation<
-  Table extends RuntimeTableRecord,
+  Table extends RuntimeQueryTable,
   ComponentId extends ComponentIdOfTable<NoInfer<Table>>,
+  Definitions extends ZoneDefinitions,
 >(
   table: Table,
+  definitions: Definitions,
   componentId: ComponentId,
-): ResolvedSpaceLocation<Table, ComponentId> | null {
+): ResolvedSpaceLocation<Table, ComponentId, Definitions> | null {
   const location = getComponentLocation(table, componentId);
   if (location.type !== "OnSpace") {
     return null;
   }
 
   const boardId = location.boardId as BoardIdOfTable<Table>;
-  const spaceId = location.spaceId as SpaceIdOfTable<Table, typeof boardId>;
+  const spaceId = location.spaceId;
   return {
     componentId,
     boardId,
-    board: getBoard(table, boardId),
+    board: getBoard(table, definitions, boardId),
     spaceId,
-    space: getSpace(table, boardId, spaceId),
+    space: getSpace(table, definitions, boardId, spaceId),
     location,
-  } as ResolvedSpaceLocation<Table, ComponentId>;
+  } as ResolvedSpaceLocation<Table, ComponentId, Definitions>;
 }
 
 export function getComponentEdgeLocation<
-  Table extends RuntimeTableRecord,
+  Table extends RuntimeQueryTable,
   ComponentId extends ComponentIdOfTable<NoInfer<Table>>,
+  Definitions extends ZoneDefinitions,
 >(
   table: Table,
+  definitions: Definitions,
   componentId: ComponentId,
-): ResolvedEdgeLocation<Table, ComponentId> | null {
+): ResolvedEdgeLocation<Table, ComponentId, Definitions> | null {
   const location = getComponentLocation(table, componentId);
   if (location.type !== "OnEdge") {
     return null;
@@ -96,20 +100,22 @@ export function getComponentEdgeLocation<
   return {
     componentId,
     boardId,
-    board: getTiledBoard(table, boardId),
+    board: getTiledBoard(table, definitions, boardId),
     edgeId,
-    edge: getEdge(table, boardId, edgeId),
+    edge: getEdge(table, definitions, boardId, edgeId),
     location,
-  } as ResolvedEdgeLocation<Table, ComponentId>;
+  } as ResolvedEdgeLocation<Table, ComponentId, Definitions>;
 }
 
 export function getComponentVertexLocation<
-  Table extends RuntimeTableRecord,
+  Table extends RuntimeQueryTable,
   ComponentId extends ComponentIdOfTable<NoInfer<Table>>,
+  Definitions extends ZoneDefinitions,
 >(
   table: Table,
+  definitions: Definitions,
   componentId: ComponentId,
-): ResolvedVertexLocation<Table, ComponentId> | null {
+): ResolvedVertexLocation<Table, ComponentId, Definitions> | null {
   const location = getComponentLocation(table, componentId);
   if (location.type !== "OnVertex") {
     return null;
@@ -123,9 +129,9 @@ export function getComponentVertexLocation<
   return {
     componentId,
     boardId,
-    board: getTiledBoard(table, boardId),
+    board: getTiledBoard(table, definitions, boardId),
     vertexId,
-    vertex: getVertex(table, boardId, vertexId),
+    vertex: getVertex(table, definitions, boardId, vertexId),
     location,
-  } as ResolvedVertexLocation<Table, ComponentId>;
+  } as ResolvedVertexLocation<Table, ComponentId, Definitions>;
 }

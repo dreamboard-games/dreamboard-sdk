@@ -1,8 +1,5 @@
-import type {
-  RuntimeBoardState,
-  RuntimeBoardCollections,
-} from "../reducer/model/table.js";
-import type { ActionProps, ReadonlyData } from "./model.js";
+import type { BoardTopology } from "../shared/board-topology.js";
+import type { ActionProps } from "./model.js";
 import type { InputDomain } from "../shared/protocol/frame.js";
 import type { RuntimeJson } from "../shared/runtime-json.js";
 import type {
@@ -48,7 +45,7 @@ export interface RuntimeFeatureGame extends RuntimeFeatureSnapshot {
 }
 export interface RuntimeBoard {
   readonly id: string;
-  readonly data: ReadonlyData<RuntimeBoardState>;
+  readonly data: BoardTopology;
   readonly game: RuntimeFeatureGame;
 }
 export interface RuntimeCollection<Value> {
@@ -58,8 +55,8 @@ export interface RuntimeCollection<Value> {
 }
 export interface RuntimeFeatureContext {
   readonly game: RuntimeFeatureGame;
-  getBoards(): ReadonlyData<RuntimeBoardCollections["byId"]>;
-  createBoard(data: ReadonlyData<RuntimeBoardState>): RuntimeBoard;
+  getBoards(): Readonly<Record<string, BoardTopology>>;
+  createBoard(data: BoardTopology): RuntimeBoard;
   routeTarget(
     target: RuntimeSelectionTarget,
     options?: RuntimeTargetOptions,

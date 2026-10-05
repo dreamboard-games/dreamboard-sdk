@@ -19,7 +19,8 @@ import {
  * The rule of thumb is "one way to do things": if a field *is* a player id,
  * card id, zone id, etc. in the manifest, the authored state schema must
  * reuse the same literal/branded schema so generated types line up with the
- * runtime checks, instead of silently widening to `string`.
+ * runtime checks, instead of silently widening to `string`. Relation type tags
+ * are open game-defined strings, not manifest membership IDs.
  */
 const MANIFEST_SCOPED_ID_NAMES = [
   "playerId",
@@ -38,7 +39,6 @@ const MANIFEST_SCOPED_ID_NAMES = [
   "vertexTypeId",
   "spaceId",
   "spaceTypeId",
-  "relationTypeId",
   "resourceId",
   "pieceId",
   "pieceTypeId",

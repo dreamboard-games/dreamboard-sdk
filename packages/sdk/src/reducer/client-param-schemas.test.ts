@@ -17,6 +17,8 @@ function createContract() {
   const handIds = ["hand"] as const;
   return createModel({
     manifest: {
+      boardDefinitions: {},
+      tileDefinitions: {},
       literals: {
         boardLayouts: [] as const,
         boardTypeIds: [] as const,

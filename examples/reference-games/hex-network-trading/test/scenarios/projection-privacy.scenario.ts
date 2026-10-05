@@ -1,3 +1,4 @@
+import { tileSpaceId } from "@dreamboard-games/sdk/reducer";
 import { defineScenario } from "../testing-types.ts";
 import {
   DISCARD_BARRIER_PREFIX_COMMANDS,
@@ -17,7 +18,7 @@ export default defineScenario({
     discard(0, { brick: 4 }),
   ],
   when: [
-    ...bandits(0, "centralBarrens", 1),
+    ...bandits(0, tileSpaceId("centralBarrens", "cell"), 1),
     offer(0, 1, { timber: 1 }, { provisions: 1 }),
   ],
   then: ({ expect, state, view }) => {

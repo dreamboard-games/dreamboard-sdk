@@ -1,3 +1,5 @@
+import { createSquareBoardLayout } from "../../shared/square-board-layout.js";
+import { parseBoardElementId } from "../../shared/domain/board-element.js";
 import { perPlayerInstanceId } from "../../shared/domain/per-player-instance.js";
 import { RuntimeJsonSchema } from "../../shared/runtime-json.js";
 import { describe, expect, it, vi } from "vitest";
@@ -9,9 +11,11 @@ import {
 } from "../../testing/sources/test-source.js";
 import type { SourceSnapshot } from "../sources/types.js";
 import type {
-  RuntimeBoardState,
-  RuntimeHexBoardState,
-} from "../../reducer/model/table.js";
+  BoardTopology,
+  HexBoardTopology,
+} from "../../shared/board-topology.js";
+import { tileSpaceId } from "../../shared/domain/tile-space.js";
+import { deriveBoardTopology } from "../../shared/board-topology.js";
 import { createHexTopology } from "../../shared/hex-board.js";
 import { handFeature } from "./hand.js";
 import { boardFeature } from "./board.js";
@@ -28,12 +32,17 @@ function onBoard(targets: readonly DropTarget<unknown>[]) {
   );
 }
 
-function hexBoard(id = "island", playerId?: string): RuntimeHexBoardState {
-  const spaces = [{ id: "center", q: 0, r: 0 }];
-  const geometry = createHexTopology({ id: "island", spaces });
+const CENTER = tileSpaceId("cell", "center");
+
+function hexBoard(id = "island", playerId?: string): HexBoardTopology {
+  const spaces = [
+    { id: CENTER, tileId: "cell", localCellId: "center", q: 0, r: 0 },
+  ];
+  const geometry = createHexTopology({ id, spaces });
   return {
     id,
     baseId: "island",
+    name: "Island",
     layout: "hex",
     scope: playerId ? "perPlayer" : "shared",
     playerId,
@@ -77,14 +86,34 @@ function descriptor(): InteractionDescriptor {
           projection: "resolved",
           targetKind: "space",
           boardId: "island",
-          eligibleTargets: ["center"],
+          eligibleTargets: [CENTER],
         },
       },
     ],
   };
 }
-function source(board: RuntimeBoardState = hexBoard()) {
+function source(board: BoardTopology = hexBoard()) {
+  const spaceId = Object.keys(board.spaces)[0];
   let action = descriptor();
+  action = {
+    ...action,
+    inputs: action.inputs.map((input) =>
+      input.key === "space"
+        ? {
+            ...input,
+            domain: {
+              type: "boardTarget",
+              valueKind: "board-id",
+              projection: "resolved",
+              targetKind: "space",
+              boardId: board.id,
+              eligibleTargets: spaceId ? [spaceId] : [],
+            },
+          }
+        : input,
+    ),
+  };
+
   if (board.scope === "perPlayer") {
     action = {
       ...action,
@@ -101,7 +130,7 @@ function source(board: RuntimeBoardState = hexBoard()) {
                 eligibleTargets: [
                   {
                     boardId: perPlayerInstanceId("board", "island", "alice"),
-                    spaceId: "center",
+                    spaceId,
                   },
                 ],
               },
@@ -118,13 +147,9 @@ function source(board: RuntimeBoardState = hexBoard()) {
       events: [],
       view: {
         boards: {
-          byId: {
-            [board.id]: RuntimeJsonSchema.parse(
-              JSON.parse(JSON.stringify(board)),
-            ),
-          },
-          hex: {},
-          square: {},
+          [board.id]: RuntimeJsonSchema.parse(
+            JSON.parse(JSON.stringify(board)),
+          ),
         },
       },
       flow: {
@@ -162,7 +187,7 @@ function emitFrame(source: TestSource, frame: SourceSnapshot["frame"]) {
   const snapshot = source.store.get().snapshot!;
   source.emit({ ...snapshot, version: snapshot.version + 1, frame });
 }
-function setup(board?: RuntimeBoardState) {
+function setup(board?: BoardTopology) {
   const input = source(board);
   const game = createGameInstance()({
     source: input,
@@ -245,17 +270,19 @@ describe("headless features", () => {
     expect(layout.getEdges()).toHaveLength(6);
     expect(layout.getVertices()).toHaveLength(6);
     expect(
-      layout.getEdges().every((edge) => edge.id.startsWith("island:edge:")),
+      layout
+        .getEdges()
+        .every((edge) => parseBoardElementId(edge.id)?.boardId === board.id),
     ).toBe(true);
     const cell = layout.getSpaces()[0];
-    expect(layout.pointToSpace(cell.center.x, cell.center.y)).toBe("center");
+    expect(layout.pointToSpace(cell.center.x, cell.center.y)).toBe(CENTER);
     expect(layout.pointToSpace(9999, 9999)).toBeUndefined();
     expect(cell.getIsSelectable()).toBe(true);
     cell.getSelectHandler()();
     expect(game.state.drafts["play.move"]).toMatchObject({
       space: {
         boardId: perPlayerInstanceId("board", "island", "alice"),
-        spaceId: "center",
+        spaceId: CENTER,
       },
     });
     expect(cell.getIsSelected()).toBe(false);
@@ -303,7 +330,7 @@ describe("headless features", () => {
     origin.x = 999;
     viewport.scale = 99;
     expect(cell.points()).toBe(points);
-    expect(layout.pointToSpace(cell.center.x, cell.center.y)).toBe("center");
+    expect(layout.pointToSpace(cell.center.x, cell.center.y)).toBe(CENTER);
     expect(Object.isFrozen(origin)).toBe(false);
     expect(Object.isFrozen(viewport)).toBe(false);
     game.dispose();
@@ -334,9 +361,9 @@ describe("headless features", () => {
       .getSpaces()[0];
     const props = cell.getTargetProps();
     expect(props.disabled).toBe(true);
-    emit(["center"]);
+    emit([CENTER]);
     props.onClick();
-    expect(game.state.drafts["play.move"]?.space).toBe("center");
+    expect(game.state.drafts["play.move"]?.space).toBe(CENTER);
     expect(cell.getIsEligible()).toBe(false);
     expect(cell.getIsSelected()).toBe(false);
     emit([]);
@@ -345,39 +372,91 @@ describe("headless features", () => {
     game.dispose();
   });
 
-  it("supports authored square incidence and reports generic layout limits", () => {
-    const square: RuntimeBoardState = {
-      id: "square",
-      scope: "shared",
-      fields: {},
-      layout: "square",
-      spaces: {
-        a: { id: "a", row: 0, col: 0, fields: {} },
-        b: { id: "b", row: 0, col: 1, fields: {} },
+  it("supports derived square incidence and reports generic layout limits", () => {
+    const square = deriveBoardTopology(
+      {
+        boards: { square: { baseId: "square", relations: [] } },
+        tiles: { cell: { id: "cell", tileTypeId: "domino" } },
+        componentLocations: {
+          cell: {
+            type: "OnBoard",
+            layout: "square",
+            boardId: "square",
+            col: 0,
+            row: 0,
+            rotation: 0,
+          },
+        },
       },
-      relations: [],
-      edges: [
-        { id: "authored-edge", spaceIds: ["a", "b"], fields: {} },
-        { id: "unlocated-boundary", spaceIds: ["a"], fields: {} },
-      ],
-      vertices: [],
-    };
+      {
+        boardDefinitions: {
+          square: {
+            id: "square",
+            name: "Square",
+            scope: "shared",
+            layout: "square",
+            fields: {},
+          },
+        },
+        tileDefinitions: {
+          domino: {
+            id: "domino",
+            name: "Domino",
+            layout: "square",
+            fields: {},
+            cells: [
+              { id: "a", at: { col: 0, row: 0 }, fields: {} },
+              { id: "b", at: { col: 1, row: 0 }, fields: {} },
+            ],
+            edges: [],
+            vertices: [],
+          },
+        },
+      },
+      "square",
+    );
+    if (square.layout !== "square")
+      throw new Error("Expected square topology.");
+    for (const size of [0, -1, Infinity, NaN])
+      expect(() =>
+        createSquareBoardLayout(square, size, { x: 0, y: 0 }),
+      ).toThrow(/positive and finite/);
+    expect(() =>
+      createSquareBoardLayout(square, 10, { x: Infinity, y: 0 }),
+    ).toThrow(/origin/);
     const { game } = setup(square);
     const layout = game.boards
       .get("square")
       .getLayout({ hexSize: 10, viewport: { x: 5, y: 3, scale: 2 } });
-    expect(layout.getEdges().map((edge) => edge.id)).toEqual(["authored-edge"]);
-    expect(game.boards.get("square").data).toHaveProperty(
-      "edges",
+    expect(layout.getEdges()).toHaveLength(7);
+    expect(layout.getVertices()).toHaveLength(6);
+    expect(layout.getVertices().map((vertex) => vertex.center)).toEqual(
       expect.arrayContaining([
-        { id: "unlocated-boundary", spaceIds: ["a"], fields: {} },
+        { x: 5, y: 3 },
+        { x: 25, y: 3 },
+        { x: 45, y: 3 },
+        { x: 5, y: 23 },
+        { x: 25, y: 23 },
+        { x: 45, y: 23 },
       ]),
+    );
+    expect(square.layout === "square" && square.edges).toHaveLength(7);
+    expect(game.boards.get("square").data).toEqual(square);
+    expect(layout.getEdges().map((edge) => edge.id)).toEqual(
+      square.layout === "square" ? square.edges.map((edge) => edge.id) : [],
+    );
+    expect(layout.getVertices().map((vertex) => vertex.id)).toEqual(
+      square.layout === "square"
+        ? square.vertices.map((vertex) => vertex.id)
+        : [],
     );
     for (const cell of layout.getSpaces())
       expect(layout.pointToSpace(cell.center.x, cell.center.y)).toBe(cell.id);
     game.dispose();
     const generic = setup({
       id: "generic",
+      baseId: "generic",
+      name: "Generic",
       layout: "generic",
       scope: "shared",
       fields: {},
@@ -429,7 +508,7 @@ describe("headless features", () => {
     );
     const [target] = game.drag.getDropTargets();
     expect(target).toMatchObject({
-      value: "center",
+      value: CENTER,
       boardId: "island",
       interactionKey: "play.move",
       cardInputKey: "card",
@@ -439,7 +518,7 @@ describe("headless features", () => {
     game.drag.drop();
     expect(game.state.drafts["play.move"]).toEqual({
       card: "red",
-      space: "center",
+      space: CENTER,
     });
     expect(game.drag.active).toBeNull();
     game.cards.get("blue").select();
@@ -472,7 +551,7 @@ describe("headless features", () => {
           : value,
       ),
     });
-    const broad = narrow(["center", "other"]);
+    const broad = narrow([CENTER, "other"]);
     const emit = (ids: string[]) =>
       emitFrame(input, {
         ...input.store.get().snapshot!.frame,
@@ -486,11 +565,11 @@ describe("headless features", () => {
           },
         },
       });
-    emit(["center"]);
+    emit([CENTER]);
     game.drag.begin("red");
     const old = game.getSnapshot().drag;
     expect(onBoard(old.getDropTargets()).map((target) => target.value)).toEqual(
-      ["center"],
+      [CENTER],
     );
     emit(["other"]);
     expect(game.drag.active).toBeNull();
@@ -499,7 +578,7 @@ describe("headless features", () => {
       onBoard(game.drag.getDropTargets()).map((target) => target.value),
     ).toEqual(["other"]);
     expect(onBoard(old.getDropTargets()).map((target) => target.value)).toEqual(
-      ["center"],
+      [CENTER],
     );
     game.dispose();
   });
@@ -531,7 +610,7 @@ describe("headless features", () => {
       true,
     );
     cell.getSelectHandler({ interaction: "play.move" })();
-    expect(game.state.drafts["play.move"]?.space).toBe("center");
+    expect(game.state.drafts["play.move"]?.space).toBe(CENTER);
     expect(cell.getTargetProps({ interaction: "play.move" })).toMatchObject({
       "data-interaction": "play.move",
       "data-input": "space",
@@ -644,7 +723,7 @@ it("retains both input keys when one interaction has multiple card and board inp
   game.drag.drop();
   expect(game.state.drafts["play.move"]).toEqual({
     secondCard: "red",
-    secondSpace: "center",
+    secondSpace: CENTER,
   });
   game.interactions.get("play.move").reset();
   game.boards
@@ -652,14 +731,14 @@ it("retains both input keys when one interaction has multiple card and board inp
     .getLayout({ hexSize: 20 })
     .getSpaces()[0]
     .getSelectHandler({ interaction: "play.move", input: "secondSpace" })();
-  expect(game.state.drafts["play.move"]).toEqual({ secondSpace: "center" });
+  expect(game.state.drafts["play.move"]).toEqual({ secondSpace: CENTER });
   game.dispose();
 });
 
 it("shares semantic space handlers with geometry and captures immutable selection", () => {
   const { game } = setup();
   const board = game.boards.get("island");
-  const space = board.spaces.get("center");
+  const space = board.spaces.get(CENTER);
   expect(board.spaces).toBe(board.spaces);
   expect(board.spaces.getAll()).toEqual([space]);
   expect(space.board).toBe(board);
@@ -667,9 +746,9 @@ it("shares semantic space handlers with geometry and captures immutable selectio
   expect(spatial.getSelectHandler).toBe(space.getSelectHandler);
   expect(spatial.getTargetProps).toBe(space.getTargetProps);
   space.getSelectHandler({ interaction: "play.move" })();
-  expect(game.state.drafts["play.move"]).toEqual({ space: "center" });
+  expect(game.state.drafts["play.move"]).toEqual({ space: CENTER });
   expect(space.getIsSelected()).toBe(false);
-  expect(game.boards.get("island").spaces.get("center").getIsSelected()).toBe(
+  expect(game.boards.get("island").spaces.get(CENTER).getIsSelected()).toBe(
     true,
   );
   expect(board.spaces.find("missing")).toBeUndefined();
@@ -682,13 +761,14 @@ it("shares semantic space handlers with geometry and captures immutable selectio
 it.each(["shared", "perPlayer"] as const)(
   "selects generic %s spaces without constructing geometry",
   (scope) => {
-    const board: RuntimeBoardState = {
+    const board: BoardTopology = {
       id:
         scope === "shared"
           ? "island"
           : perPlayerInstanceId("board", "island", "alice"),
       baseId: "island",
-      playerId: scope === "perPlayer" ? "alice" : null,
+      name: "Island",
+      ...(scope === "perPlayer" ? { playerId: "alice" } : {}),
       scope,
       layout: "generic",
       fields: {},
@@ -738,3 +818,19 @@ it.each(["frame", "seat", "recovering"] as const)(
     game.dispose();
   },
 );
+
+it("rejects malformed frames atomically while retaining usable board state", () => {
+  const { game, input } = setup();
+  const current = game.getSnapshot();
+  const snapshot = current.snapshot;
+  if (!snapshot) throw new Error("Expected initialized source snapshot.");
+  expect(() =>
+    emitFrame(input, {
+      ...snapshot.frame,
+      view: { boards: { island: { id: "island" } } },
+    }),
+  ).toThrow();
+  expect(game.getSnapshot().snapshot).toBe(snapshot);
+  expect(game.boards.get("island").data.id).toBe("island");
+  expect(() => game.dispose()).not.toThrow();
+});

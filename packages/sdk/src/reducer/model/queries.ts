@@ -1,3 +1,5 @@
+import type { TopologyDefinitions } from "../../shared/domain/topology-definitions.js";
+import type { BoardTopologyOf } from "./topology.js";
 import type { BoundBoardQueries } from "../table/board-queries";
 import type {
   CardCollection,
@@ -22,7 +24,7 @@ import type {
   TiledEdgeIdOfTable,
   TiledVertexIdOfTable,
 } from "./extract";
-import type { RuntimeComponentLocation, RuntimeTableRecord } from "./table";
+import type { RuntimeComponentLocation, RuntimeQueryTable } from "./table";
 
 type ScopedZoneHostArgs<
   Table,
@@ -38,24 +40,29 @@ type ZoneHostArgs<Table, Z extends ZoneIdOfTable<Table>> = ScopedZoneHostArgs<
 >;
 
 type BoardRecord<
-  Table extends RuntimeTableRecord,
+  Table extends RuntimeQueryTable,
   BoardId extends BoardIdOfTable<Table>,
-> = Table["boards"]["byId"][BoardId];
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
+> = BoardTopologyOf<Table, Definitions, BoardId>;
 
 type TiledBoardRecord<
-  Table extends RuntimeTableRecord,
-  BoardId extends TiledBoardIdOfTable<Table>,
-> = Extract<BoardRecord<Table, BoardId>, { layout: "hex" | "square" }>;
+  Table extends RuntimeQueryTable,
+  BoardId extends TiledBoardIdOfTable<Table, Definitions>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
+> = Extract<
+  BoardRecord<Table, BoardId, Definitions>,
+  { layout: "hex" | "square" }
+>;
 
 type CardsByIdOfTable<
-  Table extends RuntimeTableRecord,
+  Table extends RuntimeQueryTable,
   CardIds extends readonly CardIdOfTable<Table>[],
 > = Readonly<{
   [Id in CardIds[number]]: ViewCardOfTable<Table, Id>;
 }>;
 
 type CardCollectionOfTable<
-  Table extends RuntimeTableRecord,
+  Table extends RuntimeQueryTable,
   Z extends ZoneIdOfTable<Table>,
 > = CardCollection<
   Extract<ZoneComponentsOfTable<Table, Z>, CardIdOfTable<Table>>,
@@ -96,7 +103,7 @@ export type ComponentLocationByTypeOfTable<
 > = Extract<ComponentLocationOfTable<Table, ComponentId>, { type: Type }>;
 
 export type ResolvedZoneLocation<
-  Table extends RuntimeTableRecord,
+  Table extends RuntimeQueryTable,
   ComponentId extends ComponentIdOfTable<Table>,
 > =
   ComponentLocationByTypeOfTable<
@@ -118,16 +125,17 @@ export type ResolvedZoneLocation<
     : never;
 
 export type ResolvedSpaceLocation<
-  Table extends RuntimeTableRecord,
+  Table extends RuntimeQueryTable,
   ComponentId extends ComponentIdOfTable<Table>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > = {
   [BoardId in BoardIdOfTable<Table>]: {
-    [SpaceId in SpaceIdOfTable<Table, BoardId>]: {
+    [SpaceId in SpaceIdOfTable<Table, BoardId, Definitions>]: {
       componentId: ComponentId;
       boardId: BoardId;
-      board: BoardRecord<Table, BoardId>;
+      board: BoardRecord<Table, BoardId, Definitions>;
       spaceId: SpaceId;
-      space: Table["boards"]["byId"][BoardId]["spaces"][SpaceId];
+      space: BoardTopologyOf<Table, Definitions, BoardId>["spaces"][SpaceId];
       location: ComponentLocationByTypeOfTable<
         Table,
         ComponentId,
@@ -137,21 +145,22 @@ export type ResolvedSpaceLocation<
         spaceId: SpaceId;
       };
     };
-  }[SpaceIdOfTable<Table, BoardId>];
+  }[SpaceIdOfTable<Table, BoardId, Definitions>];
 }[BoardIdOfTable<Table>];
 
 export type ResolvedEdgeLocation<
-  Table extends RuntimeTableRecord,
+  Table extends RuntimeQueryTable,
   ComponentId extends ComponentIdOfTable<Table>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > = {
-  [BoardId in TiledBoardIdOfTable<Table>]: {
-    [EdgeId in TiledEdgeIdOfTable<Table, BoardId>]: {
+  [BoardId in TiledBoardIdOfTable<Table, Definitions>]: {
+    [EdgeId in TiledEdgeIdOfTable<Table, BoardId, Definitions>]: {
       componentId: ComponentId;
       boardId: BoardId;
-      board: TiledBoardRecord<Table, BoardId>;
+      board: TiledBoardRecord<Table, BoardId, Definitions>;
       edgeId: EdgeId;
       edge: Extract<
-        Table["boards"]["byId"][BoardId],
+        BoardTopologyOf<Table, Definitions, BoardId>,
         { layout: "hex" | "square" }
       >["edges"][number];
       location: ComponentLocationByTypeOfTable<Table, ComponentId, "OnEdge"> & {
@@ -159,21 +168,22 @@ export type ResolvedEdgeLocation<
         edgeId: EdgeId;
       };
     };
-  }[TiledEdgeIdOfTable<Table, BoardId>];
-}[TiledBoardIdOfTable<Table>];
+  }[TiledEdgeIdOfTable<Table, BoardId, Definitions>];
+}[TiledBoardIdOfTable<Table, Definitions>];
 
 export type ResolvedVertexLocation<
-  Table extends RuntimeTableRecord,
+  Table extends RuntimeQueryTable,
   ComponentId extends ComponentIdOfTable<Table>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > = {
-  [BoardId in TiledBoardIdOfTable<Table>]: {
-    [VertexId in TiledVertexIdOfTable<Table, BoardId>]: {
+  [BoardId in TiledBoardIdOfTable<Table, Definitions>]: {
+    [VertexId in TiledVertexIdOfTable<Table, BoardId, Definitions>]: {
       componentId: ComponentId;
       boardId: BoardId;
-      board: TiledBoardRecord<Table, BoardId>;
+      board: TiledBoardRecord<Table, BoardId, Definitions>;
       vertexId: VertexId;
       vertex: Extract<
-        Table["boards"]["byId"][BoardId],
+        BoardTopologyOf<Table, Definitions, BoardId>,
         { layout: "hex" | "square" }
       >["vertices"][number];
       location: ComponentLocationByTypeOfTable<
@@ -185,14 +195,17 @@ export type ResolvedVertexLocation<
         vertexId: VertexId;
       };
     };
-  }[TiledVertexIdOfTable<Table, BoardId>];
-}[TiledBoardIdOfTable<Table>];
+  }[TiledVertexIdOfTable<Table, BoardId, Definitions>];
+}[TiledBoardIdOfTable<Table, Definitions>];
 
-export type TableQueries<Table extends RuntimeTableRecord> = {
+export type TableQueries<
+  Table extends RuntimeQueryTable,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
+> = {
   board<BoardId extends BoardIdOfTable<Table>>(
     boardId: BoardId,
   ): BoundBoardQueries<
-    Table["boards"]["byId"][BoardId],
+    BoardTopologyOf<Table, Definitions, BoardId>,
     ComponentIdOfTable<Table>
   >;
   tile: <Id extends TileIdOfTable<Table>>(tileId: Id) => Table["tiles"][Id];
@@ -276,15 +289,17 @@ export type TableQueries<Table extends RuntimeTableRecord> = {
     ) => ResolvedZoneLocation<Table, ComponentId> | null;
     space: <ComponentId extends ComponentIdOfTable<Table>>(
       componentId: ComponentId,
-    ) => ResolvedSpaceLocation<Table, ComponentId> | null;
+    ) => ResolvedSpaceLocation<Table, ComponentId, Definitions> | null;
     edge: <ComponentId extends ComponentIdOfTable<Table>>(
       componentId: ComponentId,
-    ) => ResolvedEdgeLocation<Table, ComponentId> | null;
+    ) => ResolvedEdgeLocation<Table, ComponentId, Definitions> | null;
     vertex: <ComponentId extends ComponentIdOfTable<Table>>(
       componentId: ComponentId,
-    ) => ResolvedVertexLocation<Table, ComponentId> | null;
+    ) => ResolvedVertexLocation<Table, ComponentId, Definitions> | null;
   };
 };
 
-export type TableQueriesOfState<State extends { table: RuntimeTableRecord }> =
-  TableQueries<TableOfState<State>>;
+export type TableQueriesOfState<
+  State extends { table: RuntimeQueryTable },
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
+> = TableQueries<TableOfState<State>, Definitions>;

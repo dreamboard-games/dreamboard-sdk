@@ -1,5 +1,7 @@
-import { FRONTIER_GEOMETRY } from "../../app/model";
-import { asPlayerId } from "@dreamboard-games/sdk/reducer";
+import { manifestContract } from "../../app/manifest";
+import { tileSpaceId } from "@dreamboard-games/sdk/reducer";
+import { FRONTIER_GEOMETRY } from "../topology";
+import { asPlayerId, createTableQueries } from "@dreamboard-games/sdk/reducer";
 import { defineScenario } from "../testing-types.ts";
 import { STANDARD_SETUP_COMMANDS } from "../scenario-commands.ts";
 
@@ -17,54 +19,70 @@ export default defineScenario({
     expect(state().flow.currentPhase).toBe("roll");
     expect(state().flow.activePlayers).toEqual([asPlayerId("player-1")]);
     expect(state().publicState.setup).toBeNull();
-    expect(view({ seat: 0 }).hexes).toEqual([
+    expect(
+      Object.values(
+        createTableQueries(state().table, manifestContract).board("frontier")
+          .state.spaces,
+      )
+        .map((space) => ({
+          id: space.id,
+          terrain: space.typeId,
+          ...space.fields,
+        }))
+        .sort((left, right) =>
+          left.id < right.id ? -1 : left.id > right.id ? 1 : 0,
+        ),
+    ).toEqual([
       {
-        id: "centralBarrens",
+        id: tileSpaceId("centralBarrens", "cell"),
         terrain: "barrens",
         number: null,
         resourceId: null,
       },
       {
-        id: "northEastClay",
+        id: tileSpaceId("northEastClay", "cell"),
         terrain: "clayFlats",
         number: 6,
         resourceId: "brick",
       },
       {
-        id: "northForest",
+        id: tileSpaceId("northForest", "cell"),
         terrain: "pineForest",
         number: 5,
         resourceId: "timber",
       },
       {
-        id: "northWestFields",
+        id: tileSpaceId("northWestFields", "cell"),
         terrain: "grainFields",
         number: 10,
         resourceId: "provisions",
       },
       {
-        id: "southEastFields",
+        id: tileSpaceId("southEastFields", "cell"),
         terrain: "grainFields",
         number: 8,
         resourceId: "provisions",
       },
       {
-        id: "southForest",
+        id: tileSpaceId("southForest", "cell"),
         terrain: "pineForest",
         number: 9,
         resourceId: "timber",
       },
       {
-        id: "southWestClay",
+        id: tileSpaceId("southWestClay", "cell"),
         terrain: "clayFlats",
         number: 4,
         resourceId: "brick",
       },
     ]);
     expect(view({ seat: 0 }).campsByIntersectionId).toEqual({
-      [FRONTIER_GEOMETRY.vertexAt("northForest", 0)]: "player-1",
-      [FRONTIER_GEOMETRY.vertexAt("southEastFields", 2)]: "player-2",
-      [FRONTIER_GEOMETRY.vertexAt("southWestClay", 4)]: "player-3",
+      [FRONTIER_GEOMETRY.vertexAt(tileSpaceId("northForest", "cell"), 0)]:
+        "player-1",
+      [FRONTIER_GEOMETRY.vertexAt(tileSpaceId("southEastFields", "cell"), 2)]:
+        "player-2",
+      [FRONTIER_GEOMETRY.vertexAt(tileSpaceId("southWestClay", "cell"), 4)]:
+        "player-3",
     });
     expect(view({ seat: 0 }).mySupplies).toEqual({
       brick: 1,

@@ -54,11 +54,8 @@ const color: string = table.pieces.flag.properties.color;
 const dieId: "battle" = table.dice.battle.id;
 const dieType: "combat" = table.dice.battle.dieTypeId;
 const bonus: number = table.dice.battle.properties.bonus;
-const scope: "perPlayer" =
-  table.boards.byId[perPlayerInstanceId("board", "mat", "player-1")].scope;
-const spaceId: "home" =
-  table.boards.byId[perPlayerInstanceId("board", "mat", "player-1")].spaces.home
-    .id;
+const scope: "perPlayer" = manifest.boardDefinitions.mat.scope;
+const spaceId: "home" = manifest.boardDefinitions.mat.spaces.home.id;
 const componentId: ComponentIdOfTable<typeof table> = "battle";
 // @ts-expect-error Component identity includes only authored cards, pieces and dice.
 const missingComponent: ComponentIdOfTable<typeof table> = "missing";

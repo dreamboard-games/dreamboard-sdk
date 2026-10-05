@@ -6,7 +6,18 @@ import manifest from "../../../examples/reference-games/hex-network-trading/mani
 export const contract = compileManifest(manifest);
 ```
 
-The manifest owns identities, card metadata, zones and static board geometry. Hex topology uses canonical space/edge/vertex identities and shared layout math; generic and square boards use inline data, with no template identity or merging. The SDK projects current board instances into each seat's `boards` collection. The frame materializer exposes that collection as `frame.view.boards`; authored views cannot overwrite it. See the real Hex manifest and geometry guide for authored shapes.
+The manifest owns identities, component definitions, zones and board definitions.
+Hex and square boards derive their topology from placed tile instances. Generic
+boards declare static spaces. The SDK projects current topology into each seat's
+flat `boards` collection. The frame materializer exposes that collection as
+`frame.view.boards`; authored views cannot overwrite it.
+
+Runtime `table.boards[boardId]` contains only its authored `baseId` and session
+`relations`. Immutable board metadata and tile geometry live in compiled
+definitions. A tile's canonical component location owns its placement. Spaces,
+edges, vertices and adjacency are derived; checkpoints do not store geometry
+copies. `q.board(boardId).state` returns this derived topology, not the stored
+board instance. There is no separate static-board projection.
 
 Inferred tables preserve each card, piece, die and tile's runtime ID, authored type,
 and property schema. Component IDs are the union of those inventories, so
@@ -26,8 +37,8 @@ place it during reducer setup.
 `contract.createInitialTable({ playerIds })` requires an explicit roster. Pass
 `[]` explicitly for static geometry tooling; session initialization supplies the
 real roster. `maxPlayers` constrains session size and never invents runtime IDs.
-Static board data contains shared boards only. Use the actual table inventories
-for runtime enumeration.
+Use the actual table inventories for runtime enumeration. A compiled board
+definition is a declaration, not evidence that a runtime board exists.
 
 Instance record factories also require the roster, for example
 `contract.records.pieceIds(0, { playerIds })`. Declaration record factories,
@@ -90,8 +101,9 @@ totals at the end through the game outcome.
 
 ## Attached zones
 
-A zone can attach to a board, one of its spaces, or every instance of a piece
-or die type. Declare `attachedTo` instead of `scope`:
+A zone can attach to a board, one of its generic static spaces, a cell of every
+instance of a tile type, or every instance of a piece or die type. Declare
+`attachedTo` instead of `scope`:
 
 ```ts
 zones: [
@@ -106,8 +118,10 @@ zones: [
 ```
 
 Each host has its own ordered membership array. Board attachments use the
-runtime board ID; component attachments use the component ID. A board-space
-attachment uses the SDK's canonical board-space host codec. Decoding a host
+runtime board ID; component attachments use the component ID. A generic board-space
+attachment uses the SDK's canonical board-space host codec. A tile-cell attachment
+uses its stable `TileSpaceId`, encoded from the tile instance and local cell IDs.
+Decoding a host
 only checks its syntax: admission also checks that the current host exists and
 matches the zone's declared board, space or component type.
 
@@ -178,12 +192,32 @@ canonical location. Tile seed counts and per-player expansion follow the same
 identity rules as other components. Omitted homes are detached. `ref.tileId()`
 uses declaration-stage validation at authoring and live inventory at restore.
 
-This layer supports detached tiles and public zone inventory. Private initial
-homes and destinations reject before mutation. Tiles cannot occupy a component
-space, edge or vertex. Board placement, private projection and tile UI follow in
-the subsequent layers; the current headless zone facade continues to present
-cards. Tile seed assignments and instance properties are not automatically sent
-in static, seat or UI bridge projections.
+Tile homes can also place a tile on a board. An `OnBoard` location names the
+exact runtime board ID, the matching `layout`, coordinates and rotation. Hex
+rotations are 0–5; square rotations are 0–3. Admission rejects overlapping cells,
+incompatible layouts, invalid rotations and unsafe coordinate arithmetic.
+
+Each placed cell has a stable `TileSpaceId` encoded from the instance ID and its
+local cell ID. Moving a tile does not rename its cells. World edge and vertex
+IDs are scoped to the exact runtime board instance and lattice coordinates.
+Adjacent cells share world elements; conflicting immutable metadata on a shared
+element is rejected.
+
+Use `attachedTo: { tileType: "forest", cell: "center" }` for a zone at each
+forest tile's center. Its host exists even while the tile is detached or in a
+zone, but must remain empty until the tile is placed. Admission rejects contents
+in an unplaced cell host. Host ownership follows the tile's current owner.
+
+Board queries enumerate only the tiles placed on that board; `q.tile(id)` also
+addresses detached and contained inventory. Geometric adjacency and explicit
+session relations are distinct. Relations must name current board members.
+Their `typeId` is a game-defined string; it need not occur in initial relations.
+The board's `relationFieldsSchema` validates their fields.
+
+Private tile homes and destinations remain rejected in this layer. Generic
+component moves cannot remove a placed tile or move tiles onto a component
+space, edge or vertex. Dependency-aware tile transactions and private projection
+follow in subsequent layers. The headless zone facade continues to present cards.
 
 ## Field schemas
 

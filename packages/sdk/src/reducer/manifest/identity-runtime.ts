@@ -1,3 +1,5 @@
+import { parseBoardElementId } from "../../shared/domain/board-element.js";
+import { parseTileSpaceId } from "../../shared/domain/tile-space.js";
 import * as z from "zod";
 import {
   perPlayerInstanceId,
@@ -100,5 +102,90 @@ export function createInstanceDeclaration(
   return {
     schema,
     accepts: (value: string) => schema.safeParse(value).success,
+  };
+}
+
+/** Declared generic spaces or canonical cells of compatible tile inventory. */
+export function createSpaceDeclaration(
+  manifest: import("../../shared/domain/manifest.js").GameTopologyManifest,
+  boardBaseId?: string,
+) {
+  const boards = (manifest.boards ?? []).filter(
+    (board) => boardBaseId === undefined || board.id === boardBaseId,
+  );
+  const sharedSpaces = new Set(
+    boards.flatMap((board) =>
+      board.layout === "generic"
+        ? (board.spaces ?? []).map((space) => space.id)
+        : [],
+    ),
+  );
+  const layouts = new Set(boards.map((board) => board.layout));
+  const tiles = (manifest.tileTypes ?? [])
+    .filter((type) => layouts.has(type.layout))
+    .map((type) => ({
+      cells: new Set(type.cells.map((cell) => cell.id)),
+      inventory: createInstanceDeclaration(
+        "tile",
+        (manifest.tileSeeds ?? [])
+          .filter((seed) => seed.typeId === type.id)
+          .map((seed) => ({
+            baseIds: expandSeedIds([seed]),
+            scope: seed.scope,
+          })),
+      ),
+    }));
+  const accepts = (value: string) => {
+    if (sharedSpaces.has(value)) return true;
+    const parsed = parseTileSpaceId(value);
+    return (
+      parsed !== null &&
+      tiles.some(
+        (tile) =>
+          tile.cells.has(parsed.cellId) &&
+          tile.inventory.accepts(parsed.tileId),
+      )
+    );
+  };
+  return {
+    accepts,
+    schema: z.string().refine(accepts, "Unknown declared space identity."),
+  };
+}
+
+export function createBoardElementDeclaration(
+  manifest: import("../../shared/domain/manifest.js").GameTopologyManifest,
+  kind: "edge" | "vertex",
+  boardBaseId?: string,
+) {
+  const boards = (manifest.boards ?? [])
+    .filter(
+      (board) =>
+        board.layout !== "generic" &&
+        (boardBaseId === undefined || board.id === boardBaseId),
+    )
+    .map((board) => ({
+      layout: board.layout,
+      identity: createInstanceDeclaration("board", [
+        { baseIds: [board.id], scope: board.scope },
+      ]),
+    }));
+  const accepts = (value: string) => {
+    const parsed = parseBoardElementId(value);
+    return (
+      parsed !== null &&
+      parsed.kind === kind &&
+      boards.some(
+        (board) =>
+          board.layout === parsed.layout &&
+          board.identity.accepts(parsed.boardId),
+      )
+    );
+  };
+  return {
+    accepts,
+    schema: z
+      .string()
+      .refine(accepts, `Unknown declared board ${kind} identity.`),
   };
 }

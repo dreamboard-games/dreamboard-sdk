@@ -13,7 +13,7 @@ export type ViewDefinition<
   Projection extends ViewData = ViewData,
 > = (
   args: ActionContext<State, Manifest> &
-    ReadHelpers<State> & {
+    ReadHelpers<State, Manifest> & {
       state: State;
       playerId: PlayerIdOfState<State>;
     },

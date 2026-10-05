@@ -21,14 +21,17 @@ export type StepPrefix = {
 };
 
 /** Evaluate in order against authoritative state. Never samples RNG or applies defaults. */
-export function evaluateStepPrefix<State extends CollectorState>(
-  steps: StepDefinition<Record<string, InputCollector>>,
+export function evaluateStepPrefix<
+  State extends CollectorState,
+  Definitions extends ZoneDefinitions,
+>(
+  steps: StepDefinition<Record<string, InputCollector>, Definitions>,
   state: State,
   playerId: PlayerIdOfState<State>,
   values: readonly unknown[],
-  definitions: ZoneDefinitions,
+  definitions: Definitions,
 ): StepPrefix {
-  const q = createStateQueries(state, definitions);
+  const q = createStateQueries<CollectorState, Definitions>(state, definitions);
   const selected: Record<string, unknown> = {};
   const collectors: Record<string, InputCollector> = {};
   const validValues: unknown[] = [];

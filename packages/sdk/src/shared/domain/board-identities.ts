@@ -1,8 +1,16 @@
 declare const boardIdentity: unique symbol;
-export type HexEdgeId<BoardId extends string = string> =
-  `${BoardId}:edge:${string}` & { readonly [boardIdentity]: "edge" };
-export type HexVertexId<BoardId extends string = string> =
-  `${BoardId}:vertex:${string}` & { readonly [boardIdentity]: "vertex" };
+export type BoardEdgeId<BoardId extends string = string> = string & {
+  readonly [boardIdentity]: {
+    readonly kind: "edge";
+    readonly boardId: BoardId;
+  };
+};
+export type BoardVertexId<BoardId extends string = string> = string & {
+  readonly [boardIdentity]: {
+    readonly kind: "vertex";
+    readonly boardId: BoardId;
+  };
+};
 /** Shape membership is checked at runtime; explicit coordinates retain literals. */
 export type HexSpaceId<Board> = Board extends { shape: infer Shape }
   ? Shape extends { coordinates: readonly (infer Coordinate)[] }

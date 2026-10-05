@@ -38,6 +38,7 @@ import {
 } from "./simultaneous-player";
 import type {
   TrustedDomainState,
+  TrustedManifest,
   TrustedPhaseName,
   TrustedPlayerId,
   TrustedRuntimeScope,
@@ -149,7 +150,7 @@ export function createInteractionDecisionResolver<
     playerId: PlayerId;
     interactionId: string;
     assignment: Readonly<Record<string, unknown>>;
-    projection?: ProjectionContext<DomainState>;
+    projection?: ProjectionContext<DomainState, TrustedManifest<Contract>>;
   }): boolean {
     const decision = resolveInteractionDecision({
       state: input.state,
@@ -368,7 +369,7 @@ export function createInteractionDecisionResolver<
           mode === "submit"
             ? [...previousValues, paramsRecord[submittedKey ?? ""]]
             : previousValues,
-          scope.definition.contract.manifest,
+          scope.manifest,
         )
       : undefined;
     const submittedPrefix = mode === "submit" ? prefix : undefined;
@@ -465,7 +466,7 @@ export function createInteractionDecisionResolver<
         projection?.domainState ?? scope.toDomainState(state),
         playerId,
         parsed.params,
-        scope.definition.contract.manifest,
+        scope.manifest,
       );
     }
 
@@ -512,7 +513,7 @@ export function createInteractionDecisionResolver<
             domainState: projection?.domainState ?? scope.toDomainState(state),
             playerId,
             queries: projection?.q,
-            definitions: scope.definition.contract.manifest,
+            definitions: scope.manifest,
             initialValues: params,
             acceptsAssignment: () => true,
           })
@@ -592,7 +593,9 @@ export function createInteractionDecisionResolver<
   function resolveAvailableInteractionsFor(
     state: State,
     playerId: PlayerId,
-    options: { projection?: ProjectionContext<DomainState> } = {},
+    options: {
+      projection?: ProjectionContext<DomainState, TrustedManifest<Contract>>;
+    } = {},
   ) {
     const phaseName = state.flow.currentPhase as PhaseName;
     const descriptors: Descriptor[] = [];
@@ -615,7 +618,7 @@ export function createInteractionDecisionResolver<
     state: State;
     playerId: PlayerId;
     interactionId: string;
-    projection?: ProjectionContext<DomainState>;
+    projection?: ProjectionContext<DomainState, TrustedManifest<Contract>>;
   }): InteractionActionabilityResult {
     const decision = resolveInteractionDecision({
       ...input,
@@ -651,7 +654,7 @@ export function createInteractionDecisionResolver<
     playerId: PlayerId;
     interactionId: string;
     maxEvaluations: number;
-    projection?: ProjectionContext<DomainState>;
+    projection?: ProjectionContext<DomainState, TrustedManifest<Contract>>;
   }): InteractionInputEnumerationResult {
     const decision = resolveInteractionDecision({
       state: input.state,
@@ -671,7 +674,7 @@ export function createInteractionDecisionResolver<
               input.projection?.domainState ?? scope.toDomainState(input.state),
             playerId: input.playerId,
             queries: input.projection?.q,
-            definitions: scope.definition.contract.manifest,
+            definitions: scope.manifest,
             acceptsAssignment: (assignment) =>
               acceptsSubmitAssignment({
                 state: input.state,
@@ -696,7 +699,7 @@ export function createInteractionDecisionResolver<
     state: State;
     playerId: PlayerId;
     interactionId: string;
-    projection?: ProjectionContext<DomainState>;
+    projection?: ProjectionContext<DomainState, TrustedManifest<Contract>>;
   }): InteractionExplanation {
     const { state, playerId, interactionId, projection } = input;
     const phaseName = state.flow.currentPhase as PhaseName;

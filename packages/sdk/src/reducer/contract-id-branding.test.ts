@@ -11,6 +11,8 @@ function buildMinimalManifest() {
   const cardIds = ["c-alpha", "c-beta"] as const;
   const zoneIds = ["hand", "discard"] as const;
   return {
+    boardDefinitions: {},
+    tileDefinitions: {},
     literals: {
       tileTypeIds: [] as const,
       tileIds: [] as const,

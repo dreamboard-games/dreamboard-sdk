@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { compileManifest } from "./compiler";
 import { createGame } from "../authoring/game";
+import { tileSpaceId } from "../../shared/domain/tile-space.js";
 const manifest = {
   players: { minPlayers: 2, maxPlayers: 4 },
   cardSets: [
@@ -80,13 +81,34 @@ const hex = compileManifest({
       name: "Map",
       layout: "hex",
       scope: "shared",
-      shape: { kind: "coordinates", coordinates: [{ q: 0, r: 0 }] },
-      spaces: { "0,0": { id: "center" } },
+    },
+  ],
+  tileTypes: [
+    {
+      id: "terrain",
+      name: "Terrain",
+      layout: "hex",
+      cells: [{ id: "center", at: { q: 0, r: 0 } }],
+    },
+  ],
+  tileSeeds: [
+    {
+      id: "terrain",
+      typeId: "terrain",
+      scope: "shared",
+      home: {
+        type: "board",
+        boardId: "map",
+        layout: "hex",
+        q: 0,
+        r: 0,
+        rotation: 0,
+      },
     },
   ],
 } as const);
-const hexId: z.infer<typeof hex.ids.spaceId> = "center";
-const axial: number = hex.staticBoards.hex.map.spaces.center.q;
+const hexId: z.infer<typeof hex.ids.spaceId> = tileSpaceId("terrain", "center");
+const axial: number = hex.tileDefinitions.terrain.cells[0].at.q;
 // @ts-expect-error Unused spaces do not enter the inferred manifest.
 const absent: z.infer<typeof hex.ids.spaceId> = "nowhere";
 void [seed, hugeSeed, hexId, axial, absent];

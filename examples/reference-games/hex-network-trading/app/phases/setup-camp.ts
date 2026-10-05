@@ -1,3 +1,4 @@
+import { tileSpaceId } from "@dreamboard-games/sdk/reducer";
 import { emptyIntersection } from "../eligibility";
 import {
   appendHistory,
@@ -66,7 +67,7 @@ export default setupCamp.define({
       tx.moveComponentToSpace({
         componentId: "bandits",
         boardId: "frontier",
-        spaceId: "centralBarrens",
+        spaceId: tileSpaceId("centralBarrens", "cell"),
       });
     }
     tx.setActivePlayers([setupPlayerId(tx.state, q)]);

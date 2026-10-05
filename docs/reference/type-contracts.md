@@ -27,7 +27,13 @@ Assertions are not interchangeable with validation. Retained assertions must nam
 
 Errors, raw JSON, schema input, opaque feature coverage values and heterogeneous parameter enumeration legitimately use `unknown`. Do not replace it with `any`, `never`, a fake guard, an unchecked generic helper or a wider public facade to silence a diagnostic.
 
-The reserved board projection in a source frame is a trusted producer/consumer composition boundary. The generic wire JSON schema does not validate its complete topology. Keep that admission explicit; introducing another unchecked shape alias would not strengthen it.
+The reserved board projection has one strict, layout-discriminated wire schema.
+It admits record identities, tile-cell identities and bounded coordinates;
+the same schema owns its broad DTO types. The shared topology deriver owns
+geometric consistency. Game-specific query and headless types refine the admitted
+shape from compiled definitions and actual inventory types. `TableQueries<Table,
+Definitions>` carries that dependency explicitly; runtime tables do not carry
+phantom geometry fields for type inference.
 
 ## Verification and prevention
 

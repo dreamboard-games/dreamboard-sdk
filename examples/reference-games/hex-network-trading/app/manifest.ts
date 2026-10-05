@@ -2,7 +2,7 @@ import { compileManifest } from "@dreamboard-games/sdk/reducer";
 import type { z } from "zod";
 import manifest from "../manifest";
 export const manifestContract = compileManifest(manifest);
-export const { ids, literals, staticBoards } = manifestContract;
+export const { ids, literals } = manifestContract;
 export type { PlayerId } from "@dreamboard-games/sdk/reducer";
 export type CardId = z.infer<typeof ids.cardId>;
 export type CardType = z.infer<typeof ids.cardType>;

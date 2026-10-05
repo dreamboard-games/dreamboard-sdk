@@ -13,7 +13,7 @@
 | react   | `createGameHook<Game>()({ features, ...defaults })`            | `GameProvider`, `useGame`, `Subscribe`, `useCardGesture`, `useDropArea`, `useDragOverlay` |
 | reducer | `createGame(model)`                                            | Bound authoring model                                                                     |
 | reducer | `compileManifest(manifest)`                                    | In-memory manifest contract                                                               |
-| reducer | `createReducerBundle(definition)`                              | Authoritative initialize/dispatch/project/boardStatic operations                          |
+| reducer | `createReducerBundle(definition)`                              | Authoritative initialize/dispatch/project operations                                      |
 | reducer | `memoize(fn)`                                                  | WeakMap identity cache for one object argument                                            |
 
 The React provider requires its own source prop and owns source disposal. Its

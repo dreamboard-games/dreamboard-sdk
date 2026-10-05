@@ -1,8 +1,14 @@
+import { deriveBoardTopology } from "../../shared/board-topology.js";
+import {
+  boardEdgeId,
+  parseBoardElementId,
+} from "../../shared/domain/board-element.js";
 import { perPlayerInstanceId } from "../../shared/domain/per-player-instance.js";
 import { RuntimeJsonSchema } from "../../shared/runtime-json";
 import { ReducerSessionStateSchema } from "../../shared/runtime-schema.js";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
+import { validateStateSchemaIdBranding } from "../authoring/validation";
 import { compileManifest } from "./compiler";
 import { createGame } from "../authoring/game";
 import { createTableQueries } from "../table-queries";
@@ -53,6 +59,44 @@ const manifest = {
   resources: [{ id: "points", name: "Points" }],
 } as const;
 describe("in-memory manifests", () => {
+  test("admits nonempty relation tags absent from setup", () => {
+    const compiled = compileManifest({
+      players: { minPlayers: 1, maxPlayers: 2 },
+      cardSets: [],
+      boards: [
+        {
+          id: "map",
+          name: "Map",
+          scope: "shared",
+          layout: "generic",
+          spaces: [{ id: "a" }, { id: "b" }],
+          relations: [],
+        },
+      ],
+    } as const);
+    expect(compiled.ids.relationTypeId.parse("bridge")).toBe("bridge");
+    expect(compiled.ids.relationTypeId.safeParse("").success).toBe(false);
+    const table = compiled.createInitialTable({ playerIds: [] });
+    table.boards.map.relations.push({
+      typeId: "bridge",
+      fromSpaceId: "a",
+      toSpaceId: "b",
+      directed: false,
+      fields: {},
+    });
+    expect(compiled.tableSchema.safeParse(table).success).toBe(true);
+    table.boards.map.relations[0].typeId = "";
+    expect(compiled.tableSchema.safeParse(table).success).toBe(false);
+    expect(() =>
+      validateStateSchemaIdBranding(
+        z.object({
+          relationTypeId: z.string().min(1),
+          relationTypeIds: z.array(z.string().min(1)),
+        }),
+        "public",
+      ),
+    ).not.toThrow();
+  });
   test("treats playing-card names as ordinary authored inventory", () => {
     const compiled = compileManifest({
       ...manifest,
@@ -439,7 +483,7 @@ test("player-scoped boards follow the active roster rather than max-player place
     ],
   } as const);
   const table = board.createInitialTable({ playerIds: ["north", "south"] });
-  expect(Object.keys(table.boards.byId)).toEqual([
+  expect(Object.keys(table.boards)).toEqual([
     perPlayerInstanceId("board", "mat", "north"),
     perPlayerInstanceId("board", "mat", "south"),
   ]);
@@ -454,39 +498,61 @@ test("player-scoped boards follow the active roster rather than max-player place
   expect(board.ids.cardId.safeParse("unavailable").success).toBe(false);
 });
 
-test("derived geometry IDs remain constrained by the materialized topology", () => {
+test("declared geometry IDs are separate from live topology membership", () => {
   const compiled = compileManifest({
     players: { minPlayers: 1, maxPlayers: 2 },
     cardSets: [],
     zones: [],
-    boards: [
+    boards: [{ id: "map", name: "Map", layout: "square", scope: "shared" }],
+    tileTypes: [
       {
-        id: "map",
-        name: "Map",
+        id: "terrain",
+        name: "Terrain",
         layout: "square",
-        scope: "shared",
-        spaces: [
-          { id: "a", row: 0, col: 0 },
-          { id: "b", row: 0, col: 1 },
+        cells: [
+          { id: "a", at: { col: 0, row: 0 } },
+          { id: "b", at: { col: 1, row: 0 } },
         ],
-        relations: [],
-        edges: [],
-        vertices: [],
+      },
+    ],
+    tileSeeds: [
+      {
+        id: "tile",
+        typeId: "terrain",
+        home: {
+          type: "board",
+          boardId: "map",
+          layout: "square",
+          col: 0,
+          row: 0,
+          rotation: 0,
+        },
       },
     ],
   } as const);
-  expect(compiled.ids.edgeId.safeParse("square-edge:1,0::1,1").success).toBe(
+  const table = compiled.createInitialTable({ playerIds: [] });
+  const topology = deriveBoardTopology(table, compiled, "map");
+  if (topology.layout !== "square")
+    throw new Error("Expected square topology.");
+  expect(compiled.ids.edgeId.safeParse(topology.edges[0].id).success).toBe(
     true,
+  );
+  expect(compiled.ids.vertexId.safeParse(topology.vertices[0].id).success).toBe(
+    true,
+  );
+  expect(compiled.ids.edgeId.safeParse("square-edge:1,0::1,1").success).toBe(
+    false,
   );
   expect(compiled.ids.vertexId.safeParse("square-vertex:1,1").success).toBe(
-    true,
-  );
-  expect(compiled.ids.edgeId.safeParse("square-edge:99,0::99,1").success).toBe(
     false,
   );
-  expect(compiled.ids.vertexId.safeParse("square-vertex:99,99").success).toBe(
-    false,
-  );
+  const edge = parseBoardElementId(topology.edges[0].id);
+  if (!edge) throw new Error("Expected canonical edge identity.");
+  expect(
+    compiled.ids.edgeId.safeParse(
+      boardEdgeId("square", "unknown", edge.latticeId),
+    ).success,
+  ).toBe(false);
 });
 
 describe("active player records", () => {

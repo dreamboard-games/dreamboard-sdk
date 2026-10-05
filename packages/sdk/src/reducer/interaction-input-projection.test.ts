@@ -1,6 +1,7 @@
+import { asPlayerId } from "./per-player";
 import { inputDefinitions } from "./input-test-fixtures";
 import { createInputTestState } from "./input-test-fixtures";
-import type { InputCollector } from "./model";
+import type { CollectorState, InputCollector } from "./model";
 import { InteractionSteps } from "./authoring/steps";
 import { evaluateStepPrefix } from "./bundle/trusted/step-prefix";
 import { describe, expect, test } from "vitest";
@@ -187,15 +188,16 @@ const select = (values: readonly string[], defaultValue?: string) =>
   });
 function projectCurrent(
   steps: InteractionSteps<
-    typeof stepState,
-    Record<string, import("./model").InputCollector>
+    CollectorState,
+    Record<string, InputCollector>,
+    typeof inputDefinitions
   >,
   values: unknown[],
 ) {
   const evaluated = evaluateStepPrefix(
     steps,
     stepState,
-    "player-1",
+    asPlayerId("player-1"),
     values,
     inputDefinitions,
   );
@@ -212,7 +214,11 @@ function projectCurrent(
 describe("committed current input projection", () => {
   test("projects only the current domain, never future branch choices", () => {
     let futureCalls = 0;
-    const steps = new InteractionSteps<typeof stepState>()
+    const steps = new InteractionSteps<
+      CollectorState,
+      Record<never, never>,
+      typeof inputDefinitions
+    >()
       .input("mode", select(["a", "b"]))
       .input("answer", ({ selected }) => {
         futureCalls++;
@@ -225,27 +231,41 @@ describe("committed current input projection", () => {
     ]);
   });
   test("defaults remain suggestions and do not advance committed progress", () => {
-    const steps = new InteractionSteps<typeof stepState>()
+    const steps = new InteractionSteps<
+      CollectorState,
+      Record<never, never>,
+      typeof inputDefinitions
+    >()
       .input("mode", select(["a"], "a"))
       .input("answer", select(["b"]));
     expect(projectCurrent(steps, [])).toMatchObject([
       { key: "mode", defaultValue: "a" },
     ]);
     expect(
-      evaluateStepPrefix(steps, stepState, "player-1", [], inputDefinitions)
-        .values,
+      evaluateStepPrefix(
+        steps,
+        stepState,
+        asPlayerId("player-1"),
+        [],
+        inputDefinitions,
+      ).values,
     ).toEqual([]);
   });
   test("undefined defaults keep the current value unfinished", () => {
-    const steps = new InteractionSteps<typeof stepState>().input(
-      "mode",
-      select(["a"]),
-    );
+    const steps = new InteractionSteps<
+      CollectorState,
+      Record<never, never>,
+      typeof inputDefinitions
+    >().input("mode", select(["a"]));
     expect(projectCurrent(steps, [])[0]).not.toHaveProperty("defaultValue");
   });
   for (const kind of ["card", "board-space"] as const) {
     test(`projects only the selected ${kind} target domain`, () => {
-      const steps = new InteractionSteps<typeof stepState>()
+      const steps = new InteractionSteps<
+        CollectorState,
+        Record<never, never>,
+        typeof inputDefinitions
+      >()
         .input("mode", select(["a", "b"]))
         .input(
           "target",
@@ -292,20 +312,33 @@ describe("committed current input projection", () => {
     });
   }
   test("empty next domains remain explicit and do not erase a valid selection", () => {
-    const steps = new InteractionSteps<typeof stepState>()
+    const steps = new InteractionSteps<
+      CollectorState,
+      Record<never, never>,
+      typeof inputDefinitions
+    >()
       .input("mode", select(["a"]))
       .input("answer", select([]));
     expect(projectCurrent(steps, ["a"])).toMatchObject([
       { key: "answer", domain: { choices: [] } },
     ]);
     expect(
-      evaluateStepPrefix(steps, stepState, "player-1", ["a"], inputDefinitions)
-        .values,
+      evaluateStepPrefix(
+        steps,
+        stepState,
+        asPlayerId("player-1"),
+        ["a"],
+        inputDefinitions,
+      ).values,
     ).toEqual(["a"]);
   });
   test("large preceding domains never enumerate future branch combinations", () => {
     let calls = 0;
-    const steps = new InteractionSteps<typeof stepState>()
+    const steps = new InteractionSteps<
+      CollectorState,
+      Record<never, never>,
+      typeof inputDefinitions
+    >()
       .input("mode", select(Array.from({ length: 1000 }, (_, i) => String(i))))
       .input("target", ({ selected }) => {
         calls++;

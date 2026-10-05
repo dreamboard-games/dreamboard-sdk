@@ -1,6 +1,5 @@
 import { canonicalizePluginRuntimeJson } from "./json";
 import {
-  BoardStaticProjectionSchema,
   PluginGameplayFrameSchema,
   SeatProjectionBundleSchema,
 } from "./schema.js";
@@ -8,7 +7,6 @@ import type {
   InteractionDescriptor,
   PlayerId,
   PluginGameplayFrame,
-  ReducerBoardStaticProjection,
   ReducerSeatProjectionBundle,
   ZoneHandlesSnapshot,
 } from "./frame.js";
@@ -18,7 +16,6 @@ export interface MaterializePluginGameplayFrameInput {
   readonly currentPhase: string | null;
   readonly activePlayers: readonly PlayerId[];
   readonly dynamicProjection: ReducerSeatProjectionBundle;
-  readonly staticProjection?: ReducerBoardStaticProjection | null;
   readonly perspectivePlayerId: PlayerId;
 
   readonly version: number;
@@ -31,13 +28,6 @@ export function materializePluginGameplayFrame(
   const dynamicProjection = SeatProjectionBundleSchema.parse(
     canonicalizePluginRuntimeJson(input.dynamicProjection),
   );
-  const staticProjection =
-    input.staticProjection == null
-      ? null
-      : BoardStaticProjectionSchema.parse(
-          canonicalizePluginRuntimeJson(input.staticProjection),
-        );
-
   const registry = dynamicProjection.interactionsByRef ?? {};
   const seat = dynamicProjection.seats[input.perspectivePlayerId] ?? null;
 
@@ -59,7 +49,7 @@ export function materializePluginGameplayFrame(
       actionSetVersion: input.actionSetVersion,
       perspectivePlayerId: input.perspectivePlayerId,
     },
-    view: materializeView(staticProjection, seat?.view, seat?.boards),
+    view: materializeView(seat?.view, seat?.boards),
     flow: {
       currentPhase: input.currentPhase,
       activePlayers: [...input.activePlayers],
@@ -73,12 +63,10 @@ export function materializePluginGameplayFrame(
 }
 
 function materializeView(
-  staticProjection: ReducerBoardStaticProjection | null,
   seatView: unknown,
   seatBoards: ReducerSeatProjectionBundle["seats"][string]["boards"],
 ): RuntimeJson | null {
   const parts = [
-    staticProjection?.view,
     seatView,
     seatBoards === undefined ? undefined : { boards: seatBoards },
   ].filter((part) => part !== undefined && part !== null);

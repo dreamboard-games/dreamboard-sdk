@@ -7,13 +7,15 @@ export const createTestRandom = (seed = 42) =>
 
 export function createTestTransaction<
   State extends { table: RuntimeTableRecord },
->(state: State, definitions: ZoneDefinitions = { zoneDefinitions: {} }) {
+  Definitions extends ZoneDefinitions,
+>(state: State, definitions: Definitions) {
   return createReducerTransaction(state, createTestRandom(), definitions);
 }
 
-export function createTestEdit<State extends { table: RuntimeTableRecord }>(
-  definitions: ZoneDefinitions = { zoneDefinitions: {} },
-) {
-  const edit = createReducerEdit<State>(definitions);
+export function createTestEdit<
+  State extends { table: RuntimeTableRecord },
+  Definitions extends ZoneDefinitions,
+>(definitions: Definitions) {
+  const edit = createReducerEdit<State, Definitions>(definitions);
   return <Draft extends State>(state: Draft) => edit(state, createTestRandom());
 }

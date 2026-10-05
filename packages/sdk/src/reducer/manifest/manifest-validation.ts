@@ -15,20 +15,14 @@ import type {
   DieSeedSpec,
   PieceSeedSpec,
   ZoneSpec,
+  TileSeedSpec,
 } from "../../shared/domain/contracts.js";
 import type { GameTopologyManifest } from "../../shared/domain/manifest.js";
-import { createHexTopology, resolveHexSpaces } from "../../shared/hex-board.js";
 
 export type ManifestAuthoringValidationResult = {
   errors: string[];
   warnings: string[];
 };
-
-function isHexBoardSpec(
-  board: BoardSpec,
-): board is Extract<BoardSpec, { layout: "hex" }> {
-  return board.layout === "hex";
-}
 
 function collectDuplicateIdIssues(options: {
   entries: ReadonlyArray<{ id?: string | null; path: string }>;
@@ -164,7 +158,7 @@ function validateCardHomes(manifest: GameTopologyManifest): string[] {
       continue;
     }
     const validateCardHome = (
-      home: BoardCard["home"],
+      home: BoardCard["home"] | TileSeedSpec["home"],
       path: string,
       label: string,
     ) => {
@@ -224,7 +218,11 @@ function validateCardImages(manifest: GameTopologyManifest): string[] {
 
 function homeTargetsBoard(
   home:
-    BoardCard["home"] | PieceSeedSpec["home"] | DieSeedSpec["home"] | undefined,
+    | BoardCard["home"]
+    | PieceSeedSpec["home"]
+    | DieSeedSpec["home"]
+    | TileSeedSpec["home"]
+    | undefined,
 ): home is Extract<
   NonNullable<BoardCard["home"] | PieceSeedSpec["home"] | DieSeedSpec["home"]>,
   { type: "space" | "edge" | "vertex" }
@@ -235,253 +233,68 @@ function homeTargetsBoard(
 }
 
 function validateBoardDuplicates(boards: readonly BoardSpec[]): string[] {
-  const issues: string[] = [];
-
-  for (const [index, board] of boards.entries()) {
-    if (isHexBoardSpec(board)) {
-      issues.push(
-        ...collectDuplicateIdIssues({
-          entries: Object.values(board.spaces ?? {}).map(
-            (space, spaceIndex) => ({
-              id: space.id,
-              path: `manifest.boards[${index}].spaces[${spaceIndex}].id`,
-            }),
-          ),
+  return boards.flatMap((board, index) => [
+    ...(board.layout === "generic"
+      ? collectDuplicateIdIssues({
+          entries: (board.spaces ?? []).map((space, i) => ({
+            id: space.id,
+            path: `manifest.boards[${index}].spaces[${i}].id`,
+          })),
           label: "space id",
-        }),
-      );
-      continue;
-    }
-
-    issues.push(
-      ...collectDuplicateIdIssues({
-        entries: (board.spaces ?? []).map((space, spaceIndex) => ({
-          id: space.id,
-          path: `manifest.boards[${index}].spaces[${spaceIndex}].id`,
-        })),
-        label: "space id",
-      }),
-    );
-    issues.push();
-    issues.push(
-      ...collectDuplicateIdIssues({
-        entries: (board.relations ?? []).map((relation, relationIndex) => ({
-          id: relation.id,
-          path: `manifest.boards[${index}].relations[${relationIndex}].id`,
-        })),
-        label: "relation id",
-      }),
-    );
-  }
-
-  return issues;
+        })
+      : []),
+    ...collectDuplicateIdIssues({
+      entries: (board.relations ?? []).map((relation, i) => ({
+        id: relation.id,
+        path: `manifest.boards[${index}].relations[${i}].id`,
+      })),
+      label: "relation id",
+    }),
+  ]);
 }
-
-function validateHexBoardVertexRefs(manifest: GameTopologyManifest): string[] {
-  const issues: string[] = [];
-  for (const board of manifest.boards ?? []) {
-    if (board.layout !== "hex") continue;
-    try {
-      const geometry = createHexTopology({
-        ...board,
-        spaces: resolveHexSpaces(board),
-      });
-      const vertices = (board.vertices ?? []).map((vertex) =>
-        "spaces" in vertex.ref
-          ? geometry.vertex(...vertex.ref.spaces)
-          : geometry.vertexAt(vertex.ref.space, vertex.ref.corner),
-      );
-      const edges = (board.edges ?? []).map((edge) =>
-        "spaces" in edge.ref
-          ? geometry.edge(...edge.ref.spaces)
-          : geometry.edgeAt(edge.ref.space, edge.ref.side),
-      );
-      if (new Set(vertices).size !== vertices.length)
-        throw new Error("Duplicate hex vertex refs.");
-      if (new Set(edges).size !== edges.length)
-        throw new Error("Duplicate hex edge refs.");
-    } catch (error) {
-      issues.push(
-        `Hex board '${board.id}': ${error instanceof Error ? error.message : String(error)}`,
-      );
-    }
-  }
-  return issues;
-}
-
-function collectAmbiguousBoardTypeWarnings(
-  manifest: GameTopologyManifest,
-): string[] {
-  const warnings: string[] = [];
-  const boardsBySpaceType = new Map<string, Set<string>>();
-  const boardsByEdgeType = new Map<string, Set<string>>();
-  const boardsByVertexType = new Map<string, Set<string>>();
-
-  const addBoardUsage = (
-    target: Map<string, Set<string>>,
-    typeId: string | null | undefined,
-    boardId: string,
-  ) => {
-    if (!typeId) {
-      return;
-    }
-    const boardIds = target.get(typeId) ?? new Set<string>();
-    boardIds.add(boardId);
-    target.set(typeId, boardIds);
-  };
-
-  for (const board of manifest.boards ?? []) {
-    for (const space of [
-      ...(board.layout === "hex"
-        ? Object.values(board.spaces ?? {})
-        : (board.spaces ?? [])),
-    ]) {
-      addBoardUsage(boardsBySpaceType, space.typeId, board.id);
-    }
-
-    if (board.layout === "hex" || board.layout === "square") {
-      for (const edge of [...(board.edges ?? [])]) {
-        addBoardUsage(boardsByEdgeType, edge.typeId, board.id);
-      }
-      for (const vertex of [...(board.vertices ?? [])]) {
-        addBoardUsage(boardsByVertexType, vertex.typeId, board.id);
-      }
-    }
-  }
-
-  const pushWarnings = (
-    kind: "space" | "edge" | "vertex",
-    boardsByType: Map<string, Set<string>>,
-    helperName: string,
-  ) => {
-    for (const [typeId, boardIds] of boardsByType.entries()) {
-      if (boardIds.size < 2) {
-        continue;
-      }
-      warnings.push(
-        `Ambiguous ${kind}.typeId '${typeId}' is authored on multiple boards (${Array.from(boardIds).sort().join(", ")}). Prefer ${helperName} for board-scoped lookups.`,
-      );
-    }
-  };
-
-  pushWarnings(
-    "space",
-    boardsBySpaceType,
-    "boardHelpers.spaceIdsByBoardId / boardHelpers.spaceTypeIdByBoardId",
-  );
-  pushWarnings(
-    "edge",
-    boardsByEdgeType,
-    "boardHelpers.edgeIdsByBoardIdAndTypeId",
-  );
-  pushWarnings(
-    "vertex",
-    boardsByVertexType,
-    "boardHelpers.vertexIdsByBoardIdAndTypeId",
-  );
-
-  return warnings;
-}
-
 function collectBoardRecordKeyIssues(manifest: GameTopologyManifest): string[] {
   const issues: string[] = [];
-
-  for (const [boardIndex, board] of (manifest.boards ?? []).entries()) {
-    const boardPath = `manifest.boards[${boardIndex}]`;
-    const runtimeBoardIds = board.scope === "perPlayer" ? [] : [board.id];
+  for (const [i, board] of (manifest.boards ?? []).entries()) {
+    const path = `manifest.boards[${i}]`;
     issues.push(
       ...collectKeyIssues([
-        { value: board.id, path: `${boardPath}.id` },
-        { value: board.typeId, path: `${boardPath}.typeId` },
-        ...runtimeBoardIds.map((runtimeBoardId) => ({
-          value: runtimeBoardId,
-          path: `${boardPath}.runtimeBoardId`,
-        })),
+        { value: board.id, path: `${path}.id` },
+        { value: board.typeId, path: `${path}.typeId` },
       ]),
       ...fieldSchemaKeyIssues(
         board.boardFieldsSchema,
-        `${boardPath}.boardFieldsSchema`,
+        `${path}.boardFieldsSchema`,
       ),
       ...fieldSchemaKeyIssues(
-        board.spaceFieldsSchema,
-        `${boardPath}.spaceFieldsSchema`,
+        board.relationFieldsSchema,
+        `${path}.relationFieldsSchema`,
       ),
     );
-
-    if (board.layout !== "hex") {
+    if (board.layout === "generic") {
       issues.push(
         ...fieldSchemaKeyIssues(
-          board.relationFieldsSchema,
-          `${boardPath}.relationFieldsSchema`,
+          board.spaceFieldsSchema,
+          `${path}.spaceFieldsSchema`,
         ),
-        ...collectKeyIssues([
-          ...(board.relations ?? []).flatMap((relation, relationIndex) => [
-            {
-              value: relation.id,
-              path: `${boardPath}.relations[${relationIndex}].id`,
-            },
-            {
-              value: relation.typeId,
-              path: `${boardPath}.relations[${relationIndex}].typeId`,
-            },
-            {
-              value: relation.fromSpaceId,
-              path: `${boardPath}.relations[${relationIndex}].fromSpaceId`,
-            },
-            {
-              value: relation.toSpaceId,
-              path: `${boardPath}.relations[${relationIndex}].toSpaceId`,
-            },
+      );
+      for (const [j, space] of (board.spaces ?? []).entries())
+        issues.push(
+          ...collectKeyIssues([
+            { value: space.id, path: `${path}.spaces[${j}].id` },
+            { value: space.typeId, path: `${path}.spaces[${j}].typeId` },
           ]),
-        ]),
-      );
+        );
     }
-
-    if (board.layout !== "generic") {
+    for (const [j, relation] of (board.relations ?? []).entries())
       issues.push(
-        ...fieldSchemaKeyIssues(
-          board.edgeFieldsSchema,
-          `${boardPath}.edgeFieldsSchema`,
-        ),
-        ...fieldSchemaKeyIssues(
-          board.vertexFieldsSchema,
-          `${boardPath}.vertexFieldsSchema`,
-        ),
         ...collectKeyIssues([
-          ...(board.edges ?? []).map((edge, edgeIndex) => ({
-            value: edge.typeId,
-            path: `${boardPath}.edges[${edgeIndex}].typeId`,
-          })),
-          ...(board.vertices ?? []).map((vertex, vertexIndex) => ({
-            value: vertex.typeId,
-            path: `${boardPath}.vertices[${vertexIndex}].typeId`,
-          })),
+          { value: relation.id, path: `${path}.relations[${j}].id` },
+          { value: relation.typeId, path: `${path}.relations[${j}].typeId` },
         ]),
       );
-    }
-
-    issues.push(
-      ...collectKeyIssues(
-        (board.layout === "hex"
-          ? Object.values(board.spaces ?? {})
-          : (board.spaces ?? [])
-        ).flatMap((space, spaceIndex) => [
-          {
-            value: space.id,
-            path: `${boardPath}.spaces[${spaceIndex}].id`,
-          },
-          {
-            value: space.typeId,
-            path: `${boardPath}.spaces[${spaceIndex}].typeId`,
-          },
-        ]),
-      ),
-    );
   }
-
   return issues;
 }
-
 function collectManifestRecordKeyIssues(
   manifest: GameTopologyManifest,
 ): string[] {
@@ -901,11 +714,10 @@ export function validateManifestAuthoring(
   }
   errors.push(...validateAnalyzedManifest(manifest));
   errors.push(...validateCardImages(manifest));
-  errors.push(...validateHexBoardVertexRefs(manifest));
 
   return {
     errors,
-    warnings: collectAmbiguousBoardTypeWarnings(manifest),
+    warnings: [],
   };
 }
 
@@ -1060,37 +872,20 @@ function validateAnalyzedManifest(manifest: GameTopologyManifest): string[] {
   for (const [i, board] of (manifest.boards ?? []).entries()) {
     const base = `manifest.boards[${i}]`;
     check(board.boardFieldsSchema, board.fields, `${base}.fields`, board.id);
-    const spaces =
-      board.layout === "hex" ? resolveHexSpaces(board) : (board.spaces ?? []);
+    const spaces = board.layout === "generic" ? (board.spaces ?? []) : [];
     for (const [j, space] of spaces.entries())
       check(
-        board.spaceFieldsSchema,
+        board.layout === "generic" ? board.spaceFieldsSchema : undefined,
         space.fields,
         `${base}.spaces[${j}].fields`,
         board.id,
       );
-    if (board.layout !== "hex") {
+    {
       for (const [j, relation] of (board.relations ?? []).entries())
         check(
           board.relationFieldsSchema,
           relation.fields,
           `${base}.relations[${j}].fields`,
-          board.id,
-        );
-    }
-    if (board.layout !== "generic") {
-      for (const [j, edge] of (board.edges ?? []).entries())
-        check(
-          board.edgeFieldsSchema,
-          edge.fields,
-          `${base}.edges[${j}].fields`,
-          board.id,
-        );
-      for (const [j, vertex] of (board.vertices ?? []).entries())
-        check(
-          board.vertexFieldsSchema,
-          vertex.fields,
-          `${base}.vertices[${j}].fields`,
           board.id,
         );
     }
@@ -1104,7 +899,7 @@ function validateHomeMembership(
 ): string[] {
   const errors: string[] = [];
   function check(
-    home: BoardCard["home"],
+    home: BoardCard["home"] | TileSeedSpec["home"],
     path: string,
     scope: "shared" | "perPlayer" = "shared",
   ): void {
@@ -1134,9 +929,17 @@ function validateHomeMembership(
       } else {
         const attachment = zone.attachedTo;
         const type =
-          "pieceType" in attachment ? attachment.pieceType : attachment.dieType;
+          "pieceType" in attachment
+            ? attachment.pieceType
+            : "dieType" in attachment
+              ? attachment.dieType
+              : attachment.tileType;
         const seeds =
-          "pieceType" in attachment ? manifest.pieceSeeds : manifest.dieSeeds;
+          "pieceType" in attachment
+            ? manifest.pieceSeeds
+            : "dieType" in attachment
+              ? manifest.dieSeeds
+              : manifest.tileSeeds;
         const host = seeds?.find(
           (seed) =>
             seed.typeId === type &&
@@ -1158,6 +961,13 @@ function validateHomeMembership(
     );
     if (!board) {
       errors.push(`${path}.boardId: unknown board '${home.boardId}'.`);
+      return;
+    }
+    if (home.type === "board") {
+      if (board.layout === "generic" || board.layout !== home.layout)
+        errors.push(`${path}: Tile home requires matching tiled board layout.`);
+      if (scope !== "perPlayer" && board.board.scope === "perPlayer")
+        errors.push(`${path}: Shared tile cannot infer per-player board.`);
       return;
     }
     if (home.type === "space") {
@@ -1195,7 +1005,8 @@ function validateHomeMembership(
       else {
         if (
           "space" in attachment &&
-          !board.spaces.some((space) => space.id === attachment.space)
+          (board.layout !== "generic" ||
+            !board.spaces.some((space) => space.id === attachment.space))
         )
           errors.push(`${path}.space: Unknown space '${attachment.space}'.`);
         if (zone.visibility === "ownerOnly" && board.board.scope === "shared")
@@ -1206,8 +1017,18 @@ function validateHomeMembership(
         errors.push(
           `${path}.pieceType: Unknown piece type '${attachment.pieceType}'.`,
         );
-    } else if (!analysis.dieTypeIds.includes(attachment.dieType))
-      errors.push(`${path}.dieType: Unknown die type '${attachment.dieType}'.`);
+    } else if ("dieType" in attachment) {
+      if (!analysis.dieTypeIds.includes(attachment.dieType))
+        errors.push(
+          `${path}.dieType: Unknown die type '${attachment.dieType}'.`,
+        );
+    } else {
+      const type = manifest.tileTypes?.find(
+        (type) => type.id === attachment.tileType,
+      );
+      if (!type || !type.cells.some((cell) => cell.id === attachment.cell))
+        errors.push(`${path}: Unknown tile type or local cell.`);
+    }
   }
   for (const [si, set] of manifest.cardSets.entries()) {
     check(set.defaultHome, `manifest.cardSets[${si}].defaultHome`, "perPlayer");

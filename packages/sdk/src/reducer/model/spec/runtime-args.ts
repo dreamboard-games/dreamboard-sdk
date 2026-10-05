@@ -1,3 +1,5 @@
+import type { ZoneDefinitions } from "../table.js";
+import type { TopologyDefinitions } from "../../../shared/domain/topology-definitions.js";
 import type { RuntimeTableRecord } from "../table";
 import type { ManifestContract } from "../manifest";
 import type {
@@ -41,8 +43,9 @@ export type ValidationIssue<ErrorCode extends string = string> = {
  */
 export type ReadHelpers<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > = {
-  q: TableQueriesOfState<State>;
+  q: TableQueriesOfState<State, Definitions>;
 };
 
 export type RandomHelpers = {
@@ -61,8 +64,9 @@ export type RandomHelpers = {
 export type MutationHelpers<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
   ErrorCode extends string = string,
+  Definitions extends ZoneDefinitions = ZoneDefinitions,
 > = {
-  tx: ReducerTransaction<State, ErrorCode>;
+  tx: ReducerTransaction<State, ErrorCode, Definitions>;
   random: RandomHelpers;
 };
 
@@ -71,8 +75,8 @@ export type PhaseEnterArgs<
   Manifest extends ManifestContract<TableOfState<State>>,
   ErrorCode extends string = string,
 > = ActionContext<State, Manifest> &
-  ReadHelpers<State> &
-  MutationHelpers<State, ErrorCode> &
+  ReadHelpers<State, Manifest> &
+  MutationHelpers<State, ErrorCode, Manifest> &
   PhaseEnterContext & {
     state: State;
   };
@@ -81,7 +85,7 @@ export type ActorSelectorArgs<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
   Manifest extends ManifestContract<TableOfState<State>>,
 > = ActionContext<State, Manifest> &
-  ReadHelpers<State> & {
+  ReadHelpers<State, Manifest> & {
     state: State;
   };
 

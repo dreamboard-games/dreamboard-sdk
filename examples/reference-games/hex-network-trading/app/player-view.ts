@@ -1,6 +1,5 @@
-import { literals, type PlayerId } from "./manifest";
+import { type PlayerId } from "./manifest";
 import { stormtrail, type GameState } from "./game-model";
-import { HEX_RULES } from "./model";
 import {
   banditsHexId,
   campsByIntersectionId,
@@ -14,10 +13,6 @@ function projectPublic(state: GameState, q: typeof stormtrail.types.Queries) {
     activePlayerId: state.flow.activePlayers[0] ?? null,
     turnNumber: state.publicState.turnNumber,
     setup: state.publicState.setup,
-    hexes: literals.spaceIds.map((hexId) => ({
-      id: hexId,
-      ...HEX_RULES[hexId],
-    })),
     banditsHexId: banditsHexId(state),
     campsByIntersectionId: campsByIntersectionId(state),
     trailsByEdgeId: trailsByEdgeId(state),

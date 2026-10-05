@@ -2,17 +2,18 @@ import type {
   PlayerIdOfTable,
   ResourceBalancesOfTable,
   RuntimeTableRecord,
+  RuntimeQueryTable,
 } from "../model";
 
 import { assertNonNegativeSafeInteger } from "./numeric";
 
-export function getPlayerOrder<Table extends RuntimeTableRecord>(
+export function getPlayerOrder<Table extends RuntimeQueryTable>(
   table: Table,
 ): Table["playerOrder"] {
   return table.playerOrder;
 }
 
-export function getPlayerResources<Table extends RuntimeTableRecord>(
+export function getPlayerResources<Table extends RuntimeQueryTable>(
   table: Table,
   playerId: PlayerIdOfTable<NoInfer<Table>>,
 ): ResourceBalancesOfTable<Table> {
@@ -23,7 +24,7 @@ export function getPlayerResources<Table extends RuntimeTableRecord>(
  * Read the amount a player holds of a single resource. Returns `0` when the
  * player has never accumulated that resource.
  */
-export function getPlayerResourceAmount<Table extends RuntimeTableRecord>(
+export function getPlayerResourceAmount<Table extends RuntimeQueryTable>(
   table: Table,
   playerId: string,
   resourceId: string,
@@ -45,7 +46,7 @@ export function getPlayerResourceAmount<Table extends RuntimeTableRecord>(
  * Sum of every resource amount for a player (e.g. "total cards in hand"
  * games). Skips omitted keys but rejects malformed stored balances.
  */
-export function getPlayerResourceTotal<Table extends RuntimeTableRecord>(
+export function getPlayerResourceTotal<Table extends RuntimeQueryTable>(
   table: Table,
   playerId: string,
 ): number {
@@ -73,7 +74,7 @@ export function getPlayerResourceTotal<Table extends RuntimeTableRecord>(
  * first seat. Returns `null` when `playerId` is not in the player order or
  * the order is empty.
  */
-export function getNextPlayerInOrder<Table extends RuntimeTableRecord>(
+export function getNextPlayerInOrder<Table extends RuntimeQueryTable>(
   table: Table,
   playerId: string,
 ): PlayerIdOfTable<Table> | null {
@@ -114,7 +115,7 @@ function resourceEntries(
  * resource. Unknown resource ids are treated as zero-balance (i.e. requesting
  * one of them returns `false` unless the requested amount is also zero).
  */
-export function canAffordResources<Table extends RuntimeTableRecord>(
+export function canAffordResources<Table extends RuntimeQueryTable>(
   table: Table,
   playerId: string,
   amounts: Readonly<Record<string, number | undefined>>,
@@ -132,7 +133,7 @@ export function canAffordResources<Table extends RuntimeTableRecord>(
  * record maps resource id → shortfall. Empty when the player can afford the
  * full cost.
  */
-export function getMissingResources<Table extends RuntimeTableRecord>(
+export function getMissingResources<Table extends RuntimeQueryTable>(
   table: Table,
   playerId: string,
   amounts: Readonly<Record<string, number | undefined>>,

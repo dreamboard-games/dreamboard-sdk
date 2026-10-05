@@ -84,7 +84,7 @@ test("applies semantic checks after structural parsing", () => {
     expect(() => parseTopologyManifestJson(value)).toThrow();
 });
 
-test("admits each board layout and checks integer geometry", () => {
+test("admits board layouts and checks tile-local integer geometry", () => {
   const boards = [
     {
       id: "graph",
@@ -93,35 +93,48 @@ test("admits each board layout and checks integer geometry", () => {
       scope: "shared",
       spaces: [{ id: "a" }],
     },
+    { id: "hex", name: "Hex", layout: "hex", scope: "shared" },
+    { id: "square", name: "Square", layout: "square", scope: "shared" },
+  ];
+  const tileTypes = [
     {
-      id: "hex",
-      name: "Hex",
+      id: "hex-terrain",
+      name: "Hex terrain",
       layout: "hex",
-      scope: "shared",
-      shape: { kind: "hexagon", radius: 1 },
+      cells: [{ id: "origin", at: { q: 0, r: 0 } }],
     },
     {
-      id: "square",
-      name: "Square",
+      id: "square-terrain",
+      name: "Square terrain",
       layout: "square",
-      scope: "shared",
-      spaces: [{ id: "a", row: 0, col: -1 }],
+      cells: [{ id: "origin", at: { col: -1, row: 0 } }],
     },
   ];
-  expect(parseTopologyManifestJson({ ...minimal, boards }).boards).toEqual(
-    boards,
-  );
-  expect(() =>
-    parseTopologyManifestJson({
-      ...minimal,
-      boards: [
-        {
-          ...boards[1],
-          shape: { kind: "coordinates", coordinates: [{ q: 0.5, r: 0 }] },
-        },
-      ],
-    }),
-  ).toThrow();
+  const parsed = parseTopologyManifestJson({ ...minimal, boards, tileTypes });
+  expect(parsed.boards).toEqual(boards);
+  expect(parsed.tileTypes).toEqual(tileTypes);
+  for (const at of [
+    { q: 0.5, r: 0 },
+    { q: 0, r: Infinity },
+    { col: 0.5, row: 0 },
+  ]) {
+    const type = "q" in at ? tileTypes[0] : tileTypes[1];
+    expect(() =>
+      parseTopologyManifestJson({
+        ...minimal,
+        boards,
+        tileTypes: [{ ...type, cells: [{ id: "origin", at }] }],
+      }),
+    ).toThrow();
+  }
+  for (const legacy of [
+    { ...boards[1], shape: { kind: "hexagon", radius: 1 } },
+    { ...boards[2], spaces: [{ id: "a", row: 0, col: 0 }] },
+    { ...boards[1], edges: [] },
+  ])
+    expect(() =>
+      parseTopologyManifestJson({ ...minimal, boards: [legacy] }),
+    ).toThrow();
 });
 
 test("preserves optional structural metadata across all board layouts", () => {
@@ -166,63 +179,101 @@ test("preserves optional structural metadata across all board layouts", () => {
         scope: "shared",
         layout: "hex",
         orientation: "flat",
-        shape: {
-          kind: "coordinates",
-          coordinates: [
-            { q: 0, r: 0 },
-            { q: 1, r: 0 },
-          ],
-        },
-        exclude: [{ q: 1, r: 0 }],
-        spaces: { "0,0": { id: "origin", typeId: "cell", label: "Origin" } },
-        edgeFieldsSchema: z.object({ cost: z.int() }),
+      },
+      { id: "square", name: "Square", scope: "shared", layout: "square" },
+    ],
+    tileTypes: [
+      {
+        id: "hex-terrain",
+        name: "Hex terrain",
+        layout: "hex",
+        frontImage: "assets/terrain.png",
+        fieldsSchema: z.object({ category: z.string() }),
+        fields: { category: "land" },
+        propertiesSchema: z.object({ visited: z.boolean().default(false) }),
+        cellFieldsSchema: z.object({ altitude: z.number() }),
+        cells: [
+          {
+            id: "origin",
+            at: { q: 0, r: 0 },
+            name: "Origin",
+            typeId: "cell",
+            fields: { altitude: 3 },
+          },
+        ],
+        edgeFieldsSchema: z.object({
+          cost: z.int(),
+          tags: z.array(z.string()),
+        }),
         edges: [
           {
-            ref: { space: "origin", side: 0 },
+            cellId: "origin",
+            side: 0,
             typeId: "border",
             label: "Border",
-            tags: ["outside"],
-            fields: { cost: 1 },
+            fields: { cost: 1, tags: ["outside"] },
           },
         ],
         vertexFieldsSchema: z.object({ value: z.int() }),
         vertices: [
           {
-            ref: { space: "origin", corner: 0 },
+            cellId: "origin",
+            corner: 0,
             typeId: "corner",
             label: "Corner",
-            tags: ["outside"],
             fields: { value: 2 },
           },
         ],
       },
       {
-        id: "square",
-        name: "Square",
-        scope: "shared",
+        id: "square-terrain",
+        name: "Square terrain",
         layout: "square",
-        spaces: [
-          { id: "a", row: 0, col: 0, typeId: "cell", label: "A" },
-          { id: "b", row: 0, col: 1 },
-          { id: "c", row: 1, col: 0 },
-          { id: "d", row: 1, col: 1 },
+        cells: [
+          { id: "a", at: { row: 0, col: 0 }, typeId: "cell", name: "A" },
+          { id: "b", at: { row: 0, col: 1 } },
+          { id: "c", at: { row: 1, col: 0 } },
+          { id: "d", at: { row: 1, col: 1 } },
         ],
         edges: [
           {
-            ref: { spaces: ["a", "b"] },
+            cellId: "a",
+            side: 0,
             typeId: "border",
             label: "Boundary",
-            tags: ["outside"],
+            fields: { tags: ["outside"] },
           },
         ],
         vertices: [
-          {
-            ref: { spaces: ["a", "b", "c", "d"] },
-            typeId: "corner",
-            label: "Corner",
-            tags: ["outside"],
-          },
+          { cellId: "a", corner: 0, typeId: "corner", label: "Corner" },
         ],
+      },
+    ],
+    tileSeeds: [
+      {
+        id: "hex-tile",
+        typeId: "hex-terrain",
+        properties: { visited: true },
+        home: {
+          type: "board",
+          boardId: "hex",
+          layout: "hex",
+          q: 1,
+          r: -1,
+          rotation: 1,
+        },
+      },
+      {
+        id: "square-tile",
+        typeId: "square-terrain",
+        home: {
+          type: "board",
+          boardId: "square",
+          layout: "square",
+          col: -1,
+          row: 0,
+          rotation: 2,
+        },
       },
     ],
     pieceTypes: [

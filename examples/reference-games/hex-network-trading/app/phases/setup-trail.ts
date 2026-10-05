@@ -35,7 +35,7 @@ const placeStartingTrail = setupTrail.interaction({
         "Starting trail requires a pending camp and trail piece.",
       );
     }
-    const grants = producingHexesAtIntersection(intersectionId).reduce<
+    const grants = producingHexesAtIntersection(q, intersectionId).reduce<
       Partial<Record<ResourceId, number>>
     >((counts, { resourceId }) => {
       counts[resourceId] = (counts[resourceId] ?? 0) + 1;

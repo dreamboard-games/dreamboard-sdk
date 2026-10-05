@@ -1,4 +1,7 @@
-import { perPlayerInstanceId } from "@dreamboard-games/sdk/reducer";
+import {
+  perPlayerInstanceId,
+  tileSpaceId,
+} from "@dreamboard-games/sdk/reducer";
 import { z } from "zod";
 import { proveCardDrag } from "./card-drag-proof.ts";
 import {
@@ -222,21 +225,24 @@ try {
         story.id.endsWith("player-board-targets") ||
         story.id.endsWith("generic-board-spaces")
       ) {
-        const boardControl = story.id.endsWith("generic-board-spaces")
-          ? "section button"
-          : "svg";
-        const ownId = perPlayerInstanceId("board", "mat", "player-1");
-        const opponentId = perPlayerInstanceId("board", "mat", "player-2");
-        const ownSelector = await page.evaluate((id) => CSS.escape(id), ownId);
-        const opponentSelector = await page.evaluate(
-          (id) => CSS.escape(id),
-          opponentId,
+        const targets = ["player-1", "player-2"].map((playerId) => ({
+          boardId: perPlayerInstanceId("board", "mat", playerId),
+          spaceId: story.id.endsWith("generic-board-spaces")
+            ? "slot"
+            : tileSpaceId(
+                perPlayerInstanceId("tile", "cell", playerId),
+                "slot",
+              ),
+        }));
+        const [ownValue, opponentValue] = await page.evaluate(
+          (values) => values.map((value) => CSS.escape(JSON.stringify(value))),
+          targets,
         );
         const own = page.locator(
-          `${boardControl}[data-board="${ownSelector}"][data-action="select"], ${boardControl} [data-board="${ownSelector}"][data-action="select"]`,
+          `[data-board][data-action="select"][data-value="${ownValue}"]`,
         );
         const opponent = page.locator(
-          `${boardControl}[data-board="${opponentSelector}"][data-action="select"], ${boardControl} [data-board="${opponentSelector}"][data-action="select"]`,
+          `[data-board][data-action="select"][data-value="${opponentValue}"]`,
         );
         await own.focus();
         await page.keyboard.press("Enter");
@@ -248,10 +254,7 @@ try {
           .locator('[data-action="submit"][data-interaction="play.choose"]')
           .click();
         await expect(page.getByTestId("scenario-view")).toContainText(
-          `"selected":${JSON.stringify([
-            { boardId: ownId, spaceId: "slot" },
-            { boardId: opponentId, spaceId: "slot" },
-          ])}`,
+          `"selected":${JSON.stringify(targets)}`,
         );
       }
       // Gesture proofs run on a portrait phone and a desktop.

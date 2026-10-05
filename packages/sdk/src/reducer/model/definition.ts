@@ -96,7 +96,7 @@ export type ReducerSessionForConfig<
 >;
 
 export type BaseGameStateOfContract<Contract> = ReducerGameState<
-  TableOfManifest<ManifestContractOf<Contract>>,
+  TableOfManifest<ManifestOf<Contract>>,
   z.infer<PublicSchemaOfContract<Contract>>,
   z.infer<PrivateSchemaOfContract<Contract>>,
   z.infer<HiddenSchemaOfContract<Contract>>,
@@ -160,7 +160,7 @@ export type ResolvedGameStateOf<
   Definitions extends PhaseMapOf<Contract>,
 > = {
   [Name in keyof Definitions & string]: ReducerGameState<
-    TableOfManifest<ManifestContractOf<Contract>>,
+    TableOfManifest<ManifestOf<Contract>>,
     z.infer<PublicSchemaOfContract<Contract>>,
     z.infer<PrivateSchemaOfContract<Contract>>,
     z.infer<HiddenSchemaOfContract<Contract>>,
@@ -172,7 +172,7 @@ export type ResolvedGameStateOf<
     PhaseNameOfContract<Contract>
   > & {
     flow: ReducerGameState<
-      TableOfManifest<ManifestContractOf<Contract>>,
+      TableOfManifest<ManifestOf<Contract>>,
       z.infer<PublicSchemaOfContract<Contract>>,
       z.infer<PrivateSchemaOfContract<Contract>>,
       z.infer<HiddenSchemaOfContract<Contract>>,

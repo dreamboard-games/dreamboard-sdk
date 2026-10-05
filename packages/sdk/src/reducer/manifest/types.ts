@@ -1,12 +1,13 @@
+import type { ReadonlyTopology } from "../../shared/board-topology-schema.js";
+import type { TileSpaceId } from "../../shared/domain/tile-space.js";
 import type { BoardSpaceHostId } from "../../shared/domain/board-space-host.js";
 import type {
   PerPlayerInstanceId,
   PerPlayerInstanceFamily,
 } from "../../shared/domain/per-player-instance.js";
 import type {
-  HexSpaceId,
-  HexEdgeId,
-  HexVertexId,
+  BoardEdgeId,
+  BoardVertexId,
 } from "../../shared/domain/board-identities.js";
 import type { GameTopologyManifest } from "../../shared/domain/manifest.js";
 import type { FieldsOutput, FieldSchema, CardSchema } from "./field-schemas.js";
@@ -15,16 +16,12 @@ import type {
   ManifestIdSchema,
   ReducerManifestContract,
   RuntimeTableRecord,
-  RuntimeRecord,
   RuntimeCardData,
   RuntimePieceData,
   RuntimeDieData,
   RuntimeTileData,
   RuntimeComponentLocation,
-  RuntimeBoardState,
-  RuntimeGenericBoardState,
-  RuntimeHexBoardState,
-  RuntimeSquareBoardState,
+  RuntimeBoardInstance,
   ZoneDefinition,
   ZoneHostMap,
 } from "../model";
@@ -109,6 +106,16 @@ type RuntimeBoardId<B> = B extends { id: infer I extends string }
     : I
   : never;
 type CardTypeOf<C> = C extends { cardType: infer T extends string } ? T : never;
+export type TileSpaceIds<M, Layout = "hex" | "square"> =
+  Entries<M, "tileSeeds"> extends infer S
+    ? S extends { typeId: infer T }
+      ? Extract<Entries<M, "tileTypes">, { id: T }> extends infer D
+        ? D extends { layout: Layout; cells: infer C }
+          ? TileSpaceId<SeedIds<S, "tile">, Id<Entry<C>>>
+          : never
+        : never
+      : never
+    : never;
 export type ManifestIdsOf<M> = {
   playerId: PlayerId;
   phaseName: string;
@@ -127,27 +134,27 @@ export type ManifestIdsOf<M> = {
   boardTypeId: Extract<Get<Boards<M>, "typeId">, string>;
   boardBaseId: Id<Boards<M>>;
   boardId: RuntimeBoardId<Boards<M>>;
-  relationTypeId: Extract<
-    Get<Entry<Get<Boards<M>, "relations">>, "typeId">,
+  relationTypeId: string;
+  edgeId: BoardEdgeId<
+    RuntimeBoardId<Extract<Boards<M>, { layout: "hex" | "square" }>>
+  >;
+  edgeTypeId: Extract<
+    Get<Entry<Get<Entries<M, "tileTypes">, "edges">>, "typeId">,
     string
   >;
-  edgeId:
-    | HexEdgeId<Extract<Id<Extract<Boards<M>, { layout: "hex" }>>, string>>
-    | (Extract<Boards<M>, { layout: "square" }> extends never
-        ? never
-        : `square-edge:${string}`);
-  edgeTypeId: Extract<Get<Entry<Get<Boards<M>, "edges">>, "typeId">, string>;
-  vertexId:
-    | HexVertexId<Extract<Id<Extract<Boards<M>, { layout: "hex" }>>, string>>
-    | (Extract<Boards<M>, { layout: "square" }> extends never
-        ? never
-        : `square-vertex:${string}`);
+  vertexId: BoardVertexId<
+    RuntimeBoardId<Extract<Boards<M>, { layout: "hex" | "square" }>>
+  >;
   vertexTypeId: Extract<
-    Get<Entry<Get<Boards<M>, "vertices">>, "typeId">,
+    Get<Entry<Get<Entries<M, "tileTypes">, "vertices">>, "typeId">,
     string
   >;
-  spaceId: BoardSpaceId<Boards<M>>;
-  spaceTypeId: Extract<Get<BoardSpaceEntry<Boards<M>>, "typeId">, string>;
+  spaceId: BoardSpaceId<Boards<M>> | TileSpaceIds<M>;
+  spaceTypeId: Extract<
+    | Get<BoardSpaceEntry<Boards<M>>, "typeId">
+    | Get<Entry<Get<Entries<M, "tileTypes">, "cells">>, "typeId">,
+    string
+  >;
 };
 type ObjectFields<S, M, B = never> = FieldsOutput<S, M, B>;
 type CardFields<S, Category extends string, M> = S extends {
@@ -260,88 +267,99 @@ type InferredTiles<M> = {
   [I in SeedIds<Entries<M, "tileSeeds">, "tile">]: EntityAtId<TileState<M>, I>;
 };
 type BoardField<B, K extends PropertyKey, M> = ObjectFields<Get<B, K>, M, B>;
-type BoardSpaceEntry<B> = B extends { layout: "hex"; spaces: infer Spaces }
-  ? Spaces[keyof Spaces]
-  : Entry<Get<B, "spaces">>;
-type BoardSpaceId<B> = B extends { layout: "hex" }
-  ? HexSpaceId<B>
-  : Id<Entry<Get<B, "spaces">>>;
-type BoardParts<M, B> = {
-  id: RuntimeBoardId<B>;
-  baseId: Id<B>;
-  scope: B extends { scope: infer Scope } ? Scope : never;
-  fields: BoardField<B, "boardFieldsSchema", M>;
-  relations: (Omit<RuntimeHexBoardState["relations"][number], "typeId"> & {
-    typeId:
-      | Extract<Get<Entry<Get<B, "relations">>, "typeId">, string>
-      | (B extends { layout: "hex" | "square" } ? "adjacent" : never);
-  })[];
-  spaces: {
-    [SpaceId in BoardSpaceId<B>]: (B extends { layout: "hex" }
-      ? { q: number; r: number }
-      : B extends { layout: "square" }
-        ? { row: number; col: number }
-        : unknown) & {
-      id: SpaceId;
-      name?: string | null;
-      typeId?: Extract<Get<BoardSpaceEntry<B>, "typeId">, string> | null;
-      fields: BoardField<B, "spaceFieldsSchema", M>;
-    };
-  };
-};
-type BoardState<M, B> = B extends { layout: "hex" }
-  ? Omit<
-      RuntimeHexBoardState,
-      "id" | "baseId" | "fields" | "spaces" | "edges" | "vertices" | "relations"
-    > &
-      BoardParts<M, B> & {
-        edges: (Omit<
-          RuntimeHexBoardState["edges"][number],
-          "id" | "spaceIds"
-        > & {
-          id: HexEdgeId<Extract<Id<B>, string>>;
-          spaceIds: BoardSpaceId<B>[];
-        })[];
-        vertices: (Omit<
-          RuntimeHexBoardState["vertices"][number],
-          "id" | "spaceIds"
-        > & {
-          id: HexVertexId<Extract<Id<B>, string>>;
-          spaceIds: BoardSpaceId<B>[];
-        })[];
-      }
-  : B extends { layout: "square" }
-    ? Omit<
-        RuntimeSquareBoardState,
-        "id" | "baseId" | "fields" | "spaces" | "relations"
-      > &
-        BoardParts<M, B>
-    : Omit<
-        RuntimeGenericBoardState,
-        "id" | "baseId" | "fields" | "spaces" | "relations"
-      > &
-        BoardParts<M, B>;
-type BoardMap<M> = {
-  [B in Boards<M> as RuntimeBoardId<B>]: Extract<
-    BoardState<M, B>,
-    RuntimeBoardState
+type DefinitionFields<S, M, B = never> = {
+  readonly [K in keyof ObjectFields<S, M, B>]: ReadonlyTopology<
+    ObjectFields<S, M, B>[K]
   >;
 };
+type BoardSpaceEntry<B> = Entry<Get<B, "spaces">>;
+type BoardSpaceId<B> = Id<BoardSpaceEntry<B>>;
+type BoardDefinitionMetadata<M, B> = Readonly<Pick<B, "typeId" & keyof B>> & {
+  readonly id: Id<B>;
+  readonly name: B extends { name: infer Name extends string } ? Name : never;
+  readonly scope: B extends {
+    scope: infer Scope extends "shared" | "perPlayer";
+  }
+    ? Scope
+    : never;
+  readonly fields: DefinitionFields<Get<B, "boardFieldsSchema">, M, B>;
+};
+type InferredBoardDefinition<M, B> = B extends { layout: "generic" }
+  ? BoardDefinitionMetadata<M, B> & {
+      readonly layout: "generic";
+      readonly spaces: {
+        readonly [S in BoardSpaceEntry<B> as Id<S>]: Omit<S, "fields"> & {
+          readonly fields: DefinitionFields<Get<B, "spaceFieldsSchema">, M, B>;
+        };
+      };
+    }
+  : B extends { layout: "hex" }
+    ? BoardDefinitionMetadata<M, B> & {
+        readonly layout: "hex";
+        readonly orientation: B extends { orientation: infer O } ? O : "pointy";
+      }
+    : B extends { layout: "square" }
+      ? BoardDefinitionMetadata<M, B> & { readonly layout: "square" }
+      : never;
+export type InferredBoardDefinitions<M> = AuthoredManifest extends M
+  ? import("../../shared/domain/topology-definitions.js").TopologyDefinitions["boardDefinitions"]
+  : {
+      readonly [B in Boards<M> as Id<B>]: InferredBoardDefinition<M, B>;
+    };
+type TileDefinitionFields<M, T, K extends string, V> = V extends unknown
+  ? Readonly<Omit<V, "fields" | "at">> & {
+      readonly fields: ReadonlyTopology<ObjectFields<Get<T, K>, M>>;
+    } & (V extends { at: infer A } ? { readonly at: Readonly<A> } : unknown)
+  : never;
+type TileDefinitionMetadata<M, T> = Readonly<
+  Pick<T, "frontImage" & keyof T>
+> & {
+  readonly id: Id<T>;
+  readonly name: T extends { name: infer Name extends string } ? Name : never;
+  readonly fields: DefinitionFields<Get<T, "fieldsSchema">, M>;
+  readonly cells: readonly TileDefinitionFields<
+    M,
+    T,
+    "cellFieldsSchema",
+    Entry<Get<T, "cells">>
+  >[];
+  readonly edges: readonly TileDefinitionFields<
+    M,
+    T,
+    "edgeFieldsSchema",
+    Entry<Get<T, "edges">>
+  >[];
+  readonly vertices: readonly TileDefinitionFields<
+    M,
+    T,
+    "vertexFieldsSchema",
+    Entry<Get<T, "vertices">>
+  >[];
+};
+type InferredTileDefinition<M, T> = T extends { layout: "hex" }
+  ? TileDefinitionMetadata<M, T> & { readonly layout: "hex" }
+  : T extends { layout: "square" }
+    ? TileDefinitionMetadata<M, T> & { readonly layout: "square" }
+    : never;
+export type InferredTileDefinitions<M> = AuthoredManifest extends M
+  ? import("../../shared/domain/topology-definitions.js").TopologyDefinitions["tileDefinitions"]
+  : {
+      readonly [T in Entries<M, "tileTypes"> as Id<T>]: InferredTileDefinition<
+        M,
+        T
+      >;
+    };
 type InferredBoards<M> = {
-  byId: BoardMap<M>;
-  hex: {
-    [B in Extract<Boards<M>, { layout: "hex" }> as RuntimeBoardId<B>]: Extract<
-      BoardState<M, B>,
-      RuntimeHexBoardState
-    >;
+  [B in Boards<M> as RuntimeBoardId<B>]: {
+    baseId: Id<B>;
+    relations: (Omit<
+      RuntimeBoardInstance["relations"][number],
+      "typeId" | "fields"
+    > & {
+      typeId: string;
+      fields: BoardField<B, "relationFieldsSchema", M>;
+    })[];
   };
-  square: {
-    [
-      B in Extract<Boards<M>, { layout: "square" }> as RuntimeBoardId<B>
-    ]: Extract<BoardState<M, B>, RuntimeSquareBoardState>;
-  };
-  network: Record<string, RuntimeRecord>;
-  track: Record<string, RuntimeRecord>;
 };
 type AllowedCardSets<M, Z> = Z extends {
   allowedCardSetIds: readonly (infer S)[];
@@ -372,7 +390,20 @@ export type HostIdOfZone<M, Z> = Z extends { scope: "shared" }
           ? SeedIds<Extract<Entries<M, "pieceSeeds">, { typeId: T }>, "piece">
           : Z extends { attachedTo: { dieType: infer T } }
             ? SeedIds<Extract<Entries<M, "dieSeeds">, { typeId: T }>, "die">
-            : never;
+            : Z extends {
+                  attachedTo: {
+                    tileType: infer T;
+                    cell: infer C extends string;
+                  };
+                }
+              ? TileSpaceId<
+                  SeedIds<
+                    Extract<Entries<M, "tileSeeds">, { typeId: T }>,
+                    "tile"
+                  >,
+                  C
+                >
+              : never;
 type ZoneTileIds<M, Z> = Z extends { visibility: "hidden" | "ownerOnly" }
   ? never
   : ManifestIdsOf<M>["tileId"];
@@ -413,7 +444,10 @@ export type ManifestTable<M> = AuthoredManifest extends M
       > &
         Record<
           ManifestIdsOf<M>["tileId"],
-          Extract<RuntimeComponentLocation, { type: "Detached" | "InZone" }>
+          Extract<
+            RuntimeComponentLocation,
+            { type: "Detached" | "InZone" | "OnBoard" }
+          >
         >;
       resources: Record<
         PlayerId,
@@ -426,9 +460,6 @@ type SharedCardMetadata<M, Key extends "cardSetId" | "cardType"> = {
   ]: Card[Key];
 };
 type InstanceFamily = "cardId" | "pieceId" | "dieId" | "tileId" | "boardId";
-type SharedBoardManifest<M> = Omit<M, "boards"> & {
-  boards: readonly Exclude<Boards<M>, { scope: "perPlayer" }>[];
-};
 export type CompiledManifest<M> = Omit<
   ReducerManifestContract<
     ManifestTable<M>,
@@ -437,7 +468,12 @@ export type CompiledManifest<M> = Omit<
     ManifestIdsOf<M>["zoneId"],
     ManifestIdsOf<M>["cardId"]
   >,
-  "ids" | "literals" | "records" | "staticBoards" | "zoneDefinitions"
+  | "ids"
+  | "literals"
+  | "records"
+  | "zoneDefinitions"
+  | "boardDefinitions"
+  | "tileDefinitions"
 > & {
   readonly [compiledManifest]: true;
   readonly zoneDefinitions: {
@@ -453,10 +489,8 @@ export type CompiledManifest<M> = Omit<
           ? { readonly attachedTo: A }
           : never);
   };
-  staticBoards: Pick<
-    InferredBoards<SharedBoardManifest<M>>,
-    "byId" | "hex" | "square"
-  >;
+  readonly boardDefinitions: InferredBoardDefinitions<M>;
+  readonly tileDefinitions: InferredTileDefinitions<M>;
   literals: Omit<
     ReducerManifestContract<
       RuntimeTableRecord,

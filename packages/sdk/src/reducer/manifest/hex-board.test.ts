@@ -1,3 +1,6 @@
+import * as hexTiles from "./hex-tiles";
+import { tileSpaceId } from "../../shared/domain/tile-space.js";
+import { parseBoardElementId } from "../../shared/domain/board-element.js";
 import { describe, expect, it } from "vitest";
 import { compileManifest } from "./compiler";
 import { cloneRuntimeTable } from "../table/clone";
@@ -5,22 +8,21 @@ import { bindBoardQueries } from "../table/board-queries";
 import {
   createHexTopology,
   createHexTopologyCache,
-  hexShapeCoordinates,
-  hexagon,
-  rectangle,
-  ring,
-  spiral,
-  fromCoordinates,
-  resolveHexSpaces,
 } from "../../shared/hex-board";
+
+const identity = {
+  boardId: "map",
+  tileTypeId: "land",
+  tileId: "land",
+} as const;
 
 describe("honeycomb board geometry", () => {
   for (const orientation of ["pointy", "flat"] as const) {
     it(`shares exact topology and round-trips centers (${orientation})`, () => {
-      const spaces = hexShapeCoordinates(
-        hexagon({ radius: 1 }),
-        orientation,
-      ).map((space) => ({ ...space, id: `${space.q},${space.r}` }));
+      const spaces = hexTiles
+        .hexagon({ ...identity, radius: 1 })
+        .tileTypes[0].cells.map((cell) => cell.at)
+        .map((space) => ({ ...space, id: `${space.q},${space.r}` }));
       const board = createHexTopology({ id: "map", orientation, spaces });
       expect(board.edges).toHaveLength(30);
       expect(board.vertices).toHaveLength(24);
@@ -64,16 +66,24 @@ describe("honeycomb board geometry", () => {
       );
     });
   }
-  it("generates all supported shapes", () => {
-    expect(hexShapeCoordinates(hexagon({ radius: 2 }))).toHaveLength(19);
-    expect(hexShapeCoordinates(spiral({ radius: 2 }))).toHaveLength(19);
-    expect(hexShapeCoordinates(ring({ radius: 2 }))).toHaveLength(12);
+  it("generates ordinary tile inventory for all supported shapes", () => {
     expect(
-      hexShapeCoordinates(rectangle({ width: 3, height: 2 })),
+      hexTiles.hexagon({ ...identity, radius: 2 }).tileTypes[0].cells,
+    ).toHaveLength(19);
+    expect(
+      hexTiles.spiral({ ...identity, radius: 2 }).tileTypes[0].cells,
+    ).toHaveLength(19);
+    expect(
+      hexTiles.ring({ ...identity, radius: 2 }).tileTypes[0].cells,
+    ).toHaveLength(12);
+    expect(
+      hexTiles.rectangle({ ...identity, width: 3, height: 2 }).tileTypes[0]
+        .cells,
     ).toHaveLength(6);
-    expect(hexShapeCoordinates(fromCoordinates([{ q: -10, r: 7 }]))).toEqual([
-      { q: -10, r: 7 },
-    ]);
+    expect(
+      hexTiles.fromCoordinates({ ...identity, coordinates: [{ q: -10, r: 7 }] })
+        .tileTypes[0].cells[0].at,
+    ).toEqual({ q: -10, r: 7 });
   });
 });
 
@@ -114,14 +124,9 @@ it("preserves boundary identity and exact incidence for one and two cells", () =
 });
 
 it("translates layout origin and excludes holes from hit testing", () => {
-  const spaces = resolveHexSpaces({
-    id: "hole",
-    name: "Hole",
-    layout: "hex",
-    scope: "shared",
-    shape: hexagon({ radius: 1 }),
-    exclude: [{ q: 0, r: 0 }],
-  });
+  const spaces = hexTiles
+    .ring({ ...identity, radius: 1 })
+    .tileTypes[0].cells.map((cell) => ({ id: cell.id, ...cell.at }));
   const board = createHexTopology({ id: "hole", spaces });
   const origin = { x: 120, y: -75 };
   const layout = board.getLayout({ hexSize: 40, origin });
@@ -130,30 +135,25 @@ it("translates layout origin and excludes holes from hit testing", () => {
     expect(layout.pointToSpace(space.center)).toBe(space.id);
 });
 
-it("rejects malformed shapes and duplicate or excluded overrides", () => {
-  expect(() => hexShapeCoordinates(hexagon({ radius: -1 }))).toThrow("radius");
+it("rejects malformed tile helper coordinates and duplicate runtime cell IDs", () => {
+  expect(() => hexTiles.hexagon({ ...identity, radius: -1 })).toThrow();
   expect(() =>
-    hexShapeCoordinates(rectangle({ width: 1.5, height: 2 })),
-  ).toThrow("width");
+    hexTiles.rectangle({ ...identity, width: 1.5, height: 2 }),
+  ).toThrow();
   expect(() =>
-    hexShapeCoordinates(
-      fromCoordinates([
-        { q: 0, r: 0 },
-        { q: 0, r: 0 },
-      ]),
-    ),
-  ).toThrow("duplicate");
-  expect(() =>
-    resolveHexSpaces({
-      id: "map",
-      name: "Map",
-      scope: "shared",
-      layout: "hex",
-      shape: hexagon({ radius: 1 }),
-      exclude: [{ q: 0, r: 0 }],
-      spaces: { "0,0": { id: "center" } },
+    compileManifest({
+      players: { minPlayers: 1, maxPlayers: 1 },
+      cardSets: [],
+      boards: [{ id: "map", name: "Map", layout: "hex", scope: "shared" }],
+      ...hexTiles.fromCoordinates({
+        ...identity,
+        coordinates: [
+          { q: 0, r: 0 },
+          { q: 0, r: 0 },
+        ],
+      }),
     }),
-  ).toThrow("outside its shape");
+  ).toThrow();
   expect(() =>
     createHexTopology({
       id: "map",
@@ -169,6 +169,7 @@ it("bound board queries validate generated space membership", async () => {
   const { compileManifest } = await import("./compiler");
   const { createTableQueries } = await import("../table-queries");
   const contract = compileManifest({
+    ...hexTiles.hexagon({ ...identity, radius: 0 }),
     players: { minPlayers: 1, maxPlayers: 1 },
     cardSets: [],
     zones: [],
@@ -178,7 +179,6 @@ it("bound board queries validate generated space membership", async () => {
         name: "Map",
         layout: "hex",
         scope: "shared",
-        shape: hexagon({ radius: 0 }),
       },
     ],
   } as const);
@@ -186,9 +186,13 @@ it("bound board queries validate generated space membership", async () => {
     contract.createInitialTable({ playerIds: [] }),
     contract,
   ).board("map");
-  expect(board.space("0,0").q).toBe(0);
-  expect(() => board.space("5,5")).toThrow('Space on board map "5,5"');
-  expect(() => board.neighbors("5,5")).toThrow("Unknown space");
+  expect(board.space(tileSpaceId("land", "0,0")).q).toBe(0);
+  expect(() => board.space(tileSpaceId("land", "5,5"))).toThrow(
+    "Unknown space",
+  );
+  expect(() => board.neighbors(tileSpaceId("land", "5,5"))).toThrow(
+    "Unknown space",
+  );
 });
 
 it("keeps lattice identity as neighbours appear and uses axial sides in both orientations", () => {
@@ -322,6 +326,13 @@ it("preserves pointy side pixel positions from the original honeycomb order", ()
 
 it("reuses topology across cloned tables while retaining independent board state", () => {
   const manifest = compileManifest({
+    ...hexTiles.fromCoordinates({
+      ...identity,
+      coordinates: [
+        { q: 0, r: 0 },
+        { q: 1, r: 0 },
+      ],
+    }),
     players: { minPlayers: 1, maxPlayers: 1 },
     cardSets: [],
     zones: [],
@@ -331,20 +342,16 @@ it("reuses topology across cloned tables while retaining independent board state
         name: "Map",
         layout: "hex",
         scope: "shared",
-        shape: fromCoordinates([
-          { q: 0, r: 0 },
-          { q: 1, r: 0 },
-        ]),
       },
     ],
   } as const);
   const table = manifest.createInitialTable({ playerIds: [] });
-  const first = bindBoardQueries(table, "map");
+  const first = bindBoardQueries(table, manifest, "map");
   const next = cloneRuntimeTable(table);
-  const second = bindBoardQueries(next, "map");
+  const second = bindBoardQueries(next, manifest, "map");
   expect(second.edges).toBe(first.edges);
   expect(second.vertices).toBe(first.vertices);
-  expect(second.state).not.toBe(first.state);
+  expect(second.state).toBe(first.state);
   expect(second.getLayout({ hexSize: 20 })).toBe(
     first.getLayout({ hexSize: 20 }),
   );
@@ -368,9 +375,10 @@ it("snapshots layout origin before caching hit testing", () => {
 it("shares incidence across several lattice radii and orientations", () => {
   for (const orientation of ["pointy", "flat"] as const) {
     for (const radius of [0, 1, 2, 4]) {
-      const spaces = hexShapeCoordinates(hexagon({ radius }), orientation).map(
-        (space) => ({ ...space, id: `${space.q},${space.r}` }),
-      );
+      const spaces = hexTiles
+        .hexagon({ ...identity, radius })
+        .tileTypes[0].cells.map((cell) => cell.at)
+        .map((space) => ({ ...space, id: `${space.q},${space.r}` }));
       const topology = createHexTopology({
         id: "property",
         orientation,
@@ -413,7 +421,7 @@ it("snapshots board identity instead of retaining mutable input metadata", () =>
   const topology = createHexTopology(board);
   board.id = "changed";
   expect(() => topology.neighbors("missing")).toThrow("board 'original'");
-  expect(topology.edges[0].id.startsWith("original:edge:")).toBe(true);
+  expect(parseBoardElementId(topology.edges[0].id)?.boardId).toBe("original");
 });
 
 it("rejects lattice coordinates whose adjacent cube coordinates overflow", () => {

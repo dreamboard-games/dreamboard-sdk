@@ -4,7 +4,7 @@ import type { ReducerBundleContract } from "../../shared/worker-contract";
 
 export type ReducerScenarioBundle = Pick<
   ReducerBundleContract,
-  "project" | "dispatch" | "boardStatic"
+  "project" | "dispatch"
 >;
 
 export interface ReducerScenarioViewer {
@@ -16,7 +16,6 @@ export interface ReducerScenarioFrame {
   readonly id: string;
   readonly reducerState: Wire.ReducerSessionState;
   readonly dynamicProjection: Wire.SeatProjectionBundle;
-  readonly staticProjection?: Wire.BoardStaticProjection | null;
   readonly gameVersion: number;
   readonly actionSetVersion: string;
   readonly projectionDigest: string;

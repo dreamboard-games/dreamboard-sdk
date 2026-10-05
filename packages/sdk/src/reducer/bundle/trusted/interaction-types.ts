@@ -130,7 +130,10 @@ export type ResolveDecisionInput<Contract extends ReducerGameContractLike> = {
    * cost, and authored validate rules.
    */
   candidateInvariantsValidated?: boolean;
-  projection?: ProjectionContext<TrustedDomainState<Contract>>;
+  projection?: ProjectionContext<
+    TrustedDomainState<Contract>,
+    TrustedManifest<Contract>
+  >;
 };
 
 export type InteractionDecisionResult<

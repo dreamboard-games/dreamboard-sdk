@@ -72,6 +72,8 @@ const cardIds = ["card-1", "card-2"] as const;
 const playerZoneIds = ["hand"] as const;
 
 const manifest = {
+  boardDefinitions: {},
+  tileDefinitions: {},
   zoneDefinitions: {
     hand: {
       scope: "perPlayer",

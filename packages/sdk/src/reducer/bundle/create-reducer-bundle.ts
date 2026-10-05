@@ -21,7 +21,6 @@ import {
 import { createInteractionResolver } from "./trusted/interaction-resolver";
 import { createLifecycleRunner } from "./trusted/lifecycle-runner";
 import { createReducerExecutor } from "./trusted/reducer-executor";
-import { createStaticProjectionBuilder } from "./trusted/static-projection";
 import { createProjectionBuilder } from "./trusted/projection-builder";
 
 function wireOutcome(outcome: GameOutcome): Wire.GameOutcome {
@@ -134,7 +133,6 @@ export function createReducerBundle<
   });
   const lifecycle = createLifecycleRunner(scope);
   const executor = createReducerExecutor(scope, interactions, lifecycle);
-  const staticProjection = createStaticProjectionBuilder(scope);
   const projection = createProjectionBuilder(scope, interactions);
   let submissionCounter = 0;
   return {
@@ -196,8 +194,6 @@ export function createReducerBundle<
         codec.serializeState(scope.toSessionState(next)),
       );
     },
-    boardStatic: () =>
-      staticProjection.boardStatic() as Wire.BoardStaticProjection | null,
     project({ state, playerIds }) {
       const perspectives = codec.parseStatePerspectives(state, playerIds);
       // eslint-disable-next-line no-restricted-syntax -- This game-bound projector assembles the seat bundle from parsed session and player IDs; the wire facade erases its generic view type.

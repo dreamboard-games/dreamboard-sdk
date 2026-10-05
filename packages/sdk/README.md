@@ -198,8 +198,8 @@ Instance record factories likewise require `{ playerIds }`, for example
 `manifest.records.pieceIds(0, { playerIds })`. Player IDs are nonempty and unique;
 `__proto__` is reserved to preserve roster keys through record parsing.
 
-Zones declare either `scope` or `attachedTo` a board, board space, piece type,
-or die type. Query and move through the same zone API with the concrete host ID;
+Zones declare either `scope` or `attachedTo` a board, generic board space, tile
+cell, piece type, or die type. Query and move through the same zone API with the concrete host ID;
 use `boardSpaceHostId(boardId, spaceId)` for a space attachment. Component-hosted
 access follows the host's current owner, independently of contained ownership
 and card face state. Initialization, movement and restore reject containment
@@ -207,10 +207,17 @@ cycles. Containers, slots and their location variants are removed.
 
 `tileTypes` own immutable hex/square cells, annotations and rule fields;
 `tileSeeds` create game-owned instances with independent ownership and mutable
-properties. `q.tile(id)` addresses that inventory. This layer supports detached
-tiles and public zones; private tile destinations and spatial component moves
-reject before writes. Tile assignments are not automatically projected, and the
-existing UI zone facade still presents cards.
+properties. `q.tile(id)` addresses that inventory, including detached tiles.
+Canonical `OnBoard` locations own placement. Hex/square topology is derived from
+those locations and immutable definitions; runtime boards store only `baseId`
+and explicit session relations. Cell identity follows the tile instance and
+local cell, while world edges and vertices belong to the exact board instance.
+The flat seat `boards` projection is the sole client topology source.
+
+Private tile destinations remain rejected in this layer. Generic component
+moves cannot remove a placed tile or place tiles on component spaces, edges or
+vertices. Tile-cell zone hosts must remain empty while their tile is unplaced.
+The existing UI zone facade still presents cards.
 
 Manifest card counts and explicit piece/die/tile seed counts must be positive safe
 integers. Omitted seed counts mean one copy. Zero, negative, fractional, non-finite,
@@ -267,8 +274,8 @@ To migrate an older manifest, replace each card's `type` with `id` and set
 
 ## Reducer runner contract
 
-`createReducerBundle(game)` returns exactly the contract version and four
-operations: `boardStatic()`, `initialize(input)`, `dispatch({ state, input })`,
+`createReducerBundle(game)` returns exactly the contract version and three
+operations: `initialize(input)`, `dispatch({ state, input })`,
 and `project({ state, playerIds })`. The runner contract is `0.10.0`; hosts must
 require that exact version. Dispatch includes validation, direct transaction mutations, and phase entry.
 Initialization returns
@@ -276,7 +283,7 @@ Initialization returns
 phase entry and returned transitions.
 
 Mutation callbacks use `tx.roll(dieId)`, `tx.shuffle({ zone: { zoneId, hostId } })`,
-`tx.deal({ fromZoneId, toZoneId, playerId, count })` and
+`tx.deal({ from, to, count })` and
 `tx.flipCard({ cardId, faceUp })` directly. Return
 `tx.transition(phaseName)` to enter a phase, including reentering the current
 phase. An unreturned outcome schedules no work. Entry chains are bounded to
