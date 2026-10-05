@@ -104,7 +104,7 @@ export async function proveCardControl(page: Page, touch: boolean) {
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await card.press("Enter");
   await page.getByRole("button", { name: "Flip", exact: true }).click();
-  const hidden = table.locator('[data-value="hidden:table:0"]');
+  const hidden = table.locator('button[data-value^="hidden:"]');
   await expect(hidden).toBeVisible();
   await page.getByRole("button", { name: "End turn", exact: true }).click();
   await hidden.click();
