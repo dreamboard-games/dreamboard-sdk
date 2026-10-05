@@ -101,7 +101,7 @@ export type RelationInputForBoard<Definitions, Base extends string> = {
   readonly fromSpaceId: RelationSpaceInput<Definitions, Base>;
   readonly toSpaceId: RelationSpaceInput<Definitions, Base>;
   readonly directed?: boolean;
-} & ({} extends RelationFieldsInput<Definitions, Base>
+} & (Record<never, never> extends RelationFieldsInput<Definitions, Base>
   ? { readonly fields?: RelationFieldsInput<Definitions, Base> }
   : { readonly fields: RelationFieldsInput<Definitions, Base> });
 export type AuthoredManifest = SchemaAuthoring<GameTopologyManifest>;

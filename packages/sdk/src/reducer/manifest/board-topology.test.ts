@@ -299,7 +299,8 @@ describe("definition-owned board topology", () => {
     expect(
       compiled.tableSchema.safeParse(restored([relation, relation])).success,
     ).toBe(false);
-    const { id: _id, ...anonymous } = relation;
+    const { id, ...anonymous } = relation;
+    expect(id).toBeTruthy();
     expect(
       compiled.tableSchema.safeParse({
         ...table,

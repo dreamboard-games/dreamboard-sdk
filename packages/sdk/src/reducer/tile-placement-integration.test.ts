@@ -193,7 +193,8 @@ describe("tile transaction integration", () => {
     expect(projection).toEqual(original);
     const ownBoards = projection.seats[north].boards;
     const otherBoards = projection.seats[south].boards;
-    if (!ownBoards || !otherBoards) throw new Error("Expected projected boards");
+    if (!ownBoards || !otherBoards)
+      throw new Error("Expected projected boards");
     const own = ownBoards.map;
     const other = otherBoards.map;
     if (own.layout !== "square" || other.layout !== "square")

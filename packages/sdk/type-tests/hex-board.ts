@@ -152,7 +152,12 @@ const links = compileManifest({
       scope: "shared",
       spaces: [{ id: "start", typeId: "entry" }, { id: "finish" }],
       relations: [
-        { typeId: "route", fromSpaceId: "start", toSpaceId: "finish" },
+        {
+          id: "route",
+          typeId: "route",
+          fromSpaceId: "start",
+          toSpaceId: "finish",
+        },
       ],
     },
   ],

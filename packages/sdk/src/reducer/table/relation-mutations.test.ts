@@ -66,7 +66,8 @@ const relation = {
 };
 describe("relation mutations", () => {
   it("requires an explicit nonempty identity at authored and wire boundaries", () => {
-    const { id: _id, ...anonymous } = relation;
+    const { id, ...anonymous } = relation;
+    expect(id).toBeTruthy();
     for (const input of [
       anonymous,
       { ...relation, id: null },
