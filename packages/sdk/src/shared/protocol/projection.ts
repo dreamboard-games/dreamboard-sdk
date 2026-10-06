@@ -18,6 +18,7 @@ export interface MaterializePluginGameplayFrameInput {
   readonly dynamicProjection: ReducerSeatProjectionBundle;
   readonly perspectivePlayerId: PlayerId;
 
+  readonly sessionId: string;
   readonly version: number;
   readonly actionSetVersion: string;
 }
@@ -28,6 +29,14 @@ export function materializePluginGameplayFrame(
   const dynamicProjection = SeatProjectionBundleSchema.parse(
     canonicalizePluginRuntimeJson(input.dynamicProjection),
   );
+  if (
+    dynamicProjection.referenceBasis.sessionId !== input.sessionId ||
+    dynamicProjection.referenceBasis.version !== input.version
+  ) {
+    throw new Error(
+      "Projection reference basis does not match the frame basis.",
+    );
+  }
   const registry = dynamicProjection.interactionsByRef ?? {};
   const seat = dynamicProjection.seats[input.perspectivePlayerId] ?? null;
 
@@ -43,8 +52,9 @@ export function materializePluginGameplayFrame(
     seat?.zones == null ? {} : hydrateZones(registry, seat.zones, "zones");
 
   const frame = {
-    events: dynamicProjection.events,
+    events: seat?.events ?? [],
     basis: {
+      sessionId: input.sessionId,
       version: input.version,
       actionSetVersion: input.actionSetVersion,
       perspectivePlayerId: input.perspectivePlayerId,
@@ -87,6 +97,7 @@ function hydrateZones(
         Object.entries(hosts).map(([hostId, zone]) => [
           hostId,
           {
+            tiles: zone.tiles,
             cardIds: zone.cardIds,
             cardViewsById: zone.cardViewsById,
             cardBacksById: zone.cardBacksById,

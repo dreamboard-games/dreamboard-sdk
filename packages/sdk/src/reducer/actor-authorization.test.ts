@@ -1,3 +1,7 @@
+import {
+  testReferenceBasis,
+  testGameplayBasis,
+} from "../shared/__fixtures__/reference-basis.js";
 import { compileManifest } from "./manifest/compiler";
 import { RuntimeJsonSchema } from "../shared/runtime-json";
 import { createGame as createModel } from "../reducer";
@@ -13,6 +17,7 @@ function getAvailableInteractions(
   playerId: string,
 ) {
   const projection = bundle.project({
+    referenceBasis: testReferenceBasis,
     state,
     playerIds: [playerId],
   });
@@ -95,8 +100,11 @@ describe("recipient-based response authorization", () => {
     ).state;
     const offerer = getAvailableInteractions(bundle, initial, "player-1");
     expect(
-      bundle.project({ state: initial, playerIds: ["player-1", "player-2"] })
-        .schedulerFlow,
+      bundle.project({
+        referenceBasis: testReferenceBasis,
+        state: initial,
+        playerIds: ["player-1", "player-2"],
+      }).schedulerFlow,
     ).toEqual({
       version: 1,
       activePlayerIds: ["player-2"],
@@ -135,8 +143,10 @@ describe("recipient-based response authorization", () => {
       })
     ).state;
     const accepted = await bundle.validateInput({
+      referenceBasis: testReferenceBasis,
       state: initial,
       input: {
+        basis: testGameplayBasis("player-2"),
         kind: "interaction",
         interactionId: "respond",
         playerId: "player-2",
@@ -154,8 +164,10 @@ describe("recipient-based response authorization", () => {
       })
     ).state;
     const rejected = await bundle.validateInput({
+      referenceBasis: testReferenceBasis,
       state: initial,
       input: {
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         interactionId: "respond",
         playerId: "player-1",
@@ -276,8 +288,10 @@ describe("phase actor, step, and cost resolution", () => {
       nonActorDescriptors.find((d) => d.interactionId === "spendGold"),
     ).toBeUndefined();
     const notActor = await bundle.validateInput({
+      referenceBasis: testReferenceBasis,
       state,
       input: {
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         playerId: "player-1",
         interactionId: "spendGold",
@@ -317,8 +331,10 @@ describe("phase actor, step, and cost resolution", () => {
       nonActorDescriptors.find((d) => d.interactionId === "actorOnlyOverride"),
     ).toBeUndefined();
     const rejected = await bundle.validateInput({
+      referenceBasis: testReferenceBasis,
       state,
       input: {
+        basis: testGameplayBasis("player-2"),
         kind: "interaction",
         playerId: "player-2",
         interactionId: "actorOnlyOverride",
@@ -340,8 +356,10 @@ describe("phase actor, step, and cost resolution", () => {
     ).state;
     await expect(
       bundle.validateInput({
+        referenceBasis: testReferenceBasis,
         state,
         input: {
+          basis: testGameplayBasis("player-2"),
           kind: "interaction",
           playerId: "player-2",
           interactionId: "spendGold",
@@ -354,8 +372,10 @@ describe("phase actor, step, and cost resolution", () => {
     });
     await expect(
       bundle.validateInput({
+        referenceBasis: testReferenceBasis,
         state,
         input: {
+          basis: testGameplayBasis("player-2"),
           kind: "interaction",
           playerId: "player-2",
           interactionId: "blockedOnly",
@@ -434,7 +454,11 @@ describe("default action-kind authorization", () => {
       availability: { status: "available" },
     });
     expect(
-      bundle.project({ state: initial, playerIds: ["player-1"] }).schedulerFlow,
+      bundle.project({
+        referenceBasis: testReferenceBasis,
+        state: initial,
+        playerIds: ["player-1"],
+      }).schedulerFlow,
     ).toEqual({
       version: 1,
       activePlayerIds: ["player-1"],
@@ -464,8 +488,10 @@ describe("default action-kind authorization", () => {
       inactive.find((d) => d.interactionId === "rollOnly"),
     ).toBeUndefined();
     const rejected = await bundle.validateInput({
+      referenceBasis: testReferenceBasis,
       state: initial,
       input: {
+        basis: testGameplayBasis("player-2"),
         kind: "interaction",
         interactionId: "rollOnly",
         playerId: "player-2",
@@ -486,8 +512,10 @@ describe("default action-kind authorization", () => {
       })
     ).state;
     const rejected = await bundle.validateInput({
+      referenceBasis: testReferenceBasis,
       state: initial,
       input: {
+        basis: testGameplayBasis("player-2"),
         kind: "interaction",
         interactionId: "act",
         playerId: "player-2",
@@ -508,8 +536,10 @@ describe("default action-kind authorization", () => {
       })
     ).state;
     const accepted = await bundle.validateInput({
+      referenceBasis: testReferenceBasis,
       state: initial,
       input: {
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         interactionId: "act",
         playerId: "player-1",
@@ -585,8 +615,10 @@ describe("closed response (`actor` resolves to empty set)", () => {
     ).state;
     for (const playerId of ["player-1", "player-2"] as const) {
       const rejected = await bundle.validateInput({
+        referenceBasis: testReferenceBasis,
         state: initial,
         input: {
+          basis: testGameplayBasis(playerId),
           kind: "interaction",
           interactionId: "respond",
           playerId,
@@ -720,8 +752,10 @@ describe("author `available` predicate composes with authorization", () => {
       reason: "Interaction unavailable",
     });
     const rejected = await bundle.validateInput({
+      referenceBasis: testReferenceBasis,
       state: initial,
       input: {
+        basis: testGameplayBasis("player-2"),
         kind: "interaction",
         interactionId: "gatedRespond",
         playerId: "player-2",

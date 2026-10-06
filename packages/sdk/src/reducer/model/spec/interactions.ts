@@ -12,10 +12,10 @@ import type {
   ValidationIssue,
 } from "./runtime-args";
 import type {
-  ClientParamsOf,
   ClientSyntaxParamsOf,
   InputCollector,
   ParamsOf,
+  SubmittedParamsOf,
 } from "./inputs";
 
 export type InteractionReduceInput<
@@ -35,7 +35,7 @@ export type InteractionValidateArgs<
     state: State;
     input: {
       playerId: PlayerIdOfState<State>;
-      params: ClientParamsOf<Collectors>;
+      params: SubmittedParamsOf<Collectors>;
     };
   };
 

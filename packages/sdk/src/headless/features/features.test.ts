@@ -15,6 +15,11 @@ import type {
   HexBoardTopology,
 } from "../../shared/board-topology.js";
 import { tileSpaceId } from "../../shared/domain/tile-space.js";
+import {
+  SeatSpaceRefSchema,
+  SeatTileRefSchema,
+} from "../../shared/domain/seat-reference.js";
+import { SeatBoardTopologySchema } from "../../shared/seat-topology-schema.js";
 import { deriveBoardTopology } from "../../shared/board-topology.js";
 import { createHexTopology } from "../../shared/hex-board.js";
 import { handFeature } from "./hand.js";
@@ -32,11 +37,17 @@ function onBoard(targets: readonly DropTarget<unknown>[]) {
   );
 }
 
-const CENTER = tileSpaceId("cell", "center");
+const CENTER = SeatSpaceRefSchema.parse(`space-ref:sha256:${"0".repeat(64)}`);
 
 function hexBoard(id = "island", playerId?: string): HexBoardTopology {
   const spaces = [
-    { id: CENTER, tileId: "cell", localCellId: "center", q: 0, r: 0 },
+    {
+      id: tileSpaceId("cell", "center"),
+      tileId: "cell",
+      localCellId: "center",
+      q: 0,
+      r: 0,
+    },
   ];
   const geometry = createHexTopology({ id, spaces });
   return {
@@ -92,7 +103,57 @@ function descriptor(): InteractionDescriptor {
     ],
   };
 }
-function source(board: BoardTopology = hexBoard()) {
+function source(authoritative: BoardTopology = hexBoard()) {
+  const tileRef = SeatTileRefSchema.parse(`tile-ref:sha256:${"1".repeat(64)}`);
+  const refs = new Map(
+    Object.values(authoritative.spaces).map((space, index) => [
+      space.id,
+      SeatSpaceRefSchema.parse(
+        `space-ref:sha256:${index.toString(16).padStart(64, "0")}`,
+      ),
+    ]),
+  );
+  const board = SeatBoardTopologySchema.parse(
+    authoritative.layout === "generic"
+      ? authoritative
+      : {
+          ...authoritative,
+          spaces: Object.fromEntries(
+            Object.values(authoritative.spaces).map(
+              ({ tileId, ...space }, index) => {
+                expect(tileId).toBeDefined();
+                const id = SeatSpaceRefSchema.parse(
+                  `space-ref:sha256:${index.toString(16).padStart(64, "0")}`,
+                );
+                return [id, { ...space, id, tileRef }];
+              },
+            ),
+          ),
+          edges: authoritative.edges.map((edge) => ({
+            ...edge,
+            spaceIds: edge.spaceIds.map((id) => refs.get(id)),
+          })),
+          vertices: authoritative.vertices.map((vertex) => ({
+            ...vertex,
+            spaceIds: vertex.spaceIds.map((id) => refs.get(id)),
+          })),
+          tiles: [
+            {
+              disclosure: "visible",
+              ref: tileRef,
+              tileTypeId: "fixture",
+              name: "Fixture",
+              ownerId: null,
+              fields: {},
+              properties: {},
+              placement:
+                authoritative.layout === "hex"
+                  ? { layout: "hex", q: 0, r: 0, rotation: 0 }
+                  : { layout: "square", col: 0, row: 0, rotation: 0 },
+            },
+          ],
+        },
+  );
   const spaceId = Object.keys(board.spaces)[0];
   let action = descriptor();
   action = {
@@ -162,6 +223,7 @@ function source(board: BoardTopology = hexBoard()) {
       zones: {
         hand: {
           alice: {
+            tiles: [],
             cardIds: ["red", "blue", "hidden"],
             cardViewsById: {
               red: {
@@ -441,7 +503,16 @@ describe("headless features", () => {
       ]),
     );
     expect(square.layout === "square" && square.edges).toHaveLength(7);
-    expect(game.boards.get("square").data).toEqual(square);
+    expect(game.boards.get("square").data).toMatchObject({
+      id: square.id,
+      layout: "square",
+      fields: square.fields,
+    });
+    expect(
+      Object.keys(game.boards.get("square").data.spaces).every(
+        (id) => SeatSpaceRefSchema.safeParse(id).success,
+      ),
+    ).toBe(true);
     expect(layout.getEdges().map((edge) => edge.id)).toEqual(
       square.layout === "square" ? square.edges.map((edge) => edge.id) : [],
     );
@@ -583,7 +654,7 @@ describe("headless features", () => {
     game.dispose();
   });
 
-  it("rejects ambiguous space/tile routing and respects explicit disabled choices", () => {
+  it("rejects ambiguous space routing and respects explicit disabled choices", () => {
     const { game, input } = setup();
     const alternate: InteractionDescriptor = {
       ...descriptor(),
@@ -593,7 +664,7 @@ describe("headless features", () => {
         value.key === "space" &&
         value.domain.type === "boardTarget" &&
         value.domain.valueKind === "board-id"
-          ? { ...value, domain: { ...value.domain, targetKind: "tile" } }
+          ? { ...value, domain: { ...value.domain, targetKind: "space" } }
           : value,
       ),
     };

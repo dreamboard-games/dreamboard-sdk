@@ -1,3 +1,7 @@
+import {
+  testReferenceBasis,
+  testGameplayBasis,
+} from "../shared/__fixtures__/reference-basis.js";
 import { compileManifest } from "./manifest/compiler";
 import { RuntimeJsonSchema } from "../shared/runtime-json";
 import { ReducerSessionStateSchema } from "../shared/runtime-schema";
@@ -221,8 +225,10 @@ describe("initialization runtime", () => {
       JSON.parse(JSON.stringify(initialized)),
     );
     const next = await bundle.reduce({
+      referenceBasis: testReferenceBasis,
       state: restored,
       input: {
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         playerId: "player-1",
         interactionId: "next",
@@ -624,7 +630,11 @@ describe("initialization runtime", () => {
         },
         resources: ppEmpty(["player-1", "player-2"]),
         boards: {
-          "main-board": { baseId: "main-board" as const, relations: [] },
+          "main-board": {
+            visibility: "public",
+            baseId: "main-board" as const,
+            relations: [],
+          },
         },
         dice: {
           "die-1": {
@@ -756,7 +766,11 @@ describe("initialization runtime", () => {
         },
         resources: ppEmpty(["player-1"]),
         boards: {
-          "main-board": { baseId: "main-board" as const, relations: [] },
+          "main-board": {
+            visibility: "public",
+            baseId: "main-board" as const,
+            relations: [],
+          },
         },
         dice: {},
       } satisfies RuntimeTableRecord,

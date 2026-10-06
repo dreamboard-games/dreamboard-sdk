@@ -1,3 +1,4 @@
+import { AuthoredTileDisclosureSchema } from "./tile-disclosure.js";
 import { TilePlacementSchema } from "./tile-placement.js";
 import { MAXIMUM_BOARD_COORDINATE } from "./board-coordinates.js";
 import * as z from "zod";
@@ -126,6 +127,7 @@ const side = z.union([
 ]);
 const boardBase = {
   id,
+  visibility: ZoneVisibilitySchema.optional(),
   name: z.string(),
   scope: TopologyScopeSchema,
   typeId: id.optional(),
@@ -251,6 +253,7 @@ export const TileBoardHomeSpecSchema = z.discriminatedUnion("layout", [
 ]);
 export const TileSeedSpecSchema = z.strictObject({
   id,
+  disclosure: AuthoredTileDisclosureSchema.optional(),
   typeId: id,
   count: positiveInteger.optional(),
   scope: TopologyScopeSchema.optional(),

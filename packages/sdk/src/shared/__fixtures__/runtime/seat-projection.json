@@ -17,8 +17,10 @@
         "cardBacksById": {},
         "playableByCardId": {
           "c1": ["claim-ref"]
-        }
+        },
+        "tiles": []
       }
     }
-  }
+  },
+  "events": []
 }

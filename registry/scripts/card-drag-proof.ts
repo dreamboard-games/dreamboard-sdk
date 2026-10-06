@@ -1,3 +1,4 @@
+import { z } from "zod";
 import {
   perPlayerInstanceId,
   tileSpaceId,
@@ -18,9 +19,10 @@ export async function proveCardDrag(page: Page, touch: boolean) {
     perPlayerInstanceId("tile", "cell", "player-2"),
     "cell",
   );
+  const escapedBoard = await page.evaluate((id) => CSS.escape(id), boardId);
   const destination = page
-    .locator("svg")
-    .getByRole("button", { name: spaceId, exact: true });
+    .locator(`svg [data-board="${escapedBoard}"][data-action="select"]`)
+    .first();
   const discard = page.locator('[aria-label="Drop for play.discard"]');
   const drafts = page.getByTestId("scenario-drafts");
   const active = page.getByTestId("scenario-drag");
@@ -73,6 +75,11 @@ export async function proveCardDrag(page: Page, touch: boolean) {
 
   await expect(card).toBeVisible();
   const cardId = (await card.getAttribute("data-value"))!;
+  const seatTarget = z
+    .object({ boardId: z.string(), spaceId: z.string() })
+    .parse(JSON.parse((await destination.getAttribute("data-value"))!));
+  expect(seatTarget.boardId).toBe(boardId);
+  expect(seatTarget.spaceId).toMatch(/^space-ref:sha256:/);
   expect(cardId).toBe(perPlayerInstanceId("card", "card", "player-1"));
   const escapedCardId = await page.evaluate((id) => CSS.escape(id), cardId);
 
@@ -105,7 +112,7 @@ export async function proveCardDrag(page: Page, touch: boolean) {
     .toEqual({
       "play.place": {
         card: cardId,
-        space: { boardId, spaceId },
+        space: seatTarget,
       },
     });
   await page

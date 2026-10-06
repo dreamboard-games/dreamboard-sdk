@@ -90,7 +90,7 @@ function table(): RuntimeTableRecord {
       harbor: { [boardSpaceHostId("map", "port:#雪")]: [] },
     },
     boards: {
-      map: { baseId: "map", relations: [] },
+      map: { visibility: "public", baseId: "map", relations: [] },
     },
     resources: {},
     ownerOfCard: {},
@@ -271,6 +271,7 @@ describe("attached zone runtime admission", () => {
     const state = table();
     const boardId = perPlayerInstanceId("board", "mat", "table");
     state.boards[boardId] = {
+      visibility: "public",
       baseId: "mat",
       relations: [],
     };

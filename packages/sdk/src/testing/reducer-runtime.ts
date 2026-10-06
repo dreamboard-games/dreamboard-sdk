@@ -1,3 +1,7 @@
+import { ReducerSessionStateSchema } from "../shared/runtime-schema.js";
+import { RuntimeJsonSchema } from "../shared/runtime-json.js";
+import { encodeSeatParams } from "../reducer/bundle/trusted/seat-interactions.js";
+import { createSeatDisclosure } from "../reducer/bundle/trusted/tile-disclosure.js";
 import type * as Wire from "../shared/runtime-types";
 import type { ReducerBundleContract } from "../shared/worker-contract";
 import { createReducerBundle } from "../reducer/bundle/create-reducer-bundle";
@@ -5,15 +9,11 @@ import type { ReducerBundleOptions } from "../reducer/bundle/types";
 import { createIngressRuntimeCodec } from "../reducer/ingress/session-codec";
 import {
   createTrustedRuntimeScope,
-  type TrustedInput,
   type TrustedSessionState,
 } from "../reducer/bundle/trusted/runtime-scope";
 import { createInteractionResolver } from "../reducer/bundle/trusted/interaction-resolver";
 import { createProjectionBuilder } from "../reducer/bundle/trusted/projection-builder";
-import {
-  concealCards,
-  concealSubmittedCards,
-} from "../reducer/bundle/trusted/card-concealment";
+import { concealCards } from "../reducer/bundle/trusted/card-concealment";
 import type {
   InteractionActionabilityResult,
   InteractionExplanation,
@@ -28,7 +28,10 @@ import type {
   ViewOfContract,
 } from "../reducer/model";
 
+import { createPendingSelectionReconciler } from "../reducer/bundle/trusted/pending-selection.js";
+
 type InspectionInput = {
+  referenceBasis: Wire.ReferenceBasis;
   state: Wire.ReducerSessionState;
   playerId: unknown;
   interactionId: string;
@@ -39,6 +42,7 @@ type ReductionResult =
 
 /** Scenario conveniences; all state changes use the production bundle. */
 export type ReducerTestingRuntime = Omit<ReducerBundleContract, "project"> & {
+  dispatchClient: ReducerBundleContract["dispatch"];
   validateInput(input: Wire.DispatchRequest): Promise<ReducerValidationResult>;
   reduce(input: Wire.DispatchRequest): Promise<ReductionResult>;
   project(
@@ -46,6 +50,7 @@ export type ReducerTestingRuntime = Omit<ReducerBundleContract, "project"> & {
   ): Wire.SeatProjectionBundle;
   explainInteraction(input: InspectionInput): InteractionExplanation;
   currentClientParamSchema(input: InspectionInput): ClientParamSchema | null;
+  currentAuthorParamSchema(input: InspectionInput): ClientParamSchema | null;
   resolveInteractionActionability(
     input: InspectionInput,
   ): InteractionActionabilityResult;
@@ -69,8 +74,6 @@ export function createReducerTestingRuntime<
   const parseState = (state: Wire.ReducerSessionState) =>
     // eslint-disable-next-line no-restricted-syntax -- This codec parses the same Contract schemas and current phase before the testing runtime receives its trusted session state.
     codec.parseState(state) as unknown as TrustedSessionState<Contract>;
-  const parseInput = (input: Wire.GameInput) =>
-    codec.parseInput(input) as TrustedInput<Contract>;
   const scope = createTrustedRuntimeScope(definition);
   const interactions = createInteractionResolver(scope, {
     diagnostics:
@@ -78,12 +81,24 @@ export function createReducerTestingRuntime<
       (options.diagnostics === "verbose" ? "verbose" : undefined),
   });
   const projection = createProjectionBuilder(scope, interactions);
-  function inspect({ state, playerId, interactionId }: InspectionInput) {
+  const reconcilePending = createPendingSelectionReconciler(
+    scope,
+    interactions,
+  );
+  function inspect({
+    state,
+    playerId,
+    interactionId,
+    referenceBasis,
+  }: InspectionInput) {
     if (typeof playerId !== "string")
       throw new Error("Expected a string playerId.");
     const [perspective] = codec.parseStatePerspectives(state, [playerId]);
     return {
-      state: scope.toCombinedState(parseState(state)),
+      state: reconcilePending(
+        scope.toCombinedState(parseState(state)),
+        referenceBasis,
+      ),
       playerId: perspective,
       interactionId,
     };
@@ -93,29 +108,41 @@ export function createReducerTestingRuntime<
   async function dispatch({
     state,
     input,
+    referenceBasis,
   }: Wire.DispatchRequest): Promise<Wire.DispatchResult> {
     if (
       input.kind !== "interaction" ||
       !codec.isStatePlayer(state, input.playerId)
     )
-      return bundle.dispatch({ state, input });
-    const combinedState = scope.toCombinedState(parseState(state));
+      return bundle.dispatch({ state, input, referenceBasis });
+    const combinedState = reconcilePending(
+      scope.toCombinedState(parseState(state)),
+      referenceBasis,
+    );
     const playerId = codec.parsePlayerId(input.playerId);
+    const disclosure = createSeatDisclosure(
+      combinedState.table,
+      scope.manifest,
+      playerId,
+      referenceBasis,
+    );
     return bundle.dispatch({
-      state,
+      state: ReducerSessionStateSchema.parse(
+        scope.toSessionState(combinedState),
+      ),
+      referenceBasis,
       input: {
         ...input,
-        params: concealSubmittedCards(
-          input.params,
-          interactions.cardInputKeys(
-            combinedState,
-            playerId,
-            input.interactionId,
-          ),
-          concealCards(
-            combinedState.table,
-            playerId,
-            scope.definition.contract.manifest,
+        params: RuntimeJsonSchema.parse(
+          encodeSeatParams(
+            input.params as Record<string, unknown>,
+            interactions.inputCollectors(
+              combinedState,
+              playerId,
+              input.interactionId,
+            ),
+            disclosure,
+            concealCards(combinedState.table, playerId, disclosure),
           ),
         ),
       },
@@ -124,18 +151,21 @@ export function createReducerTestingRuntime<
   return {
     ...bundle,
     dispatch,
-    async validateInput({ state, input }) {
-      const parsed = parseInput(input);
-      if (!codec.isStatePlayer(state, parsed.playerId))
-        return {
-          valid: false,
-          errorCode: "NOT_YOUR_TURN",
-          message: "Player is not seated in this session.",
-        };
-      return interactions.validateClientInput(
-        scope.toCombinedState(parseState(state)),
-        parsed,
-      );
+    dispatchClient: (request) => Promise.resolve(bundle.dispatch(request)),
+    async validateInput(request) {
+      const result = await dispatch({
+        ...request,
+        state: structuredClone(request.state),
+      });
+      return result.kind === "reject"
+        ? {
+            valid: false,
+            errorCode: result.errorCode,
+            ...(result.message === undefined
+              ? {}
+              : { message: result.message }),
+          }
+        : { valid: true };
     },
     async reduce(input) {
       const result = await dispatch(input);
@@ -147,19 +177,28 @@ export function createReducerTestingRuntime<
         ...(result.terminal ? { terminal: result.terminal } : {}),
       };
     },
-    project({ state, playerIds, projectionMode }) {
+    project({ state, playerIds, projectionMode, referenceBasis }) {
       if (projectionMode !== "actionsOnly")
-        return bundle.project({ state, playerIds });
+        return bundle.project({ state, playerIds, referenceBasis });
       const perspectives = codec.parseStatePerspectives(state, playerIds);
       // eslint-disable-next-line no-restricted-syntax -- This game-bound actions-only projector assembles the wire seat bundle from parsed session and player IDs.
       return projection.project({
-        state: parseState(state),
+        state: scope.toSessionState(
+          reconcilePending(
+            scope.toCombinedState(parseState(state)),
+            referenceBasis,
+          ),
+        ),
         playerIds: perspectives,
         projectionMode,
+        referenceBasis,
       }) as unknown as Wire.SeatProjectionBundle;
     },
     explainInteraction(input) {
       return interactions.explainInteraction(inspect(input));
+    },
+    currentAuthorParamSchema(input) {
+      return interactions.currentAuthorParamSchema(inspect(input));
     },
     currentClientParamSchema(input) {
       return interactions.currentClientParamSchema(inspect(input));

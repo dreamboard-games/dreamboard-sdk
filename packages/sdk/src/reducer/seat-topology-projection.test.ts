@@ -1,3 +1,4 @@
+import { testReferenceBasis } from "../shared/__fixtures__/reference-basis.js";
 import { RuntimeJsonSchema } from "../shared/runtime-json.js";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
@@ -46,6 +47,7 @@ describe("seat topology projection", () => {
       rngSeed: 1,
     });
     const projection = bundle.project({
+      referenceBasis: testReferenceBasis,
       state: initialized.state,
       playerIds: ["player-1"],
     });

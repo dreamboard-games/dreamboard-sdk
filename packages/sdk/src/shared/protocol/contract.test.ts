@@ -46,6 +46,7 @@ function baseFrame() {
   return {
     events: [],
     basis: {
+      sessionId: "test-session",
       version: 42,
       actionSetVersion: "sha256:actions",
       perspectivePlayerId: "player-1",
@@ -60,6 +61,7 @@ function baseFrame() {
     zones: {
       hand: {
         "player-1": {
+          tiles: [],
           cardIds: ["card-1"],
           cardViewsById: {
             "card-1": {
@@ -83,19 +85,22 @@ describe("shared plugin runtime contract", () => {
     const frame = PluginGameplayFrameSchema.parse(
       Reflect.apply(materializePluginGameplayFrame, undefined, [
         {
+          sessionId: "test-session",
           currentPhase: "play",
           activePlayers: ["player-1"],
           perspectivePlayerId: "player-1",
           version: 1,
           actionSetVersion: "actions",
           dynamicProjection: {
-            events: [],
+            referenceBasis: { sessionId: "test-session", version: 1 },
             interactionsByRef: {},
             seats: {
               "player-1": {
+                events: [],
                 zones: {
                   hand: {
                     "player-1": {
+                      tiles: [],
                       cardIds: ["card-1"],
                       cardViewsById: {
                         "card-1": {
@@ -125,7 +130,7 @@ describe("shared plugin runtime contract", () => {
       properties: { nested: { value: 2 } },
     });
   });
-  test("strict frame and protocol schemas accept version 9 gameplay frames", () => {
+  test("strict frame and protocol schemas accept version 10 gameplay frames", () => {
     const frame = PluginGameplayFrameSchema.parse(baseFrame());
     expect(frame.basis.version).toBe(42);
 
@@ -140,12 +145,12 @@ describe("shared plugin runtime contract", () => {
       },
     } satisfies PluginProtocolEnvelope<unknown>);
 
-    expect(envelope.version).toBe(9);
+    expect(envelope.version).toBe(10);
     expect(() =>
       PluginGameplayFrameSchema.parse({ ...baseFrame(), syncId: 9 }),
     ).toThrow();
     expect(() =>
-      HostToPluginEnvelopeSchema.parse({ ...envelope, version: 8 }),
+      HostToPluginEnvelopeSchema.parse({ ...envelope, version: 9 }),
     ).toThrow();
   });
 
@@ -202,24 +207,27 @@ describe("shared plugin runtime contract", () => {
       availableInteractions: [claimDescriptor],
     });
     const frame = materializePluginGameplayFrame({
+      sessionId: "test-session",
       currentPhase: "play",
       activePlayers: ["player-1"],
       perspectivePlayerId: "player-1",
       version: 8,
       actionSetVersion,
       dynamicProjection: ReducerWireZod.SeatProjectionBundleSchema.parse({
-        events: [],
+        referenceBasis: { sessionId: "test-session", version: 8 },
         simultaneousPhase: null,
         interactionsByRef: {
           "claim-ref": claimDescriptor,
         },
         seats: {
           "player-1": {
+            events: [],
             view: { handSize: 1, market: ["card-1"] },
             availableInteractionRefs: ["claim-ref"],
             zones: {
               hand: {
                 "player-1": {
+                  tiles: [],
                   cardIds: ["card-1"],
                   cardViewsById: {
                     "card-1": {
@@ -241,6 +249,7 @@ describe("shared plugin runtime contract", () => {
     });
 
     expect(frame.basis).toEqual({
+      sessionId: "test-session",
       version: 8,
       actionSetVersion,
       perspectivePlayerId: "player-1",
@@ -261,13 +270,14 @@ describe("shared plugin runtime contract", () => {
     const frame = PluginGameplayFrameSchema.parse(
       Reflect.apply(materializePluginGameplayFrame, undefined, [
         {
+          sessionId: "test-session",
           currentPhase: "play",
           activePlayers: ["player-1"],
           perspectivePlayerId: "player-1",
           version: 8,
           actionSetVersion: "sha256:actions",
           dynamicProjection: {
-            events: [],
+            referenceBasis: { sessionId: "test-session", version: 8 },
             schedulerFlow: {
               version: 1,
               activePlayerIds: ["player-1"],
@@ -300,6 +310,7 @@ describe("shared plugin runtime contract", () => {
             },
             seats: {
               "player-1": {
+                events: [],
                 view: { handSize: 1, optional: undefined },
                 availableInteractionRefs: ["claim-ref"],
               },
@@ -324,16 +335,18 @@ describe("shared plugin runtime contract", () => {
       () =>
         void Reflect.apply(materializePluginGameplayFrame, undefined, [
           {
+            sessionId: "test-session",
             currentPhase: "play",
             activePlayers: ["player-1"],
             perspectivePlayerId: "player-1",
             version: 8,
             actionSetVersion: "sha256:actions",
             dynamicProjection: {
-              events: [],
+              referenceBasis: { sessionId: "test-session", version: 8 },
               interactionsByRef: {},
               seats: {
                 "player-1": {
+                  events: [],
                   availableInteractionRefs: [undefined],
                 },
               },
@@ -447,15 +460,17 @@ describe("manifest-owned boards in the single seat view", () => {
   const boards = {};
   test("an absent seat receives neither board data nor another seat's private view", () => {
     const frame = materializePluginGameplayFrame({
+      sessionId: "test-session",
       currentPhase: "play",
       activePlayers: ["player-1"],
       perspectivePlayerId: "spectator",
       version: 1,
       actionSetVersion: "actions-1",
       dynamicProjection: {
-        events: [],
+        referenceBasis: { sessionId: "test-session", version: 1 },
         seats: {
           "player-1": {
+            events: [],
             view: { secret: "private" },
             availableInteractionRefs: [],
           },
@@ -476,6 +491,7 @@ describe("manifest-owned boards in the single seat view", () => {
   });
   function materialize(view: unknown) {
     return materializePluginGameplayFrame({
+      sessionId: "test-session",
       currentPhase: "play",
       activePlayers: ["player-1"],
       perspectivePlayerId: "player-1",
@@ -483,8 +499,15 @@ describe("manifest-owned boards in the single seat view", () => {
       actionSetVersion: "actions-1",
       // Deliberately cross the external admission boundary with untrusted data.
       dynamicProjection: {
-        events: [],
-        seats: { "player-1": { view, boards, availableInteractionRefs: [] } },
+        referenceBasis: { sessionId: "test-session", version: 1 },
+        seats: {
+          "player-1": {
+            events: [],
+            view,
+            boards,
+            availableInteractionRefs: [],
+          },
+        },
       } as ReducerSeatProjectionBundle,
     });
   }
@@ -519,20 +542,23 @@ test("seat board projection uses only the selected seat's current collection", (
     },
   };
   const frame = materializePluginGameplayFrame({
+    sessionId: "test-session",
     currentPhase: "play",
     activePlayers: ["player-1"],
     perspectivePlayerId: "player-1",
     version: 2,
     actionSetVersion: "actions-2",
     dynamicProjection: {
-      events: [],
+      referenceBasis: { sessionId: "test-session", version: 2 },
       seats: {
         "player-1": {
+          events: [],
           view: { score: 3 },
           boards: current,
           availableInteractionRefs: [],
         },
         "player-2": {
+          events: [],
           boards: {
             other: {
               id: "other",

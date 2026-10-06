@@ -1,5 +1,5 @@
-import { BoardProjectionSchema } from "../shared/board-topology-schema.js";
-import type { BoardTopology } from "../shared/board-topology.js";
+import { BoardProjectionSchema } from "../shared/seat-topology-schema.js";
+import type { SeatBoardTopology } from "../shared/seat-topology-schema.js";
 import type { ViewCard } from "../shared/domain/cards.js";
 import {
   runtimeFeatures,
@@ -87,8 +87,7 @@ function matchesBoardTarget(
   return (
     domain.type === "boardTarget" &&
     domain.valueKind === target.valueKind &&
-    (domain.targetKind === target.kind ||
-      (target.kind === "space" && domain.targetKind === "tile")) &&
+    domain.targetKind === target.kind &&
     (domain.valueKind === "board-id" && target.valueKind === "board-id"
       ? domain.boardId === target.boardId
       : domain.valueKind === "board-space" &&
@@ -751,7 +750,7 @@ class Controller {
       });
     const boardProjections = new WeakMap<
       object,
-      Readonly<Record<string, BoardTopology>>
+      Readonly<Record<string, SeatBoardTopology>>
     >();
     const runtime: RuntimeFeatureContext = {
       game: this.instance,
@@ -769,7 +768,7 @@ class Controller {
         boardProjections.set(view, boards);
         return boards;
       },
-      createBoard: (data: BoardTopology) =>
+      createBoard: (data: SeatBoardTopology) =>
         this.object("board", {
           id: data.id,
           data: immutableCopy(data),

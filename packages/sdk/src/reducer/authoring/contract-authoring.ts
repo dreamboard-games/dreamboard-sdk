@@ -8,6 +8,7 @@ import type { z } from "zod";
 import type {
   ZoneIdOfTable,
   CardIdOfManifest,
+  TileIdOfTable,
   BoardIdOfTable,
   SpaceIdOfTable,
   InputCollector,
@@ -24,7 +25,6 @@ import type {
   TableOfManifest,
   TiledBoardIdOfTable,
   TiledEdgeIdOfTable,
-  TiledSpaceIdOfTable,
   TiledVertexIdOfTable,
   ViewOfContract,
 } from "../model";
@@ -43,6 +43,8 @@ import {
   boardTarget,
   cardInput,
   cardTarget,
+  tileInput,
+  tileTarget,
   formInput,
   rngInput,
 } from "../inputs";
@@ -145,27 +147,6 @@ type BoundBoardInputs<Contract extends ContractWithPhases> = {
     "board-edge",
     TiledEdgeIdOfTable<BoundTable<Contract>, B, BoundManifest<Contract>>
   >;
-  tile<
-    B extends TiledBoardIdOfTable<
-      BoundTable<Contract>,
-      BoundManifest<Contract>
-    >,
-  >(
-    options: BoundBoardInputOptions<
-      Contract,
-      B,
-      TiledSpaceIdOfTable<
-        BoundTable<Contract>,
-        NoInfer<B>,
-        BoundManifest<Contract>
-      >
-    >,
-  ): InputCollector<
-    z.ZodString,
-    BoundState<Contract>,
-    "board-tile",
-    TiledSpaceIdOfTable<BoundTable<Contract>, B, BoundManifest<Contract>>
-  >;
   space<B extends BoardIdOfTable<BoundTable<Contract>>>(
     options: BoundBoardInputOptions<
       Contract,
@@ -251,6 +232,27 @@ type BoundCardInput<Contract extends ContractWithPhases> = <
   ZoneIds
 >;
 
+/** Tile instances in authored zones or exact runtime boards. */
+type BoundTileInput<Contract extends ContractWithPhases> = (
+  options: (
+    | { from: readonly ZoneIdOfTable<BoundTable<Contract>>[]; boards?: never }
+    | {
+        boards: readonly TiledBoardIdOfTable<
+          BoundTable<Contract>,
+          BoundManifest<Contract>
+        >[];
+        from?: never;
+      }
+  ) & {
+    where?: BoundWhere<Contract, TileIdOfTable<BoundTable<Contract>>>;
+  },
+) => InputCollector<
+  z.ZodType<TileIdOfTable<BoundTable<Contract>>>,
+  BoundState<Contract>,
+  "tile",
+  TileIdOfTable<BoundTable<Contract>>
+>;
+
 type BoundRngInputs<Contract extends ContractWithPhases> = {
   d6(count?: number): ReturnType<typeof rngInput.d6<BoundState<Contract>>>;
   coin(): ReturnType<typeof rngInput.coin<BoundState<Contract>>>;
@@ -259,6 +261,7 @@ type BoundRngInputs<Contract extends ContractWithPhases> = {
 export type BoundInputBuilders<Contract extends ContractWithPhases> = {
   readonly board: BoundBoardInputs<Contract>;
   readonly card: BoundCardInput<Contract>;
+  readonly tile: BoundTileInput<Contract>;
   readonly form: BoundFormInputs<Contract>;
   readonly rng: BoundRngInputs<Contract>;
 };
@@ -481,6 +484,32 @@ function createFusedCardInput<
     });
 }
 
+function createFusedTileInput<Contract extends ContractWithPhases>(
+  contract: Contract,
+): BoundTileInput<Contract> {
+  return (options) => {
+    const builder =
+      options.from !== undefined
+        ? tileTarget.zones<
+            BoundState<Contract>,
+            TileIdOfTable<BoundTable<Contract>>,
+            BoundManifest<Contract>
+          >(options.from)
+        : tileTarget.boards<
+            BoundState<Contract>,
+            TileIdOfTable<BoundTable<Contract>>,
+            BoundManifest<Contract>
+          >(options.boards);
+    return tileInput({
+      target: applyWhere(builder, options.where).build(),
+      // The bound contract owns the authoritative tile syntax and target IDs.
+      schema: contract.manifest.ids.tileId as z.ZodType<
+        TileIdOfTable<BoundTable<Contract>>
+      >,
+    });
+  };
+}
+
 function createFusedBoardInputs<
   Contract extends ContractWithPhases,
 >(): BoundBoardInputs<Contract> {
@@ -506,21 +535,6 @@ function createFusedBoardInputs<
           boardTarget.edge<
             BoundState<Contract>,
             TiledEdgeIdOfTable<
-              BoundTable<Contract>,
-              typeof options.boardId,
-              BoundManifest<Contract>
-            >,
-            BoundManifest<Contract>
-          >(options.boardId),
-          options.where,
-        ).build(),
-      }),
-    tile: (options) =>
-      boardInput.tile({
-        target: applyWhere(
-          boardTarget.tile<
-            BoundState<Contract>,
-            TiledSpaceIdOfTable<
               BoundTable<Contract>,
               typeof options.boardId,
               BoundManifest<Contract>
@@ -567,12 +581,13 @@ function createFusedBoardInputs<
   };
 }
 
-function createBoundInputBuilders<
-  Contract extends ContractWithPhases,
->(): BoundInputBuilders<Contract> {
+function createBoundInputBuilders<Contract extends ContractWithPhases>(
+  contract: Contract,
+): BoundInputBuilders<Contract> {
   return {
     board: createFusedBoardInputs<Contract>(),
     card: createFusedCardInput<Contract>(),
+    tile: createFusedTileInput(contract),
     form: formInput.forState<BoundState<Contract>>(),
     rng: rngInput,
   };
@@ -582,7 +597,7 @@ function createPhaseAuthoring<
   Contract extends ContractWithPhases,
   PhaseStateSchema extends SchemaLike<object>,
 >(
-  _contract: Contract,
+  contract: Contract,
   schema: PhaseStateSchema,
 ): PhaseAuthoring<Contract, PhaseStateSchema> {
   return {
@@ -598,7 +613,7 @@ function createPhaseAuthoring<
         >[0],
       ) as typeof rule,
     define: (definition) => ({ ...definition, state: schema }),
-    inputs: createBoundInputBuilders<Contract>(),
+    inputs: createBoundInputBuilders(contract),
     types: phantomTypes<PhaseTypes<Contract, PhaseStateSchema>>(),
   };
 }

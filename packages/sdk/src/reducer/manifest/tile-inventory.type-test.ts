@@ -79,7 +79,7 @@ const privateHome = {
     { ...source.tileSeeds[0], home: { type: "zone", zoneId: "private" } },
   ],
 } as const;
-// @ts-expect-error Private tile homes are not supported by the current projection boundary.
+// Private tile homes are admitted; location policy controls seat delivery.
 compileManifest(privateHome);
 const wrongProperties = {
   ...source,
@@ -107,7 +107,6 @@ const publicTile: (typeof table.zones.supply)[Extract<
   keyof typeof table.zones.supply,
   string
 >][number] = id;
-// @ts-expect-error Private zone inventories cannot contain tiles before private tile projection.
 const privateTile: (typeof table.zones.private)[Extract<
   keyof typeof table.zones.private,
   string

@@ -1,3 +1,4 @@
+import { testGameplayBasis } from "../../shared/__fixtures__/reference-basis.js";
 import { createGame as createModel } from "../../reducer";
 
 import { describe, expect, test } from "vitest";
@@ -240,6 +241,7 @@ describe("ingress runtime codec", () => {
     });
     expect(() =>
       codec.parseInput({
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         playerId: "player-1",
         interactionId: "takeAction",
@@ -247,6 +249,7 @@ describe("ingress runtime codec", () => {
     ).toThrow(/params/);
     expect(() =>
       codec.parseInput({
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         playerId: "player-1",
         interactionId: "",
@@ -255,6 +258,7 @@ describe("ingress runtime codec", () => {
     ).toThrow(/interactionId/);
     expect(() =>
       codec.parseInput({
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         playerId: "player-1",
         interactionId: "takeAction",
@@ -264,12 +268,14 @@ describe("ingress runtime codec", () => {
     ).toThrow(/Unrecognized key/);
     expect(
       codec.parseInput({
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         playerId: "player-1",
         interactionId: "takeAction",
         params: {},
       }),
     ).toEqual({
+      basis: testGameplayBasis("player-1"),
       kind: "interaction",
       playerId: "player-1",
       interactionId: "takeAction",

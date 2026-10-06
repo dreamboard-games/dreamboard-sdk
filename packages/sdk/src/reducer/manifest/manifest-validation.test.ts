@@ -354,8 +354,11 @@ test("validateManifestAuthoring rejects reserved record keys before generation",
 });
 
 test.each([
-  ["hidden:table:0", 1],
-  ["hidden:deck", 2],
+  [
+    "card-ref:sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    1,
+  ],
+  ["card-ref:invalid", 2],
 ] as const)("card id %s reserves the concealed-card namespace", (id, count) => {
   const manifest: GameTopologyManifest = {
     ...BASE_MANIFEST,
@@ -370,10 +373,10 @@ test.each([
     ],
   };
   expect(validateManifestAuthoring(manifest).errors).toContain(
-    `manifest.cardSets[0].cards[0].id: The 'hidden:' prefix is reserved for concealed card positions.`,
+    `manifest.cardSets[0].cards[0].id: The 'card-ref:' prefix is reserved for concealed card positions.`,
   );
   expect(() => compileManifest(manifest)).toThrow(
-    "'hidden:' prefix is reserved",
+    "'card-ref:' prefix is reserved",
   );
 });
 
@@ -467,7 +470,7 @@ test("the same tile category may be used on multiple boards without global alias
   expect(compiled.tileDefinitions.terrain.cells[0].typeId).toBe("site");
   expect(compiled.tileDefinitions.terrain.edges[0].typeId).toBe("route");
   expect(compiled.createInitialTable({ playerIds: [] }).boards).toEqual({
-    alpha: { baseId: "alpha", relations: [] },
-    beta: { baseId: "beta", relations: [] },
+    alpha: { baseId: "alpha", visibility: "public", relations: [] },
+    beta: { baseId: "beta", visibility: "public", relations: [] },
   });
 });

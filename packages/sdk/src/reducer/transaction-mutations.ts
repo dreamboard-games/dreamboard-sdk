@@ -1,3 +1,10 @@
+import { getPublicTileFootprint } from "../shared/tile-appearance.js";
+import { ZoneVisibilitySchema } from "../shared/domain/manifest-schema.js";
+import {
+  TileDisclosureSchema,
+  type TileDisclosure,
+} from "../shared/domain/tile-disclosure.js";
+import type { ReadonlyRuntimeData } from "../shared/runtime-json.js";
 import type { TopologyDefinitions } from "../shared/domain/topology-definitions.js";
 import type {
   ZoneDefinitions,
@@ -7,6 +14,7 @@ import type {
   BoardIdOfTable,
   CardIdOfTable,
   ComponentIdOfTable,
+  TileIdOfTable,
   SpatialComponentIdOfTable,
   HiddenStateOfState,
   PhaseStateOfState,
@@ -159,6 +167,14 @@ export interface TransactionMutations<
   setComponentOwner(args: {
     componentId: ComponentIdOfTable<TableOfState<State>>;
     ownerId: PlayerIdOfState<State> | null;
+  }): State;
+  setBoardVisibility(args: {
+    boardId: BoardIdOfTable<TableOfState<State>>;
+    visibility: RuntimeTableRecord["boards"][string]["visibility"];
+  }): State;
+  setTileDisclosure(args: {
+    tileId: TileIdOfTable<TableOfState<State>>;
+    disclosure: ReadonlyRuntimeData<TileDisclosure>;
   }): State;
   flipCard(args: {
     cardId: CardIdOfTable<TableOfState<State>>;
@@ -440,6 +456,48 @@ export const transactionMutations = {
         ownerId,
       };
     else throw new Error(`Unknown component '${componentId}'.`);
+    return state;
+  },
+  setBoardVisibility<S extends AnyState>(
+    state: S,
+    args: { boardId: string; visibility: unknown },
+    definitions: ZoneDefinitions,
+  ): S {
+    const board = Object.hasOwn(state.table.boards, args.boardId)
+      ? state.table.boards[args.boardId]
+      : undefined;
+    if (!board) throw new Error(`Unknown board '${args.boardId}'.`);
+    const visibility = ZoneVisibilitySchema.parse(args.visibility);
+    const definition = Object.hasOwn(definitions.boardDefinitions, board.baseId)
+      ? definitions.boardDefinitions[board.baseId]
+      : undefined;
+    if (!definition)
+      throw new Error(`Unknown board definition '${board.baseId}'.`);
+    if (visibility === "ownerOnly" && definition.scope === "shared")
+      throw new Error("ownerOnly board visibility requires perPlayer scope.");
+    state.table.boards[args.boardId] = { ...board, visibility };
+    return state;
+  },
+  setTileDisclosure<S extends AnyState>(
+    state: S,
+    args: { tileId: string; disclosure: unknown },
+  ): S {
+    const tile = Object.hasOwn(state.table.tiles, args.tileId)
+      ? state.table.tiles[args.tileId]
+      : undefined;
+    if (!tile) throw new Error(`Unknown tile '${args.tileId}'.`);
+    const disclosure = TileDisclosureSchema.parse(args.disclosure);
+    if (
+      disclosure.face.audience === "seats" &&
+      disclosure.face.playerIds.some(
+        (playerId) => !state.table.playerOrder.includes(playerId),
+      )
+    )
+      throw new Error("Tile face audience must name active roster players.");
+    const location = state.table.componentLocations[args.tileId];
+    if (location?.type === "OnBoard" && disclosure.appearance)
+      getPublicTileFootprint(disclosure.appearance, location);
+    state.table.tiles[args.tileId] = { ...tile, disclosure };
     return state;
   },
   flipCard<S extends AnyState>(

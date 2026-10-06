@@ -1,3 +1,5 @@
+import { createSeatDisclosure } from "./bundle/trusted/tile-disclosure.js";
+import { testReferenceBasis } from "../shared/__fixtures__/reference-basis.js";
 import { boardEdgeId, boardVertexId } from "../shared/domain/board-element.js";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
@@ -109,14 +111,25 @@ function setup() {
   const table: RuntimeTableRecord = compiled.createInitialTable({
     playerIds: ["player-1", "player-2"],
   });
-  // Nonpublic cargo remains unsupported even when its host has a seated owner.
+  // Attached cargo resolves its current host owner.
   table.pieces.pawn.ownerId = "player-1";
   table.dice.die.ownerId = "player-1";
   return { compiled, table };
 }
-function game() {
+function game(privateTiles = false) {
   const model = createGame({
-    manifest,
+    manifest: privateTiles
+      ? {
+          ...manifest,
+          tileSeeds: manifest.tileSeeds.map((tile) => ({
+            ...tile,
+            disclosure: {
+              face: { audience: "none" as const },
+              appearance: { layout: "hex" as const, cells: [{ q: 0, r: 0 }] },
+            },
+          })),
+        }
+      : manifest,
     phases: { play: z.object({}) },
     state: {
       public: z.object({}),
@@ -202,41 +215,57 @@ describe("tile inventory projection boundary", () => {
   });
 
   test.each(privateHomes)(
-    "rejects a tile's nonpublic initial home: $zoneId",
+    "admits a private initial home and projects only its location audience: $zoneId",
     (home) => {
-      expect(() =>
-        parseTopologyManifestJson({
-          ...defineTopologyManifest(manifest),
-          tileSeeds: [
-            {
-              id: "forest-instance",
-              typeId: "forest-face",
-              scope: "perPlayer",
-              home: { type: "zone", ...home },
-            },
-          ],
-        }),
-      ).toThrow(
-        /manifest\.tileSeeds\[0\]\.home: Tile inventory requires a public zone/,
+      const parsed = parseTopologyManifestJson({
+        ...defineTopologyManifest(manifest),
+        tileSeeds: [
+          {
+            id: "forest-instance",
+            typeId: "forest-face",
+            scope: "perPlayer",
+            home: { type: "zone", ...home },
+          },
+        ],
+      });
+      const compiled = compileManifest(parsed);
+      const table = compiled.createInitialTable({
+        playerIds: ["player-1", "player-2"],
+      });
+      expect(Object.values(table.tiles)).toHaveLength(2);
+      const own = createSeatDisclosure(
+        table,
+        compiled,
+        "player-1",
+        testReferenceBasis,
       );
+      const ownVisible = own.zones
+        .flatMap((zone) => zone.tiles)
+        .filter((tile) => tile.disclosure === "visible");
+      expect(ownVisible).toHaveLength(home.zoneId === "hand" ? 1 : 0);
+      for (const tile of Object.values(table.tiles))
+        expect(table.componentLocations[tile.id]).toMatchObject({
+          type: "InZone",
+          zoneId: home.zoneId,
+        });
     },
   );
 
   test.each(privateDestinations)(
-    "rejects nonpublic movement and mixed dealing atomically: $zoneId",
+    "moves and deals mixed inventory into private locations atomically: $zoneId",
     (to) => {
       const { compiled, table } = setup();
-      const before = structuredClone(table);
-      expect(() =>
-        moveComponentToZoneInPlace({
-          table,
-          definitions: compiled,
-          componentId: "forest-instance",
-          to,
-        }),
-      ).toThrow("Tiles require public zone destinations");
-      expect(table).toEqual(before);
-      // A valid card precedes the tile so rejection cannot leave a moved prefix.
+      moveComponentToZoneInPlace({
+        table,
+        definitions: compiled,
+        componentId: "forest-instance",
+        to,
+      });
+      expect(table.componentLocations["forest-instance"]).toMatchObject({
+        type: "InZone",
+        ...to,
+      });
+      expect(table.zones[to.zoneId][to.hostId]).toContain("forest-instance");
       moveComponentToZoneInPlace({
         table,
         definitions: compiled,
@@ -251,17 +280,34 @@ describe("tile inventory projection boundary", () => {
         to: { zoneId: "stock", hostId: "table" },
         position: 1,
       });
-      const beforeDeal = structuredClone(table);
-      expect(() =>
-        dealComponentsInPlace({
+      const before = [...table.zones.stock.table];
+      dealComponentsInPlace({
+        table,
+        definitions: compiled,
+        from: { zoneId: "stock", hostId: "table" },
+        to,
+        count: 2,
+      });
+      expect(table.zones[to.zoneId][to.hostId]).toEqual(before.slice(0, 2));
+      expect(table.zones.stock.table).toEqual(before.slice(2));
+      const own = createSeatDisclosure(
+        table,
+        compiled,
+        "player-1",
+        testReferenceBasis,
+      );
+      const visible = own.tile("forest-instance")?.disclosure;
+      expect(visible).toBe(
+        ["hand", "cargo"].includes(to.zoneId) ? "visible" : undefined,
+      );
+      expect(
+        createSeatDisclosure(
           table,
-          definitions: compiled,
-          from: { zoneId: "stock", hostId: "table" },
-          to,
-          count: 2,
-        }),
-      ).toThrow("Tiles require public zone destinations");
-      expect(table).toEqual(beforeDeal);
+          compiled,
+          "player-2",
+          testReferenceBasis,
+        ).tile("forest-instance"),
+      ).toBeNull();
     },
   );
 
@@ -301,12 +347,13 @@ describe("tile inventory projection boundary", () => {
   });
 
   test("held tile assignments stay out of seat and UI bridge payloads", async () => {
-    const definition = game();
+    const definition = game(true);
     const source = await localSource(definition, { players: 2, seed: 1 });
     try {
       const bundle = createReducerBundle(definition);
       const payloads: unknown[] = [
         bundle.project({
+          referenceBasis: testReferenceBasis,
           state: source.checkpoint().state,
           playerIds: ["player-1", "player-2"],
         }),
@@ -325,6 +372,7 @@ describe("tile inventory projection boundary", () => {
               frame: {
                 ...snapshot.frame,
                 basis: {
+                  sessionId: testReferenceBasis.sessionId,
                   version: snapshot.version,
                   perspectivePlayerId: playerId,
                   actionSetVersion: computePluginActionSetVersion({

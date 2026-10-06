@@ -1,3 +1,4 @@
+import { isCardReferenceNamespace } from "../../shared/domain/cards.js";
 import { deriveBoardTopology } from "../../shared/board-topology.js";
 import {
   tileSpaceId,
@@ -357,13 +358,6 @@ export function assertComponentAllowed(
   componentId: string,
 ): void {
   assertComponent(table, componentId);
-  if (
-    Object.hasOwn(table.tiles, componentId) &&
-    definition.visibility !== "public"
-  )
-    throw new Error(
-      "Tiles require public zone destinations until tile projection supports privacy.",
-    );
   const card = Object.hasOwn(table.cards, componentId)
     ? table.cards[componentId]
     : undefined;
@@ -391,7 +385,7 @@ export function assertZoneConsistency(
   ];
   for (const family of families)
     for (const [id, component] of Object.entries(family)) {
-      if (id.startsWith("hidden:"))
+      if (isCardReferenceNamespace(id))
         throw new Error(
           `Component id '${id}' uses the reserved hidden-card namespace.`,
         );

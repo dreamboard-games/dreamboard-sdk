@@ -1,3 +1,4 @@
+import type { GameplayBasis } from "../../shared/runtime-types.js";
 import type { RuntimePayload } from "../model";
 
 export type TrustedInteractionInput<PlayerId extends string> = {
@@ -5,6 +6,7 @@ export type TrustedInteractionInput<PlayerId extends string> = {
   // an ordinary actor-authorized interaction; the trusted bundle
   // disambiguates from the interaction spec.
   kind: "interaction";
+  basis: GameplayBasis;
   playerId: PlayerId;
   interactionId: string;
   params: RuntimePayload;
@@ -12,7 +14,12 @@ export type TrustedInteractionInput<PlayerId extends string> = {
 
 export type TrustedRuntimeInput<PlayerId extends string> =
   | TrustedInteractionInput<PlayerId>
-  | { kind: "interaction.cancel"; playerId: PlayerId; interactionId: string };
+  | {
+      kind: "interaction.cancel";
+      basis: GameplayBasis;
+      playerId: PlayerId;
+      interactionId: string;
+    };
 
 export type DecodedReducerInput<PlayerId extends string> =
   TrustedRuntimeInput<PlayerId>;

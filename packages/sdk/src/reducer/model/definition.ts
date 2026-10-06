@@ -1,4 +1,4 @@
-import type { CollectorValueOf } from "./spec/inputs";
+import type { ClientCollectorValueOf, CollectorValueOf } from "./spec/inputs";
 import type { HiddenCardId } from "../../shared/domain/cards";
 import type { ViewData } from "./spec/views";
 import type { z } from "zod";
@@ -520,7 +520,7 @@ type ClientValueOf<Collector> = Collector extends { readonly kind: "card" }
   ? CollectorValueOf<Collector> extends readonly (infer CardId)[]
     ? (CardId | HiddenCardId)[]
     : CollectorValueOf<Collector> | HiddenCardId
-  : CollectorValueOf<Collector>;
+  : ClientCollectorValueOf<Collector>;
 
 type ClientParamsOfCollectors<Collectors> =
   Collectors extends Record<string, InputCollector>
@@ -572,7 +572,7 @@ export type BoardInteractionKeyOfDefinition<Definition> = {
   ]: QualifiedInteractionIdsWithCollectorKindOfDefinitionPhase<
     Definition,
     PhaseName,
-    "board-edge" | "board-space" | "board-tile" | "board-vertex"
+    "board-edge" | "board-space" | "board-vertex"
   >;
 }[PhaseNamesOfDefinition<Definition>];
 

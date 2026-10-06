@@ -76,12 +76,10 @@ tx.moveComponentToZone({
   to: { zoneId: "supply", hostId: table.playerOrder[0] },
 });
 tx.moveComponentToZone({
-  // @ts-expect-error Known owner-only destinations do not admit tile components.
   componentId: tileId,
   to: { zoneId: "hand", hostId: table.playerOrder[0] },
 });
 tx.moveComponentToZone({
-  // @ts-expect-error Known hidden destinations do not admit tile components.
   componentId: tileId,
   to: { zoneId: "bag" },
 });
@@ -106,3 +104,30 @@ tx.moveComponentToVertex({
 void [charges, componentCharges, tileLocation, wrong];
 const proofs: [ExactId, ExactType] = [true, true];
 void proofs;
+
+// Disclosure operations preserve the inferred board and tile identity domains.
+tx.setBoardVisibility({ boardId: "map", visibility: "hidden" });
+tx.setTileDisclosure({
+  tileId,
+  disclosure: {
+    face: { audience: "owner" },
+    appearance: { layout: "hex", cells: [{ q: 0, r: 0 }] },
+  },
+});
+tx.setTileDisclosure({
+  tileId,
+  disclosure: {
+    face: { audience: "seats", playerIds: [table.playerOrder[0]] },
+  },
+});
+// @ts-expect-error Board visibility names a declared runtime board.
+tx.setBoardVisibility({ boardId: "missing", visibility: "public" });
+// @ts-expect-error Visibility is a finite audience policy.
+tx.setBoardVisibility({ boardId: "map", visibility: "all" });
+tx.setTileDisclosure({
+  // @ts-expect-error Tile disclosure names a tile instance, never its definition.
+  tileId: "island",
+  disclosure: { face: { audience: "public" } },
+});
+// @ts-expect-error Runtime face audiences are an explicit discriminated union.
+tx.setTileDisclosure({ tileId, disclosure: { face: { audience: "all" } } });

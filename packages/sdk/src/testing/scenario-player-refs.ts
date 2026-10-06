@@ -3,7 +3,7 @@ import type {
   ReducerGameContractLike,
 } from "../reducer/model.js";
 import type { z } from "zod";
-import { createClientParamSchemasByPhase } from "../reducer/client-param-schemas.js";
+import { createAuthorParamSchemasByPhase } from "../reducer/client-param-schemas.js";
 import type { ScenarioSeatRef } from "./definitions.js";
 import {
   projectScenarioSeatReferences,
@@ -64,7 +64,7 @@ export function resolveScenarioCommandParams<
   readonly path: string;
   readonly currentSchema?: z.ZodTypeAny | null;
 }): Record<string, unknown> {
-  const candidateSchemas = clientParamSchemaCandidates(options);
+  const candidateSchemas = authorParamSchemaCandidates(options);
   let firstSeatError: ScenarioSchemaValueError | undefined;
   let firstIssue:
     { readonly path: PropertyKey[]; readonly message: string } | undefined;
@@ -120,7 +120,7 @@ export function projectScenarioCommandParams<
   readonly path: string;
   readonly currentSchema?: z.ZodTypeAny | null;
 }): Record<string, unknown> {
-  const candidateSchemas = clientParamSchemaCandidates(options);
+  const candidateSchemas = authorParamSchemaCandidates(options);
   let firstSeatError: ScenarioSchemaValueError | undefined;
   for (const schema of candidateSchemas) {
     if (!schema.safeParse(options.params).success) continue;
@@ -148,11 +148,11 @@ export function projectScenarioCommandParams<
   }
   throw new ScenarioCommandParamsError(
     `${options.path}.params`,
-    "runtime interaction parameters do not match a client parameter schema",
+    "runtime interaction parameters do not match an authoring parameter schema",
   );
 }
 
-function clientParamSchemaCandidates<
+function authorParamSchemaCandidates<
   Contract extends ReducerGameContractLike,
 >(options: {
   readonly game: AnyReducerGameDefinition<Contract>;
@@ -162,7 +162,7 @@ function clientParamSchemaCandidates<
   readonly currentSchema?: z.ZodTypeAny | null;
 }): z.ZodTypeAny[] {
   if (options.currentSchema) return [options.currentSchema];
-  const schemas = createClientParamSchemasByPhase(options.game);
+  const schemas = createAuthorParamSchemasByPhase(options.game);
   const currentPhaseSchema = schemas[options.phase]?.[options.interactionId] as
     z.ZodTypeAny | undefined;
   const candidateSchemas = [
@@ -177,7 +177,7 @@ function clientParamSchemaCandidates<
   if (candidateSchemas.length === 0) {
     throw new ScenarioCommandParamsError(
       `${options.path}.interactionId`,
-      `interaction '${options.interactionId}' has no client parameter schema`,
+      `interaction '${options.interactionId}' has no authoring parameter schema`,
     );
   }
   return candidateSchemas;

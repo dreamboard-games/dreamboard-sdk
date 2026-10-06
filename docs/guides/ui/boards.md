@@ -20,8 +20,10 @@ current canonical inputs, preserving runtime board identity. All boards expose
 semantic `spaces`; hex and square boards also have layout support. The registry
 owns SVG rendering, touch areas and converting browser pixels into layout coordinates.
 
-Tiled cells keep their identity when their tile moves. Use projected cell IDs;
-do not derive them from coordinates. World edge and vertex IDs belong to the
+Tiled cells use opaque `SeatSpaceRef` IDs and name their visible tile through
+`tileRef: SeatTileRef`. References belong to the issuing seat and frame; an accepted
+commit or restore replaces them. Use the current projected cell IDs and do not
+derive them from coordinates or authoritative tile IDs. World edge and vertex IDs belong to the
 exact runtime board instance. Headless geometry never reads authoritative tile
 inventory or infers missing cells from authored definitions.
 

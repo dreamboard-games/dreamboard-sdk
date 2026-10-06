@@ -4,5 +4,11 @@
   "interactionId": "rollForResources",
   "params": {
     "targetDieId": "die-red"
+  },
+  "basis": {
+    "sessionId": "fixture-session",
+    "version": 1,
+    "actionSetVersion": "fixture-actions",
+    "perspectivePlayerId": "player-1"
   }
 }

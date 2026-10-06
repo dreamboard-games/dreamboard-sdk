@@ -1,10 +1,12 @@
+import type { ProjectedTile } from "../seat-topology-schema.js";
 import type { ViewCard } from "../domain/cards.js";
-import type { GameEvent } from "../domain/results.js";
+import type { ProjectedGameEvent } from "../domain/results.js";
 import type * as Wire from "../runtime-types.js";
 
 export type PlayerId = string;
 
 export interface GameplayBasis {
+  readonly sessionId: string;
   readonly version: number;
   readonly actionSetVersion: string;
   readonly perspectivePlayerId: PlayerId;
@@ -45,6 +47,7 @@ export type ActionInteractionDescriptor<Interaction extends string = string> =
   InteractionDescriptor<Interaction>;
 
 export interface ZoneHandlesSnapshot<Interaction extends string = string> {
+  readonly tiles: readonly ProjectedTile[];
   readonly cardIds: readonly string[];
   /** Complete views of the cards the seat can see, by card id. */
   readonly cardViewsById: ReadonlyProjection<Record<string, ViewCard>>;
@@ -55,19 +58,22 @@ export interface ZoneHandlesSnapshot<Interaction extends string = string> {
   >;
 }
 
-type ReadonlyProjection<Value> = Value extends readonly (infer Item)[]
-  ? readonly ReadonlyProjection<Item>[]
-  : Value extends object
-    ? { readonly [Key in keyof Value]: ReadonlyProjection<Value[Key]> }
-    : Value;
+type ReadonlyProjection<Value> = Value extends
+  string | number | boolean | null | undefined
+  ? Value
+  : Value extends readonly (infer Item)[]
+    ? readonly ReadonlyProjection<Item>[]
+    : Value extends object
+      ? { readonly [Key in keyof Value]: ReadonlyProjection<Value[Key]> }
+      : Value;
 
 export type SimultaneousPhaseSnapshot =
   ReadonlyProjection<Wire.SimultaneousPhaseProjection>;
 
 export type {
-  GameEventDetail,
-  SystemActionEvent,
-  GameEvent,
+  ProjectedGameEventDetail as GameEventDetail,
+  ProjectedGameEvent as SystemActionEvent,
+  ProjectedGameEvent as GameEvent,
   OutcomeResult,
   OutcomeScoreComponent,
   OutcomeTieBreak,
@@ -80,8 +86,8 @@ export interface PluginGameplayFrame<
   Phase extends string = string,
   Interaction extends string = string,
 > {
-  /** Latest committed public display-event batch. Reading a snapshot does not replay notifications. */
-  readonly events: readonly GameEvent[];
+  /** Latest committed display-event batch admitted for this seat. Reading a snapshot does not replay notifications. */
+  readonly events: readonly ProjectedGameEvent[];
   readonly basis: GameplayBasis;
   readonly view: View | null;
   readonly flow: {

@@ -1,4 +1,3 @@
-import { tileSpaceId } from "@dreamboard-games/sdk/reducer";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { boardFeature, createGameInstance } from "@dreamboard-games/sdk";
@@ -16,6 +15,20 @@ function instance(source: LocalSource<typeof game>) {
     source,
     features: (core, context) => ({ board: boardFeature(core, context) }),
   });
+}
+
+function district(ui: ReturnType<typeof instance>, tileTypeId: string) {
+  const board = ui.boards.get("frontier");
+  const tile = board.data.tiles.find(
+    (value) =>
+      value.disclosure === "visible" && value.tileTypeId === tileTypeId,
+  );
+  assert.ok(tile, `Expected visible district ${tileTypeId}`);
+  const cell = board.spaces
+    .getAll()
+    .find((space) => space.data.tileRef === tile.ref);
+  assert.ok(cell, `Expected projected cell for ${tileTypeId}`);
+  return cell.id;
 }
 
 test("live opening geometry commits one legal camp through its canonical handler", async () => {
@@ -67,17 +80,17 @@ test("Bandits saved district survives restore, cancels, and accepts explicit no-
   const ui = instance(source);
   ui.inputs
     .get("moveBandits.moveBandits", "hexId")
-    .setValue(tileSpaceId("northForest", "cell"));
+    .setValue(district(ui, "northForest"));
   assert.equal(
     (await ui.interactions.get("moveBandits.moveBandits").submit()).accepted,
     true,
   );
-  assert.equal(ui.view!.banditsHexId, tileSpaceId("centralBarrens", "cell"));
+  assert.equal(ui.view!.banditsHexId, district(ui, "centralBarrens"));
   const saved: unknown = JSON.parse(JSON.stringify(source.checkpoint()));
   source.restore(saved);
   assert.deepEqual(
     ui.interactions.get("moveBandits.moveBandits").getStep()!.selected,
-    { hexId: tileSpaceId("northForest", "cell") },
+    { hexId: district(ui, "northForest") },
   );
   source.switchSeat("player-3");
   assert.equal(ui.interactions.find("moveBandits.moveBandits"), undefined);
@@ -93,14 +106,14 @@ test("Bandits saved district survives restore, cancels, and accepts explicit no-
   );
   ui.inputs
     .get("moveBandits.moveBandits", "hexId")
-    .setValue(tileSpaceId("southWestClay", "cell"));
+    .setValue(district(ui, "southWestClay"));
   await ui.interactions.get("moveBandits.moveBandits").submit();
   ui.inputs.get("moveBandits.moveBandits", "targetPlayerId").setValue(null);
   assert.equal(
     (await ui.interactions.get("moveBandits.moveBandits").submit()).accepted,
     true,
   );
-  assert.equal(ui.view!.banditsHexId, tileSpaceId("southWestClay", "cell"));
+  assert.equal(ui.view!.banditsHexId, district(ui, "southWestClay"));
   assert.equal(ui.view!.currentPhase, "main");
   ui.dispose();
 });

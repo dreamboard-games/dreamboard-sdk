@@ -1,3 +1,7 @@
+import {
+  testReferenceBasis,
+  testGameplayBasis,
+} from "../shared/__fixtures__/reference-basis.js";
 import { compileManifest } from "./manifest/compiler";
 import { RuntimeJsonSchema } from "../shared/runtime-json";
 import { createGame as createModel } from "../reducer";
@@ -141,6 +145,7 @@ function createGame({
             });
             tx.emit(
               gameEvent.systemAction({
+                audience: { kind: "public" as const },
                 procedureId: "resolved",
                 title: "Resolved",
               }),
@@ -214,6 +219,7 @@ function createCardPassGame(options?: {
 
 function submitInput(playerId: string, choice: "left" | "right") {
   return {
+    basis: testGameplayBasis(playerId),
     kind: "interaction" as const,
     interactionId: "submit",
     playerId,
@@ -223,6 +229,7 @@ function submitInput(playerId: string, choice: "left" | "right") {
 
 function submitCardsInput(playerId: string, cardIds: readonly string[]) {
   return {
+    basis: testGameplayBasis(playerId),
     kind: "interaction" as const,
     interactionId: "submit",
     playerId,
@@ -244,8 +251,10 @@ describe("simultaneousPlayer phases", () => {
     ).state;
     const submit = (state: typeof initial, playerId: string, choice: string) =>
       bundle.dispatch({
+        referenceBasis: testReferenceBasis,
         state,
         input: {
+          basis: testGameplayBasis(playerId),
           kind: "interaction",
           playerId,
           interactionId: "submit",
@@ -323,6 +332,7 @@ describe("simultaneousPlayer phases", () => {
 
     expect(
       bundle.project({
+        referenceBasis: testReferenceBasis,
         state,
         playerIds: ["player-1"],
       }).schedulerFlow,
@@ -344,6 +354,7 @@ describe("simultaneousPlayer phases", () => {
     ).state;
 
     const initialProjection = bundle.project({
+      referenceBasis: testReferenceBasis,
       state: initial,
       playerIds: ["player-1", "player-2", "player-3"],
     });
@@ -365,6 +376,7 @@ describe("simultaneousPlayer phases", () => {
     ).toContain("submit");
 
     const outsiderValidation = await bundle.validateInput({
+      referenceBasis: testReferenceBasis,
       state: initial,
       input: submitInput("player-3", "left"),
     });
@@ -374,6 +386,7 @@ describe("simultaneousPlayer phases", () => {
     });
 
     const first = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: initial,
       input: submitInput("player-1", "left"),
     });
@@ -382,6 +395,7 @@ describe("simultaneousPlayer phases", () => {
     expect(first.state.domain.publicState).toEqual({ resolved: [] });
 
     const afterFirstProjection = bundle.project({
+      referenceBasis: testReferenceBasis,
       state: first.state,
       playerIds: ["player-1", "player-2"],
     });
@@ -413,6 +427,7 @@ describe("simultaneousPlayer phases", () => {
     ).toContain("submit");
 
     const duplicate = await bundle.validateInput({
+      referenceBasis: testReferenceBasis,
       state: first.state,
       input: submitInput("player-1", "right"),
     });
@@ -422,6 +437,7 @@ describe("simultaneousPlayer phases", () => {
     });
 
     const second = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: first.state,
       input: submitInput("player-2", "right"),
     });
@@ -448,6 +464,7 @@ describe("simultaneousPlayer phases", () => {
     ).state;
 
     const first = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: initial,
       input: submitInput("player-1", "left"),
     });
@@ -455,6 +472,7 @@ describe("simultaneousPlayer phases", () => {
     if (first.kind !== "accept") return;
 
     const replacement = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: first.state,
       input: submitInput("player-1", "right"),
     });
@@ -462,6 +480,7 @@ describe("simultaneousPlayer phases", () => {
     if (replacement.kind !== "accept") return;
 
     const resolved = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: replacement.state,
       input: submitInput("player-2", "left"),
     });
@@ -485,6 +504,7 @@ describe("simultaneousPlayer phases", () => {
     ).state;
 
     const projection = bundle.project({
+      referenceBasis: testReferenceBasis,
       state: initial,
       playerIds: ["player-1"],
     });
@@ -514,6 +534,7 @@ describe("simultaneousPlayer phases", () => {
 
     await expect(
       bundle.validateInput({
+        referenceBasis: testReferenceBasis,
         state: initial,
         input: submitCardsInput("player-1", ["card-1", "card-2"]),
       }),
@@ -523,6 +544,7 @@ describe("simultaneousPlayer phases", () => {
     });
     await expect(
       bundle.validateInput({
+        referenceBasis: testReferenceBasis,
         state: initial,
         input: submitCardsInput("player-1", ["card-1", "card-1", "card-2"]),
       }),
@@ -532,15 +554,17 @@ describe("simultaneousPlayer phases", () => {
     });
     await expect(
       bundle.validateInput({
+        referenceBasis: testReferenceBasis,
         state: initial,
         input: submitCardsInput("player-1", ["card-1", "card-2", "card-4"]),
       }),
     ).resolves.toMatchObject({
       valid: false,
-      errorCode: "CARD_TARGET_NOT_ELIGIBLE",
+      errorCode: "COMPONENT_TARGET_NOT_ELIGIBLE",
     });
 
     const first = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: initial,
       input: submitCardsInput("player-1", ["card-1", "card-2", "card-3"]),
     });
@@ -549,6 +573,7 @@ describe("simultaneousPlayer phases", () => {
     expect(first.state.domain.publicState).toEqual({ resolved: [] });
 
     const second = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: first.state,
       input: submitCardsInput("player-2", ["card-4", "card-5", "card-6"]),
     });

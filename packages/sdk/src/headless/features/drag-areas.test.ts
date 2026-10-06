@@ -55,6 +55,7 @@ function setup() {
       zones: {
         hand: {
           alice: {
+            tiles: [],
             cardIds: ["red", "blue", "green"],
             cardViewsById: {
               red: { id: "red", cardType: "ranked", properties: {} },

@@ -1,3 +1,4 @@
+import { isHiddenCardId as isHidden } from "../../shared/domain/cards.js";
 import type { CoreInstance, IdOf, SeatCardId, ZoneHostId } from "../model.js";
 import type { SourceSnapshot } from "../sources/types.js";
 
@@ -36,7 +37,6 @@ const flatten = (zones: NestedZones): Zones =>
     ),
   );
 
-const isHidden = (cardId: string) => cardId.startsWith("hidden:");
 const hiddenCount = (zones: Zones, zone: string) =>
   zones[zone]?.cardIds.filter(isHidden).length ?? 0;
 
@@ -185,11 +185,15 @@ export function originsFeature<G>(game: CoreInstance<G>) {
       return;
     // Game-binding boundary: card, zone and player ids come from this instance's frames.
     origins =
-      frame && next && next.me === frame.me && nextSource === source
+      frame &&
+      next &&
+      next.me === frame.me &&
+      nextSource === source &&
+      next.version === frame.version + 1
         ? (findCardOrigins(
             frame.frame.zones,
             next.frame.zones,
-            next.version === frame.version + 1 ? moverOf(frame) : null,
+            moverOf(frame),
           ) as Origins)
         : new Map();
     frame = next;

@@ -149,7 +149,7 @@ export function createReducerBundle<
         events: wireEvents(result.events),
       };
     },
-    async dispatch({ state, input: rawInput }) {
+    async dispatch({ state, input: rawInput, referenceBasis }) {
       const input = parseInput(rawInput);
       if (!codec.isStatePlayer(state, input.playerId))
         return {
@@ -166,7 +166,7 @@ export function createReducerBundle<
         interactionId: input.interactionId,
         phase: String(combinedState.flow.currentPhase),
       });
-      const result = executor.dispatch(combinedState, input);
+      const result = executor.dispatch(combinedState, input, referenceBasis);
       if (result.type === "reject") {
         scope.diagnostics.event({
           type: "submitRejected",
@@ -194,12 +194,18 @@ export function createReducerBundle<
         codec.serializeState(scope.toSessionState(next)),
       );
     },
-    project({ state, playerIds }) {
+    project({ state, playerIds, referenceBasis }) {
       const perspectives = codec.parseStatePerspectives(state, playerIds);
       // eslint-disable-next-line no-restricted-syntax -- This game-bound projector assembles the seat bundle from parsed session and player IDs; the wire facade erases its generic view type.
       return projection.project({
-        state: parseState(state),
+        state: scope.toSessionState(
+          executor.reconcilePending(
+            scope.toCombinedState(parseState(state)),
+            referenceBasis,
+          ),
+        ),
         playerIds: perspectives,
+        referenceBasis,
       }) as unknown as Wire.SeatProjectionBundle;
     },
   };

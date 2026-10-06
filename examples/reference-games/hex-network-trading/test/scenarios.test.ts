@@ -1050,10 +1050,13 @@ test("Bandits suppress production and multiple adjacent camps each produce", asy
     at: { segment: "given", completed: 117 },
   });
   assert.equal(suppressed.state().publicState.lastRoll?.total, 5);
-  assert.equal(
-    suppressed.view({ seat: 0 }).banditsHexId,
-    tileSpaceId("northForest", "cell"),
-  );
+  assert.deepEqual(suppressed.state().table.componentLocations.bandits, {
+    type: "OnSpace",
+    boardId: "frontier",
+    spaceId: tileSpaceId("northForest", "cell"),
+    position: 0,
+  });
+  assert.match(suppressed.view({ seat: 0 }).banditsHexId!, /^space-ref:/);
   assert.deepEqual(suppressed.state().publicState.lastProduction, []);
 
   const twoCamps = await replayScenario({
@@ -1338,6 +1341,7 @@ test("Bandits public events omit the privately stolen resource", async () => {
   assert.deepEqual(state.runtime.events, [
     {
       kind: "systemAction",
+      audience: { kind: "public" },
       procedureId: "stormtrail-bandits",
       title: "Bandits moved",
       summary: "player-1 stole one hidden supply from player-2.",

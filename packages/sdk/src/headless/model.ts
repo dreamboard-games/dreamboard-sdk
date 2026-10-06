@@ -196,8 +196,57 @@ export type ZoneHostId<G, K extends IdOf<G, "zoneId"> = IdOf<G, "zoneId">> = [
       : never
     : never;
 
+type SeatCell<Cell> = Cell extends {
+  readonly id: string;
+  readonly tileId: string;
+}
+  ? Omit<Cell, "id" | "tileId"> & {
+      readonly id: import("../shared/domain/seat-reference.js").SeatSpaceRef;
+      readonly tileRef: import("../shared/domain/seat-reference.js").SeatTileRef;
+    }
+  : Cell;
+type SeatRelation<Relation> = Relation extends {
+  readonly fromSpaceId: string;
+  readonly toSpaceId: string;
+}
+  ? Omit<Relation, "fromSpaceId" | "toSpaceId"> & {
+      readonly fromSpaceId: import("../shared/domain/seat-reference.js").SeatSpaceRef;
+      readonly toSpaceId: import("../shared/domain/seat-reference.js").SeatSpaceRef;
+    }
+  : Relation;
+type SeatElement<Element> = Element extends {
+  readonly spaceIds: readonly string[];
+}
+  ? Omit<Element, "spaceIds"> & {
+      readonly spaceIds: readonly import("../shared/domain/seat-reference.js").SeatSpaceRef[];
+    }
+  : Element;
+type SeatTopology<Topology> = Topology extends {
+  readonly layout: "hex" | "square";
+  readonly spaces: infer Spaces;
+  readonly relations: readonly (infer Relation)[];
+  readonly edges: readonly (infer Edge)[];
+  readonly vertices: readonly (infer Vertex)[];
+}
+  ? Omit<Topology, "spaces" | "relations" | "edges" | "vertices"> & {
+      readonly spaces: Readonly<
+        Record<
+          import("../shared/domain/seat-reference.js").SeatSpaceRef,
+          SeatCell<Spaces[keyof Spaces]>
+        >
+      >;
+      readonly tiles: Extract<
+        import("../shared/seat-topology-schema.js").SeatBoardTopology,
+        { readonly layout: "hex" | "square" }
+      >["tiles"];
+      readonly relations: readonly SeatRelation<Relation>[];
+      readonly edges: readonly SeatElement<Edge>[];
+      readonly vertices: readonly SeatElement<Vertex>[];
+    }
+  : Topology;
+
 export type BoardDataOf<G, K extends string> = [TableOfGame<G>] extends [never]
-  ? import("../shared/board-topology.js").BoardTopology
+  ? import("../shared/seat-topology-schema.js").SeatBoardTopology
   : G extends {
         contract: {
           manifest: infer Definitions extends
@@ -206,10 +255,12 @@ export type BoardDataOf<G, K extends string> = [TableOfGame<G>] extends [never]
       }
     ? TableOfGame<G> extends { boards: infer Boards }
       ? K extends Extract<keyof Boards, string>
-        ? import("../reducer/model/topology.js").BoardTopologyOf<
-            TableOfGame<G>,
-            Definitions,
-            K
+        ? SeatTopology<
+            import("../reducer/model/topology.js").BoardTopologyOf<
+              TableOfGame<G>,
+              Definitions,
+              K
+            >
           >
         : never
       : never

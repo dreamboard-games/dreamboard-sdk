@@ -1,3 +1,7 @@
+import {
+  testReferenceBasis,
+  testGameplayBasis,
+} from "../shared/__fixtures__/reference-basis.js";
 import { compileManifest } from "./manifest/compiler";
 import { RuntimeJsonSchema } from "../shared/runtime-json";
 import { getPlayerResourceAmount } from "./table/resource-ops";
@@ -110,6 +114,7 @@ function getAvailableInteractions(
   playerId: string,
 ) {
   const projection = bundle.project({
+    referenceBasis: testReferenceBasis,
     state,
     playerIds: [playerId],
   });
@@ -513,8 +518,10 @@ describe("trusted interaction decision pipeline", () => {
       })
     ).state;
     const result = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state,
       input: {
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         playerId: "player-1",
         interactionId: "chooseCard",
@@ -536,10 +543,12 @@ describe("trusted interaction decision pipeline", () => {
       })
     ).state;
     const oneSeatProjection = bundle.project({
+      referenceBasis: testReferenceBasis,
       state,
       playerIds: ["player-1"],
     });
     const shiftedSeatProjection = bundle.project({
+      referenceBasis: testReferenceBasis,
       state,
       playerIds: ["player-2", "player-1"],
     });
@@ -621,8 +630,10 @@ describe("trusted interaction decision pipeline", () => {
     });
     await expect(
       bundle.validateInput({
+        referenceBasis: testReferenceBasis,
         state,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "stageBlocked",
@@ -636,8 +647,10 @@ describe("trusted interaction decision pipeline", () => {
     });
     await expect(
       bundle.validateInput({
+        referenceBasis: testReferenceBasis,
         state,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "stepBlocked",
@@ -696,6 +709,7 @@ describe("trusted interaction decision pipeline", () => {
       table.visibility[id] = { faceUp: false };
     state.domain.table = RuntimeJsonSchema.parse(table);
     const hidden = bundle.project({
+      referenceBasis: testReferenceBasis,
       state,
       playerIds: ["player-1", "player-2"],
     });
@@ -703,8 +717,8 @@ describe("trusted interaction decision pipeline", () => {
       const zone = hidden.seats[seat].zones?.playZone["player-1"];
       expect(zone).toMatchObject({
         cardIds: [
-          'hidden:["playZone","player-1",0]',
-          'hidden:["playZone","player-1",1]',
+          expect.stringMatching(/^card-ref:sha256:/),
+          expect.stringMatching(/^card-ref:sha256:/),
         ],
         cardViewsById: {},
         cardBacksById: {},
@@ -712,11 +726,11 @@ describe("trusted interaction decision pipeline", () => {
       // Descriptors name hidden cards by position too.
       const [play] = hydrateCardRefs(
         hidden,
-        zone?.playableByCardId['hidden:["playZone","player-1",0]'],
+        zone?.playableByCardId[zone.cardIds[0]],
       );
       if (seat === "player-1") {
         expect(play?.inputs[0]?.domain).toMatchObject({
-          eligibleTargets: ['hidden:["playZone","player-1",0]'],
+          eligibleTargets: [zone?.cardIds[0]],
         });
       } else {
         expect(play).toBeUndefined();
@@ -730,6 +744,7 @@ describe("trusted interaction decision pipeline", () => {
     };
     state.domain.table = RuntimeJsonSchema.parse(table);
     const visible = bundle.project({
+      referenceBasis: testReferenceBasis,
       state,
       playerIds: ["player-1", "player-2"],
     });
@@ -738,7 +753,7 @@ describe("trusted interaction decision pipeline", () => {
     ).toEqual(["card-a", "card-b"]);
     expect(
       visible.seats["player-2"].zones?.playZone["player-1"].cardIds,
-    ).toEqual(['hidden:["playZone","player-1",0]', "card-b"]);
+    ).toEqual([expect.stringMatching(/^card-ref:sha256:/), "card-b"]);
     expect(
       visible.seats["player-2"].zones?.playZone["player-1"].cardViewsById,
     ).not.toHaveProperty("card-a");
@@ -753,6 +768,7 @@ describe("trusted interaction decision pipeline", () => {
       })
     ).state;
     const projection = bundle.project({
+      referenceBasis: testReferenceBasis,
       state,
       playerIds: ["player-1"],
     });
@@ -781,8 +797,10 @@ describe("trusted interaction decision pipeline", () => {
     });
     await expect(
       bundle.validateInput({
+        referenceBasis: testReferenceBasis,
         state,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "answerPrompt",
@@ -822,8 +840,10 @@ describe("trusted interaction decision pipeline", () => {
     });
     await expect(
       bundle.validateInput({
+        referenceBasis: testReferenceBasis,
         state,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "spendGold",
@@ -855,8 +875,10 @@ describe("trusted interaction decision pipeline", () => {
     });
     await expect(
       bundle.validateInput({
+        referenceBasis: testReferenceBasis,
         state,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "ruleGatedBid",
@@ -883,8 +905,10 @@ describe("trusted interaction decision pipeline", () => {
     });
     await expect(
       bundle.validateInput({
+        referenceBasis: testReferenceBasis,
         state: fundedState,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "ruleGatedBid",
@@ -907,8 +931,10 @@ describe("trusted interaction decision pipeline", () => {
     ).state;
     await expect(
       bundle.validateInput({
+        referenceBasis: testReferenceBasis,
         state,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "stringRuleBid",
@@ -931,6 +957,7 @@ describe("trusted interaction decision pipeline", () => {
     ).state;
     expect(
       bundle.explainInteraction({
+        referenceBasis: testReferenceBasis,
         state,
         playerId: "player-1",
         interactionId: "ruleGatedBid",
@@ -1001,6 +1028,7 @@ describe("trusted interaction decision pipeline", () => {
       })
     ).state;
     const projection = bundle.project({
+      referenceBasis: testReferenceBasis,
       state,
       playerIds: ["player-1"],
     });
@@ -1036,8 +1064,10 @@ describe("trusted interaction decision pipeline", () => {
     expect(playZone?.playableByCardId["card-b"]).toEqual([]);
     expect(
       await bundle.validateInput({
+        referenceBasis: testReferenceBasis,
         state,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "playCard",
@@ -1099,6 +1129,7 @@ describe("trusted interaction decision pipeline", () => {
       })
     ).state;
     const projection = bundle.project({
+      referenceBasis: testReferenceBasis,
       state,
       playerIds: ["player-1"],
     });
@@ -1391,8 +1422,10 @@ describe("trusted interaction decision pipeline", () => {
       })
     ).state;
     const first = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state,
       input: {
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         playerId: "player-1",
         interactionId: "playWithMode",
@@ -1403,8 +1436,10 @@ describe("trusted interaction decision pipeline", () => {
     if (first.kind !== "accept") return;
     await expect(
       bundle.validateInput({
+        referenceBasis: testReferenceBasis,
         state: first.state,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "playWithMode",
@@ -1414,6 +1449,7 @@ describe("trusted interaction decision pipeline", () => {
     ).resolves.toMatchObject({ valid: true });
     expect(
       bundle.enumerateInteractionParams({
+        referenceBasis: testReferenceBasis,
         state: first.state,
         playerId: "player-1",
         interactionId: "playWithMode",
@@ -1427,8 +1463,10 @@ describe("trusted interaction decision pipeline", () => {
       },
     });
     const disabled = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state,
       input: {
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         playerId: "player-1",
         interactionId: "playWithMode",
@@ -1439,8 +1477,10 @@ describe("trusted interaction decision pipeline", () => {
       throw new Error("first step must not enumerate future domains");
     await expect(
       bundle.validateInput({
+        referenceBasis: testReferenceBasis,
         state: disabled.state,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "playWithMode",
@@ -1497,6 +1537,7 @@ describe("trusted interaction decision pipeline", () => {
       })
     ).state;
     const projection = bundle.project({
+      referenceBasis: testReferenceBasis,
       state,
       playerIds: ["player-1"],
     });
@@ -1570,6 +1611,7 @@ describe("trusted interaction decision pipeline", () => {
       })
     ).state;
     const projection = bundle.project({
+      referenceBasis: testReferenceBasis,
       state,
       playerIds: ["player-1"],
     });
@@ -1587,8 +1629,10 @@ describe("trusted interaction decision pipeline", () => {
       },
     ]);
     const submitted = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state,
       input: {
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         interactionId: "submit",
         playerId: "player-1",
@@ -1598,6 +1642,7 @@ describe("trusted interaction decision pipeline", () => {
     expect(submitted.kind).toBe("accept");
     if (submitted.kind !== "accept") return;
     const afterSubmit = bundle.project({
+      referenceBasis: testReferenceBasis,
       state: submitted.state,
       playerIds: ["player-1", "player-2"],
     });
@@ -1628,6 +1673,7 @@ describe("trusted interaction decision pipeline", () => {
       })
     ).state;
     const projection = bundle.project({
+      referenceBasis: testReferenceBasis,
       state,
       playerIds: ["player-1"],
     });
@@ -1708,6 +1754,7 @@ describe("trusted interaction decision pipeline", () => {
       })
     ).state;
     const projection = bundle.project({
+      referenceBasis: testReferenceBasis,
       state,
       playerIds: ["player-1"],
     });
@@ -1726,8 +1773,10 @@ describe("trusted interaction decision pipeline", () => {
     ).toEqual([]);
     await expect(
       bundle.validateInput({
+        referenceBasis: testReferenceBasis,
         state,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "castSpell",
@@ -1856,8 +1905,10 @@ describe("trusted interaction decision pipeline", () => {
     });
     await expect(
       bundle.validateInput({
+        referenceBasis: testReferenceBasis,
         state,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "chooseMode",
@@ -1982,6 +2033,7 @@ describe("trusted interaction decision pipeline", () => {
     ).toMatchObject({ availability: { status: "available" } });
     expect(
       bundle.resolveInteractionActionability({
+        referenceBasis: testReferenceBasis,
         state,
         playerId: "player-1",
         interactionId: "noLegalInput",
@@ -1993,6 +2045,7 @@ describe("trusted interaction decision pipeline", () => {
     });
     expect(
       bundle.resolveInteractionActionability({
+        referenceBasis: testReferenceBasis,
         state,
         playerId: "player-1",
         interactionId: "ruleRejectedInput",
@@ -2007,8 +2060,10 @@ describe("trusted interaction decision pipeline", () => {
     });
     expect(
       await bundle.validateInput({
+        referenceBasis: testReferenceBasis,
         state,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "ruleRejectedInput",
@@ -2018,6 +2073,7 @@ describe("trusted interaction decision pipeline", () => {
     ).toMatchObject({ valid: false, errorCode: "TASK_REJECTED" });
     expect(
       bundle.enumerateInteractionParams({
+        referenceBasis: testReferenceBasis,
         state,
         playerId: "player-1",
         interactionId: "ruleRejectedInput",
@@ -2031,6 +2087,7 @@ describe("trusted interaction decision pipeline", () => {
     });
     expect(
       bundle.enumerateInteractionParams({
+        referenceBasis: testReferenceBasis,
         state,
         playerId: "player-1",
         interactionId: "costFilteredInput",
@@ -2047,6 +2104,7 @@ describe("trusted interaction decision pipeline", () => {
     });
     expect(
       bundle.enumerateInteractionParams({
+        referenceBasis: testReferenceBasis,
         state,
         playerId: "player-1",
         interactionId: "opaqueInput",

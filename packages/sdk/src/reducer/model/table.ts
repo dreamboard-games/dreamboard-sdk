@@ -62,6 +62,7 @@ export type RuntimeResourceMap = Record<string, RuntimeRecord>;
 /** Authoritative board state contains no topology or definition metadata. */
 export type RuntimeBoardInstance = {
   baseId: string;
+  visibility: "public" | "ownerOnly" | "hidden";
   relations: {
     id?: string | null;
     typeId: string;
@@ -107,6 +108,7 @@ export type RuntimeDieData = {
 };
 /** Geometry remains in public definitions; instances own only mutable state. */
 export type RuntimeTileData = {
+  disclosure: import("../../shared/domain/tile-disclosure.js").TileDisclosure;
   componentType: "tile";
   id: string;
   tileTypeId: string;

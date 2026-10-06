@@ -5,6 +5,12 @@ describe("TrustedRuntimeInput", () => {
   test("preserves narrowed player ids for interaction inputs", () => {
     const input: TrustedRuntimeInput<"p1" | "p2"> = {
       kind: "interaction",
+      basis: {
+        sessionId: "authority",
+        version: 1,
+        actionSetVersion: "actions",
+        perspectivePlayerId: "p1",
+      },
       playerId: "p1",
       interactionId: "takeAction",
       params: {},
@@ -16,6 +22,12 @@ describe("TrustedRuntimeInput", () => {
   test("rejects interaction inputs outside the player union at compile time", () => {
     const input = {
       kind: "interaction",
+      basis: {
+        sessionId: "authority",
+        version: 1,
+        actionSetVersion: "actions",
+        perspectivePlayerId: "p1",
+      },
       // @ts-expect-error playerId must stay narrowed to the trusted player union.
       playerId: "p3",
       interactionId: "takeAction",

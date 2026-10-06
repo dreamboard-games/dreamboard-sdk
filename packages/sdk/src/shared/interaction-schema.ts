@@ -1,3 +1,5 @@
+import { ProjectedTileSchema } from "./seat-topology-schema.js";
+import { SeatTileRefSchema } from "./domain/seat-reference.js";
 import { ViewCardSchema } from "./domain/cards.js";
 import * as z from "zod";
 import { BoardSpaceTargetSchema } from "./board-target.js";
@@ -42,11 +44,20 @@ export const InputDomainSchema = z.discriminatedUnion("type", [
     eligibleTargets: z.array(z.string()),
     ...selection,
   }),
+  z.strictObject({
+    type: z.literal("tileTarget"),
+    projection: z.literal("resolved"),
+    targetKind: z.literal("tile"),
+    zoneIds: z.array(z.string()),
+    boardIds: z.array(z.string()),
+    eligibleTargets: z.array(SeatTileRefSchema),
+    ...selection,
+  }),
   z.discriminatedUnion("valueKind", [
     z.strictObject({
       type: z.literal("boardTarget"),
       projection: z.literal("resolved"),
-      targetKind: z.enum(["edge", "vertex", "space", "tile"]),
+      targetKind: z.enum(["edge", "vertex", "space"]),
       boardId: z.string(),
       valueKind: z.literal("board-id"),
       eligibleTargets: z.array(z.string()),
@@ -105,7 +116,7 @@ export const InteractionInputDescriptorSchema = z
       "form",
       "board-vertex",
       "board-edge",
-      "board-tile",
+      "tile",
       "board-space",
       "card",
       "rng",
@@ -169,17 +180,20 @@ export const InteractionDescriptorSchema = InteractionBaseSchema.extend({
 }).strict();
 
 export const ZoneInteractionRefsSchema = z.strictObject({
+  tiles: z.array(ProjectedTileSchema),
   cardIds: z.array(z.string()),
   cardViewsById: z.record(z.string(), ViewCardSchema),
   cardBacksById: z.record(z.string(), z.string()),
   playableByCardId: z.record(z.string(), z.array(z.string())),
 });
 
-type DeepReadonly<T> = T extends readonly (infer Item)[]
-  ? readonly DeepReadonly<Item>[]
-  : T extends object
-    ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
-    : T;
+type DeepReadonly<T> = T extends string | number | boolean | null | undefined
+  ? T
+  : T extends readonly (infer Item)[]
+    ? readonly DeepReadonly<Item>[]
+    : T extends object
+      ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
+      : T;
 export type InputDomain = DeepReadonly<z.infer<typeof InputDomainSchema>>;
 export type InputSelection = DeepReadonly<z.infer<typeof InputSelectionSchema>>;
 export type InteractionCommitPolicy = z.infer<

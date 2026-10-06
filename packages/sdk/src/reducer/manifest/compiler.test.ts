@@ -1,3 +1,4 @@
+import { testReferenceBasis } from "../../shared/__fixtures__/reference-basis.js";
 import { deriveBoardTopology } from "../../shared/board-topology.js";
 import {
   boardEdgeId,
@@ -608,6 +609,7 @@ describe("active player records", () => {
     expect(codec.serializeState(restored)).toEqual(initialized);
     expect(() =>
       bundle.project({
+        referenceBasis: testReferenceBasis,
         state: ReducerSessionStateSchema.parse(
           JSON.parse(JSON.stringify(initialized)),
         ),
@@ -668,7 +670,11 @@ describe("active player records", () => {
       frontImage: "assets/cards/ace.webp",
       backImage: "assets/cards/back.webp",
     });
-    const { seats } = bundle.project({ state, playerIds });
+    const { seats } = bundle.project({
+      referenceBasis: testReferenceBasis,
+      state,
+      playerIds,
+    });
     expect(seats.alpha?.resources).toEqual({
       alpha: { points: 0, secret: 0 },
       zulu: { points: 0 },

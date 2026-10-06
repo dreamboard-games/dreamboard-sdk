@@ -1,3 +1,7 @@
+import {
+  testReferenceBasis,
+  testGameplayBasis,
+} from "../shared/__fixtures__/reference-basis.js";
 import { asPlayerId } from "./per-player";
 import { RuntimeJsonSchema } from "../shared/runtime-json";
 const playerOne = asPlayerId("player-1");
@@ -15,6 +19,7 @@ const minimalManifest = {
   ],
 } as const;
 const event = (title: string) => ({
+  audience: { kind: "public" as const },
   kind: "systemAction" as const,
   procedureId: "test",
   title,
@@ -130,8 +135,10 @@ test("public batches replace on every accepted operation and survive JSON checkp
     params: Record<string, string> = {},
   ) => {
     const result = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state,
       input: {
+        basis: testGameplayBasis(playerOne),
         kind: "interaction",
         playerId: playerOne,
         interactionId,
@@ -151,8 +158,10 @@ test("public batches replace on every accepted operation and survive JSON checkp
   await dispatch("publish");
   const checkpoint = JSON.stringify(state);
   const rejected = await bundle.dispatch({
+    referenceBasis: testReferenceBasis,
     state,
     input: {
+      basis: testGameplayBasis(playerOne),
       kind: "interaction",
       playerId: playerOne,
       interactionId: "reject",
@@ -164,8 +173,13 @@ test("public batches replace on every accepted operation and survive JSON checkp
   await dispatch("quiet");
   expect(state.runtime.events).toEqual([]);
   state = ReducerSessionStateSchema.parse(JSON.parse(checkpoint));
-  const projection = bundle.project({ state, playerIds: [playerOne] });
+  const projection = bundle.project({
+    referenceBasis: { ...testReferenceBasis, version: 10 },
+    state,
+    playerIds: [playerOne],
+  });
   const frame = materializePluginGameplayFrame({
+    sessionId: testReferenceBasis.sessionId,
     dynamicProjection: projection,
     currentPhase: "play",
     activePlayers: [playerOne],
@@ -173,15 +187,19 @@ test("public batches replace on every accepted operation and survive JSON checkp
     version: 10,
     actionSetVersion: "restored",
   });
-  expect(frame.events).toEqual([event("Published")]);
+  expect(frame.events).toEqual([
+    { kind: "systemAction", procedureId: "test", title: "Published" },
+  ]);
   expect(JSON.stringify(frame)).not.toMatch(
     /private-card|hidden-card|Rejected secret/,
   );
   await dispatch("choose", { first: "yes" });
   expect(state.runtime.events).toEqual([]);
   const other = await bundle.dispatch({
+    referenceBasis: testReferenceBasis,
     state,
     input: {
+      basis: testGameplayBasis(playerTwo),
       kind: "interaction",
       playerId: playerTwo,
       interactionId: "otherPublish",
@@ -197,8 +215,10 @@ test("public batches replace on every accepted operation and survive JSON checkp
   expect(other.state.runtime.events).toEqual([event("Other player published")]);
   state = other.state;
   const cancelled = await bundle.dispatch({
+    referenceBasis: testReferenceBasis,
     state,
     input: {
+      basis: testGameplayBasis(playerOne),
       kind: "interaction.cancel",
       playerId: playerOne,
       interactionId: "choose",
@@ -218,8 +238,10 @@ test("the canonical event limit applies to the full operation and restored batch
   const before = JSON.stringify(initial.state);
   await expect(
     bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: initial.state,
       input: {
+        basis: testGameplayBasis(playerOne),
         kind: "interaction",
         playerId: playerOne,
         interactionId: "overflow",
@@ -231,6 +253,10 @@ test("the canonical event limit applies to the full operation and restored batch
   const oversized = structuredClone(initial.state);
   oversized.runtime.events = Array.from({ length: 33 }, () => event("Invalid"));
   expect(() =>
-    bundle.project({ state: oversized, playerIds: [playerOne] }),
+    bundle.project({
+      referenceBasis: testReferenceBasis,
+      state: oversized,
+      playerIds: [playerOne],
+    }),
   ).toThrow();
 });

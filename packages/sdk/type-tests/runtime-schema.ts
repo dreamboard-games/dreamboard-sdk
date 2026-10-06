@@ -8,6 +8,12 @@ import type {
 const request: InitializeRequest = { table: {}, playerIds: [], rngSeed: null };
 const input: GameInput = {
   kind: "interaction",
+  basis: {
+    sessionId: "type-test",
+    version: 1,
+    perspectivePlayerId: "p",
+    actionSetVersion: "type-test",
+  },
   playerId: "p",
   interactionId: "play",
   params: [null, { nested: true }],

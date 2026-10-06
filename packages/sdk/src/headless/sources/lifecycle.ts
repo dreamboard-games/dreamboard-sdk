@@ -215,6 +215,10 @@ export function createSourceLifecycle(options: {
         sessionId: session.sessionId,
         playerId: parsed.basis.perspectivePlayerId,
       };
+      if (parsed.basis.sessionId !== context.sessionId) {
+        fail(new Error("Gameplay authority session changed."));
+        return;
+      }
       if (parsed.basis.perspectivePlayerId !== context.playerId) {
         fail(new Error("Gameplay perspective changed."));
         return;

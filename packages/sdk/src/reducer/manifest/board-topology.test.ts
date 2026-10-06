@@ -52,7 +52,9 @@ describe("definition-owned board topology", () => {
   it("stores only board identity and relations and freezes normalized definitions", () => {
     const compiled = compileManifest(source);
     const table = compiled.createInitialTable({ playerIds: ["seat"] });
-    expect(table.boards).toEqual({ map: { baseId: "map", relations: [] } });
+    expect(table.boards).toEqual({
+      map: { baseId: "map", visibility: "public", relations: [] },
+    });
     expect(compiled.boardDefinitions.map.fields).toEqual({ season: "summer" });
     const topology = deriveBoardTopology(table, compiled, "map");
     expect(topology.spaces[tileSpaceId("tile", "center")].fields).toEqual({
@@ -274,7 +276,7 @@ describe("definition-owned board topology", () => {
     };
     const restored = (relations: (typeof relation & { id?: string })[]) => ({
       ...table,
-      boards: { map: { baseId: "map", relations } },
+      boards: { map: { baseId: "map", visibility: "public", relations } },
     });
     const duplicate = restored([
       { ...relation, id: "link" },

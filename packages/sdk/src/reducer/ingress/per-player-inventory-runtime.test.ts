@@ -1,3 +1,7 @@
+import {
+  testReferenceBasis,
+  testGameplayBasis,
+} from "../../shared/__fixtures__/reference-basis.js";
 import { RuntimeJsonSchema } from "../../shared/runtime-json";
 import * as z from "zod";
 import { describe, expect, test } from "vitest";
@@ -118,8 +122,10 @@ describe("replicated inventory session admission", () => {
     expect(initial.pieces[id].ownerId).toBe(roster[0]);
     expect(initial.zones.supply[asPlayerId(roster[0])]).toContain(id);
     const transferred = await runtime.dispatch({
+      referenceBasis: testReferenceBasis,
       state,
       input: {
+        basis: testGameplayBasis(roster[0]),
         kind: "interaction",
         playerId: roster[0],
         interactionId: "transfer",

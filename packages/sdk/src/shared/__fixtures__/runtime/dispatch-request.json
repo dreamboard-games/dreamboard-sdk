@@ -40,6 +40,16 @@
     "kind": "interaction",
     "playerId": "player-1",
     "interactionId": "endTurn",
-    "params": {}
+    "params": {},
+    "basis": {
+      "sessionId": "fixture-session",
+      "version": 1,
+      "actionSetVersion": "fixture-actions",
+      "perspectivePlayerId": "player-1"
+    }
+  },
+  "referenceBasis": {
+    "sessionId": "fixture-session",
+    "version": 1
   }
 }

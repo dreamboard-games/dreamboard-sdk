@@ -10,6 +10,7 @@ test("board clones preserve identity and isolate nested relation fields", () => 
     zones: [],
   }).createInitialTable({ playerIds: ["player-1"] });
   const board = {
+    visibility: "public",
     baseId: "board",
     relations: [
       {

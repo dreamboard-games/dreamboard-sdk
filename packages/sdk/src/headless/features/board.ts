@@ -1,3 +1,5 @@
+import type { SeatBoardTopology } from "../../shared/seat-topology-schema.js";
+type ProjectedBoardSpace = SeatBoardTopology["spaces"][string];
 import { createSquareBoardLayout } from "../../shared/square-board-layout.js";
 import {
   runtimeFeatures,
@@ -19,11 +21,7 @@ import type {
   TargetOptions,
   ActionProps,
 } from "../model.js";
-import type {
-  BoardSpace as ProjectedBoardSpace,
-  BoardEdge,
-  BoardVertex,
-} from "../../shared/board-topology.js";
+import type { BoardEdge, BoardVertex } from "../../shared/board-topology.js";
 import { requireLookup } from "../../shared/lookup.js";
 import { AmbiguousTargetError } from "../instance.js";
 import {
@@ -158,7 +156,6 @@ function createRuntimeBoardFeature(context: RuntimeFeatureContext) {
       kind: TargetKind,
       id: string,
     ) {
-      const inputKinds = kind === "space" ? ["space", "tile"] : [kind];
       return model.interactions.list().flatMap((interaction) =>
         interaction
           .getInputs()
@@ -166,7 +163,7 @@ function createRuntimeBoardFeature(context: RuntimeFeatureContext) {
             const domain = input.getDomain();
             return (
               domain.type === "boardTarget" &&
-              inputKinds.includes(String(domain.targetKind)) &&
+              domain.targetKind === kind &&
               (domain.valueKind === "board-space"
                 ? board.scope === "perPlayer" &&
                   domain.boardBaseId === board.baseId

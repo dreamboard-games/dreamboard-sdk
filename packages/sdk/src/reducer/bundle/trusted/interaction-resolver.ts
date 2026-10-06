@@ -1,4 +1,5 @@
 import type {
+  InputCollector,
   PhaseMapOf,
   ReducerGameContractLike,
   ReducerReject,
@@ -85,18 +86,15 @@ export function createInteractionResolver<
     return rejectResult(invalidValidation.errorCode, invalidValidation.message);
   }
 
-  /**
-   * The inputs of an interaction that name cards: its card inputs, or for
-   * steps, the card steps selected so far and the current one.
-   */
-  function cardInputKeys(
+  /** The selected prefix and current step share one collector evaluation. */
+  function inputCollectors(
     state: State,
     playerId: TrustedPlayerId<Contract>,
     interactionId: string,
-  ): ReadonlySet<string> {
+  ): Readonly<Record<string, InputCollector>> {
     const phaseName = state.flow.currentPhase as PhaseName;
     const interaction = scope.findInteractionInPhase(phaseName, interactionId);
-    if (!interaction) return new Set();
+    if (!interaction) return {};
     const pending = state.runtime.pending[playerId];
     const prefix = interaction.steps
       ? evaluateStepPrefix(
@@ -110,7 +108,7 @@ export function createInteractionResolver<
           scope.manifest,
         )
       : undefined;
-    const collectors = prefix
+    return prefix
       ? {
           ...prefix.collectors,
           ...(prefix.current
@@ -118,16 +116,37 @@ export function createInteractionResolver<
             : {}),
         }
       : interactionInputsOf(interaction);
+  }
+
+  function inputKeys(
+    kind: "card" | "tile",
+    state: State,
+    playerId: TrustedPlayerId<Contract>,
+    interactionId: string,
+  ): ReadonlySet<string> {
     return new Set(
-      Object.entries(collectors)
-        .filter(([, collector]) => collector.kind === "card")
+      Object.entries(inputCollectors(state, playerId, interactionId))
+        .filter(([, collector]) => collector.kind === kind)
         .map(([key]) => key),
     );
   }
+  const cardInputKeys = (
+    state: State,
+    playerId: TrustedPlayerId<Contract>,
+    interactionId: string,
+  ) => inputKeys("card", state, playerId, interactionId);
+  const tileInputKeys = (
+    state: State,
+    playerId: TrustedPlayerId<Contract>,
+    interactionId: string,
+  ) => inputKeys("tile", state, playerId, interactionId);
 
   return {
+    inputCollectors,
     cardInputKeys,
+    tileInputKeys,
     currentClientParamSchema: decisions.currentClientParamSchema,
+    currentAuthorParamSchema: decisions.currentAuthorParamSchema,
     collectFirstCardZoneId,
     enumerateInteractionParams: decisions.enumerateInteractionParams,
     explainInteraction: decisions.explainInteraction,

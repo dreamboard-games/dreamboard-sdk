@@ -12,7 +12,7 @@ boards declare static spaces. The SDK projects current topology into each seat's
 flat `boards` collection. The frame materializer exposes that collection as
 `frame.view.boards`; authored views cannot overwrite it.
 
-Runtime `table.boards[boardId]` contains only its authored `baseId` and session
+Runtime `table.boards[boardId]` contains its authored `baseId`, current `visibility` and session
 `relations`. Immutable board metadata and tile geometry live in compiled
 definitions. A tile's canonical component location owns its placement. Spaces,
 edges, vertices and adjacency are derived; checkpoints do not store geometry
@@ -214,10 +214,12 @@ session relations are distinct. Relations must name current board members.
 Their `typeId` is a game-defined string; it need not occur in initial relations.
 The board's `relationFieldsSchema` validates their fields.
 
-Private tile homes and destinations remain rejected in this layer. Generic
-component moves cannot remove a placed tile or move tiles onto a component
-space, edge or vertex. Dependency-aware tile transactions and private projection
-follow in subsequent layers. The headless zone facade continues to present cards.
+Tile location policy and instance disclosure determine what each seat receives.
+Declare a seed `disclosure` with a face audience and an independently public
+appearance when its face may be concealed. Private tiles remain authoritative;
+client tile references never contain inventory IDs. Generic component moves
+cannot move tiles onto a component space, edge or vertex. The headless zone
+facade continues to present cards; projected zone payloads also carry tiles.
 
 ## Field schemas
 
@@ -250,3 +252,17 @@ replicated inventory references require the actual session roster. Table validat
 resolves these against current inventory membership; successful identity decoding
 alone is not admission. Changing topology must supply a fresh session reference
 context rather than cache manifest-time ID enums as permanent membership.
+
+Trusted hosts supply `referenceBasis: { sessionId, version }` to bundle projection
+and dispatch. The session ID identifies one authority lifetime; advance the version
+after every accepted commit and restore. Keep this metadata outside reducer
+checkpoints. Submitted interaction and cancellation inputs carry the issued full
+frame basis, including the perspective seat and action-set version. Materialization
+rejects a projection whose reference basis differs from the frame basis.
+
+Worker contract 0.11.0 and plugin protocol 10 require rebuilt bundles and fresh
+sessions. Action-set, frame and command digest domains use version 6. There are
+no legacy readers. Authoritative events explicitly declare a public or seat
+audience; frame events contain only the selected seat's projected display data.
+Typed tile event details use authoritative IDs in reducer state and seat references
+in frames. Authored arbitrary text is deliberate publication to its audience.

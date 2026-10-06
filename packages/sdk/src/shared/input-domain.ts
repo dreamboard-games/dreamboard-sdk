@@ -52,6 +52,7 @@ export function inputDomainErrors(
         errors.push(ineligibleMessage(domain));
       return errors;
     }
+    case "tileTarget":
     case "cardTarget":
     case "boardTarget":
       return inputTargetInDomain(domain, value)
@@ -109,6 +110,7 @@ export function inputTargetInDomain(
       return domain.choices.some(
         (choice) => !choice.disabled && Object.is(choice.value, value),
       );
+    case "tileTarget":
     case "cardTarget":
       return (
         typeof value === "string" && domain.eligibleTargets.includes(value)
@@ -143,7 +145,9 @@ function cardinalityErrors(
 function ineligibleMessage(domain: InputDomainDescriptor): string {
   return domain.type === "choice" || domain.type === "choiceList"
     ? "Selected choice is not eligible."
-    : domain.type === "cardTarget" || domain.type === "boardTarget"
+    : domain.type === "cardTarget" ||
+        domain.type === "tileTarget" ||
+        domain.type === "boardTarget"
       ? "Selected target is not eligible."
       : "Value is outside the current input domain.";
 }

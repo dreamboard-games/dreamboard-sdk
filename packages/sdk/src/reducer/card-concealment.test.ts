@@ -1,3 +1,7 @@
+import {
+  testReferenceBasis,
+  testGameplayBasis,
+} from "../shared/__fixtures__/reference-basis.js";
 import { expect, test } from "vitest";
 import * as z from "zod";
 import { createGame } from "../reducer.js";
@@ -101,13 +105,13 @@ test("seats see hidden and face-down cards only by position and their backs", as
   try {
     const deck = () => instance.zones.get("deck", "table").getCards();
     expect(deck().map((card) => [card.id, card.hidden])).toEqual([
-      ['hidden:["deck","table",0]', true],
-      ['hidden:["deck","table",1]', true],
+      [expect.stringMatching(/^card-ref:sha256:/), true],
+      [expect.stringMatching(/^card-ref:sha256:/), true],
     ]);
     const [top] = deck();
     expect(top.hidden && top.backImage).toBe("assets/back.webp");
     expect(JSON.stringify(source.inspect().frame.zones)).not.toMatch(
-      /ace|king/,
+      /"(?:ace|king)"/,
     );
 
     // The seat picks the top card by position; it arrives face up.
@@ -130,10 +134,10 @@ test("seats see hidden and face-down cards only by position and their backs", as
     revealed.select({ interaction: "play.flip" });
     await expect
       .poll(() => instance.zones.get("table", "table").getCards()[0]?.id)
-      .toBe('hidden:["table","table",0]');
+      .toMatch(/^card-ref:sha256:/);
     source.switchSeat("player-2");
-    expect(instance.zones.get("table", "table").getCards()[0]?.id).toBe(
-      'hidden:["table","table",0]',
+    expect(instance.zones.get("table", "table").getCards()[0]?.id).toMatch(
+      /^card-ref:sha256:/,
     );
     source.switchSeat("player-1");
     instance.zones
@@ -155,8 +159,10 @@ test("a seat cannot name a card hidden from it by its id", async () => {
   const bundle = createReducerBundle(game);
   const reveal = (cardId: string) =>
     bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: source.checkpoint().state,
       input: {
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         playerId: "player-1",
         interactionId: "reveal",
@@ -165,9 +171,17 @@ test("a seat cannot name a card hidden from it by its id", async () => {
     });
   expect(await reveal("ace")).toMatchObject({
     kind: "reject",
-    errorCode: "CARD_TARGET_NOT_ELIGIBLE",
+    errorCode: "COMPONENT_TARGET_NOT_ELIGIBLE",
   });
-  expect(await reveal('hidden:["deck","table",1]')).toMatchObject({
+  expect(
+    await reveal(
+      bundle.project({
+        state: source.checkpoint().state,
+        playerIds: ["player-1"],
+        referenceBasis: testReferenceBasis,
+      }).seats["player-1"].zones!.deck.table.cardIds[1],
+    ),
+  ).toMatchObject({
     kind: "accept",
   });
   // Tests know the table and may still name the card itself.
@@ -187,8 +201,10 @@ test("only card inputs name cards by position", async () => {
   const bundle = createReducerBundle(game);
   const guess = (value: string) =>
     bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: source.checkpoint().state,
       input: {
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         playerId: "player-1",
         interactionId: "guess",
@@ -196,7 +212,7 @@ test("only card inputs name cards by position", async () => {
       },
     });
   expect(await guess("ace")).toMatchObject({ kind: "accept" });
-  expect(await guess('hidden:["deck","table",0]')).toMatchObject({
+  expect(await guess("card-ref:sha256:" + "0".repeat(64))).toMatchObject({
     kind: "reject",
   });
 
@@ -204,14 +220,14 @@ test("only card inputs name cards by position", async () => {
   await source.apply({
     actor: { seat: 0 },
     interactionId: "pick",
-    params: { cardId: 'hidden:["deck","table",1]' },
+    params: { cardId: "king" },
   });
   const pick = source
     .inspect()
     .frame.availableInteractions.find(
       (descriptor) => descriptor.interactionId === "pick",
     );
-  expect(pick?.step?.selected).toEqual({ cardId: 'hidden:["deck","table",1]' });
+  expect(pick?.step?.selected?.cardId).toMatch(/^card-ref:sha256:/);
   expect(
     await source.apply({
       actor: { seat: 0 },
@@ -347,7 +363,7 @@ test("attached cargo follows its host's current owner without granting card visi
       const transferred = source.checkpoint();
       const cargo = source.inspect().frame.zones.cargo.vessel;
       expect(cargo.cardIds).toEqual([
-        faceDown ? 'hidden:["cargo","vessel",0]' : "treasure",
+        faceDown ? expect.stringMatching(/^card-ref:sha256:/) : "treasure",
       ]);
       expect(Object.keys(cargo.cardViewsById)).toEqual(
         faceDown ? [] : ["treasure"],
@@ -376,11 +392,39 @@ test("attached cargo follows its host's current owner without granting card visi
       expect(source.inspect().frame.zones.cargo).toBeUndefined();
       source.switchSeat("player-2");
       expect(source.inspect().frame.zones.cargo.vessel.cardIds).toEqual(
-        cargo.cardIds,
+        faceDown ? [expect.stringMatching(/^card-ref:sha256:/)] : cargo.cardIds,
       );
+      if (faceDown)
+        expect(source.inspect().frame.zones.cargo.vessel.cardIds).not.toEqual(
+          cargo.cardIds,
+        );
     } finally {
       instance.dispose();
       source.dispose();
     }
   }
+});
+
+test("concealed detached cards and unknown cards cannot be targeted", async () => {
+  const { concealCards } = await import("./bundle/trusted/card-concealment.js");
+  const { createSeatDisclosure } =
+    await import("./bundle/trusted/tile-disclosure.js");
+  const { createInputTestState, inputDefinitions } =
+    await import("./input-test-fixtures.js");
+  const table = createInputTestState().table;
+  const cardId = "card-a";
+  table.componentLocations[cardId] = { type: "Detached" };
+  table.visibility[cardId] = { faceUp: false };
+  const disclosure = createSeatDisclosure(
+    table,
+    inputDefinitions,
+    "player-1",
+    testReferenceBasis,
+  );
+  const cards = concealCards(table, "player-1", disclosure);
+  expect(cards.isHidden(cardId)).toBe(true);
+  expect(cards.canTarget(cardId)).toBe(false);
+  expect(cards.tableCardId(cardId)).toBeNull();
+  expect(cards.canTarget("unknown-card")).toBe(false);
+  expect(cards.tableCardId("unknown-card")).toBeNull();
 });

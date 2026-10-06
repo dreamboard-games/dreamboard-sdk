@@ -1,4 +1,4 @@
-import { tileSpaceId } from "../shared/domain/tile-space.js";
+import { projectedSpaceRef } from "../shared/__fixtures__/reference-basis.js";
 import { expect, it } from "vitest";
 import hearts from "../../../../examples/reference-games/hearts/app/game.ts";
 import hex from "../../../../examples/reference-games/hex-network-trading/app/game.ts";
@@ -46,7 +46,9 @@ it("uses real Hex committed steps, restore, cancel and explicit null intent", as
   const key = "moveBandits.moveBandits" as const;
   const first = game.interactions.get(key);
   expect(first.getInputs().map((input) => input.key)).toEqual(["hexId"]);
-  first.getInput("hexId").setValue(tileSpaceId("northForest", "cell"));
+  first
+    .getInput("hexId")
+    .setValue(projectedSpaceRef(source.inspect(), "frontier", "northForest"));
   expect(await game.interactions.get(key).submit()).toEqual({
     accepted: true,
   });
@@ -58,7 +60,7 @@ it("uses real Hex committed steps, restore, cancel and explicit null intent", as
       .map((input) => input.key),
   ).toEqual(["targetPlayerId"]);
   expect(game.interactions.get(key).getStep()?.selected).toEqual({
-    hexId: tileSpaceId("northForest", "cell"),
+    hexId: projectedSpaceRef(source.inspect(), "frontier", "northForest"),
   });
   expect(game.state.drafts[key]).toBeUndefined();
   expect(await game.interactions.get(key).cancel()).toEqual({
@@ -73,7 +75,7 @@ it("uses real Hex committed steps, restore, cancel and explicit null intent", as
   game.interactions
     .get(key)
     .getInput("hexId")
-    .setValue(tileSpaceId("southWestClay", "cell"));
+    .setValue(projectedSpaceRef(source.inspect(), "frontier", "southWestClay"));
   expect(await game.interactions.get(key).submit()).toEqual({
     accepted: true,
   });

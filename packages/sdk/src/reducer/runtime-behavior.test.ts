@@ -1,3 +1,7 @@
+import {
+  testReferenceBasis,
+  testGameplayBasis,
+} from "../shared/__fixtures__/reference-basis.js";
 import { compileManifest } from "./manifest/compiler";
 import { RuntimeJsonSchema } from "../shared/runtime-json";
 import { asPlayerId } from "./per-player";
@@ -138,12 +142,17 @@ describe("direct reducer lifecycle and seeded operations", () => {
     ).state;
     const before = structuredClone(initial);
     const input = {
+      basis: testGameplayBasis("player-1"),
       kind: "interaction" as const,
       playerId: "player-1",
       interactionId: "mix",
       params: {},
     };
-    const accepted = await bundle.dispatch({ state: initial, input });
+    const accepted = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
+      state: initial,
+      input,
+    });
     const freshBundle = createReducerTestingRuntime(game);
     const fresh = (
       await freshBundle.initialize({
@@ -153,7 +162,11 @@ describe("direct reducer lifecycle and seeded operations", () => {
       })
     ).state;
     expect(accepted).toEqual(
-      await freshBundle.dispatch({ state: fresh, input }),
+      await freshBundle.dispatch({
+        referenceBasis: testReferenceBasis,
+        state: fresh,
+        input,
+      }),
     );
     if (accepted.kind !== "accept")
       throw new Error("Expected mixed operations to accept");
@@ -214,10 +227,12 @@ describe("direct reducer lifecycle and seeded operations", () => {
         ],
       };
       const entered = gameEvent.systemAction({
+        audience: { kind: "public" as const },
         procedureId: "entered",
         title: "Entered phase",
       });
       const completed = gameEvent.systemAction({
+        audience: { kind: "public" as const },
         procedureId: "completed",
         title: "Completed initialization",
       });
@@ -263,8 +278,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
       const result =
         mode === "dispatch"
           ? await bundle.dispatch({
+              referenceBasis: testReferenceBasis,
               state: initialized.state,
               input: {
+                basis: testGameplayBasis("player-1"),
                 kind: "interaction",
                 playerId: "player-1",
                 interactionId: "complete",
@@ -327,7 +344,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
       "project",
       "reducerContractVersion",
     ]);
-    expect(warm.reducerContractVersion).toBe("0.10.0");
+    expect(warm.reducerContractVersion).toBe("0.11.0");
     const playerIds = ["player-1", "player-2"];
     const { state: initial } = await warm.initialize({
       table: createTable(),
@@ -336,30 +353,46 @@ describe("direct reducer lifecycle and seeded operations", () => {
     });
     const snapshot = structuredClone(initial);
     const input = {
+      basis: testGameplayBasis("player-1"),
       kind: "interaction" as const,
       playerId: "player-1",
       interactionId: "advance",
       params: {},
     };
-    const advanced = await warm.dispatch({ state: initial, input });
+    const advanced = await warm.dispatch({
+      referenceBasis: testReferenceBasis,
+      state: initial,
+      input,
+    });
     expect(advanced.kind).toBe("accept");
     if (advanced.kind !== "accept")
       throw new Error("Expected accepted fixture move");
-    warm.project({ state: advanced.state, playerIds });
+    warm.project({
+      referenceBasis: testReferenceBasis,
+      state: advanced.state,
+      playerIds,
+    });
     // Restore an older authoritative state after advancing and warming projections.
     const replayed = await warm.dispatch({
+      referenceBasis: testReferenceBasis,
       state: structuredClone(snapshot),
       input,
     });
     const fresh = createReducerBundle(game);
     expect(replayed).toEqual(
-      await fresh.dispatch({ state: structuredClone(snapshot), input }),
+      await fresh.dispatch({
+        referenceBasis: testReferenceBasis,
+        state: structuredClone(snapshot),
+        input,
+      }),
     );
     const { timing: warmTiming, ...warmProjection } = warm.project({
+      referenceBasis: testReferenceBasis,
       state: snapshot,
       playerIds,
     });
     const { timing: freshTiming, ...freshProjection } = fresh.project({
+      referenceBasis: testReferenceBasis,
       state: structuredClone(snapshot),
       playerIds,
     });
@@ -414,6 +447,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
                 });
                 tx.emit(
                   gameEvent.systemAction({
+                    audience: { kind: "public" as const },
                     procedureId: "count-advance",
                     title: "The count advanced",
                     details: [
@@ -440,17 +474,23 @@ describe("direct reducer lifecycle and seeded operations", () => {
       })
     ).state;
     const input = {
+      basis: testGameplayBasis("player-1"),
       kind: "interaction" as const,
       playerId: "player-1",
       interactionId: "advance",
       params: {},
     };
 
-    const reduced = await bundle.reduce({ state: initial, input });
+    const reduced = await bundle.reduce({
+      referenceBasis: testReferenceBasis,
+      state: initial,
+      input,
+    });
     expect(reduced).toMatchObject({
       kind: "accept",
       events: [
         {
+          audience: { kind: "public" as const },
           kind: "systemAction",
           procedureId: "count-advance",
           title: "The count advanced",
@@ -459,11 +499,16 @@ describe("direct reducer lifecycle and seeded operations", () => {
       ],
     });
 
-    const dispatched = await bundle.dispatch({ state: initial, input });
+    const dispatched = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
+      state: initial,
+      input,
+    });
     expect(dispatched).toMatchObject({
       kind: "accept",
       events: [
         {
+          audience: { kind: "public" as const },
           kind: "systemAction",
           procedureId: "count-advance",
           title: "The count advanced",
@@ -521,6 +566,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
     ).state;
 
     const projection = bundle.project({
+      referenceBasis: testReferenceBasis,
       state: session,
       playerIds: ["player-1"],
     });
@@ -592,6 +638,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
     ).state;
 
     const projection = bundle.project({
+      referenceBasis: testReferenceBasis,
       state: session,
       playerIds: ["player-1"],
       projectionMode: "actionsOnly",
@@ -660,6 +707,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
     ).state;
 
     const projection = bundle.project({
+      referenceBasis: testReferenceBasis,
       state: session,
       playerIds: ["player-1", "player-2"],
     });
@@ -675,11 +723,19 @@ describe("direct reducer lifecycle and seeded operations", () => {
       counter: 3,
       secret: "private:player-2",
     });
-    const spectator = bundle.project({ state: session, playerIds: [] });
+    const spectator = bundle.project({
+      referenceBasis: testReferenceBasis,
+      state: session,
+      playerIds: [],
+    });
     expect(spectator).not.toHaveProperty("sharedView");
     expect(spectator.seats).toEqual({});
     expect(viewedPlayers).toEqual(["player-1", "player-2"]);
-    const seat = bundle.project({ state: session, playerIds: ["player-2"] });
+    const seat = bundle.project({
+      referenceBasis: testReferenceBasis,
+      state: session,
+      playerIds: ["player-2"],
+    });
     expect(Object.keys(seat.seats)).toEqual(["player-2"]);
     expect(JSON.stringify(seat)).not.toContain("private:player-1");
   });
@@ -746,6 +802,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
     ).state;
 
     const projection = bundle.project({
+      referenceBasis: testReferenceBasis,
       state: session,
       playerIds: ["player-1"],
     });
@@ -821,6 +878,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
     ).state;
 
     bundle.project({
+      referenceBasis: testReferenceBasis,
       state: session,
       playerIds: ["player-1", "player-2"],
     });
@@ -904,6 +962,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
       })
     ).state;
     const projection = bundle.project({
+      referenceBasis: testReferenceBasis,
       state: session,
       playerIds: ["player-1"],
     });
@@ -963,8 +1022,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
     ).state;
 
     const rejected = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: initial,
       input: {
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         playerId: "player-1",
         interactionId: "unknownAction",
@@ -1054,8 +1115,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
 
     expect(
       await bundle.validateInput({
+        referenceBasis: testReferenceBasis,
         state: initial,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "locked",
@@ -1070,8 +1133,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
 
     expect(
       await bundle.reduce({
+        referenceBasis: testReferenceBasis,
         state: initial,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "locked",
@@ -1085,8 +1150,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
 
     expect(
       await bundle.dispatch({
+        referenceBasis: testReferenceBasis,
         state: initial,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "invalid",
@@ -1162,8 +1229,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
     ).state;
 
     const resultA = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: initialA,
       input: {
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         playerId: "player-1",
         interactionId: "rollVisibleDie",
@@ -1171,8 +1240,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
     });
     const resultB = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: initialB,
       input: {
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         playerId: "player-1",
         interactionId: "rollVisibleDie",
@@ -1253,8 +1324,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
     ).state;
 
     const reduced = await bundle.reduce({
+      referenceBasis: testReferenceBasis,
       state: initial,
       input: {
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         playerId: "player-1",
         interactionId: "rollSilently",
@@ -1268,8 +1341,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
     expect(reduced).not.toHaveProperty("effects");
     expect(reduced).not.toHaveProperty("continuations");
     const dispatched = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: initial,
       input: {
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         playerId: "player-1",
         interactionId: "rollSilently",
@@ -1341,8 +1416,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
 
     resetCloneRuntimeTableCallCount();
     const dispatched = await bundle.dispatch({
+      referenceBasis: testReferenceBasis,
       state: initial,
       input: {
+        basis: testGameplayBasis("player-1"),
         kind: "interaction",
         playerId: "player-1",
         interactionId: "rollTwice",
@@ -1438,8 +1515,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
       // "invalid-action-params: params.dice: expected object, received
       // undefined".
       const result = await bundle.validateInput({
+        referenceBasis: testReferenceBasis,
         state: initial,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "rollDice",
@@ -1461,8 +1540,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
       ).state;
 
       const result = await bundle.reduce({
+        referenceBasis: testReferenceBasis,
         state: initial,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "rollDice",
@@ -1512,8 +1593,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
       ).state;
 
       const resultA = await bundle.dispatch({
+        referenceBasis: testReferenceBasis,
         state: sessionA,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "rollDice",
@@ -1521,8 +1604,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
         },
       });
       const resultB = await bundle.dispatch({
+        referenceBasis: testReferenceBasis,
         state: sessionB,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "rollDice",
@@ -1551,8 +1636,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
       ).state;
 
       const first = await bundle.reduce({
+        referenceBasis: testReferenceBasis,
         state: initial,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "rollDice",
@@ -1563,8 +1650,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
         throw new Error("Expected first rollDice to accept.");
       }
       const second = await bundle.reduce({
+        referenceBasis: testReferenceBasis,
         state: first.state,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "rollDice",
@@ -1660,8 +1749,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
         })
       ).state;
       const accepted = await bundle.reduce({
+        referenceBasis: testReferenceBasis,
         state: initial,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "roll",
@@ -1700,8 +1791,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
         })
       ).state;
       const accepted = await bundle.reduce({
+        referenceBasis: testReferenceBasis,
         state: initial,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "rollDice",
@@ -1724,8 +1817,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
       const before = JSON.stringify(initial);
       expect(
         await rejecting.reduce({
+          referenceBasis: testReferenceBasis,
           state: initial,
           input: {
+            basis: testGameplayBasis("player-1"),
             kind: "interaction",
             playerId: "player-1",
             interactionId: "rollDice",
@@ -1749,8 +1844,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
       // A hostile or naive client tries to force the outcome. The engine
       // must overwrite this with the deterministic sample.
       const forced = await bundle.reduce({
+        referenceBasis: testReferenceBasis,
         state: initial,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "rollDice",
@@ -1758,8 +1855,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
         },
       });
       const authentic = await bundle.reduce({
+        referenceBasis: testReferenceBasis,
         state: initial,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "rollDice",
@@ -1868,8 +1967,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
       ]);
 
       const dispatched = await bundle.dispatch({
+        referenceBasis: testReferenceBasis,
         state: initialized,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "drawAndReenter",
@@ -1989,8 +2090,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
 
       await expect(
         bundle.dispatch({
+          referenceBasis: testReferenceBasis,
           state: initialized,
           input: {
+            basis: testGameplayBasis("player-1"),
             kind: "interaction",
             playerId: "player-1",
             interactionId: "invalid",
@@ -2056,6 +2159,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
                   tx.patchPublicState({ drawn: ["discarded"] });
                   tx.emit(
                     gameEvent.systemAction({
+                      audience: { kind: "public" as const },
                       procedureId: "discarded",
                       title: "Discarded",
                     }),
@@ -2098,8 +2202,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
       ).state;
 
       const resultA = await bundle.reduce({
+        referenceBasis: testReferenceBasis,
         state: sessionA,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "drawTwo",
@@ -2107,8 +2213,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
         },
       });
       const resultB = await bundle.reduce({
+        referenceBasis: testReferenceBasis,
         state: sessionB,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "drawTwo",
@@ -2148,8 +2256,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
         })
       ).state;
       const rejected = await bundle.reduce({
+        referenceBasis: testReferenceBasis,
         state: initial,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "rejectAfterDraw",
@@ -2163,8 +2273,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
       expect(rejected).not.toHaveProperty("instructions");
 
       const accepted = await bundle.reduce({
+        referenceBasis: testReferenceBasis,
         state: initial,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "drawTwo",
@@ -2176,8 +2288,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
       }
       expect(accepted.state.runtime?.rng?.cursor).toBe(3);
       const control = await bundle.reduce({
+        referenceBasis: testReferenceBasis,
         state: controlSession,
         input: {
+          basis: testGameplayBasis("player-1"),
           kind: "interaction",
           playerId: "player-1",
           interactionId: "drawTwo",
@@ -2199,8 +2313,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
 
       await expect(
         bundle.reduce({
+          referenceBasis: testReferenceBasis,
           state: initial,
           input: {
+            basis: testGameplayBasis("player-1"),
             kind: "interaction",
             playerId: "player-1",
             interactionId: "drawTooMany",
@@ -2226,10 +2342,12 @@ describe("implicit transaction acceptance", () => {
         },
       });
       const queued = gameEvent.systemAction({
+        audience: { kind: "public" as const },
         procedureId: "queued",
         title: "Queued",
       });
       const completed = gameEvent.systemAction({
+        audience: { kind: "public" as const },
         procedureId: "completed",
         title: "Completed",
       });
@@ -2297,8 +2415,10 @@ describe("implicit transaction acceptance", () => {
         mode === "enter"
           ? initialized
           : await bundle.dispatch({
+              referenceBasis: testReferenceBasis,
               state: initialized.state,
               input: {
+                basis: testGameplayBasis("player-1"),
                 kind: "interaction",
                 playerId: "player-1",
                 interactionId: "complete",
@@ -2309,7 +2429,11 @@ describe("implicit transaction acceptance", () => {
       expect(result.events).toEqual([queued, completed]);
       expect(result.state.domain.publicState).toMatchObject({ complete: true });
       expect(result.state.runtime.rng.cursor).toBe(2);
-      bundle.project({ state: result.state, playerIds: ["player-1"] });
+      bundle.project({
+        referenceBasis: testReferenceBasis,
+        state: result.state,
+        playerIds: ["player-1"],
+      });
     },
   );
 });

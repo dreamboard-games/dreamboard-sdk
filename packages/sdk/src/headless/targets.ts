@@ -1,3 +1,5 @@
+import type { SeatSpaceRef } from "../shared/domain/seat-reference.js";
+import type { TileSpaceId } from "../shared/domain/tile-space.js";
 import type { TopologyDefinitions } from "../shared/domain/topology-definitions.js";
 import type { BoardSpaceTarget } from "../shared/board-target.js";
 import type {
@@ -19,7 +21,7 @@ import type {
 export type RuntimeBoardTarget =
   | {
       readonly valueKind: "board-id";
-      readonly kind: "space" | "tile" | "edge" | "vertex";
+      readonly kind: "space" | "edge" | "vertex";
       readonly boardId: string;
       readonly value: string;
     }
@@ -45,6 +47,7 @@ export interface RuntimeInteractionDropTarget {
 }
 export type RuntimeDropTarget =
   RuntimeBoardDropTarget | RuntimeInteractionDropTarget;
+type SeatSpaceValue<Id> = Id extends TileSpaceId ? SeatSpaceRef : Id;
 type TargetOnBoard<
   Table,
   B extends BoardIdOfTable<Table>,
@@ -53,14 +56,10 @@ type TargetOnBoard<
   | ({ readonly valueKind: "board-id"; readonly boardId: B } & (
       | {
           readonly kind: "space";
-          readonly value: SpaceIdOfTable<Table, B, Definitions>;
+          readonly value: SeatSpaceValue<SpaceIdOfTable<Table, B, Definitions>>;
         }
       | (B extends TiledBoardIdOfTable<Table, Definitions>
           ? | {
-                readonly kind: "tile";
-                readonly value: SpaceIdOfTable<Table, B, Definitions>;
-              }
-            | {
                 readonly kind: "edge";
                 readonly value: TiledEdgeIdOfTable<Table, B, Definitions>;
               }
@@ -79,7 +78,7 @@ type TargetOnBoard<
           readonly kind: "space";
           readonly value: BoardSpaceTarget<
             B,
-            SpaceIdOfTable<Table, B, Definitions>
+            SeatSpaceValue<SpaceIdOfTable<Table, B, Definitions>>
           >;
         }
       : never);
@@ -126,7 +125,7 @@ export type BoardDropTarget<G> = BoardTarget<G> &
       readonly inputKey: KeysOfKind<
         G,
         K,
-        "board-space" | "board-tile" | "board-edge" | "board-vertex"
+        "board-space" | "board-edge" | "board-vertex"
       >;
     };
   }[InteractionKey<G>];

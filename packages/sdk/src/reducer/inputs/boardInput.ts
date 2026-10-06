@@ -25,7 +25,7 @@ export type BoardSpaceInputSchema = z.ZodObject<{
 
 /**
  * `boardInput.*` helpers produce collectors that accept a board-element id
- * (vertex / edge / space / tile) scoped to one built `boardTarget` rule.
+ * (vertex / edge / space) scoped to one built `boardTarget` rule.
  *
  * Id typing:
  *   The `Id` type parameter is the branded id for the board you target,
@@ -43,7 +43,7 @@ export type BoardSpaceInputSchema = z.ZodObject<{
  *   compile-time discipline.
  */
 function makeBoardCollector<
-  Kind extends "board-vertex" | "board-edge" | "board-tile" | "board-space",
+  Kind extends "board-vertex" | "board-edge" | "board-space",
 >(kind: Kind) {
   return function collector<
     State extends CollectorState = CollectorState,
@@ -53,7 +53,7 @@ function makeBoardCollector<
     target: BoardIdTargetRule<
       State,
       Id,
-      Kind extends `board-${infer Target extends Exclude<TargetKind, "card">}`
+      Kind extends `board-${infer Target extends Exclude<TargetKind, "card" | "tile">}`
         ? Target
         : never,
       Definitions
@@ -104,7 +104,6 @@ function makeBoardCollector<
 
 export const vertexInput = makeBoardCollector("board-vertex");
 export const edgeInput = makeBoardCollector("board-edge");
-export const tileInput = makeBoardCollector("board-tile");
 export const spaceInput = makeBoardCollector("board-space");
 
 export function playerSpaceInput<
@@ -174,7 +173,6 @@ export function playerSpaceInput<
 export const boardInput = {
   vertex: vertexInput,
   edge: edgeInput,
-  tile: tileInput,
   space: spaceInput,
   playerSpace: playerSpaceInput,
 };

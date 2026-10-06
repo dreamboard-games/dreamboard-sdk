@@ -1,3 +1,8 @@
+import {
+  CARD_REFERENCE_PREFIX,
+  isCardReferenceNamespace,
+} from "../../shared/domain/cards.js";
+import { AuthoredTileDisclosureSchema } from "../../shared/domain/tile-disclosure.js";
 import { TileTypeSpecSchema } from "../../shared/domain/manifest-schema.js";
 import * as z from "zod";
 import { renderCardInstanceIds, expandSeedIds } from "./identity-runtime.js";
@@ -256,6 +261,8 @@ function collectBoardRecordKeyIssues(manifest: GameTopologyManifest): string[] {
   const issues: string[] = [];
   for (const [i, board] of (manifest.boards ?? []).entries()) {
     const path = `manifest.boards[${i}]`;
+    if (board.visibility === "ownerOnly" && board.scope === "shared")
+      issues.push(`${path}.visibility: ownerOnly requires perPlayer scope.`);
     issues.push(
       ...collectKeyIssues([
         { value: board.id, path: `${path}.id` },
@@ -459,15 +466,35 @@ function validateTileDefinitions(manifest: GameTopologyManifest): string[] {
   }
   for (const [i, seed] of (manifest.tileSeeds ?? []).entries()) {
     errors.push(...validateRecordKey(seed.id, `manifest.tileSeeds[${i}].id`));
+    if (seed.disclosure !== undefined) {
+      const disclosure = AuthoredTileDisclosureSchema.safeParse(
+        seed.disclosure,
+      );
+      if (!disclosure.success)
+        errors.push(
+          `manifest.tileSeeds[${i}].disclosure: ${disclosure.error.message}`,
+        );
+      if (
+        seed.disclosure.appearance?.backImage !== undefined &&
+        !ASSET_IMAGE_PATH.test(seed.disclosure.appearance.backImage)
+      )
+        errors.push(
+          `manifest.tileSeeds[${i}].disclosure.appearance.backImage: Must be an image path under assets/.`,
+        );
+      if (
+        seed.home?.type === "board" &&
+        seed.disclosure.appearance !== undefined &&
+        seed.disclosure.appearance.layout !== seed.home.layout
+      )
+        errors.push(
+          `manifest.tileSeeds[${i}].disclosure.appearance.layout: Must match board placement layout.`,
+        );
+    }
     for (const id of expandSeedIds([seed]))
       errors.push(...validateRecordKey(id, `manifest.tileSeeds[${i}].id`));
     if (seed.home?.type === "zone") {
       const zoneId = seed.home.zoneId;
       const zone = manifest.zones?.find((zone) => zone.id === zoneId);
-      if (zone && (zone.visibility ?? "public") !== "public")
-        errors.push(
-          `manifest.tileSeeds[${i}].home: Tile inventory requires a public zone until private tile projection is supported.`,
-        );
       if (
         zone &&
         "scope" in zone &&
@@ -555,9 +582,9 @@ export function validateManifestAuthoring(
     ...expandSeedIds(manifest.tileSeeds ?? []),
   ];
   for (const id of componentIds)
-    if (id.startsWith("hidden:"))
+    if (isCardReferenceNamespace(id))
       errors.push(
-        `Component id '${id}' uses the reserved concealed-id namespace 'hidden:'.`,
+        `Component id '${id}' uses the reserved concealed-id namespace '${CARD_REFERENCE_PREFIX}'.`,
       );
   errors.push(...collectManifestRecordKeyIssues(manifest));
   errors.push(
@@ -694,9 +721,9 @@ export function validateManifestAuthoring(
       const path = `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}]`;
       if (typeof card.id !== "string" || card.id.length === 0) {
         errors.push(`${path}.id: Card definition id is required.`);
-      } else if (card.id.startsWith("hidden:")) {
+      } else if (isCardReferenceNamespace(card.id)) {
         errors.push(
-          `${path}.id: The 'hidden:' prefix is reserved for concealed card positions.`,
+          `${path}.id: The '${CARD_REFERENCE_PREFIX}' prefix is reserved for concealed card positions.`,
         );
       }
       if (typeof card.cardType !== "string" || card.cardType.length === 0) {

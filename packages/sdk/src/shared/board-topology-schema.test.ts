@@ -2,7 +2,7 @@ import { deriveBoardTopology } from "./board-topology.js";
 import { perPlayerInstanceId } from "./domain/per-player-instance.js";
 import { boardEdgeId, boardVertexId } from "./domain/board-element.js";
 import { describe, expect, test } from "vitest";
-import { BoardProjectionSchema } from "./board-topology-schema.js";
+import { BoardTopologyMapSchema } from "./board-topology-schema.js";
 import { tileSpaceId } from "./domain/tile-space.js";
 import { MAXIMUM_BOARD_COORDINATE } from "./domain/board-coordinates.js";
 
@@ -75,33 +75,33 @@ function tiledProjection() {
     },
     "main",
   );
-  const main = BoardProjectionSchema.parse({ main: topology }).main;
+  const main = BoardTopologyMapSchema.parse({ main: topology }).main;
   if (main.layout !== "hex") throw new Error("Expected hex topology.");
   return { main };
 }
 
 describe("projected topology admission", () => {
   test("admits the canonical derived presentation shape", () => {
-    expect(BoardProjectionSchema.parse(projection())).toEqual(projection());
+    expect(BoardTopologyMapSchema.parse(projection())).toEqual(projection());
   });
   test("rejects mismatched board and cell record identities", () => {
     const board = projection();
     board.main.id = "other";
-    expect(() => BoardProjectionSchema.parse(board)).toThrow(/Record key/);
+    expect(() => BoardTopologyMapSchema.parse(board)).toThrow(/Record key/);
     const cell = projection();
     // @ts-expect-error Deliberately violates the declared cell identity.
     cell.main.spaces[tileSpaceId('tile:"/one', "cell")].id = tileSpaceId(
       "other",
       "cell",
     );
-    expect(() => BoardProjectionSchema.parse(cell)).toThrow(
+    expect(() => BoardTopologyMapSchema.parse(cell)).toThrow(
       /Record key|Tile space identity/,
     );
   });
   test("rejects a tuple that does not identify the declared tile and local cell", () => {
     const value = projection();
     value.main.spaces[tileSpaceId('tile:"/one', "cell")].localCellId = "other";
-    expect(() => BoardProjectionSchema.parse(value)).toThrow(
+    expect(() => BoardTopologyMapSchema.parse(value)).toThrow(
       /Tile space identity/,
     );
   });
@@ -118,10 +118,10 @@ describe("projected topology admission", () => {
       fields: {},
     };
     expect(() =>
-      BoardProjectionSchema.parse({ main: { ...value.main, edges: [edge] } }),
+      BoardTopologyMapSchema.parse({ main: { ...value.main, edges: [edge] } }),
     ).toThrow(/board and layout/);
     expect(() =>
-      BoardProjectionSchema.parse({
+      BoardTopologyMapSchema.parse({
         main: {
           ...value.main,
           vertices: [
@@ -136,7 +136,7 @@ describe("projected topology admission", () => {
       }),
     ).toThrow(/board and layout/);
     expect(() =>
-      BoardProjectionSchema.parse({
+      BoardTopologyMapSchema.parse({
         main: { ...value.main, edges: [{ ...edge, id: "main:edge:0,0:e0" }] },
       }),
     ).toThrow();
@@ -144,23 +144,23 @@ describe("projected topology admission", () => {
   test("rejects missing incidence members, duplicate elements and one-way incidence", () => {
     const absent = tiledProjection();
     absent.main.vertices.pop();
-    expect(() => BoardProjectionSchema.parse(absent)).toThrow(
+    expect(() => BoardTopologyMapSchema.parse(absent)).toThrow(
       /Incidence reference/,
     );
     const unknownSpace = tiledProjection();
     unknownSpace.main.edges[0].spaceIds.push("absent");
-    expect(() => BoardProjectionSchema.parse(unknownSpace)).toThrow(
+    expect(() => BoardTopologyMapSchema.parse(unknownSpace)).toThrow(
       /Incidence reference/,
     );
     const duplicates = tiledProjection();
     duplicates.main.edges.push(duplicates.main.edges[0]);
     duplicates.main.vertices.push(duplicates.main.vertices[0]);
-    expect(() => BoardProjectionSchema.parse(duplicates)).toThrow(
+    expect(() => BoardTopologyMapSchema.parse(duplicates)).toThrow(
       /identities must be unique/,
     );
     const asymmetry = tiledProjection();
     asymmetry.main.vertices[0].edgeIds = [];
-    expect(() => BoardProjectionSchema.parse(asymmetry)).toThrow(
+    expect(() => BoardTopologyMapSchema.parse(asymmetry)).toThrow(
       /incidence must agree/,
     );
   });
@@ -184,9 +184,9 @@ describe("projected topology admission", () => {
         },
       ],
     };
-    expect(BoardProjectionSchema.parse({ main })).toEqual({ main });
+    expect(BoardTopologyMapSchema.parse({ main })).toEqual({ main });
     expect(() =>
-      BoardProjectionSchema.parse({
+      BoardTopologyMapSchema.parse({
         main: {
           ...main,
           relations: [{ ...main.relations[0], toSpaceId: "absent" }],
@@ -194,7 +194,7 @@ describe("projected topology admission", () => {
       }),
     ).toThrow(/Relation endpoints/);
     expect(() =>
-      BoardProjectionSchema.parse({
+      BoardTopologyMapSchema.parse({
         main: { ...main, relations: [...main.relations, ...main.relations] },
       }),
     ).toThrow(/Relation identities/);
@@ -202,19 +202,19 @@ describe("projected topology admission", () => {
   test("requires replication-origin identity only for per-player boards", () => {
     const shared = projection().main;
     expect(() =>
-      BoardProjectionSchema.parse({ main: { ...shared, playerId: "alice" } }),
+      BoardTopologyMapSchema.parse({ main: { ...shared, playerId: "alice" } }),
     ).toThrow(/Shared board/);
     expect(() =>
-      BoardProjectionSchema.parse({ main: { ...shared, baseId: "other" } }),
+      BoardTopologyMapSchema.parse({ main: { ...shared, baseId: "other" } }),
     ).toThrow(/Shared board identity/);
     const id = perPlayerInstanceId("board", "main", "alice");
     expect(() =>
-      BoardProjectionSchema.parse({
+      BoardTopologyMapSchema.parse({
         [id]: { ...shared, id, scope: "perPlayer", playerId: "bob" },
       }),
     ).toThrow(/Per-player board identity/);
     expect(
-      BoardProjectionSchema.parse({
+      BoardTopologyMapSchema.parse({
         [id]: { ...shared, id, scope: "perPlayer", playerId: "alice" },
       })[id].playerId,
     ).toBe("alice");
@@ -223,9 +223,9 @@ describe("projected topology admission", () => {
     const value = projection();
     value.main.spaces[tileSpaceId('tile:"/one', "cell")].q =
       MAXIMUM_BOARD_COORDINATE + 1;
-    expect(() => BoardProjectionSchema.parse(value)).toThrow();
+    expect(() => BoardTopologyMapSchema.parse(value)).toThrow();
     expect(() =>
-      BoardProjectionSchema.parse({
+      BoardTopologyMapSchema.parse({
         main: { ...projection().main, placements: {} },
       }),
     ).toThrow(/Unrecognized key/);

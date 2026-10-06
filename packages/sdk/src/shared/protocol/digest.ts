@@ -20,7 +20,7 @@ export function computePluginActionSetVersion(
   input: ActionSetVersionInput,
 ): string {
   return digestPluginRuntimeJson({
-    digestVersion: "plugin-action-set@5",
+    digestVersion: "plugin-action-set@6",
     version: input.version,
     availableInteractions: input.availableInteractions,
   });
@@ -28,7 +28,7 @@ export function computePluginActionSetVersion(
 
 export function digestPluginGameplayFrame(frame: PluginGameplayFrame): string {
   return digestPluginRuntimeJson({
-    digestVersion: "plugin-gameplay-frame@5",
+    digestVersion: "plugin-gameplay-frame@6",
     frame,
   });
 }
@@ -37,7 +37,7 @@ export function digestPluginCommandRequest(
   command: SubmitInteractionCommand | CancelInteractionCommand,
 ): string {
   return digestPluginRuntimeJson({
-    digestVersion: "plugin-command-request@5",
+    digestVersion: "plugin-command-request@6",
     command,
   });
 }

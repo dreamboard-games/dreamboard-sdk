@@ -61,6 +61,7 @@ describe("manifest tile inventory", () => {
     expect(Object.keys(table.tiles)).toHaveLength(5);
     expect(table.tiles[id]).toEqual({
       componentType: "tile",
+      disclosure: { face: { audience: "public" } },
       id,
       tileTypeId: "island",
       ownerId: "north:/雪",

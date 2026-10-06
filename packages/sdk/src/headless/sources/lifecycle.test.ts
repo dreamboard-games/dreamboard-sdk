@@ -21,6 +21,19 @@ function setup() {
 }
 afterEach(() => vi.useRealTimers());
 describe("source request lifecycle", () => {
+  it("rejects a frame from a different authority session", () => {
+    const x = setup();
+    const value = frame(2);
+    x.frame({
+      ...value,
+      basis: { ...value.basis, sessionId: "another-session" },
+    });
+    expect(x.source.store.get().connection).toBe("failed");
+    expect(x.source.store.get().failure?.message).toContain(
+      "authority session changed",
+    );
+    x.source.dispose();
+  });
   it("never converts malformed submit params to cancellation", async () => {
     const x = setup();
     await expect(
@@ -159,7 +172,12 @@ describe("source request lifecycle", () => {
       zones: {
         hand: {
           alice: {
-            cardIds: ["card-1", "card-2", "hidden:hand:2"],
+            tiles: [],
+            cardIds: [
+              "card-1",
+              "card-2",
+              "card-ref:sha256:1fe9af8545d00ca652f78745366c7359b7f7e10414dcd4ed779adc4c4befc984",
+            ],
             cardViewsById: {
               "card-1": card,
               "card-2": {
@@ -168,7 +186,10 @@ describe("source request lifecycle", () => {
                 properties: { rank: "A" },
               },
             },
-            cardBacksById: { "hidden:hand:2": "assets/cards/spell.webp" },
+            cardBacksById: {
+              "card-ref:sha256:1fe9af8545d00ca652f78745366c7359b7f7e10414dcd4ed779adc4c4befc984":
+                "assets/cards/spell.webp",
+            },
             playableByCardId: {},
           },
         },
@@ -182,7 +203,7 @@ describe("source request lifecycle", () => {
     expect(view.backImage).toBe("assets/cards/missing.webp");
     expect(
       x.source.store.get().snapshot!.frame.zones.hand.alice.cardBacksById[
-        "hidden:hand:2"
+        "card-ref:sha256:1fe9af8545d00ca652f78745366c7359b7f7e10414dcd4ed779adc4c4befc984"
       ],
     ).toBe(view.frontImage);
     expect(view.properties).toEqual({ power: 7 });
@@ -222,6 +243,7 @@ describe("source request lifecycle", () => {
             zones: {
               hand: {
                 alice: {
+                  tiles: [],
                   cardIds: ["card-1"],
                   cardViewsById: { "card-1": card },
                   cardBacksById: {},

@@ -104,3 +104,14 @@ export type RuntimePendingInteraction = z.infer<
 export type GameInputCancel = z.infer<typeof Schemas.GameInputCancelSchema>;
 
 export type AuthoredView = z.infer<typeof Schemas.AuthoredViewSchema>;
+
+export type ReferenceBasis = z.infer<typeof Schemas.ReferenceBasisSchema>;
+export type GameplayBasis = z.infer<typeof Schemas.GameplayBasisSchema>;
+export type ProjectedGameEvent = z.infer<
+  typeof Schemas.ProjectedGameEventSchema
+>;
+export type EventAudience = z.infer<typeof Schemas.EventAudienceSchema>;
+
+export type ProjectedGameEventDetail = z.infer<
+  typeof Schemas.ProjectedGameEventDetailSchema
+>;

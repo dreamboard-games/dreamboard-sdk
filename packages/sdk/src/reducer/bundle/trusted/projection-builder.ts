@@ -1,6 +1,12 @@
 import type { RuntimeTableRecord } from "../../model";
-import { createBoardTopologyCache } from "../../../shared/board-topology.js";
-import { BoardProjectionSchema } from "../../../shared/runtime-schema.js";
+import {
+  createSeatDisclosure,
+  type SeatDisclosure,
+} from "./tile-disclosure.js";
+import { projectSeatDescriptor } from "./seat-interactions.js";
+import type { ProjectedTile } from "../../../shared/seat-topology-schema.js";
+import { BoardProjectionSchema } from "../../../shared/seat-topology-schema.js";
+import type { GameEvent } from "../../../shared/domain/results.js";
 import type { ViewCard } from "../../../shared/domain/cards.js";
 import { createTableQueries } from "../../table-queries";
 import type { RuntimeJson } from "../../../shared/runtime-json";
@@ -33,11 +39,7 @@ import {
   type ProjectionContext,
 } from "./projection-context";
 import { collectCardZoneIds } from "./collector-introspection";
-import {
-  concealCards,
-  concealDescriptor,
-  type CardConcealment,
-} from "./card-concealment";
+import { concealCards, type CardConcealment } from "./card-concealment";
 import {
   isSimultaneousPhase,
   resolveSimultaneousActors,
@@ -46,6 +48,33 @@ import {
 } from "./simultaneous-player";
 
 type ProjectionMode = "full" | "actionsOnly";
+
+function projectEvents(
+  events: readonly GameEvent[],
+  playerId: string,
+  disclosure: SeatDisclosure,
+): Wire.ProjectedGameEvent[] {
+  return events.flatMap(({ audience, details, ...event }) => {
+    if (audience.kind === "seats" && !audience.playerIds.includes(playerId))
+      return [];
+    const projected = (details ?? []).flatMap<Wire.ProjectedGameEventDetail>(
+      (detail) => {
+        if (typeof detail.value !== "object")
+          return [{ ...detail, value: detail.value }];
+        const tile = disclosure.tile(detail.value.tileId);
+        return tile?.disclosure === "visible"
+          ? [
+              {
+                label: detail.label,
+                value: { kind: "tile" as const, ref: tile.ref },
+              },
+            ]
+          : [];
+      },
+    );
+    return [{ ...event, ...(projected.length ? { details: projected } : {}) }];
+  });
+}
 type ProjectionTimingMetadata = {
   resolveAvailableInteractionsMs: number;
   resolveViewMs: number;
@@ -71,7 +100,6 @@ export function createProjectionBuilder<
   scope: TrustedRuntimeScope<Contract, Definitions, View>,
   interactions: InteractionResolverFor<Contract, Definitions, View>,
 ) {
-  const topologyOf = createBoardTopologyCache();
   type SessionState = TrustedSessionState<Contract>;
   type DomainState = TrustedDomainState<Contract>;
   type State = TrustedState<Contract>;
@@ -110,23 +138,21 @@ export function createProjectionBuilder<
     };
   }
 
-  /** A descriptor as its seat sees it, naming hidden cards by position. */
   function concealFor(
     combinedState: State,
     playerId: PlayerId,
     concealment: CardConcealment,
+    disclosure: SeatDisclosure,
     descriptor: InteractionDescriptorShape,
   ) {
-    return concealDescriptor(
+    return projectSeatDescriptor(
       descriptor,
-      // Only steps carry selected values, and only card steps name cards.
-      descriptor.step
-        ? interactions.cardInputKeys(
-            combinedState,
-            playerId,
-            descriptor.interactionId,
-          )
-        : new Set(),
+      interactions.inputCollectors(
+        combinedState,
+        playerId,
+        descriptor.interactionId,
+      ),
+      disclosure,
       concealment,
     );
   }
@@ -138,6 +164,7 @@ export function createProjectionBuilder<
     projection: ProjectionContext<DomainState, TrustedManifest<Contract>>,
     registry: DescriptorRegistry,
     concealment: CardConcealment,
+    disclosure: SeatDisclosure,
   ) {
     const phaseName = combinedState.flow.currentPhase as PhaseName;
     const q = createTableQueries<RuntimeTableRecord, typeof scope.manifest>(
@@ -149,6 +176,7 @@ export function createProjectionBuilder<
       Record<
         string,
         {
+          tiles: readonly ProjectedTile[];
           cardIds: string[];
           cardViewsById: Record<string, ViewCard>;
           cardBacksById: Record<string, string>;
@@ -156,7 +184,15 @@ export function createProjectionBuilder<
         }
       >
     > = {};
-    for (const [zoneId, hostId, zoneCardIds] of concealment.zones) {
+    for (const {
+      zoneId,
+      seatHostId,
+      componentIds,
+      tiles,
+    } of disclosure.zones) {
+      const zoneCardIds = componentIds.filter((id) =>
+        Object.hasOwn(combinedState.table.cards, id),
+      );
       const cardInteractionIds = scope
         .interactionEntriesForPhase(phaseName)
         .filter(([, interaction]) =>
@@ -209,19 +245,22 @@ export function createProjectionBuilder<
           if (cardKey && !cardTargets?.includes(cardId)) {
             continue;
           }
-          perCard.push(
-            registry.add(
-              concealFor(combinedState, playerId, concealment, {
-                ...decision.descriptor,
-                zoneId,
-              }),
-              actorSeat,
-            ),
+          const descriptor = concealFor(
+            combinedState,
+            playerId,
+            concealment,
+            disclosure,
+            {
+              ...decision.descriptor,
+              zoneId,
+            },
           );
+          if (descriptor) perCard.push(registry.add(descriptor, actorSeat));
         }
         playableByCardId[seatCardId] = perCard;
       }
-      (result[zoneId] ??= {})[hostId] = {
+      (result[zoneId] ??= {})[seatHostId] = {
+        tiles,
         cardIds,
         cardViewsById,
         cardBacksById,
@@ -417,6 +456,7 @@ export function createProjectionBuilder<
     combinedState: State,
     playerId: PlayerId,
     projection: ProjectionContext<DomainState, TrustedManifest<Contract>>,
+    disclosure: SeatDisclosure,
   ): unknown {
     const view = scope.definition.view;
     // eslint-disable-next-line no-restricted-syntax -- Context, projected state, queries, and player all come from the same Contract bound to this view callback.
@@ -425,6 +465,14 @@ export function createProjectionBuilder<
       q: projection.q,
       state: projection.domainState,
       playerId,
+      references: {
+        tile: (id: string) => {
+          const tile = disclosure.tile(id);
+          return tile?.disclosure === "visible" ? tile.ref : null;
+        },
+        space: (boardId: string, spaceId: string) =>
+          disclosure.boardTarget("space", boardId, spaceId),
+      },
     } as unknown as Parameters<typeof view>[0];
     return view(viewArgs);
   }
@@ -433,10 +481,12 @@ export function createProjectionBuilder<
     state,
     playerIds,
     projectionMode = "full",
+    referenceBasis,
   }: {
     state: SessionState;
     playerIds: PlayerId[];
     projectionMode?: ProjectionMode;
+    referenceBasis: Wire.ReferenceBasis;
   }) {
     const combinedState = scope.toCombinedState(state);
     const projection = createProjectionContext<
@@ -449,33 +499,25 @@ export function createProjectionBuilder<
     const timing = createProjectionTimingMetadata();
     const registry = createDescriptorRegistry(timing);
     type SeatProjection = {
+      events: Wire.ProjectedGameEvent[];
       view?: ReturnType<typeof resolvePlayerViewFor>;
       boards?: Wire.SeatProjection["boards"];
       availableInteractionRefs: string[];
       zones?: ReturnType<typeof resolveZoneHandlesFor>;
       resources?: ReturnType<typeof resolveResourcesFor>;
     };
-    // Every board is public in this layer; private board policy remains unsupported.
-    // Derive from the admitted current inventory, once for all requested seats.
-    const boards =
-      projectionMode === "full" && playerIds.length > 0
-        ? BoardProjectionSchema.parse(
-            toCanonicalJson(
-              Object.fromEntries(
-                Object.keys(combinedState.table.boards).map((boardId) => [
-                  boardId,
-                  topologyOf(combinedState.table, scope.manifest, boardId),
-                ]),
-              ),
-            ),
-          )
-        : undefined;
     const seats: Record<string, SeatProjection> = {};
     for (const [actorSeat, playerId] of playerIds.entries()) {
+      const disclosure = createSeatDisclosure(
+        combinedState.table,
+        scope.manifest,
+        playerId,
+        referenceBasis,
+      );
       const concealment = concealCards(
         combinedState.table,
         playerId,
-        scope.manifest,
+        disclosure,
       );
       const availableInteractions = measureProjectionTiming(
         timing,
@@ -489,18 +531,29 @@ export function createProjectionBuilder<
             },
           ),
       );
-      const availableInteractionRefs = availableInteractions.map((descriptor) =>
-        registry.add(
-          concealFor(combinedState, playerId, concealment, descriptor),
-          actorSeat,
-        ),
+      const availableInteractionRefs = availableInteractions.flatMap(
+        (descriptor) => {
+          const projected = concealFor(
+            combinedState,
+            playerId,
+            concealment,
+            disclosure,
+            descriptor,
+          );
+          return projected ? [registry.add(projected, actorSeat)] : [];
+        },
       );
       const fullProjection =
         projectionMode === "full"
           ? {
-              boards,
+              boards: BoardProjectionSchema.parse(disclosure.boards),
               view: measureProjectionTiming(timing, "resolveViewMs", () =>
-                resolvePlayerViewFor(combinedState, playerId, projection),
+                resolvePlayerViewFor(
+                  combinedState,
+                  playerId,
+                  projection,
+                  disclosure,
+                ),
               ),
               zones: measureProjectionTiming(
                 timing,
@@ -513,19 +566,21 @@ export function createProjectionBuilder<
                     projection,
                     registry,
                     concealment,
+                    disclosure,
                   ),
               ),
               resources: resolveResourcesFor(combinedState, playerId),
             }
           : {};
       seats[playerId] = {
+        events: projectEvents(state.runtime.events, playerId, disclosure),
         ...fullProjection,
         availableInteractionRefs,
       };
     }
     return withProjectionTiming(
       {
-        events: state.runtime.events,
+        referenceBasis,
         simultaneousPhase: resolveSimultaneousPhaseFor(state),
         schedulerFlow: resolveSchedulerFlowFor(state, projection),
         interactionsByRef: registry.entries(),

@@ -1,4 +1,5 @@
-import { BoardProjectionSchema } from "./board-topology-schema.js";
+import { SeatTileRefSchema } from "./domain/seat-reference.js";
+import { BoardProjectionSchema } from "./seat-topology-schema.js";
 import {
   PlayerIdSchema,
   PlayerRosterSchema,
@@ -71,28 +72,73 @@ export const TransitionRecordSchema = z.strictObject({
   to: z.string().min(1),
 });
 
+export const ReferenceBasisSchema = z.strictObject({
+  sessionId: z.string().min(1),
+  version: z.number().int().gte(0),
+});
+
 export const RuntimePendingInteractionSchema = z.strictObject({
   phaseName: z.string().min(1),
   interactionId: z.string().min(1),
   values: z.array(RuntimeJsonSchema).min(1),
+  concealedBasis: ReferenceBasisSchema.optional(),
 });
 
 export const GameEventDetailSchema = z.strictObject({
   label: z.string().min(1),
-  value: z.union([z.string(), z.number().finite(), z.boolean()]),
+  value: z.union([
+    z.string(),
+    z.number().finite(),
+    z.boolean(),
+    z.strictObject({ kind: z.literal("tile"), tileId: z.string().min(1) }),
+  ]),
 });
 
-export const SystemActionEventSchema = z.strictObject({
+export const EventAudienceSchema = z.discriminatedUnion("kind", [
+  z.strictObject({ kind: z.literal("public") }),
+  z
+    .strictObject({
+      kind: z.literal("seats"),
+      playerIds: z.array(PlayerIdSchema).min(1),
+    })
+    .superRefine((audience, context) => {
+      if (new Set(audience.playerIds).size !== audience.playerIds.length)
+        context.addIssue({
+          code: "custom",
+          path: ["playerIds"],
+          message: "Event audience seats must be unique.",
+        });
+    }),
+]);
+
+export const ProjectedGameEventDetailSchema = GameEventDetailSchema.extend({
+  value: z.union([
+    z.string(),
+    z.number().finite(),
+    z.boolean(),
+    z.strictObject({ kind: z.literal("tile"), ref: SeatTileRefSchema }),
+  ]),
+});
+export const ProjectedGameEventSchema = z.strictObject({
   kind: z.literal("systemAction"),
   procedureId: z.string().min(1),
   title: z.string().min(1),
   summary: z.string().min(1).optional(),
-  details: z.array(GameEventDetailSchema).max(16).optional(),
+  details: z.array(ProjectedGameEventDetailSchema).max(16).optional(),
 });
 
+export const SystemActionEventSchema = ProjectedGameEventSchema.extend({
+  audience: EventAudienceSchema,
+  details: z.array(GameEventDetailSchema).max(16).optional(),
+});
 export const GameEventSchema = z.discriminatedUnion("kind", [
   SystemActionEventSchema,
 ]);
+
+export const GameplayBasisSchema = ReferenceBasisSchema.extend({
+  actionSetVersion: z.string().min(1),
+  perspectivePlayerId: PlayerIdSchema,
+});
 
 export const ReducerRuntimeStateSchema = z.strictObject({
   events: z.array(GameEventSchema).max(32),
@@ -119,6 +165,7 @@ export const ReducerSessionStateSchema = z.strictObject({
 
 export const GameInputInteractionSchema = z.strictObject({
   kind: z.literal("interaction"),
+  basis: GameplayBasisSchema,
   playerId: PlayerIdSchema,
   interactionId: z.string().min(1),
   params: RuntimeJsonSchema,
@@ -126,6 +173,7 @@ export const GameInputInteractionSchema = z.strictObject({
 
 export const GameInputCancelSchema = z.strictObject({
   kind: z.literal("interaction.cancel"),
+  basis: GameplayBasisSchema,
   playerId: PlayerIdSchema,
   interactionId: z.string().min(1),
 });
@@ -192,6 +240,7 @@ export const InitializeRequestSchema = z.strictObject({
 });
 
 export const DispatchRequestSchema = z.strictObject({
+  referenceBasis: ReferenceBasisSchema,
   state: ReducerSessionStateSchema,
   input: GameInputSchema,
 });
@@ -290,6 +339,7 @@ export const AuthoredViewSchema = z
 export { BoardProjectionSchema };
 
 export const SeatProjectionSchema = z.strictObject({
+  events: z.array(ProjectedGameEventSchema).max(32),
   view: AuthoredViewSchema.nullable().optional(),
   boards: BoardProjectionSchema.optional(),
   availableInteractionRefs: z.array(z.string()).optional(),
@@ -330,7 +380,7 @@ export const ProjectionTimingMetadataSchema = z.strictObject({
 });
 
 export const SeatProjectionBundleSchema = z.strictObject({
-  events: z.array(GameEventSchema).max(32),
+  referenceBasis: ReferenceBasisSchema,
   simultaneousPhase: z
     .union([SimultaneousPhaseProjectionSchema, z.null()])
     .optional(),
@@ -343,6 +393,7 @@ export const SeatProjectionBundleSchema = z.strictObject({
 });
 
 export const ProjectRequestSchema = z.strictObject({
+  referenceBasis: ReferenceBasisSchema,
   state: ReducerSessionStateSchema,
   playerIds: PlayerRosterSchema,
 });
