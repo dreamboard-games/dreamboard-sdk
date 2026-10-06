@@ -1,7 +1,8 @@
+import { compileManifest } from "./manifest/compiler.js";
 import * as z from "zod";
 import { createGame } from "../reducer.js";
 const model = createGame({
-  manifest: {
+  manifest: compileManifest({
     players: { minPlayers: 1, maxPlayers: 1 },
     cardSets: [],
     boards: [
@@ -33,7 +34,7 @@ const model = createGame({
       { id: "hexTile", typeId: "hexFace" },
       { id: "squareTile", typeId: "squareFace" },
     ],
-  },
+  }),
   phases: { play: z.object({}) },
   state: { public: z.object({}), private: z.object({}), hidden: z.object({}) },
 });

@@ -1,11 +1,12 @@
+import { compileManifest } from "@dreamboard-games/sdk/reducer";
 import { createGame, many } from "@dreamboard-games/sdk/reducer";
 import { z } from "zod";
 const model = createGame({
-  manifest: {
+  manifest: compileManifest({
     players: { minPlayers: 2, maxPlayers: 2 },
     cardSets: [],
     zones: [],
-  },
+  }),
   phases: { play: z.object({}) },
   state: {
     public: z.object({ total: z.number() }),

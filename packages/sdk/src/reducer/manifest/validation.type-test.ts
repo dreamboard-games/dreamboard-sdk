@@ -42,8 +42,11 @@ const state = {
   private: z.object({}),
   hidden: z.object({}),
 };
-// @ts-expect-error Direct reducer authoring checks literal counts too.
+// @ts-expect-error Reducer authoring requires compiler-owned metadata.
 createGame({ manifest: negative, state, phases: { play: z.object({}) } });
+
+// @ts-expect-error Even valid authored input must be compiled before binding state schemas.
+createGame({ manifest: base, state, phases: { play: z.object({}) } });
 
 const validated: ValidatedManifest<typeof base> = defineTopologyManifest(base);
 void validated;

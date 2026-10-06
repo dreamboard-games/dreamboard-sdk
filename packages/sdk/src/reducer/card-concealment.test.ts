@@ -1,3 +1,4 @@
+import { compileManifest } from "./manifest/compiler.js";
 import {
   testReferenceBasis,
   testGameplayBasis,
@@ -21,7 +22,7 @@ const card = (id: string) => ({
 
 function faceDownGame() {
   const model = createGame({
-    manifest: {
+    manifest: compileManifest({
       players: { minPlayers: 2, maxPlayers: 2 },
       cardSets: [
         {
@@ -36,7 +37,7 @@ function faceDownGame() {
         { id: "deck", name: "Deck", scope: "shared", visibility: "hidden" },
         { id: "table", name: "Table", scope: "shared", visibility: "public" },
       ],
-    },
+    }),
     phases: { play: z.object({}) },
     state: {
       public: z.object({}),
@@ -240,7 +241,7 @@ test("only card inputs name cards by position", async () => {
 
 function cargoGame() {
   const model = createGame({
-    manifest: {
+    manifest: compileManifest({
       players: { minPlayers: 2, maxPlayers: 2 },
       zones: [
         {
@@ -271,7 +272,7 @@ function cargoGame() {
           cards: [card("treasure")],
         },
       ],
-    },
+    }),
     phases: { play: z.object({}) },
     state: {
       public: z.object({}),

@@ -1,8 +1,9 @@
+import { compileManifest } from "@dreamboard-games/sdk/reducer";
 import { z } from "zod";
 import { createGame } from "@dreamboard-games/sdk/reducer";
 import manifest from "../manifest";
 export const game = createGame({
-  manifest,
+  manifest: compileManifest(manifest),
   state: {
     public: z.object({ count: z.number().int() }),
     private: z.object({}),

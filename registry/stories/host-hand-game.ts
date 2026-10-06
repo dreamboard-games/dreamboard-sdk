@@ -1,7 +1,8 @@
+import { compileManifest } from "@dreamboard-games/sdk/reducer";
 import { createGame, z } from "@dreamboard-games/sdk/reducer";
 
 const model = createGame({
-  manifest: {
+  manifest: compileManifest({
     players: { minPlayers: 2, maxPlayers: 2 },
     cardSets: [
       {
@@ -24,7 +25,7 @@ const model = createGame({
       { id: "deck", name: "Deck", scope: "shared", visibility: "hidden" },
       { id: "hand", name: "Hand", scope: "perPlayer", visibility: "public" },
     ],
-  },
+  }),
   phases: { play: z.object({}) },
   state: { public: z.object({}), private: z.object({}), hidden: z.object({}) },
 });

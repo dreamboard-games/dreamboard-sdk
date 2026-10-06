@@ -1,3 +1,4 @@
+import { compileManifest } from "../reducer/manifest/compiler.js";
 import { createGame } from "../reducer.js";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
@@ -17,11 +18,11 @@ const playerIdSchema = markManifestScopedSchema(z.string(), "playerId");
 const playerIds = ["runtime-player-a", "runtime-player-b"] as const;
 
 const model = createGame({
-  manifest: {
+  manifest: compileManifest({
     players: { minPlayers: 2, maxPlayers: 2 },
     cardSets: [],
     zones: [],
-  },
+  }),
   options: z.object({}),
   phases: { work: z.object({}) },
   state: { public: z.object({}), private: z.object({}), hidden: z.object({}) },

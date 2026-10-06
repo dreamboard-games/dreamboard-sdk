@@ -1,3 +1,4 @@
+import { compileManifest } from "../../reducer/manifest/compiler.js";
 import { testReferenceBasis } from "../../shared/__fixtures__/reference-basis.js";
 import { createReducerTestingRuntime } from "../../testing/reducer-runtime.js";
 import { perPlayerInstanceId } from "../../shared/domain/per-player-instance.js";
@@ -18,7 +19,7 @@ function authoredGame(
   scalarBoard = perPlayerInstanceId("board", "mat", "player-2"),
 ) {
   const model = createGame({
-    manifest: {
+    manifest: compileManifest({
       players: { minPlayers: 2, maxPlayers: 2 },
       cardSets: [
         {
@@ -56,7 +57,7 @@ function authoredGame(
           relations: [],
         },
       ],
-    },
+    }),
     state: {
       public: z.object({ selected: z.array(targetSchema), open: z.boolean() }),
       private: z.object({}),

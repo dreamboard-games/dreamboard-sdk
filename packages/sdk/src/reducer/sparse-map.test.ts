@@ -1,83 +1,21 @@
+import { compileManifest } from "./manifest/compiler";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { defineGameContract } from "./authoring/contract";
 import { defineInteraction } from "./authoring/interaction";
 import { formInput } from "./inputs";
 import { normalizeCommandParams, sparseCounts, sparseMap } from "../reducer";
-import {
-  createManifestStringLiteralSchema,
-  type RuntimeTableRecord,
-} from "../reducer/model";
 
 function buildMinimalManifest() {
-  const playerIds = ["player-1", "player-2"] as const;
-  const resourceIds = ["brick", "grain", "lumber"] as const;
-  return {
-    boardDefinitions: {},
-    tileDefinitions: {},
-    literals: {
-      tileTypeIds: [] as const,
-      tileIds: [] as const,
-      boardLayouts: [] as const,
-      boardTypeIds: [] as const,
-      relationTypeIds: [] as const,
-      playerIds,
-      phaseNames: ["phase-1"] as const,
-      cardSetIds: [] as const,
-      cardTypes: [] as const,
-      zoneIds: [] as const,
-      cardIds: [] as const,
-      resourceIds,
-      pieceTypeIds: [] as const,
-      pieceIds: [] as const,
-      dieTypeIds: [] as const,
-      dieIds: [] as const,
-      boardBaseIds: [] as const,
-      boardIds: [] as const,
-      edgeIds: [] as const,
-      edgeTypeIds: [] as const,
-      vertexIds: [] as const,
-      vertexTypeIds: [] as const,
-      spaceIds: [] as const,
-      spaceTypeIds: [] as const,
-      cardSetIdByCardId: {} as const,
-      cardTypeByCardId: {} as const,
-    },
-    ids: {
-      tileTypeId: z.never(),
-      tileId: z.never(),
-      boardLayout: z.enum(["hex", "square", "network", "track"]),
-      playerId: createManifestStringLiteralSchema(playerIds),
-      phaseName: z.enum(["phase-1"] as const),
-      cardSetId: createManifestStringLiteralSchema([] as const),
-      cardType: createManifestStringLiteralSchema([] as const),
-      cardId: createManifestStringLiteralSchema([] as const),
-      zoneId: createManifestStringLiteralSchema([] as const),
-      resourceId: createManifestStringLiteralSchema(resourceIds),
-      pieceTypeId: createManifestStringLiteralSchema([] as const),
-      pieceId: createManifestStringLiteralSchema([] as const),
-      dieTypeId: createManifestStringLiteralSchema([] as const),
-      dieId: createManifestStringLiteralSchema([] as const),
-      boardTypeId: createManifestStringLiteralSchema([] as const),
-      boardBaseId: createManifestStringLiteralSchema([] as const),
-      boardId: createManifestStringLiteralSchema([] as const),
-      relationTypeId: createManifestStringLiteralSchema([] as const),
-      edgeId: createManifestStringLiteralSchema([] as const),
-      edgeTypeId: createManifestStringLiteralSchema([] as const),
-      vertexId: createManifestStringLiteralSchema([] as const),
-      vertexTypeId: createManifestStringLiteralSchema([] as const),
-      spaceId: createManifestStringLiteralSchema([] as const),
-      spaceTypeId: createManifestStringLiteralSchema([] as const),
-    },
-    zoneDefinitions: {},
-    defaults: {
-      zones: () => ({}),
-      ownerOfCard: () => ({}),
-      visibility: () => ({}),
-      resources: () => Object.fromEntries([].map((id) => [id, {}])),
-    },
-    tableSchema: z.custom<RuntimeTableRecord>(),
-  } as const;
+  return compileManifest({
+    players: { minPlayers: 1, maxPlayers: 2 },
+    cardSets: [],
+    resources: [
+      { id: "brick", name: "Brick" },
+      { id: "grain", name: "Grain" },
+      { id: "lumber", name: "Lumber" },
+    ],
+  });
 }
 
 describe("sparse map helpers", () => {

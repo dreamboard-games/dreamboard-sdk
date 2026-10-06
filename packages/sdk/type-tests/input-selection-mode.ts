@@ -1,3 +1,4 @@
+import { compileManifest } from "../src/reducer/manifest/compiler.js";
 import { z } from "zod";
 import { createGame, many } from "../src/reducer.js";
 import type { InputBase, ReadModel } from "../src/headless/model.js";
@@ -9,11 +10,11 @@ type Equal<A, B> =
 type Expect<T extends true> = T;
 
 const model = createGame({
-  manifest: {
+  manifest: compileManifest({
     players: { minPlayers: 2, maxPlayers: 2 },
     cardSets: [],
     zones: [],
-  },
+  }),
   state: { public: z.object({}), private: z.object({}), hidden: z.object({}) },
   phases: { play: z.object({}) },
 });

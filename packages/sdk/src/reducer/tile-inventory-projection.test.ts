@@ -118,18 +118,20 @@ function setup() {
 }
 function game(privateTiles = false) {
   const model = createGame({
-    manifest: privateTiles
-      ? {
-          ...manifest,
-          tileSeeds: manifest.tileSeeds.map((tile) => ({
-            ...tile,
-            disclosure: {
-              face: { audience: "none" as const },
-              appearance: { layout: "hex" as const, cells: [{ q: 0, r: 0 }] },
-            },
-          })),
-        }
-      : manifest,
+    manifest: compileManifest(
+      privateTiles
+        ? {
+            ...manifest,
+            tileSeeds: manifest.tileSeeds.map((tile) => ({
+              ...tile,
+              disclosure: {
+                face: { audience: "none" as const },
+                appearance: { layout: "hex" as const, cells: [{ q: 0, r: 0 }] },
+              },
+            })),
+          }
+        : manifest,
+    ),
     phases: { play: z.object({}) },
     state: {
       public: z.object({}),

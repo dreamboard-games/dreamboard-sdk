@@ -1,3 +1,4 @@
+import { compileManifest } from "../../manifest/compiler.js";
 import {
   testReferenceBasis,
   testGameplayBasis,
@@ -62,12 +63,12 @@ function createTable(playerIds = ["player-1", "player-2"]) {
 
 function createCharacterizationGame() {
   const contract = createModel({
-    manifest: {
+    manifest: compileManifest({
       players: { minPlayers: 2, maxPlayers: 2 },
       cardSets: [],
       dieTypes: [{ id: "d6", name: "Test die", sides: 6 }],
       dieSeeds: [{ id: "die-1", typeId: "d6", home: { type: "detached" } }],
-    },
+    }),
     phases: {
       play: z.object({ visits: z.number().int() }),
       done: z.object({ visits: z.number().int() }),

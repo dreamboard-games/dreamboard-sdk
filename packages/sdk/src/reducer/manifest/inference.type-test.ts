@@ -57,7 +57,7 @@ const badColor: "green" = table.cards[card].properties.color;
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Negative compiler proof: Unknown zones are not part of the manifest.
 const missingZone = compiled.defaults.zones().missing;
 const game = createGame({
-  manifest,
+  manifest: compileManifest(manifest),
   state: { public: z.object({}), private: z.object({}), hidden: z.object({}) },
   phases: { play: z.object({}) },
 });

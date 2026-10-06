@@ -1,10 +1,11 @@
+import { compileManifest } from "../reducer/manifest/compiler.js";
 import { z } from "zod";
 import { createGame } from "../reducer.js";
 import type { CoreInstance, FeatureContext } from "./model.js";
 import { boardFeature } from "./features/board.js";
 
 const model = createGame({
-  manifest: {
+  manifest: compileManifest({
     players: { minPlayers: 1, maxPlayers: 1 },
     cardSets: [],
     boards: [{ id: "map", name: "Map", layout: "square", scope: "shared" }],
@@ -36,7 +37,7 @@ const model = createGame({
         },
       },
     ],
-  },
+  }),
   phases: { play: z.object({}) },
   state: { public: z.object({}), private: z.object({}), hidden: z.object({}) },
 });

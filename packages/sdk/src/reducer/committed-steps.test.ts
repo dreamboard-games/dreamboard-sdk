@@ -1,3 +1,4 @@
+import { compileManifest } from "./manifest/compiler";
 import {
   testReferenceBasis,
   testGameplayBasis,
@@ -29,7 +30,7 @@ async function fixture(
   let reductions = 0;
   let validations = 0;
   const game = createGame({
-    manifest: minimalManifest,
+    manifest: compileManifest(minimalManifest),
     phases: { play: z.object({}) },
     state: {
       public: z.object({ blocked: z.boolean(), result: z.string().nullable() }),
@@ -472,7 +473,7 @@ describe("prepared final step parameters", () => {
       const seen: unknown[] = [];
       let finalParses = 0;
       const game = createGame({
-        manifest: minimalManifest,
+        manifest: compileManifest(minimalManifest),
         phases: { play: z.object({}) },
         state: {
           public: z.object({}),
@@ -589,7 +590,7 @@ for (const change of [
 ] as const) {
   test(`reconciles committed prefixes after ${change}`, async () => {
     const model = createGame({
-      manifest: minimalManifest,
+      manifest: compileManifest(minimalManifest),
       phases: { play: z.object({}), detour: z.object({}) },
       state: {
         public: z.object({

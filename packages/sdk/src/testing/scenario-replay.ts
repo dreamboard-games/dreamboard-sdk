@@ -132,13 +132,6 @@ export async function replayScenario<
   };
   const bundle = operations.createBundle(events);
   const normalSetup = options.game.contract.manifest.normalSetup;
-  if (!normalSetup) {
-    throw new ScenarioDefinitionValidationError({
-      code: "NORMAL_SETUP_UNAVAILABLE",
-      path: "scenario.setup.players",
-      reason: "the game manifest does not expose normal setup",
-    });
-  }
   const table = normalSetup.createInitialTable({ playerIds });
   const initialized = await bundle.initialize({
     table: RuntimeJsonSchema.parse(table),

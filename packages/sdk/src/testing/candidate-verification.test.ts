@@ -1,3 +1,4 @@
+import { compileManifest } from "../reducer/manifest/compiler.js";
 import { createGame as createModel, createReducerBundle } from "../reducer";
 import { replayScenario, advanceScenarioReplay } from "./scenario-replay";
 import { describe, expect, test } from "vitest";
@@ -12,11 +13,11 @@ import { createScenarioAuthoring } from "./definitions";
 
 function createCandidateGame() {
   const contract = createModel({
-    manifest: {
+    manifest: compileManifest({
       players: { minPlayers: 2, maxPlayers: 2 },
       cardSets: [],
       zones: [],
-    },
+    }),
     phases: { play: z.object({}) },
     state: {
       public: z.object({ score: z.number().int() }),

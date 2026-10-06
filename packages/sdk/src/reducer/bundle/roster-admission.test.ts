@@ -1,3 +1,4 @@
+import { compileManifest } from "../manifest/compiler.js";
 import {
   testReferenceBasis,
   testGameplayBasis,
@@ -16,12 +17,12 @@ async function fixture() {
   const actor = vi.fn(() => [asPlayerId("seated")]);
   const view = vi.fn(() => ({}));
   const model = createGame({
-    manifest: {
+    manifest: compileManifest({
       players: { minPlayers: 1, maxPlayers: 1 },
       cardSets: [],
       zones: [],
       boards: [],
-    },
+    }),
     state: {
       public: z.object({ count: z.number() }).superRefine(() => {
         validation();

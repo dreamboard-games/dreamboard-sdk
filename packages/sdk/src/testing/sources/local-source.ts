@@ -55,7 +55,6 @@ export async function localSource<
   },
 ): Promise<LocalSource<Game>> {
   const setup = game.contract.manifest.normalSetup;
-  if (!setup) throw new Error("Game manifest does not expose normal setup.");
   const playerIds = resolvePlayerRoster(game, options.players);
   const runtime = createReducerTestingRuntime(game);
   const initial = await runtime.initialize({

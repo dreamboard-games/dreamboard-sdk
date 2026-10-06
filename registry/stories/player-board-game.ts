@@ -1,3 +1,4 @@
+import { compileManifest } from "@dreamboard-games/sdk/reducer";
 import { createGame, many } from "@dreamboard-games/sdk/reducer";
 import { z } from "zod";
 const target = z.object({
@@ -10,7 +11,7 @@ function createPlayerBoardGame(layout: "square" | "generic") {
       ? ({ layout: "square" } as const)
       : ({ layout: "generic", spaces: [{ id: "slot" }] } as const);
   const model = createGame({
-    manifest: {
+    manifest: compileManifest({
       players: { minPlayers: 2, maxPlayers: 2 },
       cardSets: [],
       zones: [],
@@ -50,7 +51,7 @@ function createPlayerBoardGame(layout: "square" | "generic") {
           relations: [],
         },
       ],
-    },
+    }),
     phases: { play: z.object({}) },
     state: {
       public: z.object({ selected: z.array(target) }),

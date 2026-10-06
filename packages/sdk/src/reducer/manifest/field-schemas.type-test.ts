@@ -159,7 +159,7 @@ const stateSchemas = {
   hidden: z.object({}),
 };
 const gameFromDefined = createGame({
-  manifest: defined,
+  manifest: compileManifest(defined),
   state: stateSchemas,
   phases: { play: z.object({}) },
 });

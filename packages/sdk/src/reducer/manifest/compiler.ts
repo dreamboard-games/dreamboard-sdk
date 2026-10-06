@@ -69,7 +69,7 @@ export function compileManifest<const M>(
   >;
 }
 /** Internal erased entry for already type-checked authoring factories; admission still runs once. */
-export function compileManifestRuntime(
+function compileManifestRuntime(
   manifest: unknown,
 ): CompiledManifest<AuthoredManifest> {
   const source = parseTopologyManifestJson(toManifestJson(manifest));

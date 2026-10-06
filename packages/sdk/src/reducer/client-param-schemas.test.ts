@@ -1,3 +1,4 @@
+import { compileManifest } from "./manifest/compiler";
 import { createGame as createModel } from "../reducer";
 import { cardInput, cardTarget } from "./inputs";
 
@@ -5,93 +6,40 @@ import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { formInput, rngInput } from "./inputs";
 import { many } from "../reducer";
-import { RuntimeTableRecord, type CollectorState } from "../reducer/model";
-import { createManifestStringLiteralSchema } from "./model";
+import { type CollectorState } from "../reducer/model";
 
 import { createClientParamSchemasByPhase } from "./client-param-schemas";
 function createContract() {
-  const playerIds = ["player-1"] as const;
-  const phaseNames = ["setup", "play"] as const;
-  const cardIds = ["card-1"] as const;
-  const cardTypes = ["play-card"] as const;
-  const handIds = ["hand"] as const;
   return createModel({
-    manifest: {
-      boardDefinitions: {},
-      tileDefinitions: {},
-      literals: {
-        boardLayouts: [] as const,
-        boardTypeIds: [] as const,
-        relationTypeIds: [] as const,
-        playerIds,
-        phaseNames,
-        cardSetIds: [] as const,
-        cardTypes,
-        zoneIds: handIds,
-        cardIds,
-        resourceIds: [] as const,
-        pieceTypeIds: [] as const,
-        pieceIds: [] as const,
-        dieTypeIds: [] as const,
-        dieIds: [] as const,
-        boardBaseIds: [] as const,
-        boardIds: [] as const,
-        tileIds: [] as const,
-        tileTypeIds: [] as const,
-        edgeIds: [] as const,
-        edgeTypeIds: [] as const,
-        vertexIds: [] as const,
-        vertexTypeIds: [] as const,
-        portIds: [] as const,
-        portTypeIds: [] as const,
-        spaceIds: [] as const,
-        spaceTypeIds: [] as const,
-        cardSetIdByCardId: {},
-        cardTypeByCardId: { "card-1": "play-card" },
-      },
-      ids: {
-        boardLayout: z.enum(["hex", "square", "network", "track"]),
-        playerId: createManifestStringLiteralSchema(playerIds),
-        phaseName: createManifestStringLiteralSchema(phaseNames),
-        cardSetId: createManifestStringLiteralSchema([] as const),
-        cardType: createManifestStringLiteralSchema(cardTypes),
-        cardId: createManifestStringLiteralSchema(cardIds),
-        zoneId: createManifestStringLiteralSchema(handIds),
-        resourceId: createManifestStringLiteralSchema([] as const),
-        dieTypeId: createManifestStringLiteralSchema([] as const),
-        dieId: createManifestStringLiteralSchema([] as const),
-        boardBaseId: createManifestStringLiteralSchema([] as const),
-        boardId: createManifestStringLiteralSchema([] as const),
-        boardTypeId: createManifestStringLiteralSchema([] as const),
-        tileId: createManifestStringLiteralSchema([] as const),
-        tileTypeId: createManifestStringLiteralSchema([] as const),
-        edgeId: createManifestStringLiteralSchema([] as const),
-        edgeTypeId: createManifestStringLiteralSchema([] as const),
-        vertexId: createManifestStringLiteralSchema([] as const),
-        vertexTypeId: createManifestStringLiteralSchema([] as const),
-        portId: createManifestStringLiteralSchema([] as const),
-        portTypeId: createManifestStringLiteralSchema([] as const),
-        spaceId: createManifestStringLiteralSchema([] as const),
-        spaceTypeId: createManifestStringLiteralSchema([] as const),
-        pieceId: createManifestStringLiteralSchema([] as const),
-        pieceTypeId: createManifestStringLiteralSchema([] as const),
-        relationTypeId: createManifestStringLiteralSchema([] as const),
-      },
-      zoneDefinitions: {
-        hand: {
+    manifest: compileManifest({
+      players: { minPlayers: 1, maxPlayers: 2 },
+      cardSets: [
+        {
+          id: "cards",
+          name: "Cards",
+          cardSchema: z.object({}),
+          defaultHome: { type: "detached" },
+          cards: [
+            {
+              id: "card-1",
+              name: "card-1",
+              cardType: "play-card",
+              count: 1,
+              properties: {},
+            },
+          ],
+        },
+      ],
+      zones: [
+        {
+          id: "hand",
+          name: "hand",
           scope: "perPlayer",
           visibility: "ownerOnly",
-          allowedCardSetIds: [],
+          allowedCardSetIds: ["cards"],
         },
-      } as const,
-      defaults: {
-        zones: () => ({}),
-        ownerOfCard: () => ({}),
-        visibility: () => ({}),
-        resources: () => Object.fromEntries([].map((id) => [id, {}])),
-      },
-      tableSchema: z.custom<RuntimeTableRecord>(),
-    },
+      ],
+    }),
     state: {
       public: z.object({}),
       private: z.object({}),

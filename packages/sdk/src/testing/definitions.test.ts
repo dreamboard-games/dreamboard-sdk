@@ -1,3 +1,4 @@
+import { compileManifest } from "../reducer/manifest/compiler.js";
 import { createGame } from "../reducer.js";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
@@ -27,11 +28,11 @@ const nestedPlayerSchema = z.object({
 });
 
 const model = createGame({
-  manifest: {
+  manifest: compileManifest({
     players: { minPlayers: 2, maxPlayers: 3 },
     cardSets: [],
     zones: [],
-  },
+  }),
   options: z.object({}),
   phases: { play: z.object({}) },
   state: { public: z.object({}), private: z.object({}), hidden: z.object({}) },

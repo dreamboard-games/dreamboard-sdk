@@ -1,3 +1,4 @@
+import { compileManifest } from "../manifest/compiler.js";
 import * as z from "zod";
 import { createGame } from "../authoring/game";
 import { many } from "./many";
@@ -15,7 +16,7 @@ type Equal<A, B> =
     ? true
     : false;
 const game = createGame({
-  manifest: {
+  manifest: compileManifest({
     players: { minPlayers: 1, maxPlayers: 2 },
     cardSets: [],
     zones: [{ id: "bag", name: "Bag", scope: "shared" }],
@@ -31,7 +32,7 @@ const game = createGame({
     tileSeeds: [
       { id: "tile", typeId: "terrain", home: { type: "zone", zoneId: "bag" } },
     ],
-  },
+  }),
   state: { public: z.object({}), private: z.object({}), hidden: z.object({}) },
   phases: { play: z.object({}) },
   errors: { INVALID_TILE: "Invalid tile" },

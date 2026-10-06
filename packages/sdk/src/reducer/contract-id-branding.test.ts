@@ -1,92 +1,52 @@
+import { compileManifest } from "./manifest/compiler";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { defineGameContract } from "./authoring/contract";
-import {
-  createManifestStringLiteralSchema,
-  type RuntimeTableRecord,
-} from "../reducer/model";
 
 function buildMinimalManifest() {
-  const playerIds = ["player-1", "player-2"] as const;
-  const cardIds = ["c-alpha", "c-beta"] as const;
-  const zoneIds = ["hand", "discard"] as const;
-  return {
-    boardDefinitions: {},
-    tileDefinitions: {},
-    literals: {
-      tileTypeIds: [] as const,
-      tileIds: [] as const,
-      boardLayouts: [] as const,
-      boardTypeIds: [] as const,
-      relationTypeIds: [] as const,
-      playerIds,
-      phaseNames: ["phase-1"] as const,
-      cardSetIds: ["deck-set"] as const,
-      cardTypes: ["standard"] as const,
-      zoneIds,
-      cardIds,
-      resourceIds: [] as const,
-      pieceTypeIds: [] as const,
-      pieceIds: [] as const,
-      dieTypeIds: [] as const,
-      dieIds: [] as const,
-      boardBaseIds: [] as const,
-      boardIds: [] as const,
-      edgeIds: [] as const,
-      edgeTypeIds: [] as const,
-      vertexIds: [] as const,
-      vertexTypeIds: [] as const,
-      spaceIds: [] as const,
-      spaceTypeIds: [] as const,
-      cardSetIdByCardId: {},
-      cardTypeByCardId: {},
-    },
-    ids: {
-      tileTypeId: z.never(),
-      tileId: z.never(),
-      boardLayout: z.enum(["hex", "square", "network", "track"]),
-      playerId: createManifestStringLiteralSchema(playerIds),
-      phaseName: z.enum(["phase-1"] as const),
-      cardSetId: createManifestStringLiteralSchema(["deck-set"] as const),
-      cardType: createManifestStringLiteralSchema(["standard"] as const),
-      cardId: createManifestStringLiteralSchema(cardIds),
-      zoneId: createManifestStringLiteralSchema(zoneIds),
-      resourceId: createManifestStringLiteralSchema([] as const),
-      pieceTypeId: createManifestStringLiteralSchema([] as const),
-      pieceId: createManifestStringLiteralSchema([] as const),
-      dieTypeId: createManifestStringLiteralSchema([] as const),
-      dieId: createManifestStringLiteralSchema([] as const),
-      boardTypeId: createManifestStringLiteralSchema([] as const),
-      boardBaseId: createManifestStringLiteralSchema([] as const),
-      boardId: createManifestStringLiteralSchema([] as const),
-      relationTypeId: createManifestStringLiteralSchema([] as const),
-      edgeId: createManifestStringLiteralSchema([] as const),
-      edgeTypeId: createManifestStringLiteralSchema([] as const),
-      vertexId: createManifestStringLiteralSchema([] as const),
-      vertexTypeId: createManifestStringLiteralSchema([] as const),
-      spaceId: createManifestStringLiteralSchema([] as const),
-      spaceTypeId: createManifestStringLiteralSchema([] as const),
-    },
-    zoneDefinitions: {
-      hand: {
+  return compileManifest({
+    players: { minPlayers: 1, maxPlayers: 2 },
+    cardSets: [
+      {
+        id: "deck-set",
+        name: "Cards",
+        cardSchema: z.object({}),
+        defaultHome: { type: "detached" },
+        cards: [
+          {
+            id: "c-alpha",
+            name: "c-alpha",
+            cardType: "standard",
+            count: 1,
+            properties: {},
+          },
+          {
+            id: "c-beta",
+            name: "c-beta",
+            cardType: "standard",
+            count: 1,
+            properties: {},
+          },
+        ],
+      },
+    ],
+    zones: [
+      {
+        id: "hand",
+        name: "hand",
         scope: "perPlayer",
         visibility: "ownerOnly",
         allowedCardSetIds: ["deck-set"],
       },
-      discard: {
+      {
+        id: "discard",
+        name: "discard",
         scope: "shared",
         visibility: "public",
         allowedCardSetIds: ["deck-set"],
       },
-    } as const,
-    defaults: {
-      zones: () => ({}),
-      ownerOfCard: () => ({}),
-      visibility: () => ({}),
-      resources: () => Object.fromEntries([].map((id) => [id, {}])),
-    },
-    tableSchema: z.custom<RuntimeTableRecord>(),
-  } as const;
+    ],
+  });
 }
 
 describe("defineGameContract id branding validation", () => {

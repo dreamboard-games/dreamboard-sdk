@@ -4,16 +4,16 @@ This complete local module defines a two-seat counter with one action:
 
 ```ts
 import { z } from "zod";
-import { createGame } from "@dreamboard-games/sdk/reducer";
+import { compileManifest, createGame } from "@dreamboard-games/sdk/reducer";
 import { createGameInstance } from "@dreamboard-games/sdk";
 import { localSource } from "@dreamboard-games/sdk/testing";
 
 const model = createGame({
-  manifest: {
+  manifest: compileManifest({
     players: { minPlayers: 2, maxPlayers: 2 },
     cardSets: [],
     zones: [],
-  },
+  }),
   state: {
     public: z.object({ count: z.number() }),
     private: z.object({}),

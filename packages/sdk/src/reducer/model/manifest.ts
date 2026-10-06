@@ -123,14 +123,7 @@ export type ReducerManifestContract<
   literals: ManifestLiterals<PlayerId, ZoneId, CardId, PhaseName>;
   ids: ManifestIds<PlayerId, ZoneId, CardId, PhaseName>;
   defaults: ManifestDefaults<Table>;
-  /**
-   * Normal-session setup capability supplied by the manifest compiler.
-   *
-   * This remains optional on the structural contract so small handwritten
-   * manifests can model focused reducer tests without recreating generated
-   * topology metadata. Compiled manifests always provide it.
-   */
-  normalSetup?: ManifestNormalSetup<Table>;
+  normalSetup: ManifestNormalSetup<Table>;
   tableSchema: z.ZodType<Table>;
 };
 

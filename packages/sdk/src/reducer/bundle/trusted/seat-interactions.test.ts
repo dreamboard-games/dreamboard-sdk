@@ -1,3 +1,4 @@
+import { compileManifest } from "../../manifest/compiler";
 import { describe, expect, test } from "vitest";
 import * as z from "zod";
 import { createGame } from "../../authoring/game.js";
@@ -104,7 +105,7 @@ const source = {
 } as const;
 function fixture() {
   const game = createGame({
-    manifest: source,
+    manifest: compileManifest(source),
     state: {
       public: z.object({}),
       private: z.object({}),

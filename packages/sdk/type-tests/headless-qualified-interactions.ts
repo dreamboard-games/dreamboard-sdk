@@ -1,14 +1,15 @@
+import { compileManifest } from "../src/reducer/manifest/compiler.js";
 import { z } from "zod";
 import { createGame, many } from "../src/reducer.js";
 import { createGameInstance } from "../src/headless/instance.js";
 import type { CommandSource } from "../src/headless/sources/types.js";
 
 const model = createGame({
-  manifest: {
+  manifest: compileManifest({
     players: { minPlayers: 1, maxPlayers: 1 },
     cardSets: [],
     zones: [],
-  },
+  }),
   phases: { "setup.round": z.object({}), play: z.object({}) },
   state: {
     public: z.object({}),

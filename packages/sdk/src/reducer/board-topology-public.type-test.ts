@@ -94,7 +94,7 @@ q.board("track").state.edges;
 table.boards.map.fields;
 
 const game = createGame({
-  manifest,
+  manifest: compileManifest(manifest),
   state: { public: z.object({}), private: z.object({}), hidden: z.object({}) },
   phases: { play: z.object({}) },
 });

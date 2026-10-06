@@ -1,3 +1,4 @@
+import { compileManifest } from "./manifest/compiler.js";
 import { describe, expect, it } from "vitest";
 import * as z from "zod";
 import { createGame, createReducerBundle } from "../reducer.js";
@@ -25,7 +26,7 @@ const appearance = {
 };
 async function fixture(hiddenGeometry = 1) {
   const model = createGame({
-    manifest: {
+    manifest: compileManifest({
       players: { minPlayers: 2, maxPlayers: 2 },
       cardSets: [
         {
@@ -86,7 +87,7 @@ async function fixture(hiddenGeometry = 1) {
         { id: "b", typeId: "secret-face" },
         { id: "omitted", typeId: "face" },
       ],
-    },
+    }),
     phases: { play: z.object({}) },
     state: {
       public: z.object({ picked: z.int().default(0) }),
