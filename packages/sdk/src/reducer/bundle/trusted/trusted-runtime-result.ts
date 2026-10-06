@@ -311,16 +311,9 @@ export function rejectResult(
 
 export function normalizeResult<
   State extends { table: Pick<RuntimeTableRecord, "playerOrder"> },
->(
-  result: ReducerResult<State> | void,
-  implicitResult: () => ReducerResult<State>,
-): ReducerResult<State> {
-  if (result === undefined || result === null) {
-    result = implicitResult();
-  }
+>(result: ReducerResult<State>): ReducerResult<State> {
   if (result.type === "accept") {
-    // Results built by `tx.accept()` / `tx.transition()` / `tx.endGame()`
-    // arrive raw; enforce the canonical result limits before committing.
+    // Enforce canonical event and terminal limits before committing.
     return {
       ...result,
 

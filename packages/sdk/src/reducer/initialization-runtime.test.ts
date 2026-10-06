@@ -154,7 +154,9 @@ function createBootstrapGame(
       setup: contract.phase("setup").define({
         kind: "auto",
         initialState: () => ({}),
-        enter: ({ tx }) => initialize(tx),
+        enter: ({ tx }) => {
+          initialize(tx);
+        },
       }),
     },
     view: () => ({}),

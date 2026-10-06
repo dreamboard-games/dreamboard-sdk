@@ -9,7 +9,7 @@ import {
   selectionHasConcealedReferences,
 } from "./seat-interactions.js";
 import type { ReferenceBasis } from "../../../shared/runtime-types.js";
-import { implicitResultOf } from "./trusted-runtime-args";
+import { transactionResultOf } from "./trusted-runtime-args";
 import type { DispatchTraceEntry } from "../../core/types";
 import type { RuntimePayload } from "../../model";
 import type {
@@ -122,10 +122,8 @@ export function createReducerExecutor<
       },
       { random },
     );
-    const result = normalizeResult(
-      interaction.reduce(reduceArgs) as ReducerResult<DomainState>,
-      () => implicitResultOf(reduceArgs),
-    );
+    interaction.reduce(reduceArgs);
+    const result = normalizeResult(transactionResultOf(reduceArgs));
     return result.type === "accept"
       ? {
           ...result,
@@ -322,9 +320,8 @@ export function createReducerExecutor<
       },
       { random },
     );
-    const resolved = normalizeResult(resolve(resolveArgs), () =>
-      implicitResultOf(resolveArgs),
-    );
+    resolve(resolveArgs);
+    const resolved = normalizeResult(transactionResultOf(resolveArgs));
     if (resolved.type === "reject") {
       return resolved;
     }

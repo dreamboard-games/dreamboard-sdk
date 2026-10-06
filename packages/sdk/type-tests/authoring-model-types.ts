@@ -798,3 +798,27 @@ type _ScenarioDynamicList = Expect<
   >
 >;
 void [unvalidatedChoice, unvalidatedChoices];
+
+// Mutation callbacks can only set outcomes through their transaction.
+game.phase("playerTurn").interaction({
+  inputs: {},
+  // @ts-expect-error Handwritten state replacements cannot bypass the transaction.
+  reduce({ state }) {
+    return { type: "accept", state };
+  },
+});
+game.phase("playerTurn").interaction({
+  inputs: {},
+  // @ts-expect-error Handwritten rejections cannot bypass the declared transaction error codes.
+  reduce() {
+    return { type: "reject", errorCode: "BAD_CARD" };
+  },
+});
+game.phase("playerTurn").define({
+  kind: "player",
+  initialState: () => ({ rolled: false }),
+  // @ts-expect-error Phase entry shares the transaction-owned result contract.
+  enter({ state }) {
+    return { type: "accept", state };
+  },
+});

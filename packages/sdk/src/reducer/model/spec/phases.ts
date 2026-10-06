@@ -2,7 +2,6 @@ import type { z } from "zod";
 import type { RuntimeTableRecord, SchemaLike, RuntimeRecord } from "../table";
 import type { ManifestContract } from "../manifest";
 import type { PlayerIdOfState, TableOfState } from "../extract";
-import type { ReducerResult } from "../runtime";
 import type {
   ActorSelector,
   BivariantCallback,
@@ -41,7 +40,7 @@ type PhaseDefinitionCommon<
       Manifest,
       ErrorCode
     >,
-    ReducerResult<ScopedPhaseState<State, z.infer<PhaseStateSchema>>> | void
+    undefined
   >;
 };
 
@@ -172,7 +171,7 @@ export type SimultaneousPlayerPhaseDefinition<
       Manifest,
       ErrorCode
     >,
-    ReducerResult<ScopedPhaseState<State, z.infer<PhaseStateSchema>>> | void
+    undefined
   >;
   interactions?: Interactions;
 };

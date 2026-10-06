@@ -1,5 +1,5 @@
 import { assertZoneConsistency } from "../../table/zones";
-import { implicitResultOf } from "./trusted-runtime-args";
+import { transactionResultOf } from "./trusted-runtime-args";
 import { safeParseOrThrow } from "../../parse-utils";
 import { createStateQueries } from "../../table-queries";
 import type {
@@ -121,9 +121,8 @@ export function createLifecycleRunner<
         },
         { random },
       );
-      const entered = normalizeResult(phase.enter(enterArgs), () =>
-        implicitResultOf(enterArgs),
-      );
+      phase.enter(enterArgs);
+      const entered = normalizeResult(transactionResultOf(enterArgs));
       if (entered.type === "reject") {
         throw new Error(
           entered.message ??

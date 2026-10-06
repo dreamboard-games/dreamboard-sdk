@@ -12,7 +12,7 @@ import { compileManifest } from "./manifest/compiler";
 import { RuntimeJsonSchema } from "../shared/runtime-json";
 
 async function lifecycleGame(
-  mode: "ignored" | "chain" | "terminal" | "invalid-terminal" | "runaway",
+  mode: "unreturned" | "chain" | "terminal" | "invalid-terminal" | "runaway",
 ) {
   const observations: unknown[] = [];
   const manifest = compileManifest({
@@ -72,7 +72,7 @@ async function lifecycleGame(
             inputs: {},
             reduce({ tx }) {
               tx.emit(event("go"));
-              if (mode === "ignored") {
+              if (mode === "unreturned") {
                 tx.transition("next");
                 return;
               }
@@ -143,14 +143,22 @@ async function lifecycleGame(
 }
 
 describe("direct phase entry", () => {
-  test("an unreturned transition result does not schedule a phase", async () => {
-    const { initialized, dispatch } = await lifecycleGame("ignored");
+  test("an unreturned transition schedules entries and preserves transaction events", async () => {
+    const { initialized, dispatch } = await lifecycleGame("unreturned");
     expect(initialized.state.runtime.lastTransition).toBeNull();
     const result = await dispatch();
     if (result.kind !== "accept") throw new Error("Expected acceptance");
-    expect(result.state.domain.flow.currentPhase).toBe("start");
-    expect(result.events.map((e) => e.procedureId)).toEqual(["go"]);
-    expect(result.trace.filter((e) => e.kind === "phaseEntered")).toEqual([]);
+    expect(result.state.domain.flow.currentPhase).toBe("done");
+    expect(result.events.map((e) => e.procedureId)).toEqual([
+      "go",
+      "next",
+      "next",
+      "done",
+    ]);
+    expect(result.trace.filter((e) => e.kind === "phaseEntered")).toHaveLength(
+      3,
+    );
+    expect(result.state.domain.publicState).toMatchObject({ entries: 3 });
   });
   test("every entry resets phase state and exposes the destination phase before initialState", async () => {
     const { observations, initialized, dispatch } =

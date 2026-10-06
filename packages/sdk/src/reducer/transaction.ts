@@ -5,6 +5,7 @@ import type {
   PlayerIdOfState,
   ReducerAccept,
   ReducerReject,
+  ReducerResult,
   RuntimeTableRecord,
   TableQueriesOfState,
 } from "./model";
@@ -35,7 +36,7 @@ import { cloneRuntimeTable } from "./table/clone";
 export type { RotateZoneArgs } from "./transaction-mutations";
 
 /**
- * Result builders on the transaction. A mutation callback ends with one of
+ * Outcome setters on the transaction. A mutation callback ends with one of
  * these or with a bare `return` (accept the transaction as it stands).
  */
 export type ReducerTransactionOutcome<
@@ -45,9 +46,9 @@ export type ReducerTransactionOutcome<
   /** Emit display events with an explicit public or named-seat audience. */
   emit(...events: GameEvent[]): void;
   /** Accept with the current transaction state. Same as a bare `return`. */
-  accept(): ReducerAccept<State>;
+  accept(): undefined;
   /** Accept and move the flow to another declared phase. */
-  transition<To extends TransitionTarget<State>>(to: To): ReducerAccept<State>;
+  transition<To extends TransitionTarget<State>>(to: To): undefined;
   /**
    * Accept and end the game with a terminal outcome. Pass `transition` to
    * also move the flow to a terminal phase in the same result.
@@ -55,9 +56,9 @@ export type ReducerTransactionOutcome<
   endGame(
     outcome: GameOutcome<PlayerIdOfState<State>>,
     options?: { transition?: TransitionTarget<State> },
-  ): ReducerAccept<State>;
+  ): undefined;
   /** Reject with a declared error code. The transaction is discarded. */
-  reject(errorCode: ErrorCode, message?: string): ReducerReject;
+  reject(errorCode: ErrorCode, message?: string): undefined;
 };
 
 export type ReducerTransaction<
@@ -87,6 +88,7 @@ type TransactionContext<State extends { table: RuntimeTableRecord }> = {
   currentQueries: TableQueriesOfState<State> | null;
   methodCache: Record<string, (...args: readonly unknown[]) => State>;
   events: GameEvent[];
+  disposition: Omit<ReducerAccept<State>, "state" | "events"> | ReducerReject;
   random: TransactionRandom;
   definitions: ZoneDefinitions;
   rollMethod?: (dieId: string) => number;
@@ -97,32 +99,51 @@ type TransactionContext<State extends { table: RuntimeTableRecord }> = {
 function createOutcomeMethods<State extends { table: RuntimeTableRecord }>(
   context: TransactionContext<State>,
 ): ReducerTransactionOutcome<State> {
-  const accept = (): ReducerAccept<State> => ({
-    type: "accept",
-    state: context.currentState,
-    events: [...context.events],
-  });
   return {
     emit(...events) {
       context.events.push(...events);
     },
-    accept,
+    accept() {
+      context.disposition = { type: "accept" };
+      return undefined;
+    },
     transition(to) {
-      return { ...accept(), transition: to as PhaseNameOfState<State> };
+      context.disposition = {
+        type: "accept",
+        transition: to as PhaseNameOfState<State>,
+      };
+      return undefined;
     },
     endGame(outcome, options) {
-      return {
-        ...accept(),
+      context.disposition = {
+        type: "accept",
         terminal: outcome,
         ...(options?.transition
           ? { transition: options.transition as PhaseNameOfState<State> }
           : {}),
       };
+      return undefined;
     },
     reject(errorCode, message) {
-      return { type: "reject", errorCode, message };
+      context.disposition = { type: "reject", errorCode, message };
+      return undefined;
     },
   };
+}
+
+/** Capture the completed transaction for the runtime commit boundary. */
+export function finishReducerTransaction<
+  State extends { table: RuntimeTableRecord },
+  Definitions extends ZoneDefinitions,
+>(tx: ReducerTransaction<State, string, Definitions>): ReducerResult<State> {
+  const context = getTransactionContext<State>(tx);
+  return context.disposition.type === "reject"
+    ? context.disposition
+    : {
+        ...context.disposition,
+        state: context.currentState,
+        events: [...context.events],
+      };
 }
 
 type TransactionHost<State extends { table: RuntimeTableRecord }> = {
@@ -286,6 +307,7 @@ function createReducerTransactionFromSurface<
       currentQueries: null,
       methodCache: {},
       events: [],
+      disposition: { type: "accept" },
       random,
       definitions,
     } satisfies TransactionContext<State>,
