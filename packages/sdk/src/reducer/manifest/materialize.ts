@@ -1,3 +1,11 @@
+import { boardSpaceHostId } from "../../shared/domain/board-space-host.js";
+import {
+  enumerateZoneHosts,
+  assertContainmentAcyclic,
+  assertZoneConsistency,
+  type ZoneTable,
+} from "../table/zones.js";
+import type { RuntimeComponentLocation, ZoneDefinition } from "../model";
 import {
   PlayerRosterSchema,
   isPlayerIdValue,
@@ -21,7 +29,6 @@ import {
 } from "./field-schemas";
 import type {
   BoardEdgeRef,
-  BoardContainerSpec,
   BoardCard,
   BoardRelationSpec,
   BoardSpec,
@@ -32,7 +39,6 @@ import type {
   HexEdgeRef,
   HexSpaceSpec,
   HexVertexRef,
-  DieSeedSpec,
   CardSetDefinition,
   FieldSchemaJson,
   PieceSeedSpec,
@@ -56,10 +62,8 @@ interface AnalyzedGenericBoard {
   boardFieldsSchema?: FieldSchemaJson | null;
   spaceFieldsSchema?: FieldSchemaJson | null;
   relationFieldsSchema?: FieldSchemaJson | null;
-  containerFieldsSchema?: FieldSchemaJson | null;
   spaces: BoardSpaceSpec[];
   relations: BoardRelationSpec[];
-  containers: BoardContainerSpec[];
 }
 
 interface AnalyzedHexBoard {
@@ -110,12 +114,10 @@ interface AnalyzedSquareBoard {
   boardFieldsSchema?: FieldSchemaJson | null;
   spaceFieldsSchema?: FieldSchemaJson | null;
   relationFieldsSchema?: FieldSchemaJson | null;
-  containerFieldsSchema?: FieldSchemaJson | null;
   edgeFieldsSchema?: FieldSchemaJson | null;
   vertexFieldsSchema?: FieldSchemaJson | null;
   spaces: SquareSpaceSpec[];
   relations: BoardRelationSpec[];
-  containers: BoardContainerSpec[];
   edges: Array<{
     id: string;
     spaceIds: string[];
@@ -165,14 +167,8 @@ interface ManifestAnalysis {
   dieTypeIds: string[];
   dieIds: string[];
   dieTypeIdByDieId: Map<string, string>;
-  strictSlotHosts: Array<{
-    kind: "piece" | "die";
-    id: string;
-    slotIds: string[];
-  }>;
   boardBaseIds: string[];
   boardIds: string[];
-  boardContainerIds: string[];
   boardTypeIds: string[];
   boardLayoutById: Map<string, string>;
   boardIdsByLayout: Map<string, string[]>;
@@ -182,11 +178,6 @@ interface ManifestAnalysis {
   spaceIdsByBoardId: Map<string, string[]>;
   spaceTypeIdByBoardId: Map<string, Record<string, string | null>>;
   spaceIdsByTypeId: Map<string, string[]>;
-  containerIdsByBoardId: Map<string, string[]>;
-  containerHostByBoardId: Map<
-    string,
-    Record<string, { type: "board" } | { type: "space"; spaceId: string }>
-  >;
   relationTypeIds: string[];
   relationTypeIdsByBoardId: Map<string, string[]>;
   edgeIds: string[];
@@ -632,14 +623,10 @@ function analyzeBoards(manifest: GameTopologyManifest, playerIds: string[]) {
         boardFieldsSchema: squareBoard.boardFieldsSchema,
         spaceFieldsSchema: squareBoard.spaceFieldsSchema,
         relationFieldsSchema: squareBoard.relationFieldsSchema,
-        containerFieldsSchema: squareBoard.containerFieldsSchema,
         edgeFieldsSchema: squareBoard.edgeFieldsSchema,
         vertexFieldsSchema: squareBoard.vertexFieldsSchema,
         spaces,
         relations: [...(squareBoard.relations ?? [])],
-        containers: [...(squareBoard.containers ?? [])].sort((left, right) =>
-          left.id.localeCompare(right.id),
-        ),
         edges: resolveSquareEdges(squareBoard, spaces),
         vertices: resolveSquareVertices(squareBoard, spaces),
       };
@@ -655,25 +642,12 @@ function analyzeBoards(manifest: GameTopologyManifest, playerIds: string[]) {
       boardFieldsSchema: genericBoard.boardFieldsSchema,
       spaceFieldsSchema: genericBoard.spaceFieldsSchema,
       relationFieldsSchema: genericBoard.relationFieldsSchema,
-      containerFieldsSchema: genericBoard.containerFieldsSchema,
       spaces: [...(genericBoard.spaces ?? [])].sort((left, right) =>
         left.id.localeCompare(right.id),
       ),
       relations: [...(genericBoard.relations ?? [])],
-      containers: [...(genericBoard.containers ?? [])].sort((left, right) =>
-        left.id.localeCompare(right.id),
-      ),
     };
   });
-}
-
-function isSingletonExplicitSeed(seed: {
-  id?: string | null;
-  count?: number | null;
-}): seed is typeof seed & { id: string } {
-  return (
-    typeof seed.id === "string" && seed.id.length > 0 && (seed.count ?? 1) === 1
-  );
 }
 
 export function analyzeManifest(
@@ -691,10 +665,10 @@ export function analyzeManifestStructure(
 ): ManifestAnalysis {
   const playerIds = [...(runtimePlayerIds ?? [])];
   const sharedZones = (manifest.zones ?? []).filter(
-    (zone) => zone.scope === "shared",
+    (zone) => "scope" in zone && zone.scope === "shared",
   );
   const playerZones = (manifest.zones ?? []).filter(
-    (zone) => zone.scope === "perPlayer",
+    (zone) => "scope" in zone && zone.scope === "perPlayer",
   );
   const zoneIds = dedupeSorted((manifest.zones ?? []).map((zone) => zone.id));
   const cardSets = manifest.cardSets;
@@ -744,13 +718,12 @@ export function analyzeManifestStructure(
       dedupeSorted(zone.allowedCardSetIds ?? []),
     );
   }
-  const zoneCardSetIdsById = new Map<string, string[]>();
-  for (const [zoneId, cardSetIds] of sharedZoneCardSetIds.entries()) {
-    zoneCardSetIdsById.set(zoneId, cardSetIds);
-  }
-  for (const [zoneId, cardSetIds] of playerZoneCardSetIds.entries()) {
-    zoneCardSetIdsById.set(zoneId, cardSetIds);
-  }
+  const zoneCardSetIdsById = new Map(
+    (manifest.zones ?? []).map((zone) => [
+      zone.id,
+      dedupeSorted(zone.allowedCardSetIds ?? []),
+    ]),
+  );
 
   const sharedZoneIdsByCardSetId = new Map<string, string[]>(
     cardSetIds.map((cardSetId): [string, string[]] => [cardSetId, []]),
@@ -824,12 +797,6 @@ export function analyzeManifestStructure(
       pieceType.fieldsSchema,
     ]),
   );
-  const pieceTypeSlotIdsById = new Map(
-    (manifest.pieceTypes ?? []).map((pieceType) => [
-      pieceType.id,
-      dedupeSorted((pieceType.slots ?? []).map((slot) => slot.id)),
-    ]),
-  );
   const pieceTypeIdByPieceId = new Map<string, string>();
   for (const seed of manifest.pieceSeeds ?? []) {
     for (const { id: pieceId } of scopedInstances(
@@ -851,12 +818,6 @@ export function analyzeManifestStructure(
       dieType.fieldsSchema,
     ]),
   );
-  const dieTypeSlotIdsById = new Map(
-    (manifest.dieTypes ?? []).map((dieType) => [
-      dieType.id,
-      dedupeSorted((dieType.slots ?? []).map((slot) => slot.id)),
-    ]),
-  );
   const dieTypeIdByDieId = new Map<string, string>();
   for (const seed of manifest.dieSeeds ?? []) {
     for (const { id: dieId } of scopedInstances(
@@ -869,33 +830,6 @@ export function analyzeManifestStructure(
     }
   }
   const dieIds = dedupeSorted(dieTypeIdByDieId.keys());
-  const strictSlotHosts = [
-    ...(manifest.pieceSeeds ?? []).flatMap((seed) => {
-      if (!isSingletonExplicitSeed(seed)) {
-        return [];
-      }
-      const slotIds = pieceTypeSlotIdsById.get(seed.typeId) ?? [];
-      return slotIds.length > 0
-        ? scopedInstances("piece", [seed.id], seed.scope, playerIds).map(
-            ({ id }) => ({ kind: "piece" as const, id, slotIds }),
-          )
-        : [];
-    }),
-    ...(manifest.dieSeeds ?? []).flatMap((seed) => {
-      if (!isSingletonExplicitSeed(seed)) {
-        return [];
-      }
-      const slotIds = dieTypeSlotIdsById.get(seed.typeId) ?? [];
-      return slotIds.length > 0
-        ? scopedInstances("die", [seed.id], seed.scope, playerIds).map(
-            ({ id }) => ({ kind: "die" as const, id, slotIds }),
-          )
-        : [];
-    }),
-  ].sort(
-    (left, right) =>
-      left.kind.localeCompare(right.kind) || left.id.localeCompare(right.id),
-  );
   const analyzedBoards = analyzeBoards(manifest, playerIds);
   const boardBaseIds = dedupeSorted(
     analyzedBoards.map(({ board }) => board.id),
@@ -916,11 +850,6 @@ export function analyzeManifestStructure(
   const spaceIdsByBoardId = new Map<string, string[]>();
   const spaceTypeIdByBoardId = new Map<string, Record<string, string | null>>();
   const spaceIdsByTypeId = new Map<string, string[]>();
-  const containerIdsByBoardId = new Map<string, string[]>();
-  const containerHostByBoardId = new Map<
-    string,
-    Record<string, { type: "board" } | { type: "space"; spaceId: string }>
-  >();
   const relationTypeIdsByBoardId = new Map<string, string[]>();
   const edgeIdsByTypeId = new Map<string, string[]>();
   const edgeIdsByBoardIdAndTypeId = new Map<string, Record<string, string[]>>();
@@ -951,24 +880,6 @@ export function analyzeManifestStructure(
         (space) => [space.id, space.typeId ?? null] as const,
       ),
     );
-    const runtimeContainerIds =
-      analyzedBoard.layout === "hex"
-        ? []
-        : analyzedBoard.containers.map((container) => container.id);
-    const runtimeContainerHosts: Record<
-      string,
-      { type: "board" } | { type: "space"; spaceId: string }
-    > =
-      analyzedBoard.layout === "hex"
-        ? {}
-        : sortedObject(
-            analyzedBoard.containers.map((container) => [
-              container.id,
-              container.host.type === "space"
-                ? { type: "space" as const, spaceId: container.host.spaceId }
-                : { type: "board" as const },
-            ]),
-          );
     const runtimeRelationTypeIds =
       analyzedBoard.layout === "hex"
         ? ["adjacent"]
@@ -984,8 +895,6 @@ export function analyzeManifestStructure(
       boardLayoutById.set(runtimeBoardId, analyzedBoard.board.layout);
       spaceIdsByBoardId.set(runtimeBoardId, runtimeSpaceIds);
       spaceTypeIdByBoardId.set(runtimeBoardId, runtimeSpaceTypeIds);
-      containerIdsByBoardId.set(runtimeBoardId, runtimeContainerIds);
-      containerHostByBoardId.set(runtimeBoardId, runtimeContainerHosts);
       relationTypeIdsByBoardId.set(runtimeBoardId, runtimeRelationTypeIds);
     }
     if (analyzedBoard.boardTypeId) {
@@ -1064,13 +973,6 @@ export function analyzeManifestStructure(
     ),
   );
   const vertexTypeIds = dedupeSorted(vertexIdsByTypeId.keys());
-  const boardContainerIds = dedupeSorted(
-    analyzedBoards.flatMap((board) =>
-      board.layout === "hex"
-        ? []
-        : board.containers.map((container) => container.id),
-    ),
-  );
   const spaceIds = dedupeSorted(
     analyzedBoards.flatMap((board) => board.spaces.map((space) => space.id)),
   );
@@ -1109,10 +1011,8 @@ export function analyzeManifestStructure(
     dieTypeIds,
     dieIds,
     dieTypeIdByDieId,
-    strictSlotHosts,
     boardBaseIds,
     boardIds,
-    boardContainerIds,
     boardTypeIds,
     boardLayoutById,
     boardIdsByLayout,
@@ -1122,8 +1022,6 @@ export function analyzeManifestStructure(
     spaceIdsByBoardId,
     spaceTypeIdByBoardId,
     spaceIdsByTypeId,
-    containerIdsByBoardId,
-    containerHostByBoardId,
     relationTypeIds,
     relationTypeIdsByBoardId,
     edgeIds,
@@ -1275,6 +1173,62 @@ type MaterializeOptions = {
   playerIds: readonly string[];
   shuffleItems: <Value>(values: readonly Value[]) => Value[];
 };
+/** Enumerate empty zones from the structural instance inventory, without fields or homes. */
+export function materializeEmptyZones(
+  analysis: ManifestAnalysis,
+): Record<string, Record<string, string[]>> {
+  const hosts = {
+    playerOrder: analysis.playerIds,
+    pieces: Object.fromEntries(
+      [...analysis.pieceTypeIdByPieceId].map(([id, pieceTypeId]) => [
+        id,
+        { id, pieceTypeId },
+      ]),
+    ),
+    dice: Object.fromEntries(
+      [...analysis.dieTypeIdByDieId].map(([id, dieTypeId]) => [
+        id,
+        { id, dieTypeId },
+      ]),
+    ),
+    boards: {
+      byId: Object.fromEntries(
+        analysis.analyzedBoards.flatMap((board) =>
+          board.runtimeBoardIds.map((id) => [
+            id,
+            {
+              id,
+              baseId: board.board.id,
+              scope: board.board.scope,
+              playerId:
+                board.board.scope === "perPlayer"
+                  ? parsePerPlayerInstanceId(id)?.playerId
+                  : null,
+              spaces: Object.fromEntries(
+                board.spaces.map((space) => [space.id, {}]),
+              ),
+            },
+          ]),
+        ),
+      ),
+    },
+  };
+  return Object.fromEntries(
+    (analysis.manifest.zones ?? []).map((zone) => [
+      zone.id,
+      Object.fromEntries(
+        enumerateZoneHosts(hosts, {
+          ...("scope" in zone
+            ? { scope: zone.scope }
+            : { attachedTo: zone.attachedTo }),
+          visibility: zone.visibility ?? "public",
+          allowedCardSetIds: zone.allowedCardSetIds ?? [],
+        }).map((hostId) => [hostId, []]),
+      ),
+    ]),
+  );
+}
+
 /** Construct actual session inventory; references use the supplied live roster. */
 export function materializeManifestTable(
   options: MaterializeOptions,
@@ -1307,10 +1261,16 @@ function materializeManifest(
   const manifest = analysis.manifest;
   const playerIds = [...options.playerIds];
 
-  const cards = createRecord<Record<string, unknown>>();
-  const pieces = createRecord<Record<string, unknown>>();
-  const dice = createRecord<Record<string, unknown>>();
-  const componentLocations = createRecord<Record<string, unknown>>();
+  const cards = createRecord<
+    ZoneTable["cards"][string] & Record<string, unknown>
+  >();
+  const pieces = createRecord<
+    ZoneTable["pieces"][string] & Record<string, unknown>
+  >();
+  const dice = createRecord<
+    ZoneTable["dice"][string] & Record<string, unknown>
+  >();
+  const componentLocations = createRecord<RuntimeComponentLocation>();
   const locationOrder = new Map<string, number>();
 
   const boardAnalysisByBaseId = new Map(
@@ -1349,10 +1309,19 @@ function materializeManifest(
     locationOrder.set(key, position + 1);
     return position;
   };
-  const zoneScopeById = new Map<string, "shared" | "perPlayer">([
-    ...analysis.sharedZones.map((zone) => [zone.id, "shared"] as const),
-    ...analysis.playerZones.map((zone) => [zone.id, "perPlayer"] as const),
-  ]);
+  const zoneDefinitions: Record<string, ZoneDefinition> = Object.fromEntries(
+    (manifest.zones ?? []).map((zone) => [
+      zone.id,
+      {
+        ...("scope" in zone
+          ? { scope: zone.scope }
+          : { attachedTo: zone.attachedTo }),
+        visibility: zone.visibility ?? "public",
+        allowedCardSetIds: zone.allowedCardSetIds ?? [],
+      },
+    ]),
+  );
+  const pendingHomes: (() => void)[] = [];
   const resolveRuntimeBoardId = (
     boardBaseId: string,
     origin: string | null | undefined,
@@ -1405,23 +1374,6 @@ function materializeManifest(
     return vertexId;
   };
 
-  function resolveSlotHost(
-    host: { kind: "piece" | "die"; id: string },
-    origin: string | null,
-  ) {
-    const seeds =
-      host.kind === "piece" ? manifest.pieceSeeds : manifest.dieSeeds;
-    const seed = seeds?.find((seed) => seed.id === host.id);
-    if (seed?.scope !== "perPlayer") return host;
-    if (!origin)
-      throw new Error(
-        `Shared component cannot target per-player slot host '${host.id}'.`,
-      );
-    return {
-      kind: host.kind,
-      id: perPlayerInstanceId(host.kind, host.id, origin),
-    };
-  }
   const materializeComponentLocation = (
     home: NonNullable<BoardCard["home"]>,
     origin: string | null,
@@ -1429,43 +1381,59 @@ function materializeManifest(
       path: string;
       label: string;
     },
-  ): Record<string, unknown> => {
+  ): RuntimeComponentLocation => {
     if (home.type === "detached") {
       return { type: "Detached" };
     }
 
-    if (home.type === "slot") {
-      const host = resolveSlotHost(home.host, origin);
-      return {
-        type: "InSlot",
-        host,
-        slotId: home.slotId,
-        position: nextLocationPosition({
-          type: "InSlot",
-          host,
-          slotId: home.slotId,
-        }),
-      };
-    }
-
     if (home.type === "zone") {
-      const zoneScope = zoneScopeById.get(home.zoneId);
-      if (!zoneScope) {
-        throw new Error(
-          `${context.path}.zoneId: ${context.label} targets unknown zone '${home.zoneId}'.`,
+      const definition = zoneDefinitions[home.zoneId];
+      if (!definition)
+        throw new Error(`${context.path}: Unknown zone '${home.zoneId}'.`);
+      let hostId: string;
+      if ("scope" in definition) {
+        if (definition.scope === "shared") hostId = "table";
+        else {
+          if (!origin)
+            throw new Error(
+              `${context.path}: Per-player zone requires a replication origin.`,
+            );
+          hostId = origin;
+        }
+      } else if ("board" in definition.attachedTo) {
+        const boardId = resolveRuntimeBoardId(
+          definition.attachedTo.board,
+          origin,
+          context.path,
         );
-      }
-      if (zoneScope === "perPlayer" && !origin) {
-        throw new Error(
-          `${context.path}.zoneId: ${context.label} cannot target per-player zone '${home.zoneId}' because shared card inventory has no replication origin. Place it during reducer setup instead.`,
+        hostId =
+          definition.attachedTo.space !== undefined
+            ? boardSpaceHostId(boardId, definition.attachedTo.space)
+            : boardId;
+      } else {
+        if (!home.component)
+          throw new Error(
+            `${context.path}.component: Component-attached zone requires a host base id.`,
+          );
+        const family = "pieceType" in definition.attachedTo ? "piece" : "die";
+        const seeds =
+          family === "piece" ? manifest.pieceSeeds : manifest.dieSeeds;
+        const seed = seeds?.find((seed) =>
+          expandSeedIds([seed]).includes(home.component ?? ""),
         );
+        if (!seed)
+          throw new Error(
+            `${context.path}.component: Unknown host base '${home.component}'.`,
+          );
+        if (seed.scope === "perPlayer") {
+          if (!origin)
+            throw new Error(
+              `${context.path}: Replicated host requires a replication origin.`,
+            );
+          hostId = perPlayerInstanceId(family, home.component, origin);
+        } else hostId = home.component;
       }
-      return {
-        type: "InZone",
-        zoneId: home.zoneId,
-        hostId: zoneScope === "perPlayer" ? origin : "table",
-        playedBy: null,
-      };
+      return { type: "InZone", zoneId: home.zoneId, hostId, playedBy: null };
     }
 
     if (home.type === "space") {
@@ -1489,33 +1457,6 @@ function materializeManifest(
           type: "OnSpace",
           boardId,
           spaceId: home.spaceId,
-        }),
-      };
-    }
-
-    if (home.type === "container") {
-      const boardId = resolveRuntimeBoardId(
-        home.boardId,
-        origin,
-        `${context.path}.boardId: ${context.label}`,
-      );
-      if (
-        !analysis.containerIdsByBoardId
-          .get(home.boardId)
-          ?.includes(home.containerId)
-      ) {
-        throw new Error(
-          `${context.path}.containerId: ${context.label} targets unknown container '${home.containerId}' on board '${home.boardId}'.`,
-        );
-      }
-      return {
-        type: "InContainer",
-        boardId,
-        containerId: home.containerId,
-        position: nextLocationPosition({
-          type: "InContainer",
-          boardId,
-          containerId: home.containerId,
         }),
       };
     }
@@ -1595,14 +1536,17 @@ function materializeManifest(
           card.home === undefined
             ? `manifest.cardSets[${cardSetIndex}].defaultHome`
             : `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}].home`;
-        componentLocations[cardId] = materializeComponentLocation(
-          resolvedHome,
-          origin,
-          {
-            path,
-            label: `Card '${card.id}' instance ${instanceIndex + 1}`,
-          },
-        );
+        componentLocations[cardId] = { type: "Detached" };
+        pendingHomes.push(() => {
+          componentLocations[cardId] = materializeComponentLocation(
+            resolvedHome,
+            origin,
+            {
+              path,
+              label: `Card '${card.id}' instance ${instanceIndex + 1}`,
+            },
+          );
+        });
       }
     }
   }
@@ -1628,136 +1572,18 @@ function materializeManifest(
   const assignSeedLocation = (
     componentId: string,
     origin: string | null | undefined,
-    home: PieceSeedSpec["home"] | DieSeedSpec["home"] | undefined,
-    context: {
-      path: string;
-      label: string;
-    },
+    home: PieceSeedSpec["home"] | undefined,
+    context: { path: string; label: string },
   ) => {
-    if (!home) {
-      componentLocations[componentId] = { type: "Detached" };
-      return;
-    }
-
-    if (home.type === "slot") {
-      const host = resolveSlotHost(home.host, origin ?? null);
-      componentLocations[componentId] = {
-        type: "InSlot",
-        host,
-        slotId: home.slotId,
-        position: nextLocationPosition({
-          type: "InSlot",
-          host,
-          slotId: home.slotId,
-        }),
-      };
-      return;
-    }
-
-    if (home.type === "zone") {
-      if (zoneScopeById.get(home.zoneId) === "perPlayer") {
-        if (!origin) {
-          throw new Error(
-            `${context.path}.zoneId: ${context.label} requires perPlayer scope because zone '${home.zoneId}' has scope 'perPlayer'. Use perPlayer scope to resolve the player-scoped destination.`,
-          );
-        }
-        componentLocations[componentId] = {
-          type: "InZone",
-          zoneId: home.zoneId,
-          hostId: origin,
-          playedBy: null,
-        };
-        return;
-      }
-
-      componentLocations[componentId] = {
-        type: "InZone",
-        zoneId: home.zoneId,
-        hostId: "table",
-        playedBy: null,
-      };
-      return;
-    }
-
-    if (home.type === "space") {
-      const boardId = resolveRuntimeBoardId(
-        home.boardId,
-        origin,
-        `${context.path}.boardId: ${context.label}`,
-      );
-      componentLocations[componentId] = {
-        type: "OnSpace",
-        boardId,
-        spaceId: home.spaceId,
-        position: nextLocationPosition({
-          type: "OnSpace",
-          boardId,
-          spaceId: home.spaceId,
-        }),
-      };
-      return;
-    }
-
-    if (home.type === "container") {
-      const boardId = resolveRuntimeBoardId(
-        home.boardId,
-        origin,
-        `${context.path}.boardId: ${context.label}`,
-      );
-      componentLocations[componentId] = {
-        type: "InContainer",
-        boardId,
-        containerId: home.containerId,
-        position: nextLocationPosition({
-          type: "InContainer",
-          boardId,
-          containerId: home.containerId,
-        }),
-      };
-      return;
-    }
-
-    if (home.type === "edge") {
-      const boardId = resolveRuntimeBoardId(
-        home.boardId,
-        origin,
-        `${context.path}.boardId: ${context.label}`,
-      );
-      const edgeId = resolveBoardEdgeId(home.boardId, home.ref.spaces);
-      componentLocations[componentId] = {
-        type: "OnEdge",
-        boardId,
-        edgeId,
-        position: nextLocationPosition({
-          type: "OnEdge",
-          boardId,
-          edgeId,
-        }),
-      };
-      return;
-    }
-
-    if (home.type === "vertex") {
-      const boardId = resolveRuntimeBoardId(
-        home.boardId,
-        origin,
-        `${context.path}.boardId: ${context.label}`,
-      );
-      const vertexId = resolveBoardVertexId(home.boardId, home.ref.spaces);
-      componentLocations[componentId] = {
-        type: "OnVertex",
-        boardId,
-        vertexId,
-        position: nextLocationPosition({
-          type: "OnVertex",
-          boardId,
-          vertexId,
-        }),
-      };
-      return;
-    }
-
     componentLocations[componentId] = { type: "Detached" };
+    if (home)
+      pendingHomes.push(() => {
+        componentLocations[componentId] = materializeComponentLocation(
+          home,
+          origin ?? null,
+          context,
+        );
+      });
   };
 
   for (const [seedIndex, seed] of (manifest.pieceSeeds ?? []).entries()) {
@@ -1816,7 +1642,9 @@ function materializeManifest(
     }
   }
 
-  const boardStatesById = createRecord<Record<string, unknown>>();
+  const boardStatesById = createRecord<
+    ZoneTable["boards"]["byId"][string] & Record<string, unknown>
+  >();
   const hexBoardStatesById = createRecord<Record<string, unknown>>();
   const squareBoardStatesById = createRecord<Record<string, unknown>>();
 
@@ -1846,7 +1674,6 @@ function materializeManifest(
               analysis,
               space.fields,
             ),
-            zoneId: "zoneId" in space ? (space.zoneId ?? null) : null,
           };
 
           if (analyzedBoard.layout === "hex") {
@@ -1893,34 +1720,6 @@ function materializeManifest(
             ),
           }));
 
-    const buildContainers = (runtimeBoardId: string) =>
-      analyzedBoard.layout === "hex"
-        ? {}
-        : Object.fromEntries(
-            analyzedBoard.containers.map((container) => {
-              const containerId = container.id;
-              return [
-                containerId,
-                {
-                  id: containerId,
-                  name: container.name ?? containerId,
-                  host:
-                    container.host.type === "space"
-                      ? { type: "space", spaceId: container.host.spaceId }
-                      : { type: "board" },
-                  allowedCardSetIds: container.allowedCardSetIds,
-                  zoneId: `board:${runtimeBoardId}:container:${containerId}`,
-                  fields: fields(
-                    analyzedBoard.containerFieldsSchema,
-                    analysis,
-                    container.fields,
-                    runtimeBoardId,
-                  ),
-                },
-              ];
-            }),
-          );
-
     const edges =
       analyzedBoard.layout === "generic"
         ? []
@@ -1964,7 +1763,6 @@ function materializeManifest(
         playerId,
         spaces: cloneJson(buildSpaces()),
         relations: cloneJson(relations),
-        containers: cloneJson(buildContainers(runtimeBoardId)),
         ...(analyzedBoard.layout === "hex"
           ? {
               orientation: analyzedBoard.board.orientation ?? "pointy",
@@ -1989,23 +1787,25 @@ function materializeManifest(
     }
   }
 
-  const zones = Object.fromEntries(
-    (manifest.zones ?? []).map((zone) => [
-      zone.id,
-      Object.fromEntries(
-        (zone.scope === "shared" ? ["table"] : playerIds).map((hostId) => [
-          hostId,
-          [] as string[],
-        ]),
-      ),
-    ]),
-  );
+  const zoneTable: ZoneTable = {
+    playerOrder: playerIds,
+    zones: materializeEmptyZones(analysis),
+    cards,
+    pieces,
+    dice,
+    componentLocations,
+    boards: { byId: boardStatesById },
+  };
+  const zones = zoneTable.zones;
+  for (const resolveHome of pendingHomes) resolveHome();
+  assertContainmentAcyclic(zoneTable, { zoneDefinitions });
   for (const [componentId, location] of Object.entries(componentLocations)) {
     if (location.type !== "InZone") continue;
     const ids = zones[String(location.zoneId)]?.[String(location.hostId)];
     if (!ids) throw new Error(`Missing zone host for '${componentId}'.`);
     ids.push(componentId);
   }
+  assertZoneConsistency(zoneTable, { zoneDefinitions });
   const { ownerOfCard, visibility } = initialCardMetadata(
     manifest.cardSets,
     playerIds,

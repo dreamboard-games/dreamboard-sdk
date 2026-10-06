@@ -115,26 +115,12 @@ export function createTableSchema(
       });
     },
   ).strict();
-  const slotVariants = analysis.strictSlotHosts.flatMap((host) =>
-    host.slotIds.map((slotId) =>
-      z.object({
-        type: z.literal("InSlot"),
-        host: z.object({ kind: z.literal(host.kind), id: z.literal(host.id) }),
-        slotId: z.literal(slotId),
-        position: z.number().int().nullish(),
-      }),
-    ),
-  );
-  const slotLocationSchema = slotVariants.length
-    ? z.union(slotVariants)
-    : z.never();
   const boardSpaceTypeIdSchema = ids.spaceTypeId.nullable().optional();
-  const boardSpaceStateSchema = z.object({
+  const boardSpaceStateSchema = z.strictObject({
     id: ids.spaceId,
     name: z.string().nullable().optional(),
     typeId: boardSpaceTypeIdSchema,
     fields: unknownRecordSchema,
-    zoneId: z.string().nullable().optional(),
   });
   const hexSpaceStateSchema = boardSpaceStateSchema.extend({
     q: z.number().int(),
@@ -152,18 +138,7 @@ export function createTableSchema(
     directed: z.boolean(),
     fields: unknownRecordSchema,
   });
-  const boardContainerStateSchema = z.object({
-    id: ids.boardContainerId,
-    name: z.string(),
-    host: z.discriminatedUnion("type", [
-      z.object({ type: z.literal("board") }),
-      z.object({ type: z.literal("space"), spaceId: ids.spaceId }),
-    ]),
-    allowedCardSetIds: z.array(ids.cardSetId).optional(),
-    zoneId: z.string(),
-    fields: unknownRecordSchema,
-  });
-  const runtimeGenericBoardStateSchema = z.object({
+  const runtimeGenericBoardStateSchema = z.strictObject({
     id: activeBoardId,
     baseId: ids.boardBaseId,
     layout: z.literal("generic"),
@@ -171,13 +146,8 @@ export function createTableSchema(
     scope: z.enum(["shared", "perPlayer"]),
     playerId: activePlayerId.nullable().optional(),
     fields: unknownRecordSchema,
-    // T220: per-board state.spaces is loose-keyed by string. See the
-    // codegen-template comment in renderGenericBoardStateSchema for
-    // the rationale; the wire shape is unchanged (additionalProperties
-    // JSON), and the inner id field narrows at parse time.
     spaces: z.record(z.string(), boardSpaceStateSchema),
     relations: z.array(boardRelationStateSchema),
-    containers: z.record(z.string(), boardContainerStateSchema),
   });
   const hexEdgeStateSchema = z.object({
     id: ids.edgeId,
@@ -205,20 +175,16 @@ export function createTableSchema(
   });
   const runtimeHexBoardStateSchema = runtimeGenericBoardStateSchema.extend({
     layout: z.literal("hex"),
-    // T220: loose-keyed by string — see comment above.
     spaces: z.record(z.string(), hexSpaceStateSchema),
     relations: z.array(boardRelationStateSchema),
-    containers: z.object({}),
     orientation: z.enum(["pointy", "flat"]),
     edges: z.array(hexEdgeStateSchema),
     vertices: z.array(hexVertexStateSchema),
   });
   const runtimeSquareBoardStateSchema = runtimeGenericBoardStateSchema.extend({
     layout: z.literal("square"),
-    // T220: loose-keyed by string — see comment above.
     spaces: z.record(z.string(), squareSpaceStateSchema),
     relations: z.array(boardRelationStateSchema),
-    containers: z.record(z.string(), boardContainerStateSchema),
     edges: z.array(hexEdgeStateSchema),
     vertices: z.array(squareVertexStateSchema),
   });
@@ -246,18 +212,6 @@ export function createTableSchema(
           ),
         }),
       );
-      const containers =
-        "containers" in board
-          ? shape(
-              board.containers,
-              (item) => item.id,
-              (item) =>
-                boardContainerStateSchema.extend({
-                  id: z.literal(item.id),
-                  fields: objectSchema(board.containerFieldsSchema),
-                }),
-            )
-          : z.object({});
       if (board.layout === "generic")
         return {
           id,
@@ -265,9 +219,12 @@ export function createTableSchema(
           layout: board.layout,
           schema: runtimeGenericBoardStateSchema.extend({
             ...base,
-            spaces: z.record(z.string(), spaces),
+            spaces: shape(
+              board.spaces,
+              (space) => space.id,
+              (space) => spaces.extend({ id: z.literal(space.id) }),
+            ).strict(),
             relations,
-            containers,
           }),
         };
       const edges = z.array(
@@ -289,24 +246,32 @@ export function createTableSchema(
           board.layout === "hex"
             ? runtimeHexBoardStateSchema.extend({
                 ...base,
-                spaces: z.record(
-                  z.string(),
-                  spaces.extend({ q: z.number().int(), r: z.number().int() }),
-                ),
+                spaces: shape(
+                  board.spaces,
+                  (space) => space.id,
+                  (space) =>
+                    spaces.extend({
+                      id: z.literal(space.id),
+                      q: z.number().int(),
+                      r: z.number().int(),
+                    }),
+                ).strict(),
                 edges,
                 vertices,
               })
             : runtimeSquareBoardStateSchema.extend({
                 ...base,
-                spaces: z.record(
-                  z.string(),
-                  spaces.extend({
-                    row: z.number().int(),
-                    col: z.number().int(),
-                  }),
-                ),
+                spaces: shape(
+                  board.spaces,
+                  (space) => space.id,
+                  (space) =>
+                    spaces.extend({
+                      id: z.literal(space.id),
+                      row: z.number().int(),
+                      col: z.number().int(),
+                    }),
+                ).strict(),
                 relations,
-                containers,
                 edges,
                 vertices,
               }),
@@ -354,12 +319,6 @@ export function createTableSchema(
             position: z.number().int().nullable().optional(),
           }),
           z.object({
-            type: z.literal("InContainer"),
-            boardId: activeBoardId,
-            containerId: ids.boardContainerId,
-            position: z.number().int().nullable().optional(),
-          }),
-          z.object({
             type: z.literal("OnEdge"),
             boardId: activeBoardId,
             edgeId: ids.edgeId,
@@ -371,7 +330,6 @@ export function createTableSchema(
             vertexId: ids.vertexId,
             position: z.number().int().nullable().optional(),
           }),
-          slotLocationSchema,
         ]),
       ),
       ownerOfCard: z.record(activeCardId, activePlayerId.nullable()),
@@ -539,15 +497,6 @@ export function createTableSchema(
               definition.relationFieldsSchema,
               property(relation, "fields"),
               [...path, "relations", index, "fields"],
-              id,
-            );
-          for (const [containerId, container] of recordEntries(
-            property(board, "containers"),
-          ))
-            validateFields(
-              definition.containerFieldsSchema,
-              property(container, "fields"),
-              [...path, "containers", containerId, "fields"],
               id,
             );
         }

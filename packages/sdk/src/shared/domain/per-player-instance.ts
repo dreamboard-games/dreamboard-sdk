@@ -1,7 +1,7 @@
 import * as z from "zod";
 
 /** Authored identities exclude this prefix; canonical generated instances own it. */
-export const PER_PLAYER_INSTANCE_PREFIX = "@db/";
+export const GENERATED_ID_PREFIX = "@db/";
 
 const instanceTuple = z.tuple([
   z.enum(["board", "card", "piece", "die"]),
@@ -32,7 +32,7 @@ export function perPlayerInstanceId<
 ): PerPlayerInstanceId<Family, BaseId> {
   instanceTuple.parse([family, baseId, playerId]);
   // Only this validated encoder constructs the identity's phantom witness.
-  return `${PER_PLAYER_INSTANCE_PREFIX}${JSON.stringify([family, baseId, playerId])}` as PerPlayerInstanceId<
+  return `${GENERATED_ID_PREFIX}${JSON.stringify([family, baseId, playerId])}` as PerPlayerInstanceId<
     Family,
     BaseId
   >;
@@ -49,14 +49,11 @@ export interface ParsedPerPlayerInstance {
 export function parsePerPlayerInstanceId(
   value: unknown,
 ): ParsedPerPlayerInstance | null {
-  if (
-    typeof value !== "string" ||
-    !value.startsWith(PER_PLAYER_INSTANCE_PREFIX)
-  )
+  if (typeof value !== "string" || !value.startsWith(GENERATED_ID_PREFIX))
     return null;
   let candidate: unknown;
   try {
-    candidate = JSON.parse(value.slice(PER_PLAYER_INSTANCE_PREFIX.length));
+    candidate = JSON.parse(value.slice(GENERATED_ID_PREFIX.length));
   } catch {
     return null;
   }

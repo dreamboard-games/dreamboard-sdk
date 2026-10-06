@@ -1,7 +1,7 @@
 import { createTestTransaction } from "../transaction-test-fixtures";
 import { describe, expect, test } from "vitest";
 import {
-  getComponentsInContainer,
+  getZoneComponents,
   getComponentsOnEdge,
   getComponentsOnSpace,
   getComponentsOnVertex,
@@ -9,22 +9,21 @@ import {
 import { createSpatialTable, spatialDefinitions } from "./table-test-fixtures";
 
 describe("table ops spatial helpers", () => {
-  test("moveComponentToSpace and moveComponentToContainer re-home cards, pieces, and dice", () => {
+  test("moveComponentToSpace and moveComponentToZone re-home cards, pieces, and dice", () => {
     const table = createSpatialTable();
 
-    const withCardInContainer = createTestTransaction(
+    const withCardInAttachedZone = createTestTransaction(
       {
         table,
       },
       spatialDefinitions,
-    ).moveComponentToContainer({
+    ).moveComponentToZone({
       componentId: "card-1",
-      boardId: "main-board",
-      containerId: "market-row",
+      to: { zoneId: "market-row", hostId: "main-board" },
     }).table;
     const withPieceOnSpace = createTestTransaction(
       {
-        table: withCardInContainer,
+        table: withCardInAttachedZone,
       },
       spatialDefinitions,
     ).moveComponentToSpace({
@@ -46,10 +45,10 @@ describe("table ops spatial helpers", () => {
     expect(withDieOnSpace.zones["draw-deck"].table).toEqual([]);
     expect(withDieOnSpace.zones.supply.table).toEqual([]);
     expect(withDieOnSpace.componentLocations["card-1"]).toEqual({
-      type: "InContainer",
-      boardId: "main-board",
-      containerId: "market-row",
-      position: 0,
+      type: "InZone",
+      zoneId: "market-row",
+      hostId: "main-board",
+      playedBy: null,
     });
     expect(withDieOnSpace.componentLocations["piece-1"]).toEqual({
       type: "OnSpace",
@@ -64,7 +63,10 @@ describe("table ops spatial helpers", () => {
       position: 1,
     });
     expect(
-      getComponentsInContainer(withDieOnSpace, "main-board", "market-row"),
+      getZoneComponents(withDieOnSpace, spatialDefinitions, {
+        zoneId: "market-row",
+        hostId: "main-board",
+      }),
     ).toEqual(["card-1"]);
     expect(
       getComponentsOnSpace(withDieOnSpace, "main-board", "space-a"),
@@ -190,80 +192,75 @@ describe("table ops spatial helpers", () => {
     ).toEqual(["piece-1"]);
   });
 
-  test("moving a component out of a slot reindexes only matching structured slot hosts", () => {
+  test("moving a component out preserves other attached host memberships and order", () => {
     const table = createSpatialTable();
-    table.pieces["piece-2"] = {
-      id: "piece-2",
-      pieceTypeId: "token",
+    for (const id of ["piece-2", "piece-3", "host-piece"])
+      table.pieces[id] = { id, pieceTypeId: "token", properties: {} };
+    table.dice["host-die"] = {
+      id: "host-die",
+      dieTypeId: "d6",
+      sides: 6,
       properties: {},
     };
-    table.pieces["piece-3"] = {
-      id: "piece-3",
-      pieceTypeId: "token",
-      properties: {},
-    };
+    table.componentLocations["host-piece"] = { type: "Detached" };
+    table.componentLocations["host-die"] = { type: "Detached" };
+    table.zones.supply.table = ["die-1"];
+    table.zones.worker = { "host-piece": ["piece-1", "piece-2"] };
+    table.zones.rest = { "host-die": ["piece-3"] };
     table.componentLocations["piece-1"] = {
-      type: "InSlot",
-      host: {
-        kind: "piece",
-        id: "host-a",
-      },
-      slotId: "worker-rest",
-      position: 0,
+      type: "InZone",
+      zoneId: "worker",
+      hostId: "host-piece",
+      playedBy: null,
     };
     table.componentLocations["piece-2"] = {
-      type: "InSlot",
-      host: {
-        kind: "piece",
-        id: "host-a",
-      },
-      slotId: "worker-rest",
-      position: 1,
+      type: "InZone",
+      zoneId: "worker",
+      hostId: "host-piece",
+      playedBy: null,
     };
     table.componentLocations["piece-3"] = {
-      type: "InSlot",
-      host: {
-        kind: "die",
-        id: "host-a",
-      },
-      slotId: "worker-rest",
-      position: 0,
+      type: "InZone",
+      zoneId: "rest",
+      hostId: "host-die",
+      playedBy: null,
     };
-
-    const moved = createTestTransaction(
-      {
-        table,
+    const definitions = {
+      zoneDefinitions: {
+        ...spatialDefinitions.zoneDefinitions,
+        worker: {
+          attachedTo: { pieceType: "token" },
+          visibility: "public",
+          allowedCardSetIds: [],
+        },
+        rest: {
+          attachedTo: { dieType: "d6" },
+          visibility: "public",
+          allowedCardSetIds: [],
+        },
       },
-      spatialDefinitions,
+    } as const;
+    const moved = createTestTransaction(
+      { table },
+      definitions,
     ).moveComponentToSpace({
       componentId: "piece-1",
       boardId: "main-board",
       spaceId: "space-a",
     }).table;
-
     expect(moved.componentLocations["piece-1"]).toEqual({
       type: "OnSpace",
       boardId: "main-board",
       spaceId: "space-a",
       position: 0,
     });
-    expect(moved.componentLocations["piece-2"]).toEqual({
-      type: "InSlot",
-      host: {
-        kind: "piece",
-        id: "host-a",
-      },
-      slotId: "worker-rest",
-      position: 0,
-    });
-    expect(moved.componentLocations["piece-3"]).toEqual({
-      type: "InSlot",
-      host: {
-        kind: "die",
-        id: "host-a",
-      },
-      slotId: "worker-rest",
-      position: 0,
-    });
+    expect(moved.zones.worker["host-piece"]).toEqual(["piece-2"]);
+    expect(moved.zones.rest["host-die"]).toEqual(["piece-3"]);
+    expect(moved.componentLocations["piece-2"]).toEqual(
+      table.componentLocations["piece-2"],
+    );
+    expect(moved.componentLocations["piece-3"]).toEqual(
+      table.componentLocations["piece-3"],
+    );
   });
 });

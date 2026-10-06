@@ -26,7 +26,6 @@ function createPlayerBoardGame(layout: "square" | "generic") {
           scope: "perPlayer",
           ...geometry,
           relations: [],
-          containers: [],
         },
       ],
     },

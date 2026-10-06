@@ -3,7 +3,6 @@ import type {
   ZoneArg,
   ZoneIdOfTable,
   ZoneComponentsOfTable,
-  BoardContainerIdOfTable,
   BoardIdOfTable,
   CardIdOfTable,
   ComponentIdOfTable,
@@ -33,7 +32,6 @@ import {
 import {
   addPlayerResourcesInPlace as tableAddPlayerResourcesInPlace,
   flipCardInPlace as tableFlipCardInPlace,
-  moveComponentToContainerInPlace as tableMoveComponentToContainerInPlace,
   moveComponentToDetachedInPlace as tableMoveComponentToDetachedInPlace,
   moveComponentToEdgeInPlace as tableMoveComponentToEdgeInPlace,
   moveComponentToSpaceInPlace as tableMoveComponentToSpaceInPlace,
@@ -175,17 +173,6 @@ export interface TransactionMutations<
     componentId: ComponentId;
     boardId: BoardId;
     spaceId: SpaceId;
-  }): State;
-
-  /** Move a component into a board container. */
-  moveComponentToContainer<
-    BoardId extends BoardIdOfTable<TableOfState<State>>,
-    ContainerId extends BoardContainerIdOfTable<TableOfState<State>, BoardId>,
-    ComponentId extends ComponentIdOfTable<TableOfState<State>>,
-  >(args: {
-    componentId: ComponentId;
-    boardId: BoardId;
-    containerId: ContainerId;
   }): State;
 
   /** Move a component onto a tiled board edge. */
@@ -456,20 +443,6 @@ export const transactionMutations = {
       args.componentId,
       args.boardId,
       args.spaceId,
-      definitions,
-    );
-    return state;
-  },
-  moveComponentToContainer<S extends AnyState>(
-    state: S,
-    args: { componentId: string; boardId: string; containerId: string },
-    definitions: ZoneDefinitions,
-  ): S {
-    tableMoveComponentToContainerInPlace(
-      state.table,
-      args.componentId,
-      args.boardId,
-      args.containerId,
       definitions,
     );
     return state;

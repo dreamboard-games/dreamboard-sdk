@@ -1,3 +1,4 @@
+import type { BoardSpaceHostId } from "../../shared/domain/board-space-host.js";
 import type {
   PerPlayerInstanceId,
   PerPlayerInstanceFamily,
@@ -24,6 +25,7 @@ import type {
   RuntimeHexBoardState,
   RuntimeSquareBoardState,
   ZoneDefinition,
+  ZoneHostMap,
 } from "../model";
 import type { PlayerId } from "../per-player";
 import type { RuntimeIdsFromCount } from "./identity-types.js";
@@ -39,7 +41,6 @@ export type SchemaAuthoring<T> = T extends readonly (infer V)[]
                 | "boardFieldsSchema"
                 | "spaceFieldsSchema"
                 | "relationFieldsSchema"
-                | "containerFieldsSchema"
                 | "edgeFieldsSchema"
                 | "vertexFieldsSchema"
             ? FieldSchema
@@ -121,7 +122,6 @@ export type ManifestIdsOf<M> = {
   boardTypeId: Extract<Get<Boards<M>, "typeId">, string>;
   boardBaseId: Id<Boards<M>>;
   boardId: RuntimeBoardId<Boards<M>>;
-  boardContainerId: Id<Entry<Get<Boards<M>, "containers">>>;
   relationTypeId: Extract<
     Get<Entry<Get<Boards<M>, "relations">>, "typeId">,
     string
@@ -264,7 +264,6 @@ type BoardParts<M, B> = {
       name?: string | null;
       typeId?: Extract<Get<BoardSpaceEntry<B>, "typeId">, string> | null;
       fields: BoardField<B, "spaceFieldsSchema", M>;
-      zoneId?: string | null;
     };
   };
 };
@@ -322,27 +321,6 @@ type InferredBoards<M> = {
   network: Record<string, RuntimeRecord>;
   track: Record<string, RuntimeRecord>;
 };
-type SeedSlotLocation<
-  Seed,
-  Definition,
-  Kind extends "piece" | "die",
-> = Seed extends { typeId: infer TypeId extends string }
-  ? Id<
-      Entries<Extract<Definition, { id: TypeId }>, "slots">
-    > extends infer SlotId extends string
-    ? [SlotId] extends [never]
-      ? never
-      : {
-          type: "InSlot";
-          host: {
-            kind: Kind;
-            id: SeedIds<Seed, Kind extends "die" ? "die" : "piece">;
-          };
-          slotId: SlotId;
-          position?: number | null;
-        }
-    : never
-  : never;
 type AllowedCardSets<M, Z> = Z extends {
   allowedCardSetIds: readonly (infer S)[];
 }
@@ -358,14 +336,28 @@ type ZoneCardIds<M, Z> =
         : never
       : never
     : never;
-type ManifestComponentLocation<M> =
-  | Exclude<RuntimeComponentLocation, { type: "InSlot" }>
-  | SeedSlotLocation<
-      Entries<M, "pieceSeeds">,
-      Entries<M, "pieceTypes">,
-      "piece"
-    >
-  | SeedSlotLocation<Entries<M, "dieSeeds">, Entries<M, "dieTypes">, "die">;
+export type HostIdOfZone<M, Z> = Z extends { scope: "shared" }
+  ? "table"
+  : Z extends { scope: "perPlayer" }
+    ? PlayerId
+    : Z extends {
+          attachedTo: { board: infer B; space: infer S extends string };
+        }
+      ? BoardSpaceHostId<RuntimeBoardId<Extract<Boards<M>, { id: B }>>, S>
+      : Z extends { attachedTo: { board: infer B } }
+        ? RuntimeBoardId<Extract<Boards<M>, { id: B }>>
+        : Z extends { attachedTo: { pieceType: infer T } }
+          ? SeedIds<Extract<Entries<M, "pieceSeeds">, { typeId: T }>, "piece">
+          : Z extends { attachedTo: { dieType: infer T } }
+            ? SeedIds<Extract<Entries<M, "dieSeeds">, { typeId: T }>, "die">
+            : never;
+type InferredZones<M> = {
+  [Z in Entries<M, "zones"> as Id<Z>]: ZoneHostMap<
+    HostIdOfZone<M, Z>,
+    ZoneCardIds<M, Z> | ManifestIdsOf<M>["pieceId" | "dieId"],
+    Z extends { scope: infer S extends "shared" | "perPlayer" } ? S : "attached"
+  >;
+};
 
 export type ManifestTable<M> = AuthoredManifest extends M
   ? RuntimeTableRecord
@@ -382,18 +374,13 @@ export type ManifestTable<M> = AuthoredManifest extends M
     > & {
       boards: InferredBoards<M>;
       playerOrder: PlayerId[];
-      zones: {
-        [Z in Entries<M, "zones"> as Id<Z>]: Record<
-          Z extends { scope: "shared" } ? "table" : PlayerId,
-          (ZoneCardIds<M, Z> | ManifestIdsOf<M>["pieceId" | "dieId"])[]
-        >;
-      };
+      zones: InferredZones<M>;
       cards: InferredCards<M>;
       pieces: InferredPieces<M>;
       dice: InferredDice<M>;
       componentLocations: Record<
         ManifestIdsOf<M>["cardId" | "pieceId" | "dieId"],
-        ManifestComponentLocation<M>
+        RuntimeComponentLocation
       >;
       resources: Record<
         PlayerId,
@@ -421,10 +408,17 @@ export type CompiledManifest<M> = Omit<
 > & {
   readonly [compiledManifest]: true;
   readonly zoneDefinitions: {
-    readonly [Z in Entries<M, "zones"> as Id<Z>]: Omit<
-      ZoneDefinition,
-      "scope"
-    > & { readonly scope: Get<Z, "scope"> };
+    readonly [Z in Entries<M, "zones"> as Id<Z>]: ZoneDefinition &
+      (Z extends { scope: infer S extends "shared" | "perPlayer" }
+        ? { readonly scope: S }
+        : Z extends {
+              attachedTo: infer A extends Extract<
+                ZoneDefinition,
+                { attachedTo: unknown }
+              >["attachedTo"];
+            }
+          ? { readonly attachedTo: A }
+          : never);
   };
   staticBoards: Pick<
     InferredBoards<SharedBoardManifest<M>>,

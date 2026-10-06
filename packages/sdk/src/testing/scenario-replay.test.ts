@@ -37,7 +37,6 @@ function createScenarioGame() {
         scope: "perPlayer",
         spaces: [{ id: "cell-a" }, { id: "cell-b" }],
         relations: [],
-        containers: [],
       },
     ],
   } as const);

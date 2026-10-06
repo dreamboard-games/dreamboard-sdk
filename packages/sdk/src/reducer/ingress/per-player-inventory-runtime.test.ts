@@ -21,7 +21,6 @@ const model = createGame({
         scope: "perPlayer",
         spaces: [{ id: "spot" }],
         relations: [],
-        containers: [],
       },
     ],
     cardSets: [
@@ -52,6 +51,7 @@ const model = createGame({
       },
     ],
     zones: [
+      { id: "hold", name: "Hold", attachedTo: { pieceType: "token" } },
       {
         id: "supply",
         name: "Supply",
@@ -59,7 +59,7 @@ const model = createGame({
         visibility: "public",
       },
     ],
-    pieceTypes: [{ id: "token", name: "Token", slots: [{ id: "hold" }] }],
+    pieceTypes: [{ id: "token", name: "Token" }],
     pieceSeeds: [
       {
         id: "token",
@@ -206,7 +206,7 @@ describe("replicated inventory session admission", () => {
     },
   );
 
-  test.each(["space", "slot"])(
+  test.each(["space", "attached zone"])(
     "rejects a location on a declared %s base with an absent replication seat",
     async (kind) => {
       const { state } = await session();
@@ -225,10 +225,10 @@ describe("replicated inventory session admission", () => {
           kind === "space"
             ? { type: "OnSpace", boardId: host, spaceId: "spot", position: 0 }
             : {
-                type: "InSlot",
-                host: { kind: "piece", id: host },
-                slotId: "hold",
-                position: 0,
+                type: "InZone",
+                zoneId: "hold",
+                hostId: host,
+                playedBy: null,
               },
       });
       expect(() =>
@@ -385,4 +385,28 @@ describe("replicated inventory session admission", () => {
       }),
     ).toThrow("missing private state");
   });
+  test.each(["InSlot", "InContainer"])(
+    "rejects the removed %s checkpoint location",
+    async (type) => {
+      const { state } = await session();
+      const table = model.contract.manifest.tableSchema.parse(
+        state.domain.table,
+      );
+      const piece = perPlayerInstanceId("piece", "token", roster[0]);
+      Object.assign(table.componentLocations, {
+        [piece]:
+          type === "InSlot"
+            ? {
+                type,
+                host: { kind: "piece", id: piece },
+                slotId: "hold",
+                position: 0,
+              }
+            : { type, boardId: "mat", containerId: "hold", position: 0 },
+      });
+      expect(() =>
+        codec.parseState({ ...state, domain: { ...state.domain, table } }),
+      ).toThrow("componentLocations");
+    },
+  );
 });

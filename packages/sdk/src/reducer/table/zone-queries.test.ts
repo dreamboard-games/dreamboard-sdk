@@ -8,30 +8,31 @@ import {
   getCard,
   getCardOwner,
   getCardVisibility,
-  getComponentContainerLocation,
   getComponentEdgeLocation,
   getComponentLocation,
-  getComponentSlotLocation,
   getComponentSpaceLocation,
   getComponentVertexLocation,
   getComponentZoneLocation,
-  getContainer,
   getEdge,
   getHexBoard,
   getIncidentEdges,
   getZoneComponents,
   getPlayerOrder,
   getPlayerResources,
-  getSlotOccupants,
-  getSlotOccupantsByHost,
   getSpace,
   getSpaceDistance,
   getSquareBoard,
   getVertex,
 } from "./index";
-import { createSpatialTable } from "./table-test-fixtures";
+import { createSpatialTable, spatialDefinitions } from "./table-test-fixtures";
 const definitions = {
   zoneDefinitions: {
+    ...spatialDefinitions.zoneDefinitions,
+    "worker-rest": {
+      attachedTo: { pieceType: "token" },
+      visibility: "public",
+      allowedCardSetIds: [],
+    },
     "draw-deck": {
       scope: "shared",
       visibility: "public",
@@ -115,10 +116,10 @@ describe("table ops spatial helpers", () => {
       position: 0,
     };
     table.componentLocations["piece-3"] = {
-      type: "InContainer",
-      boardId: "main-board",
-      containerId: "market-row",
-      position: 0,
+      type: "InZone",
+      zoneId: "market-row",
+      hostId: "main-board",
+      playedBy: null,
     };
     table.componentLocations["piece-4"] = {
       type: "OnEdge",
@@ -133,12 +134,25 @@ describe("table ops spatial helpers", () => {
       position: 0,
     };
     table.componentLocations["piece-6"] = {
-      type: "InSlot",
-      host: { kind: "piece", id: "host-a" },
-      slotId: "worker-rest",
-      position: 0,
+      type: "InZone",
+      zoneId: "worker-rest",
+      hostId: "host-a",
+      playedBy: null,
     };
     table.componentLocations["piece-7"] = { type: "Detached" };
+    table.pieces["host-a"] = {
+      id: "host-a",
+      pieceTypeId: "token",
+      properties: {},
+    };
+    table.componentLocations["host-a"] = { type: "Detached" };
+    table.zones["worker-rest"] = Object.fromEntries(
+      Object.keys(table.pieces).map((id) => [
+        id,
+        id === "host-a" ? ["piece-6"] : [],
+      ]),
+    );
+    table.zones["market-row"]["main-board"] = ["piece-3"];
 
     expect(getCard(table, "card-2").name).toBe("Spare Card");
     expect(getCardOwner(table, "card-2")).toBe("player-1");
@@ -204,16 +218,11 @@ describe("table ops spatial helpers", () => {
         position: 0,
       },
     });
-    expect(getComponentContainerLocation(table, "piece-3")).toMatchObject({
+    expect(getComponentZoneLocation(table, "piece-3")).toEqual({
       componentId: "piece-3",
-      boardId: "main-board",
-      containerId: "market-row",
-      location: {
-        type: "InContainer",
-        boardId: "main-board",
-        containerId: "market-row",
-        position: 0,
-      },
+      zoneId: "market-row",
+      hostId: "main-board",
+      location: table.componentLocations["piece-3"],
     });
     expect(getComponentEdgeLocation(table, "piece-4")).toMatchObject({
       componentId: "piece-4",
@@ -237,44 +246,23 @@ describe("table ops spatial helpers", () => {
         position: 0,
       },
     });
-    expect(getComponentSlotLocation(table, "piece-6")).toEqual({
+    expect(getComponentZoneLocation(table, "piece-6")).toEqual({
       componentId: "piece-6",
-      host: { kind: "piece", id: "host-a" },
-      slotId: "worker-rest",
-      location: {
-        type: "InSlot",
-        host: { kind: "piece", id: "host-a" },
-        slotId: "worker-rest",
-        position: 0,
-      },
+      zoneId: "worker-rest",
+      hostId: "host-a",
+      location: table.componentLocations["piece-6"],
     });
     expect(
-      getSlotOccupants(table, { kind: "piece", id: "host-a" }, "worker-rest"),
-    ).toEqual([
-      {
-        pieceId: "piece-6",
-        playerId: "player-2",
-        slotId: "worker-rest",
-        data: { strength: 2 },
-      },
-    ]);
-    expect(
-      getSlotOccupantsByHost(table, { kind: "piece", id: "host-a" }),
-    ).toEqual({
-      "worker-rest": [
-        {
-          pieceId: "piece-6",
-          playerId: "player-2",
-          slotId: "worker-rest",
-          data: { strength: 2 },
-        },
-      ],
-    });
+      getZoneComponents(table, definitions, {
+        zoneId: "worker-rest",
+        hostId: "host-a",
+      }),
+    ).toEqual(["piece-6"]);
+    expect(table.pieces["piece-6"].ownerId).toBe("player-2");
+    expect(table.pieces["piece-6"].properties).toEqual({ strength: 2 });
     expect(getComponentSpaceLocation(table, "piece-7")).toBeNull();
-    expect(getComponentContainerLocation(table, "piece-7")).toBeNull();
     expect(getComponentEdgeLocation(table, "piece-7")).toBeNull();
     expect(getComponentVertexLocation(table, "piece-7")).toBeNull();
-    expect(getComponentSlotLocation(table, "piece-7")).toBeNull();
   });
 
   test("table query facade matches the existing read helpers", () => {
@@ -306,12 +294,24 @@ describe("table ops spatial helpers", () => {
       properties: { stamina: 1 },
     };
     table.componentLocations["piece-8"] = {
-      type: "InSlot",
-      host: { kind: "piece", id: "host-a" },
-      slotId: "worker-rest",
-      position: 0,
+      type: "InZone",
+      zoneId: "worker-rest",
+      hostId: "host-a",
+      playedBy: null,
     };
 
+    table.pieces["host-a"] = {
+      id: "host-a",
+      pieceTypeId: "token",
+      properties: {},
+    };
+    table.componentLocations["host-a"] = { type: "Detached" };
+    table.zones["worker-rest"] = Object.fromEntries(
+      Object.keys(table.pieces).map((id) => [
+        id,
+        id === "host-a" ? ["piece-8"] : [],
+      ]),
+    );
     const q = createTableQueries(table, definitions);
 
     expect(q.board("main-board").state).toBe(getBoard(table, "main-board"));
@@ -322,9 +322,7 @@ describe("table ops spatial helpers", () => {
     expect(q.board("main-board").space("space-a")).toBe(
       getSpace(table, "main-board", "space-a"),
     );
-    expect(q.board("main-board").container("market-row")).toBe(
-      getContainer(table, "main-board", "market-row"),
-    );
+    expect(q.zone("market-row", "main-board")).toEqual([]);
     expect(
       q
         .board("hex-board")
@@ -394,33 +392,9 @@ describe("table ops spatial helpers", () => {
     expect(q.card.visibility("card-2")).toEqual(
       getCardVisibility(table, "card-2"),
     );
-    expect(
-      q.slot.occupants({ kind: "piece", id: "host-a" }, "worker-rest"),
-    ).toEqual([
-      {
-        pieceId: "piece-8",
-        playerId: "player-1",
-        slotId: "worker-rest",
-        data: { stamina: 1 },
-      },
-    ]);
-    expect(q.slot.occupantsByHost({ kind: "piece", id: "host-a" })).toEqual({
-      "worker-rest": [
-        {
-          pieceId: "piece-8",
-          playerId: "player-1",
-          slotId: "worker-rest",
-          data: { stamina: 1 },
-        },
-      ],
-    });
-    expect(q.slot.pieceOccupants("host-a", "worker-rest")).toEqual(
-      q.slot.occupants({ kind: "piece", id: "host-a" }, "worker-rest"),
-    );
-    expect(q.slot.pieceOccupantsByHost("host-a")).toEqual(
-      q.slot.occupantsByHost({ kind: "piece", id: "host-a" }),
-    );
-    expect(q.slot.dieOccupants("host-a", "worker-rest")).toEqual([]);
+    expect(q.zone("worker-rest", "host-a")).toEqual(["piece-8"]);
+    expect(q.zones("worker-rest")["host-a"]).toEqual(["piece-8"]);
+    expect(q.component.data("piece-8").properties).toEqual({ stamina: 1 });
     expect(q.player.order()).toEqual(getPlayerOrder(table));
     expect(q.player.resources("player-2")).toEqual(
       getPlayerResources(table, "player-2"),

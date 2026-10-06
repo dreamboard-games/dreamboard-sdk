@@ -1,6 +1,7 @@
 import type { RuntimeTableRecord, ZoneDefinitions } from "../model";
 import { removeComponentFromCurrentLocation } from "./component-mutations";
 import {
+  assertContainmentAcyclic,
   assertComponent,
   assertComponentAllowed,
   resolveZone,
@@ -46,13 +47,7 @@ function place(
   const { ref, definition } = resolveZone(table, definitions, zone);
   table.componentLocations[id] = { type: "InZone", ...ref, playedBy };
   if (Object.hasOwn(table.cards, id)) {
-    table.visibility[id] =
-      definition.visibility === "public"
-        ? { faceUp: true }
-        : definition.visibility === "ownerOnly" &&
-            definition.scope === "perPlayer"
-          ? { faceUp: false, visibleTo: [ref.hostId] }
-          : { faceUp: false };
+    table.visibility[id] = { faceUp: definition.visibility !== "hidden" };
   }
 }
 
@@ -89,6 +84,9 @@ export function moveComponentToZoneInPlace(options: {
         ? source.playedBy
         : null
       : options.playedBy;
+  assertContainmentAcyclic(table, definitions, {
+    [componentId]: { type: "InZone", ...destination.ref, playedBy },
+  });
   removeComponentFromCurrentLocation(table, componentId, definitions);
   destination.ids.splice(index, 0, componentId);
   place(table, definitions, componentId, destination.ref, playedBy);
@@ -126,6 +124,16 @@ export function dealComponentsInPlace(options: {
   }
   if (new Set(selected).size !== selected.length)
     throw new Error("Duplicate source membership.");
+  assertContainmentAcyclic(
+    table,
+    definitions,
+    Object.fromEntries(
+      selected.map((id) => [
+        id,
+        { type: "InZone", ...destination.ref, playedBy: null },
+      ]),
+    ),
+  );
   source.ids.splice(0, selected.length);
   destination.ids.push(...selected);
   for (const id of selected)
@@ -145,7 +153,11 @@ export function rotateZoneInPlace(options: {
   const definition = Object.hasOwn(definitions.zoneDefinitions, zoneId)
     ? definitions.zoneDefinitions[zoneId]
     : undefined;
-  if (!definition || definition.scope !== "perPlayer")
+  if (
+    !definition ||
+    !("scope" in definition) ||
+    definition.scope !== "perPlayer"
+  )
     throw new Error(`Zone '${zoneId}' must have perPlayer scope.`);
   if (options.direction !== "left" && options.direction !== "right")
     throw new Error("Rotation direction must be left or right.");
@@ -192,6 +204,15 @@ export function rotateZoneInPlace(options: {
       remaining: source.ids.filter((id) => !selected.includes(id)),
     };
   });
+  const proposed: RuntimeTableRecord["componentLocations"] = {};
+  snapshots.forEach(({ source }, index) => {
+    const offset = options.direction === "left" ? -1 : 1;
+    for (const id of snapshots[
+      (index + offset + snapshots.length) % snapshots.length
+    ].selected)
+      proposed[id] = { type: "InZone", ...source.ref, playedBy: null };
+  });
+  assertContainmentAcyclic(table, definitions, proposed);
   snapshots.forEach(({ source, remaining }, index) => {
     const offset = options.direction === "left" ? -1 : 1;
     const additions =

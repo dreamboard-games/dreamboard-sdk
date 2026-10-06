@@ -645,11 +645,9 @@ describe("initialization runtime", () => {
                   id: "space-a",
                   typeId: "slot",
                   fields: {},
-                  zoneId: null,
                 },
               },
               relations: [],
-              containers: {},
             },
           },
           hex: {},
@@ -748,6 +746,7 @@ describe("initialization runtime", () => {
         zones: {
           "draw-deck": { table: ["card-1"] },
           hand: pp<string[]>(["player-1"], { "player-1": [] }, []),
+          "restricted-row": { "main-board": new Array<"card-1">() },
         },
 
         cards: {
@@ -782,16 +781,6 @@ describe("initialization runtime", () => {
               fields: {},
               spaces: {},
               relations: [],
-              containers: {
-                "restricted-row": {
-                  id: "restricted-row",
-                  name: "Restricted Row",
-                  host: { type: "board" },
-                  allowedCardSetIds: ["special"],
-                  zoneId: "main-board::container::restricted-row",
-                  fields: {},
-                },
-              },
             },
           },
           hex: {},
@@ -815,46 +804,41 @@ describe("initialization runtime", () => {
       },
     };
 
-    expect(() =>
-      createTestTransaction(initialState, {
-        zoneDefinitions: {
-          "draw-deck": {
-            scope: "shared",
-            visibility: "public",
-            allowedCardSetIds: ["main"],
-          },
-          hand: {
-            scope: "perPlayer",
-            visibility: "ownerOnly",
-            allowedCardSetIds: ["special"],
-          },
+    const tx = createTestTransaction(initialState, {
+      zoneDefinitions: {
+        "draw-deck": {
+          scope: "shared",
+          visibility: "public",
+          allowedCardSetIds: ["main"],
         },
-      }).deal({
+        hand: {
+          scope: "perPlayer",
+          visibility: "ownerOnly",
+          allowedCardSetIds: ["special"],
+        },
+        "restricted-row": {
+          attachedTo: { board: "main-board" },
+          visibility: "public",
+          allowedCardSetIds: ["special"],
+        },
+      },
+    });
+    const before = structuredClone(tx.state);
+    expect(() =>
+      tx.deal({
         from: { zoneId: "draw-deck" },
         to: { zoneId: "hand", hostId: "player-1" },
         count: 1,
       }),
     ).toThrow("cannot enter this zone");
+    expect(tx.state).toEqual(before);
     expect(() =>
-      createTestTransaction(initialState, {
-        zoneDefinitions: {
-          "draw-deck": {
-            scope: "shared",
-            visibility: "public",
-            allowedCardSetIds: ["main"],
-          },
-          hand: {
-            scope: "perPlayer",
-            visibility: "ownerOnly",
-            allowedCardSetIds: ["special"],
-          },
-        },
-      }).moveComponentToContainer({
+      tx.moveComponentToZone({
         componentId: "card-1",
-        boardId: "main-board",
-        containerId: "restricted-row",
+        to: { zoneId: "restricted-row", hostId: "main-board" },
       }),
-    ).toThrow("cannot enter container 'restricted-row'");
+    ).toThrow("cannot enter this zone");
+    expect(tx.state).toEqual(before);
   });
 
   test("initialize injects table queries (q) into initial.public/private/hidden callbacks", async () => {

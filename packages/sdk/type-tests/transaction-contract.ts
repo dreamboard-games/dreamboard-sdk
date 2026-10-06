@@ -1,3 +1,4 @@
+import type { ZoneHostMap } from "../src/reducer/model/table";
 import * as reducer from "../src/reducer.js";
 import {
   asPlayerId,
@@ -15,10 +16,9 @@ type Expect<T extends true> = T;
 type HexBoard = RuntimeTableRecord["boards"]["hex"][string];
 type Board<Id extends string> = Omit<
   HexBoard,
-  "spaces" | "containers" | "edges" | "vertices"
+  "spaces" | "edges" | "vertices"
 > & {
   spaces: Record<`${Id}-space`, HexBoard["spaces"][string]>;
-  containers: Record<`${Id}-container`, HexBoard["containers"][string]>;
   edges: (HexBoard["edges"][number] & { id: `${Id}-edge` })[];
   vertices: (HexBoard["vertices"][number] & { id: `${Id}-vertex` })[];
 };
@@ -40,11 +40,12 @@ type Table = Omit<
   playerOrder: PlayerId[];
   pieces: { piece: RuntimeTableRecord["pieces"][string] };
   zones: {
-    draw: { table: "red"[] };
-    special: { table: "blue"[] };
-    hand: Record<PlayerId, ("red" | "piece" | "d6")[]>;
-    played: Record<PlayerId, ("red" | "piece" | "d6")[]>;
-    specialHand: Record<PlayerId, "blue"[]>;
+    cargo: ZoneHostMap<"north", "red" | "piece" | "d6", "attached">;
+    draw: ZoneHostMap<"table", "red", "shared">;
+    special: ZoneHostMap<"table", "blue", "shared">;
+    hand: ZoneHostMap<PlayerId, "red" | "piece" | "d6", "perPlayer">;
+    played: ZoneHostMap<PlayerId, "red" | "piece" | "d6", "perPlayer">;
+    specialHand: ZoneHostMap<PlayerId, "blue", "perPlayer">;
   };
   cards: Record<"red" | "blue", RuntimeTableRecord["cards"][string]>;
   componentLocations: Record<
@@ -108,10 +109,9 @@ export function assertTransactionContract(
     boardId: "north",
     spaceId: "north-space",
   });
-  tx.moveComponentToContainer({
+  tx.moveComponentToZone({
     componentId: "piece",
-    boardId: "north",
-    containerId: "north-container",
+    to: { zoneId: "cargo", hostId: "north" },
   });
   tx.moveComponentToEdge({
     componentId: "piece",
@@ -129,11 +129,13 @@ export function assertTransactionContract(
     // @ts-expect-error Space IDs belong to the selected board.
     spaceId: "south-space",
   });
-  tx.moveComponentToContainer({
+  tx.moveComponentToZone({
     componentId: "piece",
-    boardId: "north",
-    // @ts-expect-error Container IDs belong to the selected board.
-    containerId: "south-container",
+    to: {
+      zoneId: "cargo",
+      // @ts-expect-error Attached zone host must belong to its declared board family.
+      hostId: "south",
+    },
   });
   tx.moveComponentToEdge({
     componentId: "piece",

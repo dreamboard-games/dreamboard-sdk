@@ -5,7 +5,7 @@ import type {
   ZoneArg,
 } from "./extract";
 import type { TableQueries } from "./queries";
-import type { RuntimeTableRecord } from "./table";
+import type { RuntimeTableRecord, ZoneHostMap } from "./table";
 
 type Equal<A, B> =
   (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2
@@ -13,7 +13,10 @@ type Equal<A, B> =
     : false;
 type Assert<T extends true> = T;
 type ExactTable = Omit<RuntimeTableRecord, "zones"> & {
-  zones: { draw: Record<"table", string[]>; hand: Record<PlayerId, string[]> };
+  zones: {
+    draw: ZoneHostMap<"table", string, "shared">;
+    hand: ZoneHostMap<PlayerId, string, "perPlayer">;
+  };
 };
 type ExactShared = Assert<Equal<SharedZoneIdOfTable<ExactTable>, "draw">>;
 type ExactPlayer = Assert<Equal<PlayerZoneIdOfTable<ExactTable>, "hand">>;

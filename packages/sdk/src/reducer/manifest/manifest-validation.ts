@@ -1,5 +1,6 @@
+import * as z from "zod";
 import { renderCardInstanceIds, expandSeedIds } from "./identity-runtime.js";
-import { PER_PLAYER_INSTANCE_PREFIX } from "../../shared/domain/per-player-instance.js";
+import { GENERATED_ID_PREFIX } from "../../shared/domain/per-player-instance.js";
 import { analyzeManifestStructure, fieldReferenceContext } from "./materialize";
 import {
   fieldSchemaKeyIssues,
@@ -12,13 +13,9 @@ import type {
   BoardSpec,
   DieSeedSpec,
   PieceSeedSpec,
-  PieceTypeSpec,
   ZoneSpec,
 } from "../../shared/domain/contracts.js";
-import type {
-  DieTypeSpec,
-  GameTopologyManifest,
-} from "../../shared/domain/manifest.js";
+import type { GameTopologyManifest } from "../../shared/domain/manifest.js";
 import { createHexTopology, resolveHexSpaces } from "../../shared/hex-board.js";
 
 export type ManifestAuthoringValidationResult = {
@@ -68,9 +65,9 @@ function validateRecordKey(
   value: string | null | undefined,
   path: string,
 ): string[] {
-  if (value?.startsWith(PER_PLAYER_INSTANCE_PREFIX))
+  if (value?.startsWith(GENERATED_ID_PREFIX))
     return [
-      `${path}: authored identities must not begin with reserved prefix '${PER_PLAYER_INSTANCE_PREFIX}'.`,
+      `${path}: authored identities must not begin with reserved prefix '${GENERATED_ID_PREFIX}'.`,
     ];
   if (!value || !PROTOTYPE_SENSITIVE_KEYS.has(value)) {
     return [];
@@ -93,152 +90,6 @@ function collectCardSchemaKeyIssues(
   return fieldSchemaKeyIssues(cardSet.cardSchema, `${path}.cardSchema`);
 }
 
-function validateTypeSlotDuplicates(options: {
-  pieceTypes: readonly PieceTypeSpec[];
-  dieTypes: readonly DieTypeSpec[];
-}): string[] {
-  const issues: string[] = [];
-
-  for (const [index, pieceType] of options.pieceTypes.entries()) {
-    issues.push(
-      ...collectDuplicateIdIssues({
-        entries: (pieceType.slots ?? []).map((slot, slotIndex) => ({
-          id: slot.id,
-          path: `manifest.pieceTypes[${index}].slots[${slotIndex}].id`,
-        })),
-        label: "piece slot id",
-      }),
-    );
-  }
-
-  for (const [index, dieType] of options.dieTypes.entries()) {
-    issues.push(
-      ...collectDuplicateIdIssues({
-        entries: (dieType.slots ?? []).map((slot, slotIndex) => ({
-          id: slot.id,
-          path: `manifest.dieTypes[${index}].slots[${slotIndex}].id`,
-        })),
-        label: "die slot id",
-      }),
-    );
-  }
-
-  return issues;
-}
-
-function validateSlotHostsAndHomes(manifest: GameTopologyManifest): string[] {
-  const issues: string[] = [];
-  const pieceTypesById = new Map(
-    (manifest.pieceTypes ?? []).map(
-      (pieceType) => [pieceType.id, pieceType] as const,
-    ),
-  );
-  const dieTypesById = new Map(
-    (manifest.dieTypes ?? []).map((dieType) => [dieType.id, dieType] as const),
-  );
-  const slotIdsByHostKey = new Map<string, Set<string>>();
-
-  for (const [index, seed] of (manifest.pieceSeeds ?? []).entries()) {
-    const pieceType = pieceTypesById.get(seed.typeId);
-    const slotIds = (pieceType?.slots ?? []).map((slot) => slot.id);
-    if (slotIds.length === 0) {
-      continue;
-    }
-    if (typeof seed.id !== "string" || seed.id.length === 0) {
-      issues.push(
-        `manifest.pieceSeeds[${index}].id: Piece seed for slot-bearing type '${seed.typeId}' must declare an explicit id.`,
-      );
-      continue;
-    }
-    if ((seed.count ?? 1) !== 1) {
-      issues.push(
-        `manifest.pieceSeeds[${index}].count: Piece seed '${seed.id}' for slot-bearing type '${seed.typeId}' must omit count or set it to 1.`,
-      );
-      continue;
-    }
-    slotIdsByHostKey.set(`piece:${seed.id}`, new Set(slotIds));
-  }
-
-  for (const [index, seed] of (manifest.dieSeeds ?? []).entries()) {
-    const dieType = dieTypesById.get(seed.typeId);
-    const slotIds = (dieType?.slots ?? []).map((slot) => slot.id);
-    if (slotIds.length === 0) {
-      continue;
-    }
-    if (typeof seed.id !== "string" || seed.id.length === 0) {
-      issues.push(
-        `manifest.dieSeeds[${index}].id: Die seed for slot-bearing type '${seed.typeId}' must declare an explicit id.`,
-      );
-      continue;
-    }
-    if ((seed.count ?? 1) !== 1) {
-      issues.push(
-        `manifest.dieSeeds[${index}].count: Die seed '${seed.id}' for slot-bearing type '${seed.typeId}' must omit count or set it to 1.`,
-      );
-      continue;
-    }
-    slotIdsByHostKey.set(`die:${seed.id}`, new Set(slotIds));
-  }
-
-  const validateHome = (
-    home: BoardCard["home"] | PieceSeedSpec["home"] | DieSeedSpec["home"],
-    path: string,
-    scope?: "shared" | "perPlayer",
-  ) => {
-    if (home?.type !== "slot") {
-      return;
-    }
-
-    const seeds =
-      home.host.kind === "piece" ? manifest.pieceSeeds : manifest.dieSeeds;
-    if (
-      scope !== "perPlayer" &&
-      seeds?.find((seed) => seed.id === home.host.id)?.scope === "perPlayer"
-    )
-      issues.push(
-        `${path}.host: Shared inventory cannot target per-player slot host '${home.host.id}'. Place it during reducer setup instead.`,
-      );
-    const hostKey = `${home.host.kind}:${home.host.id}`;
-    const slotIds = slotIdsByHostKey.get(hostKey);
-    if (!slotIds) {
-      issues.push(
-        `${path}.host: Unknown strict slot host '${home.host.kind}:${home.host.id}'. Hosts must be singleton piece/die seeds whose type declares slots.`,
-      );
-      return;
-    }
-    if (!slotIds.has(home.slotId)) {
-      issues.push(
-        `${path}.slotId: Unknown slot '${home.slotId}' for host '${home.host.kind}:${home.host.id}'.`,
-      );
-    }
-  };
-
-  for (const [cardSetIndex, cardSet] of manifest.cardSets.entries()) {
-    validateHome(
-      cardSet.defaultHome,
-      `manifest.cardSets[${cardSetIndex}].defaultHome`,
-      "perPlayer",
-    );
-    for (const [cardIndex, card] of cardSet.cards.entries()) {
-      validateHome(
-        card.home ?? cardSet.defaultHome,
-        `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}].home`,
-        card.scope,
-      );
-    }
-  }
-
-  for (const [index, seed] of (manifest.pieceSeeds ?? []).entries()) {
-    validateHome(seed.home, `manifest.pieceSeeds[${index}].home`, seed.scope);
-  }
-
-  for (const [index, seed] of (manifest.dieSeeds ?? []).entries()) {
-    validateHome(seed.home, `manifest.dieSeeds[${index}].home`, seed.scope);
-  }
-
-  return issues;
-}
-
 function validatePlayerScopedSeedHomes(
   manifest: GameTopologyManifest,
 ): string[] {
@@ -247,7 +98,9 @@ function validatePlayerScopedSeedHomes(
     (manifest.boards ?? []).map((board) => [board.id, board.scope] as const),
   );
   const zoneScopeById = new Map(
-    (manifest.zones ?? []).map((zone) => [zone.id, zone.scope] as const),
+    (manifest.zones ?? []).map(
+      (zone) => [zone.id, "scope" in zone ? zone.scope : undefined] as const,
+    ),
   );
 
   const validateSeedHome = (
@@ -297,7 +150,9 @@ function validateCardHomes(manifest: GameTopologyManifest): string[] {
     (manifest.boards ?? []).map((board) => [board.id, board.scope] as const),
   );
   const zoneScopeById = new Map(
-    (manifest.zones ?? []).map((zone) => [zone.id, zone.scope] as const),
+    (manifest.zones ?? []).map(
+      (zone) => [zone.id, "scope" in zone ? zone.scope : undefined] as const,
+    ),
   );
 
   for (const [cardSetIndex, cardSet] of manifest.cardSets.entries()) {
@@ -371,13 +226,10 @@ function homeTargetsBoard(
     BoardCard["home"] | PieceSeedSpec["home"] | DieSeedSpec["home"] | undefined,
 ): home is Extract<
   NonNullable<BoardCard["home"] | PieceSeedSpec["home"] | DieSeedSpec["home"]>,
-  { type: "space" | "container" | "edge" | "vertex" }
+  { type: "space" | "edge" | "vertex" }
 > {
   return (
-    home?.type === "space" ||
-    home?.type === "container" ||
-    home?.type === "edge" ||
-    home?.type === "vertex"
+    home?.type === "space" || home?.type === "edge" || home?.type === "vertex"
   );
 }
 
@@ -409,15 +261,7 @@ function validateBoardDuplicates(boards: readonly BoardSpec[]): string[] {
         label: "space id",
       }),
     );
-    issues.push(
-      ...collectDuplicateIdIssues({
-        entries: (board.containers ?? []).map((container, containerIndex) => ({
-          id: container.id,
-          path: `manifest.boards[${index}].containers[${containerIndex}].id`,
-        })),
-        label: "container id",
-      }),
-    );
+    issues.push();
     issues.push(
       ...collectDuplicateIdIssues({
         entries: (board.relations ?? []).map((relation, relationIndex) => ({
@@ -569,24 +413,7 @@ function collectBoardRecordKeyIssues(manifest: GameTopologyManifest): string[] {
           board.relationFieldsSchema,
           `${boardPath}.relationFieldsSchema`,
         ),
-        ...fieldSchemaKeyIssues(
-          board.containerFieldsSchema,
-          `${boardPath}.containerFieldsSchema`,
-        ),
         ...collectKeyIssues([
-          ...(board.containers ?? []).flatMap((container, containerIndex) => [
-            {
-              value: container.id,
-              path: `${boardPath}.containers[${containerIndex}].id`,
-            },
-            {
-              value:
-                container.host.type === "space"
-                  ? container.host.spaceId
-                  : undefined,
-              path: `${boardPath}.containers[${containerIndex}].host.spaceId`,
-            },
-          ]),
           ...(board.relations ?? []).flatMap((relation, relationIndex) => [
             {
               value: relation.id,
@@ -702,20 +529,12 @@ function collectManifestRecordKeyIssues(
           value: pieceType.id,
           path: `manifest.pieceTypes[${typeIndex}].id`,
         },
-        ...(pieceType.slots ?? []).map((slot, slotIndex) => ({
-          value: slot.id,
-          path: `manifest.pieceTypes[${typeIndex}].slots[${slotIndex}].id`,
-        })),
       ]),
       ...(manifest.dieTypes ?? []).flatMap((dieType, typeIndex) => [
         {
           value: dieType.id,
           path: `manifest.dieTypes[${typeIndex}].id`,
         },
-        ...(dieType.slots ?? []).map((slot, slotIndex) => ({
-          value: slot.id,
-          path: `manifest.dieTypes[${typeIndex}].slots[${slotIndex}].id`,
-        })),
       ]),
       ...expandSeedIds(manifest.pieceSeeds ?? []).map((pieceId, index) => ({
         value: pieceId,
@@ -798,7 +617,11 @@ export function validateManifestAuthoring(
   if (errors.length) return { errors, warnings: [] };
 
   for (const [index, zone] of (manifest.zones ?? []).entries()) {
-    if (zone.scope === "shared" && zone.visibility === "ownerOnly") {
+    if (
+      "scope" in zone &&
+      zone.scope === "shared" &&
+      zone.visibility === "ownerOnly"
+    ) {
       errors.push(
         `manifest.zones[${index}].visibility: ownerOnly requires perPlayer scope; use hidden for concealed shared contents`,
       );
@@ -883,12 +706,6 @@ export function validateManifestAuthoring(
   );
   errors.push(...validateBoardDuplicates(manifest.boards ?? []));
   errors.push(
-    ...validateTypeSlotDuplicates({
-      pieceTypes: manifest.pieceTypes ?? [],
-      dieTypes: manifest.dieTypes ?? [],
-    }),
-  );
-  errors.push(
     ...collectDuplicateIdIssues({
       entries: (manifest.pieceTypes ?? []).map((pieceType, index) => ({
         id: pieceType.id,
@@ -935,7 +752,6 @@ export function validateManifestAuthoring(
       label: "resource id",
     }),
   );
-  errors.push(...validateSlotHostsAndHomes(manifest));
   errors.push(...validatePlayerScopedSeedHomes(manifest));
   errors.push(...validateCardHomes(manifest));
   for (const [kind, seeds, types] of [
@@ -1022,7 +838,6 @@ function validateAnalyzedManifest(manifest: GameTopologyManifest): string[] {
       "boardFieldsSchema",
       "spaceFieldsSchema",
       "relationFieldsSchema",
-      "containerFieldsSchema",
       "edgeFieldsSchema",
       "vertexFieldsSchema",
     ] as const)
@@ -1113,13 +928,6 @@ function validateAnalyzedManifest(manifest: GameTopologyManifest): string[] {
           `${base}.relations[${j}].fields`,
           board.id,
         );
-      for (const [j, container] of (board.containers ?? []).entries())
-        check(
-          board.containerFieldsSchema,
-          container.fields,
-          `${base}.containers[${j}].fields`,
-          board.id,
-        );
     }
     if (board.layout !== "generic") {
       for (const [j, edge] of (board.edges ?? []).entries())
@@ -1146,11 +954,54 @@ function validateHomeMembership(
   analysis: ReturnType<typeof analyzeManifestStructure>,
 ): string[] {
   const errors: string[] = [];
-  function check(home: BoardCard["home"], path: string): void {
-    if (!home || home.type === "detached" || home.type === "slot") return;
+  function check(
+    home: BoardCard["home"],
+    path: string,
+    scope: "shared" | "perPlayer" = "shared",
+  ): void {
+    if (!home || home.type === "detached") return;
     if (home.type === "zone") {
-      if (!analysis.zoneIds.includes(home.zoneId))
+      const zone = manifest.zones?.find((zone) => zone.id === home.zoneId);
+      if (!zone) {
         errors.push(`${path}.zoneId: unknown zone '${home.zoneId}'.`);
+        return;
+      }
+      if ("scope" in zone) {
+        if (home.component !== undefined)
+          errors.push(
+            `${path}.component: This zone does not have a component host.`,
+          );
+      } else if ("board" in zone.attachedTo) {
+        if (home.component !== undefined)
+          errors.push(`${path}.component: This zone has a board host.`);
+        const attachedBoard = zone.attachedTo.board;
+        const board = manifest.boards?.find(
+          (board) => board.id === attachedBoard,
+        );
+        if (scope !== "perPlayer" && board?.scope === "perPlayer")
+          errors.push(
+            `${path}: Shared inventory cannot infer a per-player board host.`,
+          );
+      } else {
+        const attachment = zone.attachedTo;
+        const type =
+          "pieceType" in attachment ? attachment.pieceType : attachment.dieType;
+        const seeds =
+          "pieceType" in attachment ? manifest.pieceSeeds : manifest.dieSeeds;
+        const host = seeds?.find(
+          (seed) =>
+            seed.typeId === type &&
+            expandSeedIds([seed]).includes(home.component ?? ""),
+        );
+        if (!host)
+          errors.push(
+            `${path}.component: Expected an expanded component base of type '${type}'.`,
+          );
+        else if (scope !== "perPlayer" && host.scope === "perPlayer")
+          errors.push(
+            `${path}: Shared inventory cannot infer a per-player component host.`,
+          );
+      }
       return;
     }
     const board = analysis.analyzedBoards.find(
@@ -1164,14 +1015,6 @@ function validateHomeMembership(
       if (!board.spaces.some((space) => space.id === home.spaceId))
         errors.push(
           `${path}.spaceId: unknown space '${home.spaceId}' on board '${home.boardId}'.`,
-        );
-    } else if (home.type === "container") {
-      if (
-        board.layout === "hex" ||
-        !board.containers.some((container) => container.id === home.containerId)
-      )
-        errors.push(
-          `${path}.containerId: unknown container '${home.containerId}' on board '${home.boardId}'.`,
         );
     } else {
       const matches = (ids: readonly string[]) =>
@@ -1190,17 +1033,47 @@ function validateHomeMembership(
         );
     }
   }
+  for (const [index, zone] of (manifest.zones ?? []).entries()) {
+    if (!("attachedTo" in zone)) continue;
+    const attachment = zone.attachedTo;
+    const path = `manifest.zones[${index}].attachedTo`;
+    if ("board" in attachment) {
+      const board = analysis.analyzedBoards.find(
+        (board) => board.board.id === attachment.board,
+      );
+      if (!board)
+        errors.push(`${path}.board: Unknown board '${attachment.board}'.`);
+      else {
+        if (
+          "space" in attachment &&
+          !board.spaces.some((space) => space.id === attachment.space)
+        )
+          errors.push(`${path}.space: Unknown space '${attachment.space}'.`);
+        if (zone.visibility === "ownerOnly" && board.board.scope === "shared")
+          errors.push(`${path}: ownerOnly requires an owned host.`);
+      }
+    } else if ("pieceType" in attachment) {
+      if (!analysis.pieceTypeIds.includes(attachment.pieceType))
+        errors.push(
+          `${path}.pieceType: Unknown piece type '${attachment.pieceType}'.`,
+        );
+    } else if (!analysis.dieTypeIds.includes(attachment.dieType))
+      errors.push(`${path}.dieType: Unknown die type '${attachment.dieType}'.`);
+  }
   for (const [si, set] of manifest.cardSets.entries()) {
-    check(set.defaultHome, `manifest.cardSets[${si}].defaultHome`);
+    check(set.defaultHome, `manifest.cardSets[${si}].defaultHome`, "perPlayer");
     for (const [ci, card] of set.cards.entries())
-      check(card.home, `manifest.cardSets[${si}].cards[${ci}].home`);
+      check(
+        card.home ?? set.defaultHome,
+        `manifest.cardSets[${si}].cards[${ci}].home`,
+        card.scope,
+      );
   }
   for (const [kind, seeds] of [
     ["pieceSeeds", manifest.pieceSeeds ?? []],
     ["dieSeeds", manifest.dieSeeds ?? []],
   ] as const)
     for (const [i, seed] of seeds.entries())
-      check(seed.home, `manifest.${kind}[${i}].home`);
+      check(seed.home, `manifest.${kind}[${i}].home`, seed.scope);
   return errors;
 }
-import * as z from "zod";

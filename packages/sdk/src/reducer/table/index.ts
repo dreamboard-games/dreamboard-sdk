@@ -1,15 +1,12 @@
 export { ensureArray } from "./internal";
 export { cloneRuntimeTable } from "./clone";
-export { assertCardAllowedInContainer } from "./card-validation";
 export {
   getAdjacentSpaces,
   getBoard,
   getBoardsByTypeId,
-  getComponentsInContainer,
   getComponentsOnEdge,
   getComponentsOnSpace,
   getComponentsOnVertex,
-  getContainer,
   getEdge,
   getEdgesByTypeId,
   getHexBoard,
@@ -33,10 +30,8 @@ export {
   getVerticesByTypeId,
 } from "./board-queries";
 export {
-  getComponentContainerLocation,
   getComponentEdgeLocation,
   getComponentLocation,
-  getComponentSlotLocation,
   getComponentSpaceLocation,
   getComponentVertexLocation,
   getComponentZoneLocation,
@@ -46,8 +41,6 @@ export {
   getCardOwner,
   getCardsById,
   getCardVisibility,
-  getSlotOccupants,
-  getSlotOccupantsByHost,
 } from "./zone-queries";
 export {
   addPlayerResourcesInPlace,
@@ -63,7 +56,6 @@ export {
   transferPlayerResourcesInPlace,
 } from "./resource-ops";
 export {
-  moveComponentToContainerInPlace,
   moveComponentToDetachedInPlace,
   moveComponentToEdgeInPlace,
   moveComponentToSpaceInPlace,

@@ -54,7 +54,6 @@ export type ManifestLiterals<
   boardTypeIds: readonly string[];
   boardBaseIds: readonly string[];
   boardIds: readonly string[];
-  boardContainerIds: readonly string[];
   relationTypeIds: readonly string[];
   edgeIds: readonly string[];
   edgeTypeIds: readonly string[];
@@ -87,7 +86,6 @@ export type ManifestIds<
   boardTypeId: AnySchema;
   boardId: AnySchema;
   boardBaseId: AnySchema;
-  boardContainerId: AnySchema;
   relationTypeId: AnySchema;
   edgeId: AnySchema;
   edgeTypeId: AnySchema;

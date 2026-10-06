@@ -198,6 +198,13 @@ Instance record factories likewise require `{ playerIds }`, for example
 `manifest.records.pieceIds(0, { playerIds })`. Player IDs are nonempty and unique;
 `__proto__` is reserved to preserve roster keys through record parsing.
 
+Zones declare either `scope` or `attachedTo` a board, board space, piece type,
+or die type. Query and move through the same zone API with the concrete host ID;
+use `boardSpaceHostId(boardId, spaceId)` for a space attachment. Component-hosted
+access follows the host's current owner, independently of contained ownership
+and card face state. Initialization, movement and restore reject containment
+cycles. Containers, slots and their location variants are removed.
+
 Manifest card counts and explicit piece/die seed counts must be positive safe
 integers. Omitted seed counts mean one copy. Zero, negative, fractional, non-finite,
 and unsafe counts fail before ID expansion; negative, zero, and fractional literals

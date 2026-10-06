@@ -241,7 +241,7 @@ function createReducerTransactionSurface<
         );
         const shuffled = context.random.shuffle(
           [...ids],
-          definition.scope === "shared"
+          "scope" in definition && definition.scope === "shared"
             ? "shuffleSharedZone"
             : "shufflePlayerZone",
         );

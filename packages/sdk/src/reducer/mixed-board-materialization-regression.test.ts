@@ -27,7 +27,6 @@ test("materializeManifestTable rejects shared seeds homed on player-scoped desti
         scope: "perPlayer",
         spaces: [{ id: "camp", row: 0, col: 0 }],
         relations: [],
-        containers: [],
         edges: [],
         vertices: [],
       },

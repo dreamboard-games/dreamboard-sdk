@@ -1,9 +1,7 @@
 import { resolveZone, assertComponent } from "./zones";
 import type {
-  BoardContainerIdOfTable,
   BoardIdOfTable,
   ComponentIdOfTable,
-  RuntimeComponentLocation,
   RuntimeTableRecord,
   ZoneDefinitions,
   SpaceIdOfTable,
@@ -12,14 +10,12 @@ import type {
   TiledVertexIdOfTable,
 } from "../model";
 import {
-  getComponentsInContainer,
   getComponentsOnEdge,
   getComponentsOnSpace,
   getComponentsOnVertex,
   getEdge,
   getVertex,
 } from "./board-queries";
-import { assertCardAllowedInContainer } from "./card-validation";
 import { orderedComponentIdsForLocation } from "./internal";
 
 function reindexSpaceOccupants<
@@ -31,24 +27,6 @@ function reindexSpaceOccupants<
     (componentId, index) => {
       const location = table.componentLocations[componentId];
       if (location?.type === "OnSpace") {
-        table.componentLocations[componentId] = {
-          ...location,
-          position: index,
-        };
-      }
-    },
-  );
-}
-
-function reindexContainerOccupants<
-  Table extends RuntimeTableRecord,
-  BoardId extends BoardIdOfTable<Table>,
-  ContainerId extends BoardContainerIdOfTable<Table, BoardId>,
->(table: Table, boardId: BoardId, containerId: ContainerId): void {
-  getComponentsInContainer(table, boardId, containerId).forEach(
-    (componentId, index) => {
-      const location = table.componentLocations[componentId];
-      if (location?.type === "InContainer") {
         table.componentLocations[componentId] = {
           ...location,
           position: index,
@@ -102,29 +80,6 @@ function reindexVertexOccupants(
   });
 }
 
-function reindexSlotOccupants<Table extends RuntimeTableRecord>(
-  table: Table,
-  host: Extract<RuntimeComponentLocation, { type: "InSlot" }>["host"],
-  slotId: string,
-): void {
-  orderedComponentIdsForLocation(
-    table,
-    (location) =>
-      location.type === "InSlot" &&
-      location.host.kind === host.kind &&
-      location.host.id === host.id &&
-      location.slotId === slotId,
-  ).forEach((componentId, index) => {
-    const location = table.componentLocations[componentId];
-    if (location?.type === "InSlot") {
-      table.componentLocations[componentId] = {
-        ...location,
-        position: index,
-      };
-    }
-  });
-}
-
 export function removeComponentFromCurrentLocation<
   Table extends RuntimeTableRecord,
   ComponentId extends ComponentIdOfTable<Table>,
@@ -156,19 +111,6 @@ export function removeComponentFromCurrentLocation<
     return;
   }
 
-  if (currentLocation.type === "InContainer") {
-    delete table.componentLocations[componentId];
-    reindexContainerOccupants(
-      table,
-      currentLocation.boardId as BoardIdOfTable<Table>,
-      currentLocation.containerId as BoardContainerIdOfTable<
-        Table,
-        BoardIdOfTable<Table>
-      >,
-    );
-    return;
-  }
-
   if (currentLocation.type === "OnEdge") {
     delete table.componentLocations[componentId];
     reindexEdgeOccupants(
@@ -186,12 +128,6 @@ export function removeComponentFromCurrentLocation<
       currentLocation.boardId,
       currentLocation.vertexId,
     );
-    return;
-  }
-
-  if (currentLocation.type === "InSlot") {
-    delete table.componentLocations[componentId];
-    reindexSlotOccupants(table, currentLocation.host, currentLocation.slotId);
     return;
   }
 
@@ -216,29 +152,6 @@ export function moveComponentToSpaceInPlace<
     type: "OnSpace",
     boardId,
     spaceId,
-    position,
-  };
-}
-
-export function moveComponentToContainerInPlace<
-  Table extends RuntimeTableRecord,
-  ComponentId extends ComponentIdOfTable<Table>,
-  BoardId extends BoardIdOfTable<NoInfer<Table>>,
-  ContainerId extends BoardContainerIdOfTable<NoInfer<Table>, BoardId>,
->(
-  table: Table,
-  componentId: ComponentId,
-  boardId: BoardId,
-  containerId: ContainerId,
-  definitions: ZoneDefinitions,
-): void {
-  assertCardAllowedInContainer(table, boardId, containerId, componentId);
-  const position = getComponentsInContainer(table, boardId, containerId).length;
-  removeComponentFromCurrentLocation(table, componentId, definitions);
-  table.componentLocations[componentId] = {
-    type: "InContainer",
-    boardId,
-    containerId,
     position,
   };
 }

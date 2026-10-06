@@ -8,6 +8,7 @@ import { perPlayerInstanceId } from "../../shared/domain/per-player-instance.js"
 const source = {
   players: { minPlayers: 1, maxPlayers: 4 },
   zones: [
+    { id: "cargo", name: "Cargo", attachedTo: { pieceType: "holder" } },
     {
       id: "supply",
       name: "Supply",
@@ -42,7 +43,7 @@ const source = {
   ],
   pieceTypes: [
     { id: "trail", name: "Trail" },
-    { id: "holder", name: "Holder", slots: [{ id: "cargo" }] },
+    { id: "holder", name: "Holder" },
   ],
   pieceSeeds: [
     {
@@ -62,9 +63,9 @@ const source = {
       typeId: "d6",
       scope: "perPlayer",
       home: {
-        type: "slot",
-        host: { kind: "piece", id: "holder" },
-        slotId: "cargo",
+        type: "zone",
+        zoneId: "cargo",
+        component: "holder",
       },
     },
   ],
@@ -108,12 +109,9 @@ describe("per-player inventory", () => {
         ).toHaveLength(12);
         const dieId = perPlayerInstanceId("die", "die", playerId);
         expect(table.componentLocations[dieId]).toMatchObject({
-          type: "InSlot",
-          host: {
-            kind: "piece",
-            id: perPlayerInstanceId("piece", "holder", playerId),
-          },
-          slotId: "cargo",
+          type: "InZone",
+          zoneId: "cargo",
+          hostId: perPlayerInstanceId("piece", "holder", playerId),
         });
         expect(
           table.boards.byId[perPlayerInstanceId("board", "mat", playerId)]
@@ -273,16 +271,16 @@ test("manifest defaults admit declared future instances, then the actual session
     ).toThrow(/declared pieceId reference/);
 });
 
-test("replicated slot ordering uses each resolved host independently", () => {
+test("replicated attached zone ordering uses each resolved host independently", () => {
   const compiled = compileManifest({
     ...source,
     cardSets: [
       {
         ...source.cardSets[0],
         defaultHome: {
-          type: "slot",
-          host: { kind: "piece", id: "holder" },
-          slotId: "cargo",
+          type: "zone",
+          zoneId: "cargo",
+          component: "holder",
         },
       },
     ],
@@ -291,14 +289,16 @@ test("replicated slot ordering uses each resolved host independently", () => {
   for (const playerId of ["north", "south"])
     for (const ordinal of [1, 2] as const) {
       const card = perPlayerInstanceId("card", `starter-${ordinal}`, playerId);
+      expect(
+        table.zones.cargo[perPlayerInstanceId("piece", "holder", playerId)][
+          ordinal - 1
+        ],
+      ).toBe(card);
       expect(table.componentLocations[card]).toEqual({
-        type: "InSlot",
-        host: {
-          kind: "piece",
-          id: perPlayerInstanceId("piece", "holder", playerId),
-        },
-        slotId: "cargo",
-        position: ordinal - 1,
+        type: "InZone",
+        zoneId: "cargo",
+        hostId: perPlayerInstanceId("piece", "holder", playerId),
+        playedBy: null,
       });
     }
 });

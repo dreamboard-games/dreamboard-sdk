@@ -159,16 +159,6 @@ test("preserves optional structural metadata across all board layouts", () => {
             fields: { cost: 1 },
           },
         ],
-        containerFieldsSchema: z.object({ capacity: z.int() }),
-        containers: [
-          {
-            id: "stash",
-            name: "Stash",
-            host: { type: "space", spaceId: "a" },
-            allowedCardSetIds: [],
-            fields: { capacity: 2 },
-          },
-        ],
       },
       {
         id: "hex",
@@ -239,7 +229,6 @@ test("preserves optional structural metadata across all board layouts", () => {
       {
         id: "piece",
         name: "Piece",
-        slots: [{ id: "storage", name: "Storage" }],
       },
     ],
     pieceSeeds: [
@@ -256,7 +245,6 @@ test("preserves optional structural metadata across all board layouts", () => {
         id: "die",
         name: "Die",
         sides: 6,
-        slots: [{ id: "storage", name: "Storage" }],
       },
     ],
     dieSeeds: [

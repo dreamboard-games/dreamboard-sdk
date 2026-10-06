@@ -30,7 +30,6 @@ const MANIFEST_SCOPED_ID_NAMES = [
   "sharedZoneId",
   "playerZoneId",
   "boardId",
-  "boardContainerId",
   "boardTypeId",
   "boardBaseId",
   "edgeId",

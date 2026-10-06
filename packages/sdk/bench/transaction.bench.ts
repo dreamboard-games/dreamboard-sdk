@@ -124,7 +124,6 @@ function createBenchState() {
     fields: {},
     spaces,
     relations: [],
-    containers: {},
     edges,
     vertices,
   } satisfies RuntimeHexBoardState;

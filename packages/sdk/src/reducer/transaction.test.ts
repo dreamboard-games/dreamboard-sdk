@@ -267,8 +267,7 @@ describe("reducer transactions", () => {
     expect(tx.q.zone("hand", player("player-3"))).toEqual(["card-c"]);
     expect(tx.q.card.owner("card-a")).toBe(player("player-1"));
     expect(tx.q.card.visibility("card-a")).toEqual({
-      faceUp: false,
-      visibleTo: ["player-2"],
+      faceUp: true,
     });
   });
 

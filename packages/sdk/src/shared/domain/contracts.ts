@@ -32,10 +32,6 @@ export type ZoneHomeSpec = z.infer<typeof manifestSchemas.ZoneHomeSpecSchema>;
 
 export type SpaceHomeSpec = z.infer<typeof manifestSchemas.SpaceHomeSpecSchema>;
 
-export type ContainerHomeSpec = z.infer<
-  typeof manifestSchemas.ContainerHomeSpecSchema
->;
-
 /**
  * Tiled board edge identified by the spaces that border it
  */
@@ -53,18 +49,6 @@ export type BoardVertexRef = z.infer<
 export type VertexHomeSpec = z.infer<
   typeof manifestSchemas.VertexHomeSpecSchema
 >;
-
-export type PieceSlotHostRef = z.infer<
-  typeof manifestSchemas.PieceSlotHostRefSchema
->;
-
-export type DieSlotHostRef = z.infer<
-  typeof manifestSchemas.DieSlotHostRefSchema
->;
-
-export type SlotHostRef = z.infer<typeof manifestSchemas.SlotHostRefSchema>;
-
-export type SlotHomeSpec = z.infer<typeof manifestSchemas.SlotHomeSpecSchema>;
 
 export type ComponentHomeSpec = z.infer<
   typeof manifestSchemas.ComponentHomeSpecSchema
@@ -89,19 +73,19 @@ export type CardSetDefinition = z.infer<
 export type TopologyScope = z.infer<typeof manifestSchemas.TopologyScopeSchema>;
 
 /**
- * Default topology visibility for a zone or slot
+ * Default topology visibility for a zone
  */
 export type ZoneVisibility = z.infer<
   typeof manifestSchemas.ZoneVisibilitySchema
 >;
 
 /**
- * Generic authored container that can hold cards, pieces, or dice
+ * Authored zone that can hold cards, pieces, or dice
  */
 export type ZoneSpec = z.infer<typeof manifestSchemas.ZoneSpecSchema>;
 
 /**
- * Stable authored board space or slot anchor
+ * Stable authored board space
  */
 export type BoardSpaceSpec = z.infer<
   typeof manifestSchemas.BoardSpaceSpecSchema
@@ -112,21 +96,6 @@ export type BoardSpaceSpec = z.infer<
  */
 export type BoardRelationSpec = z.infer<
   typeof manifestSchemas.BoardRelationSpecSchema
->;
-
-export type BoardHostSpec = z.infer<typeof manifestSchemas.BoardHostSpecSchema>;
-
-export type SpaceHostSpec = z.infer<typeof manifestSchemas.SpaceHostSpecSchema>;
-
-export type BoardContainerHostSpec = z.infer<
-  typeof manifestSchemas.BoardContainerHostSpecSchema
->;
-
-/**
- * Authored board-attached or space-attached container/slot
- */
-export type BoardContainerSpec = z.infer<
-  typeof manifestSchemas.BoardContainerSpecSchema
 >;
 
 /**
@@ -211,9 +180,6 @@ export type BoardSpec = z.infer<typeof manifestSchemas.BoardSpecSchema>;
 /**
  * Named authored slot exposed by a piece or die type
  */
-export type ComponentSlotSpec = z.infer<
-  typeof manifestSchemas.ComponentSlotSpecSchema
->;
 
 /**
  * Reusable authored piece type
