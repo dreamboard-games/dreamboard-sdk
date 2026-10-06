@@ -1,10 +1,16 @@
+import { analyzeManifestStructure, fieldReferenceContext } from "./materialize";
+import {
+  fieldSchemaKeyIssues,
+  schemaForCardType,
+  createFieldValidatorResolver,
+} from "./field-schemas";
+import type { FieldSchemaJson } from "../../shared/domain/contracts.js";
 import type {
   BoardCard,
   BoardSpec,
   DieSeedSpec,
   PieceSeedSpec,
   PieceTypeSpec,
-  PropertySchema,
   ZoneSpec,
 } from "../../shared/domain/contracts.js";
 import type {
@@ -86,86 +92,11 @@ function renderCardInstanceIds(card: BoardCard): string[] {
     : [card.id];
 }
 
-function collectPropertySchemaKeyIssues(
-  schema: PropertySchema | null | undefined,
-  path: string,
-): string[] {
-  if (!schema) {
-    return [];
-  }
-  const issues: string[] = [];
-  if (schema.type === "object") {
-    for (const [key, property] of Object.entries(schema.properties ?? {})) {
-      issues.push(
-        ...validateRecordKey(key, `${path}.properties.${key}`),
-        ...collectPropertySchemaKeyIssues(
-          property,
-          `${path}.properties.${key}`,
-        ),
-      );
-    }
-  }
-  if (schema.type === "array") {
-    issues.push(
-      ...collectPropertySchemaKeyIssues(schema.items, `${path}.items`),
-    );
-  }
-  if (schema.type === "record") {
-    issues.push(
-      ...collectPropertySchemaKeyIssues(schema.values, `${path}.values`),
-    );
-  }
-  return issues;
-}
-
-function collectObjectSchemaKeyIssues(
-  schema:
-    | {
-        properties?: Record<string, PropertySchema>;
-      }
-    | null
-    | undefined,
-  path: string,
-): string[] {
-  const issues: string[] = [];
-  for (const [key, property] of Object.entries(schema?.properties ?? {})) {
-    issues.push(
-      ...validateRecordKey(key, `${path}.properties.${key}`),
-      ...collectPropertySchemaKeyIssues(property, `${path}.properties.${key}`),
-    );
-  }
-  return issues;
-}
-
 function collectCardSchemaKeyIssues(
   cardSet: GameTopologyManifest["cardSets"][number],
   path: string,
 ): string[] {
-  const schema = cardSet.cardSchema;
-  if ("variants" in schema) {
-    return [
-      ...Object.entries(schema.shared ?? {}).flatMap(([key, property]) => [
-        ...validateRecordKey(key, `${path}.cardSchema.shared.${key}`),
-        ...collectPropertySchemaKeyIssues(
-          property,
-          `${path}.cardSchema.shared.${key}`,
-        ),
-      ]),
-      ...Object.entries(schema.variants).flatMap(
-        ([variantKey, variantSchema]) => [
-          ...validateRecordKey(
-            variantKey,
-            `${path}.cardSchema.variants.${variantKey}`,
-          ),
-          ...collectObjectSchemaKeyIssues(
-            variantSchema,
-            `${path}.cardSchema.variants.${variantKey}`,
-          ),
-        ],
-      ),
-    ];
-  }
-  return collectObjectSchemaKeyIssues(schema, `${path}.cardSchema`);
+  return fieldSchemaKeyIssues(cardSet.cardSchema, `${path}.cardSchema`);
 }
 
 function expandSeedIds<
@@ -637,11 +568,11 @@ function collectBoardRecordKeyIssues(manifest: GameTopologyManifest): string[] {
           path: `${boardPath}.runtimeBoardId`,
         })),
       ]),
-      ...collectObjectSchemaKeyIssues(
+      ...fieldSchemaKeyIssues(
         board.boardFieldsSchema,
         `${boardPath}.boardFieldsSchema`,
       ),
-      ...collectObjectSchemaKeyIssues(
+      ...fieldSchemaKeyIssues(
         board.spaceFieldsSchema,
         `${boardPath}.spaceFieldsSchema`,
       ),
@@ -649,11 +580,11 @@ function collectBoardRecordKeyIssues(manifest: GameTopologyManifest): string[] {
 
     if (board.layout !== "hex") {
       issues.push(
-        ...collectObjectSchemaKeyIssues(
+        ...fieldSchemaKeyIssues(
           board.relationFieldsSchema,
           `${boardPath}.relationFieldsSchema`,
         ),
-        ...collectObjectSchemaKeyIssues(
+        ...fieldSchemaKeyIssues(
           board.containerFieldsSchema,
           `${boardPath}.containerFieldsSchema`,
         ),
@@ -695,11 +626,11 @@ function collectBoardRecordKeyIssues(manifest: GameTopologyManifest): string[] {
 
     if (board.layout !== "generic") {
       issues.push(
-        ...collectObjectSchemaKeyIssues(
+        ...fieldSchemaKeyIssues(
           board.edgeFieldsSchema,
           `${boardPath}.edgeFieldsSchema`,
         ),
-        ...collectObjectSchemaKeyIssues(
+        ...fieldSchemaKeyIssues(
           board.vertexFieldsSchema,
           `${boardPath}.vertexFieldsSchema`,
         ),
@@ -814,13 +745,13 @@ function collectManifestRecordKeyIssues(
       collectCardSchemaKeyIssues(cardSet, `manifest.cardSets[${cardSetIndex}]`),
     ),
     ...(manifest.pieceTypes ?? []).flatMap((pieceType, typeIndex) =>
-      collectObjectSchemaKeyIssues(
+      fieldSchemaKeyIssues(
         pieceType.fieldsSchema,
         `manifest.pieceTypes[${typeIndex}].fieldsSchema`,
       ),
     ),
     ...(manifest.dieTypes ?? []).flatMap((dieType, typeIndex) =>
-      collectObjectSchemaKeyIssues(
+      fieldSchemaKeyIssues(
         dieType.fieldsSchema,
         `manifest.dieTypes[${typeIndex}].fieldsSchema`,
       ),
@@ -851,6 +782,16 @@ function validateCounts(manifest: GameTopologyManifest): string[] {
   check(manifest.players.maxPlayers, "manifest.players.maxPlayers");
   if (manifest.players.minPlayers > manifest.players.maxPlayers) {
     errors.push("manifest.players: minPlayers must not exceed maxPlayers.");
+  }
+  if (manifest.players.optimalPlayers !== undefined) {
+    check(manifest.players.optimalPlayers, "manifest.players.optimalPlayers");
+    if (
+      manifest.players.optimalPlayers < manifest.players.minPlayers ||
+      manifest.players.optimalPlayers > manifest.players.maxPlayers
+    )
+      errors.push(
+        "manifest.players.optimalPlayers: Must be within minPlayers and maxPlayers.",
+      );
   }
   return errors;
 }
@@ -969,6 +910,16 @@ export function validateManifestAuthoring(
   errors.push(...validateSlotHostsAndHomes(manifest));
   errors.push(...validatePlayerScopedSeedHomes(manifest));
   errors.push(...validateCardHomes(manifest));
+  for (const [kind, seeds, types] of [
+    ["pieceSeeds", manifest.pieceSeeds ?? [], manifest.pieceTypes ?? []],
+    ["dieSeeds", manifest.dieSeeds ?? [], manifest.dieTypes ?? []],
+  ] as const)
+    for (const [index, seed] of seeds.entries()) {
+      if (!types.some((type) => type.id === seed.typeId))
+        errors.push(
+          `manifest.${kind}[${index}].typeId: Unknown component type '${seed.typeId}'.`,
+        );
+    }
   for (const [cardSetIndex, cardSet] of manifest.cardSets.entries()) {
     for (const [cardIndex, card] of cardSet.cards.entries()) {
       const path = `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}]`;
@@ -982,8 +933,9 @@ export function validateManifestAuthoring(
       if (typeof card.cardType !== "string" || card.cardType.length === 0) {
         errors.push(`${path}.cardType: Card category is required.`);
       } else if (
-        "variants" in cardSet.cardSchema &&
-        !Object.hasOwn(cardSet.cardSchema.variants, card.cardType)
+        cardSet.cardSchema.byCardType != null &&
+        typeof cardSet.cardSchema.byCardType === "object" &&
+        !Object.hasOwn(cardSet.cardSchema.byCardType, card.cardType)
       ) {
         errors.push(
           `${path}.cardType: Unknown card category '${card.cardType}' for card set '${cardSet.id}'.`,
@@ -991,6 +943,7 @@ export function validateManifestAuthoring(
       }
     }
   }
+  errors.push(...validateAnalyzedManifest(manifest));
   errors.push(...validateCardImages(manifest));
   errors.push(...validateHexBoardVertexRefs(manifest));
 
@@ -999,3 +952,227 @@ export function validateManifestAuthoring(
     warnings: collectAmbiguousBoardTypeWarnings(manifest),
   };
 }
+
+function validateAnalyzedManifest(manifest: GameTopologyManifest): string[] {
+  let analysis: ReturnType<typeof analyzeManifestStructure>;
+  try {
+    analysis = analyzeManifestStructure(manifest);
+  } catch (error) {
+    return [
+      `manifest: ${error instanceof Error ? error.message : String(error)}`,
+    ];
+  }
+  const context = fieldReferenceContext(analysis, "manifest");
+  const errors = validateHomeMembership(manifest, analysis);
+  const resolve = createFieldValidatorResolver((boardId) =>
+    boardId ? fieldReferenceContext(analysis, "manifest", boardId) : context,
+  );
+  function admit(
+    schema: FieldSchemaJson,
+    path: string,
+    boardId?: string,
+  ): void {
+    try {
+      resolve(schema, boardId);
+    } catch (error) {
+      errors.push(
+        `${path}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+  for (const [i, set] of manifest.cardSets.entries()) {
+    if (set.cardSchema.byCardType !== undefined) {
+      const variants = z
+        .record(z.string(), z.record(z.string(), z.json()))
+        .parse(set.cardSchema.byCardType);
+      for (const [id, schema] of Object.entries(variants))
+        admit(schema, `manifest.cardSets[${i}].cardSchema.byCardType.${id}`);
+    } else admit(set.cardSchema, `manifest.cardSets[${i}].cardSchema`);
+  }
+  for (const [i, board] of (manifest.boards ?? []).entries())
+    for (const key of [
+      "boardFieldsSchema",
+      "spaceFieldsSchema",
+      "relationFieldsSchema",
+      "containerFieldsSchema",
+      "edgeFieldsSchema",
+      "vertexFieldsSchema",
+    ] as const)
+      if (key in board) {
+        const schema: unknown = Reflect.get(board, key);
+        if (schema !== undefined)
+          admit(
+            z.record(z.string(), z.json()).parse(schema),
+            `manifest.boards[${i}].${key}`,
+            board.id,
+          );
+      }
+  function check(
+    schema: FieldSchemaJson | undefined,
+    values: unknown,
+    path: string,
+    boardId?: string,
+  ): void {
+    if (!schema) return;
+    try {
+      const validator = resolve(schema, boardId);
+      const result = validator.safeParse(values ?? {});
+      if (!result.success)
+        for (const issue of result.error.issues)
+          errors.push(
+            `${path}${issue.path.length ? "." + issue.path.join(".") : ""}: ${issue.message}`,
+          );
+    } catch (error) {
+      errors.push(
+        `${path}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+  for (const type of [
+    ...(manifest.pieceTypes ?? []),
+    ...(manifest.dieTypes ?? []),
+  ])
+    if (type.fieldsSchema) {
+      try {
+        resolve(type.fieldsSchema);
+      } catch (error) {
+        errors.push(
+          `manifest.componentTypes.${type.id}.fieldsSchema: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
+  for (const [si, set] of manifest.cardSets.entries())
+    for (const [ci, card] of set.cards.entries()) {
+      try {
+        check(
+          schemaForCardType(set.cardSchema, card.cardType),
+          card.properties,
+          `manifest.cardSets[${si}].cards[${ci}].properties`,
+        );
+      } catch (error) {
+        errors.push(
+          `manifest.cardSets[${si}].cards[${ci}].properties: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
+  for (const [kind, seeds, types] of [
+    ["pieceSeeds", manifest.pieceSeeds ?? [], manifest.pieceTypes ?? []],
+    ["dieSeeds", manifest.dieSeeds ?? [], manifest.dieTypes ?? []],
+  ] as const)
+    for (const [i, seed] of seeds.entries())
+      check(
+        types.find((type) => type.id === seed.typeId)?.fieldsSchema,
+        seed.fields,
+        `manifest.${kind}[${i}].fields`,
+      );
+  for (const [i, board] of (manifest.boards ?? []).entries()) {
+    const base = `manifest.boards[${i}]`;
+    check(board.boardFieldsSchema, board.fields, `${base}.fields`, board.id);
+    const spaces =
+      board.layout === "hex" ? resolveHexSpaces(board) : (board.spaces ?? []);
+    for (const [j, space] of spaces.entries())
+      check(
+        board.spaceFieldsSchema,
+        space.fields,
+        `${base}.spaces[${j}].fields`,
+        board.id,
+      );
+    if (board.layout !== "hex") {
+      for (const [j, relation] of (board.relations ?? []).entries())
+        check(
+          board.relationFieldsSchema,
+          relation.fields,
+          `${base}.relations[${j}].fields`,
+          board.id,
+        );
+      for (const [j, container] of (board.containers ?? []).entries())
+        check(
+          board.containerFieldsSchema,
+          container.fields,
+          `${base}.containers[${j}].fields`,
+          board.id,
+        );
+    }
+    if (board.layout !== "generic") {
+      for (const [j, edge] of (board.edges ?? []).entries())
+        check(
+          board.edgeFieldsSchema,
+          edge.fields,
+          `${base}.edges[${j}].fields`,
+          board.id,
+        );
+      for (const [j, vertex] of (board.vertices ?? []).entries())
+        check(
+          board.vertexFieldsSchema,
+          vertex.fields,
+          `${base}.vertices[${j}].fields`,
+          board.id,
+        );
+    }
+  }
+  return errors;
+}
+
+function validateHomeMembership(
+  manifest: GameTopologyManifest,
+  analysis: ReturnType<typeof analyzeManifestStructure>,
+): string[] {
+  const errors: string[] = [];
+  function check(home: BoardCard["home"], path: string): void {
+    if (!home || home.type === "detached" || home.type === "slot") return;
+    if (home.type === "zone") {
+      if (!analysis.zoneIds.includes(home.zoneId))
+        errors.push(`${path}.zoneId: unknown zone '${home.zoneId}'.`);
+      return;
+    }
+    const board = analysis.analyzedBoards.find(
+      (board) => board.board.id === home.boardId,
+    );
+    if (!board) {
+      errors.push(`${path}.boardId: unknown board '${home.boardId}'.`);
+      return;
+    }
+    if (home.type === "space") {
+      if (!board.spaces.some((space) => space.id === home.spaceId))
+        errors.push(
+          `${path}.spaceId: unknown space '${home.spaceId}' on board '${home.boardId}'.`,
+        );
+    } else if (home.type === "container") {
+      if (
+        board.layout === "hex" ||
+        !board.containers.some((container) => container.id === home.containerId)
+      )
+        errors.push(
+          `${path}.containerId: unknown container '${home.containerId}' on board '${home.boardId}'.`,
+        );
+    } else {
+      const matches = (ids: readonly string[]) =>
+        ids.length === home.ref.spaces.length &&
+        [...ids]
+          .sort()
+          .every((id, index) => id === [...home.ref.spaces].sort()[index]);
+      const exists =
+        board.layout !== "generic" &&
+        (home.type === "edge"
+          ? board.edges.some((edge) => matches(edge.spaceIds))
+          : board.vertices.some((vertex) => matches(vertex.spaceIds)));
+      if (!exists)
+        errors.push(
+          `${path}.ref: Unknown ${home.type} reference on board '${home.boardId}'.`,
+        );
+    }
+  }
+  for (const [si, set] of manifest.cardSets.entries()) {
+    check(set.defaultHome, `manifest.cardSets[${si}].defaultHome`);
+    for (const [ci, card] of set.cards.entries())
+      check(card.home, `manifest.cardSets[${si}].cards[${ci}].home`);
+  }
+  for (const [kind, seeds] of [
+    ["pieceSeeds", manifest.pieceSeeds ?? []],
+    ["dieSeeds", manifest.dieSeeds ?? []],
+  ] as const)
+    for (const [i, seed] of seeds.entries())
+      check(seed.home, `manifest.${kind}[${i}].home`);
+  return errors;
+}
+import * as z from "zod";

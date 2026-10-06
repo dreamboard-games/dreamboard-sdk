@@ -93,6 +93,7 @@ export type {
 } from "./reducer/model";
 
 export { compileManifest } from "./reducer/manifest/compiler";
+export { parseTopologyManifestJson } from "./reducer/manifest/parse-json";
 export type {
   AuthoredManifest,
   ValidatedManifest,
@@ -129,3 +130,11 @@ export {
 
 export type { GameTopologyManifest } from "./shared/domain/manifest.js";
 export type { SquareBoardSpec } from "./shared/domain/contracts.js";
+
+export * as z from "zod";
+export { ref } from "./reducer/manifest/field-schemas";
+export type {
+  FieldSchema,
+  FieldsInput,
+  FieldsOutput,
+} from "./reducer/manifest/field-schemas";

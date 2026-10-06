@@ -32,3 +32,35 @@ Resources default to `visibility: "public"`. Declare `visibility: "owner"` for a
 balance only its holder may see: each seat projection's `resources` lists every
 player's public balances plus that seat's own owner-only balances. Reveal hidden
 totals at the end through the game outcome.
+
+## Field schemas
+
+Author field data with `z.object(...)`, importing `z` and `ref` from
+`@dreamboard-games/sdk/reducer`. `defineTopologyManifest` exports plain JSON
+Schema while retaining the authored input/output types for `compileManifest`.
+Use `cardSchema: { byCardType: { ... } }` for different card shapes; a shared
+`z.object(...)` can be extended for each card type.
+
+Portable fields support strings, finite numbers, integers, booleans, enums,
+literals, arrays, nested objects, records with an unconstrained `z.string()` key, nullable/optional fields
+and defaults. Required fields need authored values or explicit defaults. String
+lengths, number bounds and array lengths survive export. Refinements, transforms,
+coercion, string normalization, overwrite checks, regex flags and non-JSON values
+are rejected during definition. Defaults supplied as functions are evaluated once
+when authoring is converted to JSON; the exported document stores their concrete
+values. Default values must satisfy the same portable schema and reference checks
+as authored values. Concrete defaults must already have the complete output shape;
+extra stripped keys and missing nested defaults are rejected rather than transformed.
+Ordinary `z.object` fields strip unknown keys, `z.strictObject` rejects them,
+and `z.looseObject` preserves them. The exported object-mode metadata preserves
+these output policies through JSON. Enum-keyed records and arbitrary schema
+compositions are outside the portable subset.
+
+`ref` exposes `cardId`, `zoneId`, `playerId`, `boardId`, `spaceId`, `edgeId`,
+`vertexId`, `pieceId`, `dieId` and `resourceId`. The markers preserve ID families
+inside nested fields, arrays and records. Board-owned schemas resolve spaces,
+edges and vertices within that board. Manifest validation checks static inventory
+and topology; player IDs and instantiated board IDs require the session roster.
+Table validation resolves those against the active session. Future roster-derived
+inventory and changing topology must supply a fresh session reference context,
+rather than caching manifest-time ID enums as permanent membership.

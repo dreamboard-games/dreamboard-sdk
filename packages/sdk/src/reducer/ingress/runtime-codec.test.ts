@@ -16,7 +16,7 @@ function buildMinimalManifest() {
         id: "cards",
         name: "Cards",
         defaultHome: { type: "zone", zoneId: "draw" },
-        cardSchema: { properties: { rank: { type: "integer" } } },
+        cardSchema: z.object({ rank: z.number().int() }),
         cards: [
           {
             id: "card-1",

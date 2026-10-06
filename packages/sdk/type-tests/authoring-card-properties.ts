@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { defineTopologyManifest } from "../src/reducer/manifest/authoring.js";
 
 defineTopologyManifest({
@@ -7,15 +8,13 @@ defineTopologyManifest({
       id: "typed-cards",
       name: "Typed Cards",
       defaultHome: { type: "detached" },
-      cardSchema: {
-        properties: {
-          label: { type: "string" },
-          coins: { type: "integer" },
-          weight: { type: "number", optional: true },
-          enabled: { type: "boolean", optional: true },
-          role: { type: "enum", enums: ["treasure", "victory"] },
-        },
-      },
+      cardSchema: z.object({
+        label: z.string(),
+        coins: z.number().int(),
+        weight: z.number().optional(),
+        enabled: z.boolean().optional(),
+        role: z.enum(["treasure", "victory"]),
+      }),
       cards: [
         {
           id: "copper",
@@ -69,13 +68,11 @@ defineTopologyManifest({
       id: "missing-required-property",
       name: "Missing Required Property",
       defaultHome: { type: "detached" },
-      cardSchema: {
-        properties: {
-          coins: { type: "integer" },
-          vp: { type: "integer" },
-          cost: { type: "number", optional: true },
-        },
-      },
+      cardSchema: z.object({
+        coins: z.number().int(),
+        vp: z.number().int(),
+        cost: z.number().optional(),
+      }),
       cards: [
         {
           id: "copper",
@@ -112,20 +109,13 @@ defineTopologyManifest({
       name: "Variant Cards",
       defaultHome: { type: "detached" },
       cardSchema: {
-        shared: {
-          cost: { type: "integer" },
-        },
-        variants: {
-          copper: {
-            properties: {
-              coins: { type: "integer" },
-            },
-          },
-          "ranked-card": {
-            properties: {
-              vp: { type: "integer" },
-            },
-          },
+        byCardType: {
+          copper: z
+            .object({ cost: z.number().int() })
+            .extend({ coins: z.number().int() }),
+          "ranked-card": z
+            .object({ cost: z.number().int() })
+            .extend({ vp: z.number().int() }),
         },
       },
       cards: [
@@ -163,15 +153,10 @@ defineTopologyManifest({
       name: "Defaulted Card Properties",
       defaultHome: { type: "detached" },
       cardSchema: {
-        shared: {
-          cost: { type: "integer", optional: true, default: 0 },
-        },
-        variants: {
-          copper: {
-            properties: {
-              coins: { type: "integer" },
-            },
-          },
+        byCardType: {
+          copper: z
+            .object({ cost: z.number().int().optional().default(0) })
+            .extend({ coins: z.number().int() }),
         },
       },
       cards: [
@@ -203,13 +188,7 @@ defineTopologyManifest({
       name: "Variant Missing Required Property",
       defaultHome: { type: "detached" },
       cardSchema: {
-        variants: {
-          copper: {
-            properties: {
-              coins: { type: "integer" },
-            },
-          },
-        },
+        byCardType: { copper: z.object({ coins: z.number().int() }) },
       },
       cards: [
         {

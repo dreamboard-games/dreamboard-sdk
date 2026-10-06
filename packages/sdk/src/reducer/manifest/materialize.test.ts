@@ -29,14 +29,14 @@ test("materializeManifestTable keeps runtime board topology board-local", () => 
           layout: "generic",
           scope: "shared",
           spaceFieldsSchema: {
-            properties: {
-              marker: { type: "string" },
-            },
+            type: "object",
+            properties: { marker: { type: "string" } },
+            required: ["marker"],
           },
           containerFieldsSchema: {
-            properties: {
-              capacity: { type: "integer" },
-            },
+            type: "object",
+            properties: { capacity: { type: "integer" } },
+            required: ["capacity"],
           },
           spaces: [
             { id: "a-1", fields: { marker: "alpha" } },
@@ -58,9 +58,9 @@ test("materializeManifestTable keeps runtime board topology board-local", () => 
           layout: "generic",
           scope: "shared",
           spaceFieldsSchema: {
-            properties: {
-              marker: { type: "string" },
-            },
+            type: "object",
+            properties: { marker: { type: "string" } },
+            required: ["marker"],
           },
           spaces: [{ id: "b-1", fields: { marker: "charlie" } }],
           relations: [],
@@ -133,7 +133,7 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
           id: "market",
           name: "Market",
           defaultHome: { type: "zone", zoneId: "shared-deck" },
-          cardSchema: { properties: {} },
+          cardSchema: { type: "object", properties: {}, required: [] },
           cards: [
             {
               id: "omitted",
@@ -337,7 +337,7 @@ test("materializeManifestTable rejects unsafe manifest keys before materializati
         id: "unsafe",
         name: "Unsafe",
         defaultHome: { type: "detached" },
-        cardSchema: { properties: {} },
+        cardSchema: { type: "object", properties: {}, required: [] },
         cards: [
           {
             id: "__proto__",
@@ -367,12 +367,24 @@ test("inline square metadata and schemas survive topology materialization", () =
     layout: "square" as const,
     scope: "shared" as const,
     boardFieldsSchema: {
-      properties: { round: { type: "integer" as const, default: 2 } },
+      type: "object",
+      properties: { round: { type: "integer", default: 2 } },
+      required: [],
     },
-    spaceFieldsSchema: { properties: { terrain: { type: "string" as const } } },
-    edgeFieldsSchema: { properties: { cost: { type: "integer" as const } } },
+    spaceFieldsSchema: {
+      type: "object",
+      properties: { terrain: { type: "string", default: "" } },
+      required: [],
+    },
+    edgeFieldsSchema: {
+      type: "object",
+      properties: { cost: { type: "integer", default: 0 } },
+      required: [],
+    },
     vertexFieldsSchema: {
-      properties: { points: { type: "integer" as const } },
+      type: "object",
+      properties: { points: { type: "integer", default: 0 } },
+      required: [],
     },
     spaces: [
       { id: "a", row: 0, col: 0, fields: { terrain: "grass" } },

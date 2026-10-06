@@ -1,3 +1,5 @@
+import { z } from "zod";
+import { ref } from "../src/reducer";
 import { defineTopologyManifest } from "../src/reducer/manifest/authoring.js";
 import type { ManifestIdsOf } from "../src/reducer/manifest/types.js";
 
@@ -8,12 +10,7 @@ const manifest = defineTopologyManifest({
       id: "references",
       name: "References",
       defaultHome: { type: "detached" },
-      cardSchema: {
-        properties: {
-          piece: { type: "pieceId" },
-          die: { type: "dieId" },
-        },
-      },
+      cardSchema: z.object({ piece: ref.pieceId(), die: ref.dieId() }),
       cards: [
         {
           id: "omitted-count",

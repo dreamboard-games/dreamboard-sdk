@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { compileManifest } from "./compiler";
 import { createTableQueries } from "../table-queries";
 import type { ComponentIdOfTable } from "../model/extract";
@@ -10,16 +11,12 @@ const manifest = compileManifest({
     {
       id: "worker",
       name: "Worker",
-      fieldsSchema: {
-        properties: { strength: { type: "integer", default: 1 } },
-      },
+      fieldsSchema: z.object({ strength: z.number().int().default(1) }),
     },
     {
       id: "marker",
       name: "Marker",
-      fieldsSchema: {
-        properties: { color: { type: "string", default: "red" } },
-      },
+      fieldsSchema: z.object({ color: z.string().default("red") }),
     },
   ],
   pieceSeeds: [
@@ -31,7 +28,7 @@ const manifest = compileManifest({
       id: "combat",
       name: "Combat",
       sides: 6,
-      fieldsSchema: { properties: { bonus: { type: "integer", default: 0 } } },
+      fieldsSchema: z.object({ bonus: z.number().int().default(0) }),
     },
   ],
   dieSeeds: [{ id: "battle", typeId: "combat" }],

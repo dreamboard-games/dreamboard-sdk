@@ -193,7 +193,11 @@ export async function assertSdkExportParity(
       continue;
     }
     const declared = declarationExports(typesPath);
-    const synthetic = declared.all.filter((name) => /^[A-Za-z]$/.test(name));
+    // The reducer deliberately exposes Zod's public namespace as `z`.
+    const synthetic = declared.all.filter(
+      (name) =>
+        /^[A-Za-z]$/.test(name) && !(subpath === "./reducer" && name === "z"),
+    );
     if (synthetic.length > 0) {
       failures.push(
         `${subpath}: synthetic declaration aliases ${synthetic.join(", ")}`,

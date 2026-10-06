@@ -1,6 +1,6 @@
 import type { BoardCard } from "../src/shared/domain/contracts.js";
 import { compileManifest } from "../src/reducer/manifest/compiler.js";
-import type { z } from "zod";
+import { z } from "zod";
 
 const oldCard = {
   type: "ace",
@@ -21,7 +21,7 @@ const compiled = compileManifest({
       id: "cards",
       name: "Cards",
       defaultHome: { type: "detached" },
-      cardSchema: { variants: { ranked: { properties: {} } } },
+      cardSchema: { byCardType: { ranked: z.object({}) } },
       cards: [
         {
           id: "ace",

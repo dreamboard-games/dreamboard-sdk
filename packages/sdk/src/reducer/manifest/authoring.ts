@@ -1,42 +1,20 @@
-import { assertValidManifest } from "./manifest-validation";
+import type { SchemaAuthoring } from "./types";
+import { toManifestJson, type FieldsInput } from "./field-schemas";
+import { parseTopologyManifestJson } from "./parse-json";
 import type { ValidatedManifest } from "./types";
 import type { ManifestCountValidation } from "./identity-types";
-import type {
-  HexSpaceId,
-  HexEdgeId,
-  HexVertexId,
-} from "../../shared/domain/board-identities.js";
+import type { HexSpaceId } from "../../shared/domain/board-identities.js";
 import type {
   BoardEdgeRef,
   BoardVertexRef,
-  DieTypeSpec as ApiDieTypeSpec,
   GameTopologyManifest as ApiGameTopologyManifest,
-  JsonValue,
 } from "../../shared/domain/contracts.js";
-import type { RuntimeIdsFromCount } from "./identity-types.js";
 
-type DieTypeSpec = Omit<ApiDieTypeSpec, "sides"> & {
-  sides?: ApiDieTypeSpec["sides"];
-};
-
-type DeepReadonly<T> = T extends (...args: readonly unknown[]) => unknown
-  ? T
-  : T extends readonly (infer Item)[]
-    ? ReadonlyArray<DeepReadonly<Item>>
-    : T extends object
-      ? { readonly [Key in keyof T]: DeepReadonly<T[Key]> }
-      : T;
-
-type GameTopologyManifest = DeepReadonly<
-  Omit<ApiGameTopologyManifest, "dieTypes"> & {
-    dieTypes?: readonly DieTypeSpec[];
-  }
->;
+type GameTopologyManifest = SchemaAuthoring<ApiGameTopologyManifest>;
 
 type ArrayItem<T> = T extends readonly (infer Item)[] ? Item : never;
 type EntryId<T> = T extends { id: infer Id extends string } ? Id : never;
 type IdsOf<T> = EntryId<ArrayItem<NonNullable<T>>>;
-type RuntimeRecord = Record<string, JsonValue>;
 
 type CardSetId<Manifest extends GameTopologyManifest> = IdsOf<
   Manifest["cardSets"]
@@ -57,9 +35,6 @@ type SharedBoardId<Manifest extends GameTopologyManifest> = Exclude<
   BoardId<Manifest>,
   PerPlayerBoardId<Manifest>
 >;
-type ResourceId<Manifest extends GameTopologyManifest> = IdsOf<
-  Manifest["resources"]
->;
 type PieceTypeId<Manifest extends GameTopologyManifest> = IdsOf<
   Manifest["pieceTypes"]
 >;
@@ -72,16 +47,6 @@ type PieceSeedOf<Manifest extends GameTopologyManifest> = ArrayItem<
 type DieSeedOf<Manifest extends GameTopologyManifest> = ArrayItem<
   NonNullable<Manifest["dieSeeds"]>
 >;
-type CardSetOf<Manifest extends GameTopologyManifest> = ArrayItem<
-  NonNullable<Manifest["cardSets"]>
->;
-type CardOf<Manifest extends GameTopologyManifest> =
-  CardSetOf<Manifest> extends infer CardSet
-    ? CardSet extends { cards: infer Cards extends readonly unknown[] }
-      ? ArrayItem<Cards>
-      : never
-    : never;
-
 type BoardOf<
   Manifest extends GameTopologyManifest,
   CurrentBoardId extends BoardId<Manifest>,
@@ -92,13 +57,6 @@ type SpaceIdOf<BoardLike> = BoardLike extends { layout: "hex" }
 type ContainerIdOf<BoardLike> = IdsOf<
   BoardLike extends { containers?: infer Containers } ? Containers : never
 >;
-type SpaceOf<BoardLike> = ArrayItem<
-  NonNullable<BoardLike extends { spaces?: infer Spaces } ? Spaces : never>
->;
-type SquareSpaceOf<BoardLike> = Extract<
-  SpaceOf<BoardLike>,
-  { row: number; col: number }
->;
 type SpaceIdForBoard<
   Manifest extends GameTopologyManifest,
   CurrentBoardId extends BoardId<Manifest>,
@@ -107,28 +65,6 @@ type ContainerIdForBoard<
   Manifest extends GameTopologyManifest,
   CurrentBoardId extends BoardId<Manifest>,
 > = ContainerIdOf<BoardOf<Manifest, CurrentBoardId>>;
-
-type CardRuntimeId<Card> = Card extends { id: infer Id extends string }
-  ? RuntimeIdsFromCount<
-      Id,
-      Card extends { count: infer Count extends number } ? Count : never
-    >
-  : never;
-type SeedRuntimeId<Seed> = Seed extends { typeId: infer TypeId extends string }
-  ? RuntimeIdsFromCount<
-      Seed extends { id: infer Id extends string } ? Id : TypeId,
-      Seed extends { count: infer Count extends number } ? Count : never
-    >
-  : never;
-type CardId<Manifest extends GameTopologyManifest> = CardRuntimeId<
-  CardOf<Manifest>
->;
-type PieceId<Manifest extends GameTopologyManifest> = SeedRuntimeId<
-  PieceSeedOf<Manifest>
->;
-type DieId<Manifest extends GameTopologyManifest> = SeedRuntimeId<
-  DieSeedOf<Manifest>
->;
 
 type PieceTypeOf<
   Manifest extends GameTopologyManifest,
@@ -213,153 +149,6 @@ type TypedDieSlotHomeSpec<Manifest extends GameTopologyManifest> =
       : never
     : never;
 
-type RequiredSchemaKeys<Properties extends Readonly<Record<string, unknown>>> =
-  {
-    [Key in keyof Properties]: Properties[Key] extends { optional: true }
-      ? never
-      : Properties[Key] extends { default: unknown }
-        ? never
-        : Key;
-  }[keyof Properties];
-type OptionalSchemaKeys<Properties extends Readonly<Record<string, unknown>>> =
-  {
-    [Key in keyof Properties]: Properties[Key] extends { optional: true }
-      ? Key
-      : Properties[Key] extends { default: unknown }
-        ? Key
-        : never;
-  }[keyof Properties];
-
-type SchemaValueFromObjectProperties<
-  Properties extends Readonly<Record<string, unknown>>,
-  Manifest extends GameTopologyManifest,
-  BoardLike = never,
-> = keyof Properties extends never
-  ? RuntimeRecord
-  : {
-      [Key in RequiredSchemaKeys<Properties>]: SchemaValueForProperty<
-        Properties[Key],
-        Manifest,
-        BoardLike
-      >;
-    } & {
-      [Key in OptionalSchemaKeys<Properties>]?: SchemaValueForProperty<
-        Properties[Key],
-        Manifest,
-        BoardLike
-      >;
-    };
-
-type SchemaValueForObjectSchema<
-  Schema,
-  Manifest extends GameTopologyManifest,
-  BoardLike = never,
-> = Schema extends {
-  properties: infer Properties extends Readonly<Record<string, unknown>>;
-}
-  ? SchemaValueFromObjectProperties<Properties, Manifest, BoardLike>
-  : RuntimeRecord;
-
-type MergeSharedProperties<Variant, Shared> = Variant extends {
-  properties: infer VariantProperties extends Readonly<Record<string, unknown>>;
-}
-  ? {
-      properties: Shared extends Readonly<Record<string, unknown>>
-        ? Omit<Shared, keyof VariantProperties> & VariantProperties
-        : VariantProperties;
-    }
-  : Variant;
-
-type BaseSchemaValueForProperty<
-  Schema,
-  Manifest extends GameTopologyManifest,
-  BoardLike = never,
-> = Schema extends { type: "string" }
-  ? string
-  : Schema extends { type: "integer" | "number" }
-    ? number
-    : Schema extends { type: "boolean" }
-      ? boolean
-      : Schema extends { type: "zoneId" }
-        ? ZoneId<Manifest>
-        : Schema extends { type: "cardId" }
-          ? CardId<Manifest>
-          : Schema extends { type: "playerId" }
-            ? PlayerId<Manifest>
-            : Schema extends { type: "boardId" }
-              ? BoardId<Manifest>
-              : Schema extends { type: "spaceId" }
-                ? [BoardLike] extends [never]
-                  ? string
-                  : SpaceIdOf<BoardLike>
-                : Schema extends { type: "edgeId" }
-                  ? [BoardLike] extends [never]
-                    ? string
-                    : DerivedEdgeIdOf<BoardLike>
-                  : Schema extends { type: "vertexId" }
-                    ? [BoardLike] extends [never]
-                      ? string
-                      : DerivedVertexIdOf<BoardLike>
-                    : Schema extends { type: "pieceId" }
-                      ? PieceId<Manifest>
-                      : Schema extends { type: "dieId" }
-                        ? DieId<Manifest>
-                        : Schema extends { type: "resourceId" }
-                          ? ResourceId<Manifest>
-                          : Schema extends { type: "enum" }
-                            ? Schema extends {
-                                enums: infer Values extends readonly string[];
-                              }
-                              ? Values[number]
-                              : string
-                            : Schema extends { type: "array" }
-                              ? ReadonlyArray<
-                                  SchemaValueForProperty<
-                                    Schema extends {
-                                      items?: infer Items;
-                                    }
-                                      ? Items
-                                      : undefined,
-                                    Manifest,
-                                    BoardLike
-                                  >
-                                >
-                              : Schema extends { type: "object" }
-                                ? SchemaValueForObjectSchema<
-                                    Schema extends {
-                                      properties?: infer Properties extends
-                                        Record<string, unknown>;
-                                    }
-                                      ? {
-                                          properties: Properties;
-                                        }
-                                      : undefined,
-                                    Manifest,
-                                    BoardLike
-                                  >
-                                : Schema extends { type: "record" }
-                                  ? Record<
-                                      string,
-                                      SchemaValueForProperty<
-                                        Schema extends {
-                                          values?: infer Values;
-                                        }
-                                          ? Values
-                                          : undefined,
-                                        Manifest,
-                                        BoardLike
-                                      >
-                                    >
-                                  : RuntimeRecord;
-
-type SchemaValueForProperty<
-  Schema,
-  Manifest extends GameTopologyManifest,
-  BoardLike = never,
-> = Schema extends { nullable: true }
-  ? BaseSchemaValueForProperty<Schema, Manifest, BoardLike> | null
-  : BaseSchemaValueForProperty<Schema, Manifest, BoardLike>;
-
 type BuildTuple<
   Length extends number,
   Accumulator extends unknown[] = [],
@@ -381,136 +170,6 @@ type PlayerId<Manifest extends GameTopologyManifest> =
   Manifest["players"]["maxPlayers"] extends infer MaxPlayers extends number
     ? `player-${OneTo<MaxPlayers>}`
     : `player-${number}`;
-
-type ToNumber<Input extends string> =
-  Input extends `${infer Value extends number}` ? Value : never;
-type AbsoluteNumber<Count extends number> =
-  `${Count}` extends `-${infer Value extends number}` ? Value : Count;
-type IsNegative<Count extends number> = `${Count}` extends `-${string}`
-  ? true
-  : false;
-type Negate<Count extends number> = Count extends 0
-  ? 0
-  : ToNumber<`${`${Count}` extends `-${infer Value extends number}`
-      ? Value
-      : `-${Count}`}`>;
-type AddPositive<Left extends number, Right extends number> = number extends
-  Left | Right
-  ? number
-  : [...BuildTuple<Left>, ...BuildTuple<Right>]["length"] & number;
-type ComparePositive<
-  Left extends number,
-  Right extends number,
-> = Left extends Right
-  ? "equal"
-  : number extends Left | Right
-    ? "unknown"
-    : BuildTuple<Left> extends [...BuildTuple<Right>, ...infer Rest]
-      ? Rest extends []
-        ? "equal"
-        : "greater"
-      : "less";
-type SubtractPositive<
-  Left extends number,
-  Right extends number,
-> = number extends Left | Right
-  ? number
-  : BuildTuple<Left> extends [...BuildTuple<Right>, ...infer Rest]
-    ? Rest["length"] & number
-    : never;
-type AddSigned<Left extends number, Right extends number> = number extends
-  Left | Right
-  ? number
-  : IsNegative<Left> extends IsNegative<Right>
-    ? IsNegative<Left> extends true
-      ? Negate<AddPositive<AbsoluteNumber<Left>, AbsoluteNumber<Right>>>
-      : AddPositive<AbsoluteNumber<Left>, AbsoluteNumber<Right>>
-    : ComparePositive<
-          AbsoluteNumber<Left>,
-          AbsoluteNumber<Right>
-        > extends "equal"
-      ? 0
-      : ComparePositive<
-            AbsoluteNumber<Left>,
-            AbsoluteNumber<Right>
-          > extends "greater"
-        ? IsNegative<Left> extends true
-          ? Negate<
-              SubtractPositive<AbsoluteNumber<Left>, AbsoluteNumber<Right>>
-            >
-          : SubtractPositive<AbsoluteNumber<Left>, AbsoluteNumber<Right>>
-        : IsNegative<Right> extends true
-          ? Negate<
-              SubtractPositive<AbsoluteNumber<Right>, AbsoluteNumber<Left>>
-            >
-          : SubtractPositive<AbsoluteNumber<Right>, AbsoluteNumber<Left>>;
-type SquareCornerGeometryKey<
-  Space extends { row: number; col: number },
-  Corner extends "nw" | "ne" | "se" | "sw",
-> = Corner extends "nw"
-  ? `${Space["col"]},${Space["row"]}`
-  : Corner extends "ne"
-    ? `${AddSigned<Space["col"], 1>},${Space["row"]}`
-    : Corner extends "se"
-      ? `${AddSigned<Space["col"], 1>},${AddSigned<Space["row"], 1>}`
-      : `${Space["col"]},${AddSigned<Space["row"], 1>}`;
-type SquareEdgeGeometryKey<
-  Space extends { row: number; col: number },
-  Side extends "north" | "east" | "south" | "west",
-> = Side extends "north"
-  ? `${Space["col"]},${Space["row"]}::${AddSigned<Space["col"], 1>},${Space["row"]}`
-  : Side extends "east"
-    ? `${AddSigned<Space["col"], 1>},${Space["row"]}::${AddSigned<
-        Space["col"],
-        1
-      >},${AddSigned<Space["row"], 1>}`
-    : Side extends "south"
-      ? `${Space["col"]},${AddSigned<Space["row"], 1>}::${AddSigned<
-          Space["col"],
-          1
-        >},${AddSigned<Space["row"], 1>}`
-      : `${Space["col"]},${Space["row"]}::${Space["col"]},${AddSigned<
-          Space["row"],
-          1
-        >}`;
-type DerivedSquareEdgeIdOf<BoardLike> =
-  SquareSpaceOf<BoardLike> extends infer Space
-    ? Space extends { row: number; col: number }
-      ? | `square-edge:${SquareEdgeGeometryKey<Space, "north">}`
-        | `square-edge:${SquareEdgeGeometryKey<Space, "east">}`
-        | `square-edge:${SquareEdgeGeometryKey<Space, "south">}`
-        | `square-edge:${SquareEdgeGeometryKey<Space, "west">}`
-      : never
-    : never;
-type DerivedSquareVertexIdOf<BoardLike> =
-  SquareSpaceOf<BoardLike> extends infer Space
-    ? Space extends { row: number; col: number }
-      ? | `square-vertex:${SquareCornerGeometryKey<Space, "nw">}`
-        | `square-vertex:${SquareCornerGeometryKey<Space, "ne">}`
-        | `square-vertex:${SquareCornerGeometryKey<Space, "se">}`
-        | `square-vertex:${SquareCornerGeometryKey<Space, "sw">}`
-      : never
-    : never;
-type DerivedHexEdgeIdOf<BoardLike> = BoardLike extends {
-  id: infer Id extends string;
-}
-  ? HexEdgeId<Id>
-  : never;
-type DerivedHexVertexIdOf<BoardLike> = BoardLike extends {
-  id: infer Id extends string;
-}
-  ? HexVertexId<Id>
-  : never;
-type DerivedEdgeIdOf<BoardLike> = BoardLike extends { layout: "square" }
-  ? DerivedSquareEdgeIdOf<BoardLike>
-  : BoardLike extends { layout: "hex" }
-    ? DerivedHexEdgeIdOf<BoardLike>
-    : never;
-type DerivedVertexIdOf<BoardLike> = BoardLike extends { layout: "square" }
-  ? DerivedSquareVertexIdOf<BoardLike>
-  : BoardLike extends { layout: "hex" }
-    ? DerivedHexVertexIdOf<BoardLike>
-    : never;
 
 type TypedSharedSpaceHomeSpec<Manifest extends GameTopologyManifest> = {
   [CurrentBoardId in SharedBoardId<Manifest>]: {
@@ -548,7 +207,7 @@ type TypedSharedEdgeHomeSpec<Manifest extends GameTopologyManifest> = {
   [CurrentBoardId in SharedBoardId<Manifest>]: {
     type: "edge";
     boardId: CurrentBoardId;
-    ref: BoardEdgeRef;
+    ref: SchemaAuthoring<BoardEdgeRef>;
   };
 }[SharedBoardId<Manifest>];
 
@@ -556,7 +215,7 @@ type TypedPerPlayerEdgeHomeSpec<Manifest extends GameTopologyManifest> = {
   [CurrentBoardId in PerPlayerBoardId<Manifest>]: {
     type: "edge";
     boardId: CurrentBoardId;
-    ref: BoardEdgeRef;
+    ref: SchemaAuthoring<BoardEdgeRef>;
   };
 }[PerPlayerBoardId<Manifest>];
 
@@ -564,7 +223,7 @@ type TypedSharedVertexHomeSpec<Manifest extends GameTopologyManifest> = {
   [CurrentBoardId in SharedBoardId<Manifest>]: {
     type: "vertex";
     boardId: CurrentBoardId;
-    ref: BoardVertexRef;
+    ref: SchemaAuthoring<BoardVertexRef>;
   };
 }[SharedBoardId<Manifest>];
 
@@ -572,7 +231,7 @@ type TypedPerPlayerVertexHomeSpec<Manifest extends GameTopologyManifest> = {
   [CurrentBoardId in PerPlayerBoardId<Manifest>]: {
     type: "vertex";
     boardId: CurrentBoardId;
-    ref: BoardVertexRef;
+    ref: SchemaAuthoring<BoardVertexRef>;
   };
 }[PerPlayerBoardId<Manifest>];
 
@@ -643,7 +302,7 @@ type TypedFields<
   BoardLike = never,
 > = T extends { fields?: unknown }
   ? Omit<T, "fields"> & {
-      fields?: SchemaValueForObjectSchema<Schema, Manifest, BoardLike>;
+      fields?: FieldsInput<Schema, Manifest, BoardLike>;
     }
   : T;
 type TypedBoardContainerHost<Host, BoardLike> = Host extends {
@@ -907,16 +566,12 @@ type TypedCard<
   ? Omit<TypedVisibility<Card, Manifest>, "home" | "properties"> & {
       home?: TypedComponentHomeSpec<Manifest>;
       properties: CardSchema extends {
-        variants: infer Variants extends Record<string, unknown>;
-        shared?: infer Shared;
+        byCardType: infer Variants extends Record<string, unknown>;
       }
         ? AuthoredCardType<Card> extends keyof Variants
-          ? SchemaValueForObjectSchema<
-              MergeSharedProperties<Variants[AuthoredCardType<Card>], Shared>,
-              Manifest
-            >
+          ? FieldsInput<Variants[AuthoredCardType<Card>], Manifest>
           : never
-        : SchemaValueForObjectSchema<CardSchema, Manifest>;
+        : FieldsInput<CardSchema, Manifest>;
     }
   : Card;
 
@@ -957,7 +612,7 @@ type TypedPieceSeed<
         "typeId" | "ownerId" | "home" | "fields"
       > & {
         typeId: CurrentTypeId;
-        fields?: SchemaValueForObjectSchema<
+        fields?: FieldsInput<
           PieceTypeOf<Manifest, CurrentTypeId> extends {
             fieldsSchema?: infer FieldsSchema;
           }
@@ -983,7 +638,7 @@ type TypedDieSeed<Seed, Manifest extends GameTopologyManifest> = Seed extends {
         "typeId" | "ownerId" | "home" | "fields"
       > & {
         typeId: CurrentTypeId;
-        fields?: SchemaValueForObjectSchema<
+        fields?: FieldsInput<
           DieTypeOf<Manifest, CurrentTypeId> extends {
             fieldsSchema?: infer FieldsSchema;
           }
@@ -1010,7 +665,7 @@ export type TypedTopologyManifest<Manifest extends GameTopologyManifest> = Omit<
   zones?: Manifest["zones"] extends readonly unknown[]
     ? ReadonlyArray<TypedZone<ArrayItem<Manifest["zones"]>, Manifest>>
     : Manifest["zones"];
-  boards: Manifest["boards"] extends readonly unknown[]
+  boards?: Manifest["boards"] extends readonly unknown[]
     ? ReadonlyArray<
         TypedBoardLikeEntry<ArrayItem<Manifest["boards"]>, Manifest>
       >
@@ -1023,7 +678,7 @@ export type TypedTopologyManifest<Manifest extends GameTopologyManifest> = Omit<
     : Manifest["dieSeeds"];
 };
 
-type TopologyManifestValidation<Manifest> =
+export type TopologyManifestValidation<Manifest> =
   Manifest extends GameTopologyManifest
     ? TypedTopologyManifest<Manifest>
     : GameTopologyManifest;
@@ -1037,10 +692,7 @@ export function defineTopologyManifest<const Manifest>(
     TopologyManifestValidation<NoInfer<Manifest>> &
     ManifestCountValidation<NoInfer<Manifest>>,
 ): DefinedTopologyManifest<Manifest> {
-  const validated = structuredClone(manifest);
-  assertValidManifest(
-    // eslint-disable-next-line no-restricted-syntax -- The authoring parameter enforces the topology shape; this cloned copy is passed to semantic validation before branding.
-    validated as unknown as import("../../shared/domain/manifest").GameTopologyManifest,
-  );
-  return validated as DefinedTopologyManifest<Manifest>;
+  const validated = parseTopologyManifestJson(toManifestJson(manifest));
+  // eslint-disable-next-line no-restricted-syntax -- Semantic validation establishes the JSON boundary and its authored-type witness.
+  return validated as unknown as DefinedTopologyManifest<Manifest>;
 }

@@ -32,7 +32,7 @@ test.each([
           {
             id: "cards",
             name: "Cards",
-            cardSchema: { properties: {} },
+            cardSchema: { type: "object", properties: {}, required: [] },
             defaultHome: { type: "detached" },
             cards: [
               {

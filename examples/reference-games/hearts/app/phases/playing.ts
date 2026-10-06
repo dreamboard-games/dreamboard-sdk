@@ -1,4 +1,4 @@
-import { hearts, type Suit } from "../game-model";
+import { hearts } from "../game-model";
 import { trickWinner, validateCardPlay } from "../rules";
 
 const playing = hearts.phase("playing");
@@ -58,7 +58,7 @@ const playCard = playing.interaction({
 
     const phase = state.phase;
     const newPlays = [...phase.plays, { playerId, cardId }];
-    const leadSuit = (phase.leadSuit ?? properties.suit) as Suit;
+    const leadSuit = phase.leadSuit ?? properties.suit;
     tx.moveCardFromPlayerZoneToSharedZone({
       playerId,
       fromZoneId: "hand",

@@ -23,9 +23,7 @@ function faceDownGame() {
         {
           id: "cards",
           name: "Cards",
-          cardSchema: {
-            properties: { note: { type: "string", optional: true } },
-          },
+          cardSchema: z.object({ note: z.string().optional() }),
           defaultHome: { type: "zone", zoneId: "deck" },
           cards: [card("ace"), card("king")],
         },

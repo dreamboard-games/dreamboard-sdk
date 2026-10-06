@@ -97,7 +97,7 @@ function createBootstrapManifestContract() {
         id: "main",
         name: "Main",
         defaultHome: { type: "zone", zoneId: "draw-deck" },
-        cardSchema: { properties: {} },
+        cardSchema: z.object({}),
         cards: BOOTSTRAP_CARD_IDS.map((id) => ({
           id,
           name: id,
@@ -350,7 +350,7 @@ describe("initialization runtime", () => {
             id: "main",
             name: "Main",
             defaultHome: { type: "zone", zoneId: "draw-deck" },
-            cardSchema: { properties: {} },
+            cardSchema: z.object({}),
             cards: [
               {
                 id: "card-1",

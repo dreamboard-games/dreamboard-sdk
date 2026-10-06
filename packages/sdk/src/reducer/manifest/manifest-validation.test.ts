@@ -161,9 +161,7 @@ test("validateManifestAuthoring rejects invalid strict slot hosts and slot ids",
         id: "main",
         name: "Main",
         defaultHome: { type: "detached" },
-        cardSchema: {
-          properties: {},
-        },
+        cardSchema: { type: "object", properties: {}, required: [] },
         cards: [
           {
             id: "ace",
@@ -354,7 +352,7 @@ test("validateManifestAuthoring rejects player-scoped card homes", () => {
         id: "market",
         name: "Market",
         defaultHome: { type: "detached" },
-        cardSchema: { properties: {} },
+        cardSchema: { type: "object", properties: {}, required: [] },
         cards: [
           {
             id: "scout",
@@ -418,15 +416,16 @@ test("validateManifestAuthoring rejects reserved record keys before generation",
         name: "Unsafe Cards",
         defaultHome: { type: "detached" },
         cardSchema: {
+          type: "object",
           properties: {
             prototype: { type: "string" },
             nested: {
               type: "object",
-              properties: {
-                constructor: { type: "integer" as const },
-              },
+              properties: { constructor: { type: "integer" } },
+              required: ["constructor"],
             },
           },
+          required: ["prototype", "nested"],
         },
         cards: [
           {
@@ -492,7 +491,7 @@ test.each([
         id: "cards",
         name: "Cards",
         defaultHome: { type: "detached" },
-        cardSchema: { properties: {} },
+        cardSchema: { type: "object", properties: {}, required: [] },
         cards: [{ id, name: id, cardType: "cards", count, properties: {} }],
       },
     ],
@@ -513,7 +512,7 @@ test("distinct literal ids remain distinct when their old handles matched", () =
         id: "market",
         name: "Market",
         defaultHome: { type: "detached" },
-        cardSchema: { properties: {} },
+        cardSchema: { type: "object", properties: {}, required: [] },
         cards: [
           {
             id: "foo-bar",
@@ -610,7 +609,7 @@ test("validateManifestAuthoring requires card images under assets/", () => {
         id: "cards",
         name: "Cards",
         defaultHome: { type: "detached" },
-        cardSchema: { properties: {} },
+        cardSchema: { type: "object", properties: {}, required: [] },
         cards: [
           card("ace", "assets/cards/ace.webp"),
           card("king", "https://example.com/king.png"),

@@ -90,3 +90,21 @@ local samples, not a controlled hardware benchmark. Initial concurrent runs
 were slower (1.02s and 1.36s); only sequential samples are compared here.
 Logs: `/tmp/headless-hearts-types-final.log` and
 `/tmp/headless-hex-types-final.log`.
+
+## Portable field schemas candidate
+
+Measured sequentially on 2026-10-05 with built SDK declarations, Node 24,
+pnpm 10.4.1 and TypeScript 5.9.3. Both reference game commands above passed
+without diagnostics. The scope includes Zod field authoring, correlated field
+references, JSON manifest admission, and the current game UI sources.
+
+| Game                |   Types | Instantiations | Check time | Total time |    Memory |
+| ------------------- | ------: | -------------: | ---------: | ---------: | --------: |
+| Hearts              | 105,759 |        491,249 |     0.87 s |     1.37 s | 454,967 K |
+| Hex Network Trading | 127,129 |        603,931 |     1.08 s |     1.49 s | 516,044 K |
+
+Compared with the final headless sample, instantiations increased 1.92x and
+1.61x; check time increased 1.36x and 1.27x. These local samples remain below
+the historical investigation thresholds, although Hearts is near the
+instantiation threshold. Timing is sensitive to machine load.
+Logs: `/tmp/field-hearts-types.log` and `/tmp/field-hex-types.log`.
