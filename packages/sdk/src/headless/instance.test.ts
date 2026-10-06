@@ -573,12 +573,11 @@ describe("instance boundaries", () => {
     expect(old.state.drafts["play.move"]).toEqual({ choice: "a" });
     game.dispose();
   });
-  it("declared coverage doesn't disguise unread available interactions; development warns once", async () => {
+  it("unread available interactions warn once in development", async () => {
     const x = setup();
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const game = createGameInstance()({
       source: x.source,
-      coverage: { "play.move": () => null },
       debug: true,
     });
     expect(() => game.assertCoverage()).toThrow("play.move");
@@ -1294,7 +1293,6 @@ it("keeps connected instance projections live and nonenumerable", () => {
       "subscribe",
       "dispose",
       "assertCoverage",
-      "inspect",
     ];
     expect(Object.keys(game)).toEqual(methods);
     expect(Object.keys({ ...game })).toEqual(methods);

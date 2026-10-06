@@ -62,7 +62,6 @@ type RuntimeOptions = {
   readonly onDraftsChange?: (drafts: DraftMap) => void;
   readonly onActiveInteractionChange?: (key: string | null) => void;
   readonly onError?: (error: unknown) => void;
-  readonly coverage?: Readonly<Record<string, unknown>>;
   readonly debug?: boolean;
 };
 const EMPTY: Values = Object.freeze({});
@@ -775,7 +774,6 @@ interface RuntimeCore extends RuntimeModel {
   subscribe(listener: () => void): () => void;
   dispose(): void;
   assertCoverage(): void;
-  inspect(): RuntimeModel;
 }
 interface RuntimeContext extends Omit<
   RuntimeFeatureContext,
@@ -922,7 +920,6 @@ class Controller {
       },
       dispose: () => this.dispose(),
       assertCoverage: () => this.assertCoverage(),
-      inspect: () => this.store.get(),
     };
     // Keep live projections out of enumeration, spreads, and serialization.
     for (const [key, descriptor] of Object.entries(

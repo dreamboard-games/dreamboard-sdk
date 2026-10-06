@@ -15,7 +15,7 @@ it("captures private Hearts cards and follows a complete game through the source
     as: "player-1",
   });
   const game = createGameInstance<typeof hearts>()({ source, debug: false });
-  const original = game.inspect();
+  const original = game.getSnapshot();
   const visible = original.zones
     .getAll()
     .flatMap((zone) => zone.getCards())
