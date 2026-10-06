@@ -31,7 +31,7 @@ export type InteractionValidateArgs<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
   Manifest extends ManifestContract<TableOfState<State>>,
 > = ActionContext<State, Manifest> &
-  ReadHelpers<State> & {
+  ReadHelpers<State, Manifest> & {
     state: State;
     input: {
       playerId: PlayerIdOfState<State>;
@@ -46,13 +46,13 @@ export type InteractionReduceArgs<
   ErrorCode extends string = string,
 > = Omit<InteractionValidateArgs<Collectors, State, Manifest>, "input"> & {
   input: InteractionReduceInput<Collectors, State>;
-} & MutationHelpers<State, ErrorCode>;
+} & MutationHelpers<State, ErrorCode, Manifest>;
 
 export type InteractionAvailabilityArgs<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
   Manifest extends ManifestContract<TableOfState<State>>,
 > = ActionContext<State, Manifest> &
-  ReadHelpers<State> & {
+  ReadHelpers<State, Manifest> & {
     state: State;
     input: { playerId: PlayerIdOfState<State> };
   };
@@ -150,7 +150,7 @@ export type InteractionSpec<
   ErrorCode extends string = string,
 > = (
   | { inputs: Collectors; steps?: never }
-  | { inputs?: never; steps: StepDefinition<Collectors> }
+  | { inputs?: never; steps: StepDefinition<Collectors, Manifest> }
 ) & {
   paramsSchema?: SchemaLike<ClientSyntaxParamsOf<Collectors>>;
   presentation?: InteractionPresentation;

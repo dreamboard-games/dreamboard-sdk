@@ -1,4 +1,4 @@
-import type { RuntimeComponentLocation, RuntimeTableRecord } from "../model";
+import type { RuntimeComponentLocation, RuntimeQueryTable } from "../model";
 
 export function ensureArray<T>(value: readonly T[] | T[] | undefined): T[] {
   return Array.isArray(value) ? [...value] : [];
@@ -11,7 +11,7 @@ function locationPosition(location: RuntimeComponentLocation): number {
 }
 
 export function orderedComponentIdsForLocation(
-  table: RuntimeTableRecord,
+  table: RuntimeQueryTable,
   predicate: (location: RuntimeComponentLocation) => boolean,
 ): string[] {
   return Object.entries(table.componentLocations)

@@ -63,20 +63,22 @@ export type ReducerTransactionOutcome<
 export type ReducerTransaction<
   State extends { table: RuntimeTableRecord },
   ErrorCode extends string = string,
-> = TransactionMutations<State> &
+  Definitions extends ZoneDefinitions = ZoneDefinitions,
+> = TransactionMutations<State, Definitions> &
   ReducerTransactionOutcome<State, ErrorCode> & {
     readonly state: State;
-    readonly q: TableQueriesOfState<State>;
+    readonly q: TableQueriesOfState<State, Definitions>;
     roll(dieId: StringKeyOf<TableOfState<State>["dice"]>): number;
     shuffle(args: { zone: ZoneArg<TableOfState<State>> }): void;
   };
 
-export type ReducerEdit<State extends { table: RuntimeTableRecord }> = <
-  DraftState extends State,
->(
+export type ReducerEdit<
+  State extends { table: RuntimeTableRecord },
+  Definitions extends ZoneDefinitions = ZoneDefinitions,
+> = <DraftState extends State>(
   state: DraftState,
   random: TransactionRandom,
-) => ReducerTransaction<DraftState>;
+) => ReducerTransaction<DraftState, string, Definitions>;
 
 const transactionContext = Symbol("dreamboard.reducerTransactionContext");
 
@@ -262,13 +264,18 @@ function createReducerTransactionSurface<
 
 function createReducerTransactionFromSurface<
   State extends { table: RuntimeTableRecord },
+  Definitions extends ZoneDefinitions,
 >(
   initialState: State,
   surface: object,
   random: TransactionRandom,
-  definitions: ZoneDefinitions,
-): ReducerTransaction<State> {
-  const transaction = Object.create(surface) as ReducerTransaction<State> &
+  definitions: Definitions,
+): ReducerTransaction<State, string, Definitions> {
+  const transaction = Object.create(surface) as ReducerTransaction<
+    State,
+    string,
+    Definitions
+  > &
     TransactionHost<State>;
   Object.defineProperty(transaction, transactionContext, {
     value: {
@@ -288,11 +295,12 @@ function createReducerTransactionFromSurface<
 
 export function createReducerTransaction<
   State extends { table: RuntimeTableRecord },
+  Definitions extends ZoneDefinitions,
 >(
   initialState: State,
   random: TransactionRandom,
-  definitions: ZoneDefinitions,
-): ReducerTransaction<State> {
+  definitions: Definitions,
+): ReducerTransaction<State, string, Definitions> {
   return createReducerTransactionFromSurface(
     initialState,
     createReducerTransactionSurface<State>(),
@@ -301,9 +309,10 @@ export function createReducerTransaction<
   );
 }
 
-export function createReducerEdit<State extends { table: RuntimeTableRecord }>(
-  definitions: ZoneDefinitions,
-): ReducerEdit<State> {
+export function createReducerEdit<
+  State extends { table: RuntimeTableRecord },
+  Definitions extends ZoneDefinitions,
+>(definitions: Definitions): ReducerEdit<State, Definitions> {
   const surface = createReducerTransactionSurface<State>();
   return <DraftState extends State>(
     state: DraftState,

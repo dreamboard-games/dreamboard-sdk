@@ -25,8 +25,8 @@ export type SimultaneousResolveArgs<
   Manifest extends ManifestContract<TableOfState<State>>,
   ErrorCode extends string = string,
 > = ActionContext<State, Manifest> &
-  ReadHelpers<State> &
-  MutationHelpers<State, ErrorCode> & {
+  ReadHelpers<State, Manifest> &
+  MutationHelpers<State, ErrorCode, Manifest> & {
     state: State;
     submissions: Record<
       PlayerIdOfState<State>,

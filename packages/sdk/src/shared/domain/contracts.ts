@@ -105,57 +105,6 @@ export type HexOrientation = z.infer<
   typeof manifestSchemas.HexOrientationSchema
 >;
 export type HexCoordinate = z.infer<typeof manifestSchemas.HexCoordinateSchema>;
-export type HexShape = z.infer<typeof manifestSchemas.HexShapeSchema>;
-export type HexSpaceOverride = z.infer<
-  typeof manifestSchemas.HexSpaceOverrideSchema
->;
-
-/**
- * One authored hex space in axial coordinates
- */
-export type HexSpaceSpec = z.infer<typeof manifestSchemas.HexSpaceSpecSchema>;
-
-/**
- * Hex edge identified by two adjacent hex spaces
- */
-export type HexEdgeRef = z.infer<typeof manifestSchemas.HexEdgeRefSchema>;
-
-/**
- * Authored metadata attached to one derived hex edge
- */
-export type HexEdgeSpec = z.infer<typeof manifestSchemas.HexEdgeSpecSchema>;
-
-/**
- * Hex vertex identified by three touching hex spaces
- */
-export type HexVertexRef = z.infer<typeof manifestSchemas.HexVertexRefSchema>;
-
-/**
- * Authored metadata attached to one derived hex vertex
- */
-export type HexVertexSpec = z.infer<typeof manifestSchemas.HexVertexSpecSchema>;
-
-/**
- * One authored square space in row/column coordinates
- */
-export type SquareSpaceSpec = z.infer<
-  typeof manifestSchemas.SquareSpaceSpecSchema
->;
-
-/**
- * Authored metadata attached to one derived square edge
- */
-export type SquareEdgeSpec = z.infer<
-  typeof manifestSchemas.SquareEdgeSpecSchema
->;
-
-/**
- * Authored metadata attached to one derived square vertex
- */
-export type SquareVertexSpec = z.infer<
-  typeof manifestSchemas.SquareVertexSpecSchema
->;
-
 /**
  * Shared or per-player authored board instance shell
  */
@@ -383,14 +332,6 @@ export type HostGameplaySharedView = {
    * JSON-serialized dynamic view shared by every player for this projection.
    */
   dynamicView?: string | null;
-  /**
-   * JSON-serialized session-scoped static view. Populated on gameplay bootstrap payloads only.
-   */
-  boardStatic?: string | null;
-  /**
-   * Content hash of the session-scoped static view held on the host.
-   */
-  boardStaticHash?: string | null;
 };
 
 export type {

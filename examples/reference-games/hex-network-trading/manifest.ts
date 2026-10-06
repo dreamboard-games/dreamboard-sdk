@@ -1,5 +1,5 @@
 import { defineTopologyManifest } from "@dreamboard-games/sdk/reducer";
-import { boards } from "./manifest/board";
+import { boards, tileTypes, tileSeeds } from "./manifest/board";
 import { pieceSeeds, pieceTypes } from "./manifest/pieces";
 import { dieSeeds, dieTypes, resources } from "./manifest/setup";
 
@@ -14,6 +14,8 @@ export default defineTopologyManifest({
     { id: "supply", name: "Supply", scope: "perPlayer", visibility: "public" },
   ],
   boards,
+  tileTypes,
+  tileSeeds,
   pieceTypes,
   pieceSeeds,
   dieTypes,

@@ -1,683 +1,484 @@
-import { requireLookup } from "../../shared/lookup.js";
+import {
+  createBoardTopologyCache,
+  type BoardTopology,
+  type GenericBoardTopology,
+  type BoardSpace,
+  type HexSpace,
+  type SquareSpace,
+  type HexBoardTopology,
+  type SquareBoardTopology,
+  type TiledBoardTopology,
+} from "../../shared/board-topology.js";
 import {
   createHexTopology,
   createHexTopologyCache,
-} from "../../shared/hex-board";
+} from "../../shared/hex-board.js";
+import type { TopologyDefinitions } from "../../shared/domain/topology-definitions.js";
+import type { BoardTopologyOf } from "../model/topology.js";
 import type {
   BoardIdOfTable,
-  BoardTypeIdOfTable,
   ComponentIdOfTable,
-  HexBoardIdOfTable,
-  HexSpaceIdOfTable,
-  RelationTypeIdOfTable,
-  RuntimeTableRecord,
-  RuntimeHexBoardState,
-  RuntimeBoardState,
-  SquareBoardIdOfTable,
-  SquareSpaceIdOfTable,
-  SpaceIdOfTable,
-  SpaceTypeIdOfTable,
-  TiledBoardIdOfTable,
-  TiledEdgeIdOfTable,
-  TiledEdgeStateOfTable,
-  TiledEdgeTypeIdOfTable,
-  TiledVertexIdOfTable,
-  TiledVertexStateOfTable,
-  TiledVertexTypeIdOfTable,
+  RuntimeQueryTable,
 } from "../model";
 import { orderedComponentIdsForLocation } from "./internal";
 
-const cachedHexTopology = createHexTopologyCache();
-function geometryOf(board: RuntimeHexBoardState) {
-  return cachedHexTopology({
-    id: board.baseId ?? board.id,
-    orientation: board.orientation,
-    spaces: Object.values(board.spaces),
-  });
+const geometryOf = createHexTopologyCache();
+const topologyOf = createBoardTopologyCache();
+export function getBoard(
+  table: RuntimeQueryTable,
+  definitions: TopologyDefinitions,
+  boardId: string,
+) {
+  return topologyOf(table, definitions, boardId);
 }
-
-export function getBoard<
-  Table extends RuntimeTableRecord,
-  BoardId extends BoardIdOfTable<NoInfer<Table>>,
->(table: Table, boardId: BoardId): Table["boards"]["byId"][BoardId] {
-  return requireLookup(
-    table.boards.byId[boardId],
-    "Board",
-    boardId,
-  ) as Table["boards"]["byId"][BoardId];
+export function getHexBoard(
+  table: RuntimeQueryTable,
+  definitions: TopologyDefinitions,
+  boardId: string,
+): HexBoardTopology {
+  const board = getBoard(table, definitions, boardId);
+  if (board.layout !== "hex") throw new Error(`Board '${boardId}' is not hex.`);
+  return board;
 }
-
-export function getHexBoard<
-  Table extends RuntimeTableRecord,
-  BoardId extends HexBoardIdOfTable<NoInfer<Table>>,
->(
-  table: Table,
-  boardId: BoardId,
-): Extract<Table["boards"]["byId"][BoardId], { layout: "hex" }> {
-  return getBoard(table, boardId) as Extract<
-    Table["boards"]["byId"][BoardId],
-    { layout: "hex" }
-  >;
+export function getSquareBoard(
+  table: RuntimeQueryTable,
+  definitions: TopologyDefinitions,
+  boardId: string,
+): SquareBoardTopology {
+  const board = getBoard(table, definitions, boardId);
+  if (board.layout !== "square")
+    throw new Error(`Board '${boardId}' is not square.`);
+  return board;
 }
-
-export function getTiledBoard<
-  Table extends RuntimeTableRecord,
-  BoardId extends TiledBoardIdOfTable<NoInfer<Table>>,
->(
-  table: Table,
-  boardId: BoardId,
-): Extract<Table["boards"]["byId"][BoardId], { layout: "hex" | "square" }> {
-  return getBoard(table, boardId) as Extract<
-    Table["boards"]["byId"][BoardId],
-    { layout: "hex" | "square" }
-  >;
+export function getTiledBoard(
+  table: RuntimeQueryTable,
+  definitions: TopologyDefinitions,
+  boardId: string,
+): TiledBoardTopology {
+  const board = getBoard(table, definitions, boardId);
+  if (board.layout === "generic")
+    throw new Error(`Board '${boardId}' is not tiled.`);
+  return board;
 }
-
-export function getSquareBoard<
-  Table extends RuntimeTableRecord,
-  BoardId extends SquareBoardIdOfTable<NoInfer<Table>>,
->(
-  table: Table,
-  boardId: BoardId,
-): Extract<Table["boards"]["byId"][BoardId], { layout: "square" }> {
-  return getBoard(table, boardId) as Extract<
-    Table["boards"]["byId"][BoardId],
-    { layout: "square" }
-  >;
+function requireSpace(board: HexBoardTopology, id: string): HexSpace;
+function requireSpace(board: SquareBoardTopology, id: string): SquareSpace;
+function requireSpace(board: GenericBoardTopology, id: string): BoardSpace;
+function requireSpace(
+  board: BoardTopology,
+  id: string,
+): BoardSpace | HexSpace | SquareSpace;
+function requireSpace(
+  board: BoardTopology,
+  id: string,
+): BoardSpace | HexSpace | SquareSpace {
+  if (!Object.hasOwn(board.spaces, id))
+    throw new Error(`Unknown space '${id}' on board '${board.id}'.`);
+  return board.spaces[id];
 }
-
-export function getSpace<
-  Table extends RuntimeTableRecord,
-  BoardId extends BoardIdOfTable<NoInfer<Table>>,
-  SpaceId extends SpaceIdOfTable<NoInfer<Table>, BoardId>,
->(
-  table: Table,
-  boardId: BoardId,
-  spaceId: SpaceId,
-): Table["boards"]["byId"][BoardId]["spaces"][SpaceId] {
-  return requireLookup(
-    getBoard(table, boardId).spaces[spaceId],
-    `Space on board ${boardId}`,
-    spaceId,
-  ) as Table["boards"]["byId"][BoardId]["spaces"][SpaceId];
+export function getSpace(
+  table: RuntimeQueryTable,
+  definitions: TopologyDefinitions,
+  boardId: string,
+  spaceId: string,
+) {
+  return requireSpace(getBoard(table, definitions, boardId), spaceId);
 }
-
-export function getHexSpace<
-  Table extends RuntimeTableRecord,
-  BoardId extends HexBoardIdOfTable<NoInfer<Table>>,
-  SpaceId extends HexSpaceIdOfTable<NoInfer<Table>, BoardId>,
->(
-  table: Table,
-  boardId: BoardId,
-  spaceId: SpaceId,
-): Extract<
-  Table["boards"]["byId"][BoardId],
-  { layout: "hex" }
->["spaces"][SpaceId] {
-  return getSpace(table, boardId, spaceId) as Extract<
-    Table["boards"]["byId"][BoardId],
-    { layout: "hex" }
-  >["spaces"][SpaceId];
+export function getHexSpace(
+  table: RuntimeQueryTable,
+  definitions: TopologyDefinitions,
+  boardId: string,
+  spaceId: string,
+) {
+  return requireSpace(getHexBoard(table, definitions, boardId), spaceId);
 }
-
-export function getSquareSpace<
-  Table extends RuntimeTableRecord,
-  BoardId extends SquareBoardIdOfTable<NoInfer<Table>>,
-  SpaceId extends SquareSpaceIdOfTable<NoInfer<Table>, BoardId>,
->(
-  table: Table,
-  boardId: BoardId,
-  spaceId: SpaceId,
-): Extract<
-  Table["boards"]["byId"][BoardId],
-  { layout: "square" }
->["spaces"][SpaceId] {
-  return getSpace(table, boardId, spaceId) as Extract<
-    Table["boards"]["byId"][BoardId],
-    { layout: "square" }
-  >["spaces"][SpaceId];
+export function getSquareSpace(
+  table: RuntimeQueryTable,
+  definitions: TopologyDefinitions,
+  boardId: string,
+  spaceId: string,
+) {
+  return requireSpace(getSquareBoard(table, definitions, boardId), spaceId);
 }
-
-export function getEdge<
-  Table extends RuntimeTableRecord,
-  BoardId extends TiledBoardIdOfTable<NoInfer<Table>>,
-  EdgeId extends TiledEdgeIdOfTable<NoInfer<Table>, BoardId>,
->(
-  table: Table,
-  boardId: BoardId,
-  edgeId: EdgeId,
-): TiledEdgeStateOfTable<Table, BoardId, EdgeId> {
-  const edge = getTiledBoard(table, boardId).edges.find(
-    (candidate) => candidate.id === edgeId,
-  );
-  if (!edge) {
-    throw new Error(`Unknown edge '${edgeId}' on board '${boardId}'.`);
-  }
-  return edge as TiledEdgeStateOfTable<Table, BoardId, EdgeId>;
-}
-
-export function getVertex<
-  Table extends RuntimeTableRecord,
-  BoardId extends TiledBoardIdOfTable<NoInfer<Table>>,
-  VertexId extends TiledVertexIdOfTable<NoInfer<Table>, BoardId>,
->(
-  table: Table,
-  boardId: BoardId,
-  vertexId: VertexId,
-): TiledVertexStateOfTable<Table, BoardId, VertexId> {
-  const vertex = getTiledBoard(table, boardId).vertices.find(
-    (candidate) => candidate.id === vertexId,
-  );
-  if (!vertex) {
-    throw new Error(`Unknown vertex '${vertexId}' on board '${boardId}'.`);
-  }
-  return vertex as TiledVertexStateOfTable<Table, BoardId, VertexId>;
-}
-
-export function getHexSpaceAt<
-  Table extends RuntimeTableRecord,
-  BoardId extends HexBoardIdOfTable<NoInfer<Table>>,
->(
-  table: Table,
-  boardId: BoardId,
+export function getHexSpaceAt(
+  table: RuntimeQueryTable,
+  definitions: TopologyDefinitions,
+  boardId: string,
   q: number,
   r: number,
-):
-  | Extract<
-      Table["boards"]["byId"][BoardId],
-      { layout: "hex" }
-    >["spaces"][HexSpaceIdOfTable<NoInfer<Table>, BoardId>]
-  | undefined {
-  return Object.values(getHexBoard(table, boardId).spaces).find(
-    (space) => space.q === q && space.r === r,
-  ) as
-    | Extract<
-        Table["boards"]["byId"][BoardId],
-        { layout: "hex" }
-      >["spaces"][HexSpaceIdOfTable<NoInfer<Table>, BoardId>]
-    | undefined;
+) {
+  return (
+    Object.values(getHexBoard(table, definitions, boardId).spaces).find(
+      (space) => space.q === q && space.r === r,
+    ) ?? null
+  );
 }
-
-export function getSquareSpaceAt<
-  Table extends RuntimeTableRecord,
-  BoardId extends SquareBoardIdOfTable<NoInfer<Table>>,
->(
-  table: Table,
-  boardId: BoardId,
+export function getSquareSpaceAt(
+  table: RuntimeQueryTable,
+  definitions: TopologyDefinitions,
+  boardId: string,
   row: number,
   col: number,
-):
-  | Extract<
-      Table["boards"]["byId"][BoardId],
-      { layout: "square" }
-    >["spaces"][SquareSpaceIdOfTable<NoInfer<Table>, BoardId>]
-  | undefined {
-  return Object.values(getSquareBoard(table, boardId).spaces).find(
-    (space) => space.row === row && space.col === col,
-  ) as
-    | Extract<
-        Table["boards"]["byId"][BoardId],
-        { layout: "square" }
-      >["spaces"][SquareSpaceIdOfTable<NoInfer<Table>, BoardId>]
-    | undefined;
-}
-
-export function getSpaceEdges<
-  Table extends RuntimeTableRecord,
-  BoardId extends TiledBoardIdOfTable<NoInfer<Table>>,
->(
-  table: Table,
-  boardId: BoardId,
-  spaceId: SpaceIdOfTable<NoInfer<Table>, BoardId>,
-): TiledEdgeIdOfTable<Table, BoardId>[] {
-  return getTiledBoard(table, boardId)
-    .edges.filter((edge) => edge.spaceIds.includes(spaceId))
-    .map((edge) => edge.id as TiledEdgeIdOfTable<Table, BoardId>);
-}
-
-export function getSpaceVertices<
-  Table extends RuntimeTableRecord,
-  BoardId extends TiledBoardIdOfTable<NoInfer<Table>>,
->(
-  table: Table,
-  boardId: BoardId,
-  spaceId: SpaceIdOfTable<NoInfer<Table>, BoardId>,
-): TiledVertexIdOfTable<Table, BoardId>[] {
-  return getTiledBoard(table, boardId)
-    .vertices.filter((vertex) => vertex.spaceIds.includes(spaceId))
-    .map((vertex) => vertex.id as TiledVertexIdOfTable<Table, BoardId>);
-}
-
-export function getIncidentEdges<
-  Table extends RuntimeTableRecord,
-  BoardId extends TiledBoardIdOfTable<NoInfer<Table>>,
-  VertexId extends TiledVertexIdOfTable<NoInfer<Table>, BoardId>,
->(
-  table: Table,
-  boardId: BoardId,
-  vertexId: VertexId,
-): TiledEdgeIdOfTable<Table, BoardId>[] {
-  const tiledBoard = getTiledBoard(table, boardId);
-  if (tiledBoard.layout === "hex") {
-    const geometry = geometryOf(tiledBoard);
-    const vertex = geometry.vertices.find((vertex) => vertex.id === vertexId);
-    if (!vertex)
-      throw new Error(`Unknown vertex '${vertexId}' on board '${boardId}'.`);
-    return vertex.edgeIds as TiledEdgeIdOfTable<Table, BoardId>[];
-  }
-
-  const vertex = tiledBoard.vertices.find(
-    (candidate) => candidate.id === vertexId,
+) {
+  return (
+    Object.values(getSquareBoard(table, definitions, boardId).spaces).find(
+      (space) => space.row === row && space.col === col,
+    ) ?? null
   );
-  if (!vertex) {
+}
+export function getEdge(
+  table: RuntimeQueryTable,
+  definitions: TopologyDefinitions,
+  boardId: string,
+  edgeId: string,
+) {
+  const edge = getTiledBoard(table, definitions, boardId).edges.find(
+    (edge) => edge.id === edgeId,
+  );
+  if (!edge) throw new Error(`Unknown edge '${edgeId}' on board '${boardId}'.`);
+  return edge;
+}
+export function getVertex(
+  table: RuntimeQueryTable,
+  definitions: TopologyDefinitions,
+  boardId: string,
+  vertexId: string,
+) {
+  const vertex = getTiledBoard(table, definitions, boardId).vertices.find(
+    (vertex) => vertex.id === vertexId,
+  );
+  if (!vertex)
     throw new Error(`Unknown vertex '${vertexId}' on board '${boardId}'.`);
-  }
-  const vertexSpaceIds = new Set(vertex.spaceIds);
-  return tiledBoard.edges
-    .filter((edge) =>
-      edge.spaceIds.every((spaceId) => vertexSpaceIds.has(spaceId)),
-    )
-    .map((edge) => edge.id as TiledEdgeIdOfTable<Table, BoardId>);
+  return vertex;
 }
-
-export function getIncidentVertices<
-  Table extends RuntimeTableRecord,
-  BoardId extends TiledBoardIdOfTable<NoInfer<Table>>,
-  EdgeId extends TiledEdgeIdOfTable<NoInfer<Table>, BoardId>,
->(
-  table: Table,
-  boardId: BoardId,
-  edgeId: EdgeId,
-): TiledVertexIdOfTable<Table, BoardId>[] {
-  const tiledBoard = getTiledBoard(table, boardId);
-  if (tiledBoard.layout === "hex") {
-    const geometry = geometryOf(tiledBoard);
-    const edge = geometry.edges.find((edge) => edge.id === edgeId);
-    if (!edge)
-      throw new Error(`Unknown edge '${edgeId}' on board '${boardId}'.`);
-    // eslint-disable-next-line no-restricted-syntax -- The edge was found in this board geometry; its vertex IDs belong to the same manifest-derived BoardId.
-    return edge.vertexIds as unknown as TiledVertexIdOfTable<Table, BoardId>[];
-  }
-
-  const edge = tiledBoard.edges.find((candidate) => candidate.id === edgeId);
-  if (!edge) {
-    throw new Error(`Unknown edge '${edgeId}' on board '${boardId}'.`);
-  }
-  const edgeSpaceIds = new Set(edge.spaceIds);
-  return tiledBoard.vertices
-    .filter((vertex) =>
-      Array.from(edgeSpaceIds).every((spaceId) =>
-        vertex.spaceIds.includes(spaceId),
+export function getSpaceEdges(
+  table: RuntimeQueryTable,
+  definitions: TopologyDefinitions,
+  boardId: string,
+  spaceId: string,
+) {
+  const board = getTiledBoard(table, definitions, boardId);
+  requireSpace(board, spaceId);
+  return board.edges
+    .filter((edge) => edge.spaceIds.includes(spaceId))
+    .map((edge) => edge.id);
+}
+export function getSpaceVertices(
+  table: RuntimeQueryTable,
+  definitions: TopologyDefinitions,
+  boardId: string,
+  spaceId: string,
+) {
+  const board = getTiledBoard(table, definitions, boardId);
+  requireSpace(board, spaceId);
+  return board.vertices
+    .filter((vertex) => vertex.spaceIds.includes(spaceId))
+    .map((vertex) => vertex.id);
+}
+export function getIncidentEdges(
+  table: RuntimeQueryTable,
+  definitions: TopologyDefinitions,
+  boardId: string,
+  vertexId: string,
+) {
+  return [...getVertex(table, definitions, boardId, vertexId).edgeIds];
+}
+export function getIncidentVertices(
+  table: RuntimeQueryTable,
+  definitions: TopologyDefinitions,
+  boardId: string,
+  edgeId: string,
+) {
+  return [...getEdge(table, definitions, boardId, edgeId).vertexIds];
+}
+function relatedSpaces(board: BoardTopology, spaceId: string, typeId: string) {
+  requireSpace(board, spaceId);
+  return [
+    ...new Set(
+      board.relations.flatMap((relation) =>
+        relation.typeId !== typeId
+          ? []
+          : relation.fromSpaceId === spaceId
+            ? [relation.toSpaceId]
+            : !relation.directed && relation.toSpaceId === spaceId
+              ? [relation.fromSpaceId]
+              : [],
       ),
-    )
-    .map((vertex) => vertex.id as TiledVertexIdOfTable<Table, BoardId>);
+    ),
+  ];
 }
-
-export function getRelatedSpaces<
-  Table extends RuntimeTableRecord,
-  BoardId extends BoardIdOfTable<NoInfer<Table>>,
-  SpaceId extends SpaceIdOfTable<NoInfer<Table>, BoardId>,
-  TypeId extends RelationTypeIdOfTable<NoInfer<Table>, BoardId>,
->(
-  table: Table,
-  boardId: BoardId,
-  spaceId: SpaceId,
-  relationTypeId: TypeId,
-): SpaceId[] {
-  const board = getBoard(table, boardId);
-  const related = new Set<SpaceId>();
-
-  for (const relation of board.relations) {
-    if (relation.typeId !== relationTypeId) {
-      continue;
-    }
-    if (relation.fromSpaceId === spaceId) {
-      related.add(relation.toSpaceId as SpaceId);
-      continue;
-    }
-    if (!relation.directed && relation.toSpaceId === spaceId) {
-      related.add(relation.fromSpaceId as SpaceId);
-    }
-  }
-
-  return [...related];
+export function getRelatedSpaces(
+  table: RuntimeQueryTable,
+  definitions: TopologyDefinitions,
+  boardId: string,
+  spaceId: string,
+  typeId: string,
+) {
+  return relatedSpaces(getBoard(table, definitions, boardId), spaceId, typeId);
 }
-
-export function getAdjacentSpaces<
-  Table extends RuntimeTableRecord,
-  BoardId extends BoardIdOfTable<NoInfer<Table>>,
-  SpaceId extends SpaceIdOfTable<NoInfer<Table>, BoardId>,
->(table: Table, boardId: BoardId, spaceId: SpaceId): SpaceId[] {
-  const board = getBoard(table, boardId);
+function squareNeighbors(
+  board: SquareBoardTopology,
+  id: string,
+  options: { mode?: "orthogonal" | "diagonal" | "all" } = {},
+) {
+  const space = requireSpace(board, id);
+  return Object.values(board.spaces)
+    .filter((candidate) => {
+      const x = Math.abs(candidate.col - space.col),
+        y = Math.abs(candidate.row - space.row);
+      return options.mode === "diagonal"
+        ? x === 1 && y === 1
+        : options.mode === "all"
+          ? Math.max(x, y) === 1
+          : x + y === 1;
+    })
+    .map((space) => space.id);
+}
+function neighbors(board: BoardTopology, id: string): string[] {
+  requireSpace(board, id);
   if (board.layout === "hex")
-    return geometryOf(board).neighbors(spaceId) as SpaceId[];
-  return getRelatedSpaces(
-    table,
-    boardId,
-    spaceId,
-    "adjacent" as RelationTypeIdOfTable<NoInfer<Table>, BoardId>,
-  );
+    return geometryOf({
+      ...board,
+      spaces: Object.values(board.spaces),
+    }).neighbors(id);
+  if (board.layout === "square") return squareNeighbors(board, id);
+  return relatedSpaces(board, id, "adjacent");
 }
-
-export function getSpaceDistance<
-  Table extends RuntimeTableRecord,
-  BoardId extends BoardIdOfTable<NoInfer<Table>>,
-  SpaceId extends SpaceIdOfTable<NoInfer<Table>, BoardId>,
->(
-  table: Table,
-  boardId: BoardId,
-  fromSpaceId: SpaceId,
-  toSpaceId: SpaceId,
-): number {
-  const board = getBoard(table, boardId);
-  if (board.layout === "hex")
-    return geometryOf(board).distance(fromSpaceId, toSpaceId);
-  if (fromSpaceId === toSpaceId) {
-    return 0;
-  }
-
-  const visited = new Set<string>([fromSpaceId]);
-  let frontier: string[] = [fromSpaceId];
-  let distance = 0;
-
-  while (frontier.length > 0) {
-    distance += 1;
-    const nextFrontier: string[] = [];
-
-    for (const currentSpaceId of frontier) {
-      for (const neighborId of getAdjacentSpaces(
-        table,
-        boardId,
-        currentSpaceId as SpaceId,
-      )) {
-        if (neighborId === toSpaceId) {
-          return distance;
-        }
-        if (!visited.has(neighborId)) {
-          visited.add(neighborId);
-          nextFrontier.push(neighborId);
-        }
+export function getAdjacentSpaces(
+  table: RuntimeQueryTable,
+  definitions: TopologyDefinitions,
+  boardId: string,
+  id: string,
+) {
+  return neighbors(getBoard(table, definitions, boardId), id);
+}
+function distance(board: BoardTopology, from: string, to: string): number {
+  requireSpace(board, from);
+  requireSpace(board, to);
+  const queue = [from],
+    distances = new Map([[from, 0]]);
+  for (let index = 0; index < queue.length; index++) {
+    const id = queue[index],
+      value = distances.get(id)!;
+    if (id === to) return value;
+    for (const next of neighbors(board, id))
+      if (!distances.has(next)) {
+        distances.set(next, value + 1);
+        queue.push(next);
       }
-    }
-
-    frontier = nextFrontier;
   }
-
   return Number.POSITIVE_INFINITY;
 }
-
-export function getSquareNeighbors<
-  Table extends RuntimeTableRecord,
-  BoardId extends SquareBoardIdOfTable<NoInfer<Table>>,
-  SpaceId extends SquareSpaceIdOfTable<NoInfer<Table>, BoardId>,
->(
-  table: Table,
-  boardId: BoardId,
-  spaceId: SpaceId,
-  options: { mode?: "orthogonal" | "diagonal" | "all" } = {},
-): SquareSpaceIdOfTable<Table, BoardId>[] {
-  const board = getSquareBoard(table, boardId);
-  const space = getSquareSpace(table, boardId, spaceId);
-  const offsets: ReadonlyArray<readonly [number, number]> =
-    options.mode === "diagonal"
-      ? [
-          [-1, -1],
-          [-1, 1],
-          [1, -1],
-          [1, 1],
-        ]
-      : options.mode === "all"
-        ? [
-            [-1, 0],
-            [0, 1],
-            [1, 0],
-            [0, -1],
-            [-1, -1],
-            [-1, 1],
-            [1, -1],
-            [1, 1],
-          ]
-        : [
-            [-1, 0],
-            [0, 1],
-            [1, 0],
-            [0, -1],
-          ];
-
-  return offsets
-    .map(([rowOffset, colOffset]) =>
-      Object.values(board.spaces).find(
-        (candidate) =>
-          candidate.row === space.row + rowOffset &&
-          candidate.col === space.col + colOffset,
-      ),
-    )
-    .filter((candidate): candidate is typeof space => candidate !== undefined)
-    .map((candidate) => candidate.id as SquareSpaceIdOfTable<Table, BoardId>);
+export function getSpaceDistance(
+  table: RuntimeQueryTable,
+  definitions: TopologyDefinitions,
+  boardId: string,
+  from: string,
+  to: string,
+) {
+  return distance(getBoard(table, definitions, boardId), from, to);
 }
-
-export function getSquareDistance<
-  Table extends RuntimeTableRecord,
-  BoardId extends SquareBoardIdOfTable<NoInfer<Table>>,
-  SpaceId extends SquareSpaceIdOfTable<NoInfer<Table>, BoardId>,
->(
-  table: Table,
-  boardId: BoardId,
-  fromSpaceId: SpaceId,
-  toSpaceId: SpaceId,
+export function getSquareNeighbors(
+  table: RuntimeQueryTable,
+  definitions: TopologyDefinitions,
+  boardId: string,
+  id: string,
+  options?: { mode?: "orthogonal" | "diagonal" | "all" },
+) {
+  return squareNeighbors(
+    getSquareBoard(table, definitions, boardId),
+    id,
+    options,
+  );
+}
+export function getSquareDistance(
+  table: RuntimeQueryTable,
+  definitions: TopologyDefinitions,
+  boardId: string,
+  from: string,
+  to: string,
   options: { metric?: "manhattan" | "chebyshev" } = {},
-): number {
-  const from = getSquareSpace(table, boardId, fromSpaceId);
-  const to = getSquareSpace(table, boardId, toSpaceId);
-  const rowDistance = Math.abs(from.row - to.row);
-  const colDistance = Math.abs(from.col - to.col);
-
-  return options.metric === "chebyshev"
-    ? Math.max(rowDistance, colDistance)
-    : rowDistance + colDistance;
+) {
+  const board = getSquareBoard(table, definitions, boardId),
+    a = requireSpace(board, from),
+    b = requireSpace(board, to);
+  const x = Math.abs(a.col - b.col),
+    y = Math.abs(a.row - b.row);
+  return options.metric === "chebyshev" ? Math.max(x, y) : x + y;
 }
-
-export function getBoardsByTypeId<
-  Table extends RuntimeTableRecord,
-  TypeId extends BoardTypeIdOfTable<NoInfer<Table>>,
->(table: Table, typeId: TypeId): BoardIdOfTable<Table>[] {
-  return Object.entries(table.boards.byId)
-    .filter(([, board]) => board.typeId === typeId)
-    .map(([boardId]) => boardId as BoardIdOfTable<Table>);
+export function getBoardsByTypeId(
+  table: RuntimeQueryTable,
+  definitions: TopologyDefinitions,
+  typeId: string,
+) {
+  return Object.keys(table.boards).filter(
+    (id) => getBoard(table, definitions, id).typeId === typeId,
+  );
 }
-
-export function getSpacesByTypeId<
-  Table extends RuntimeTableRecord,
-  BoardId extends BoardIdOfTable<NoInfer<Table>>,
-  TypeId extends SpaceTypeIdOfTable<NoInfer<Table>, BoardId>,
->(
-  table: Table,
-  boardId: BoardId,
-  typeId: TypeId,
-): SpaceIdOfTable<Table, BoardId>[] {
-  return Object.entries(getBoard(table, boardId).spaces)
-    .filter(([, space]) => space.typeId === typeId)
-    .map(([spaceId]) => spaceId as SpaceIdOfTable<Table, BoardId>);
+export function getSpacesByTypeId(
+  table: RuntimeQueryTable,
+  definitions: TopologyDefinitions,
+  boardId: string,
+  typeId: string,
+) {
+  return Object.values(getBoard(table, definitions, boardId).spaces)
+    .filter((space) => space.typeId === typeId)
+    .map((space) => space.id);
 }
-
-export function getEdgesByTypeId<
-  Table extends RuntimeTableRecord,
-  BoardId extends TiledBoardIdOfTable<NoInfer<Table>>,
-  TypeId extends TiledEdgeTypeIdOfTable<NoInfer<Table>, BoardId>,
->(
-  table: Table,
-  boardId: BoardId,
-  typeId: TypeId,
-): TiledEdgeIdOfTable<Table, BoardId>[] {
-  return getTiledBoard(table, boardId)
+export function getEdgesByTypeId(
+  table: RuntimeQueryTable,
+  definitions: TopologyDefinitions,
+  boardId: string,
+  typeId: string,
+) {
+  return getTiledBoard(table, definitions, boardId)
     .edges.filter((edge) => edge.typeId === typeId)
-    .map((edge) => edge.id as TiledEdgeIdOfTable<Table, BoardId>);
+    .map((edge) => edge.id);
 }
-
-export function getVerticesByTypeId<
-  Table extends RuntimeTableRecord,
-  BoardId extends TiledBoardIdOfTable<NoInfer<Table>>,
-  TypeId extends TiledVertexTypeIdOfTable<NoInfer<Table>, BoardId>,
->(
-  table: Table,
-  boardId: BoardId,
-  typeId: TypeId,
-): TiledVertexIdOfTable<Table, BoardId>[] {
-  return getTiledBoard(table, boardId)
+export function getVerticesByTypeId(
+  table: RuntimeQueryTable,
+  definitions: TopologyDefinitions,
+  boardId: string,
+  typeId: string,
+) {
+  return getTiledBoard(table, definitions, boardId)
     .vertices.filter((vertex) => vertex.typeId === typeId)
-    .map((vertex) => vertex.id as TiledVertexIdOfTable<Table, BoardId>);
+    .map((vertex) => vertex.id);
 }
-
-export function getComponentsOnSpace<
-  Table extends RuntimeTableRecord,
-  BoardId extends BoardIdOfTable<NoInfer<Table>>,
-  SpaceId extends SpaceIdOfTable<NoInfer<Table>, BoardId>,
->(
-  table: Table,
-  boardId: BoardId,
-  spaceId: SpaceId,
-): ComponentIdOfTable<Table>[] {
-  getSpace(table, boardId, spaceId);
+export function getComponentsOnSpace(
+  table: RuntimeQueryTable,
+  definitions: TopologyDefinitions,
+  boardId: string,
+  spaceId: string,
+) {
+  getSpace(table, definitions, boardId, spaceId);
   return orderedComponentIdsForLocation(
     table,
     (location) =>
       location.type === "OnSpace" &&
       location.boardId === boardId &&
       location.spaceId === spaceId,
-  ) as ComponentIdOfTable<Table>[];
+  );
 }
-
-export function getComponentsOnEdge<
-  Table extends RuntimeTableRecord,
-  BoardId extends TiledBoardIdOfTable<NoInfer<Table>>,
-  EdgeId extends TiledEdgeIdOfTable<NoInfer<Table>, BoardId>,
->(table: Table, boardId: BoardId, edgeId: EdgeId): ComponentIdOfTable<Table>[] {
+export function getComponentsOnEdge(
+  table: RuntimeQueryTable,
+  definitions: TopologyDefinitions,
+  boardId: string,
+  edgeId: string,
+) {
+  getEdge(table, definitions, boardId, edgeId);
   return orderedComponentIdsForLocation(
     table,
     (location) =>
       location.type === "OnEdge" &&
       location.boardId === boardId &&
       location.edgeId === edgeId,
-  ) as ComponentIdOfTable<Table>[];
+  );
 }
-
-export function getComponentsOnVertex<
-  Table extends RuntimeTableRecord,
-  BoardId extends TiledBoardIdOfTable<NoInfer<Table>>,
-  VertexId extends TiledVertexIdOfTable<NoInfer<Table>, BoardId>,
->(
-  table: Table,
-  boardId: BoardId,
-  vertexId: VertexId,
-): ComponentIdOfTable<Table>[] {
+export function getComponentsOnVertex(
+  table: RuntimeQueryTable,
+  definitions: TopologyDefinitions,
+  boardId: string,
+  vertexId: string,
+) {
+  getVertex(table, definitions, boardId, vertexId);
   return orderedComponentIdsForLocation(
     table,
     (location) =>
       location.type === "OnVertex" &&
       location.boardId === boardId &&
       location.vertexId === vertexId,
-  ) as ComponentIdOfTable<Table>[];
+  );
 }
-
 export function bindBoardQueries<
-  Table extends RuntimeTableRecord,
+  Table extends RuntimeQueryTable,
+  Definitions extends TopologyDefinitions,
   BoardId extends BoardIdOfTable<Table>,
->(table: Table, boardId: BoardId) {
-  const state = getBoard(table, boardId);
+>(
+  table: Table,
+  definitions: Definitions,
+  boardId: BoardId,
+): BoundBoardQueries<
+  BoardTopologyOf<Table, Definitions, BoardId>,
+  ComponentIdOfTable<Table>
+> {
+  const state = getBoard(table, definitions, boardId);
   const common = {
     state,
-    space: <SpaceId extends SpaceIdOfTable<Table, BoardId>>(id: SpaceId) => {
-      return getSpace(table, boardId, id);
-    },
-    spacesByType: <TypeId extends SpaceTypeIdOfTable<Table, BoardId>>(
-      id: TypeId,
-    ) => getSpacesByTypeId(table, boardId, id),
-    relatedSpaces: <
-      SpaceId extends SpaceIdOfTable<Table, BoardId>,
-      TypeId extends RelationTypeIdOfTable<Table, BoardId>,
-    >(
-      id: SpaceId,
-      typeId: TypeId,
-    ) => getRelatedSpaces(table, boardId, id, typeId),
-    neighbors: (id: SpaceIdOfTable<Table, BoardId>) =>
-      getAdjacentSpaces(table, boardId, id),
-    distance: (
-      from: SpaceIdOfTable<Table, BoardId>,
-      to: SpaceIdOfTable<Table, BoardId>,
-    ) => getSpaceDistance(table, boardId, from, to),
-    spaceOccupants: (id: SpaceIdOfTable<Table, BoardId>) =>
-      getComponentsOnSpace(table, boardId, id),
+    space: (id: string) => requireSpace(state, id),
+    spacesByType: (typeId: string) =>
+      Object.values(state.spaces)
+        .filter((space) => space.typeId === typeId)
+        .map((space) => space.id),
+    relatedSpaces: (id: string, typeId: string) =>
+      relatedSpaces(state, id, typeId),
+    neighbors: (id: string) => neighbors(state, id),
+    distance: (from: string, to: string) => distance(state, from, to),
+    spaceOccupants: (id: string) =>
+      getComponentsOnSpace(table, definitions, boardId, id),
   };
+  let result: unknown = common;
   if (state.layout === "hex") {
-    const geometry = geometryOf(state);
     const {
       edgesOf: spaceEdges,
       verticesOf: spaceVertices,
       incidentEdges: edgesOf,
       incidentVertices: verticesOf,
-      ...queries
-    } = geometry;
-    // eslint-disable-next-line no-restricted-syntax -- The hex layout branch constructs the complete hex query surface from this board geometry and the same Table.
-    return {
+      ...geometry
+    } = geometryOf({ ...state, spaces: Object.values(state.spaces) });
+    result = {
       ...common,
-      ...queries,
+      ...geometry,
       spaceEdges,
       spaceVertices,
       edgesOf,
       verticesOf,
-    } as unknown as BoundBoardQueries<
-      Table["boards"]["byId"][BoardId],
-      ComponentIdOfTable<Table>
-    >;
-  }
-  if (state.layout === "square") {
-    // eslint-disable-next-line no-restricted-syntax -- The selected board has square layout; its original key therefore belongs to this Table's square and tiled board ID sets.
-    const tiledId = boardId as unknown as SquareBoardIdOfTable<Table> &
-      TiledBoardIdOfTable<Table>;
-    // eslint-disable-next-line no-restricted-syntax -- The square layout branch constructs the complete square query surface bound to this Table and BoardId.
-    return {
+    };
+  } else if (state.layout === "square") {
+    result = {
       ...common,
-      edgesOf: (id: TiledVertexIdOfTable<Table, typeof tiledId>) =>
-        getIncidentEdges(table, tiledId, id),
-      verticesOf: (id: TiledEdgeIdOfTable<Table, typeof tiledId>) =>
-        getIncidentVertices(table, tiledId, id),
-      spaceEdges: (id: SpaceIdOfTable<Table, typeof tiledId>) =>
-        getSpaceEdges(table, tiledId, id),
-      spaceVertices: (id: SpaceIdOfTable<Table, typeof tiledId>) =>
-        getSpaceVertices(table, tiledId, id),
-      spacesAt: (id: TiledVertexIdOfTable<Table, typeof tiledId>) =>
-        state.vertices.find((vertex) => vertex.id === id)!.spaceIds,
-      spacesAlong: (id: TiledEdgeIdOfTable<Table, typeof tiledId>) =>
-        state.edges.find((edge) => edge.id === id)!.spaceIds,
+      edgesOf: (id: string) =>
+        getIncidentEdges(table, definitions, boardId, id),
+      verticesOf: (id: string) =>
+        getIncidentVertices(table, definitions, boardId, id),
+      spaceEdges: (id: string) =>
+        getSpaceEdges(table, definitions, boardId, id),
+      spaceVertices: (id: string) =>
+        getSpaceVertices(table, definitions, boardId, id),
+      spacesAt: (id: string) =>
+        getVertex(table, definitions, boardId, id).spaceIds,
+      spacesAlong: (id: string) =>
+        getEdge(table, definitions, boardId, id).spaceIds,
       neighbors: (
-        id: SquareSpaceIdOfTable<Table, typeof tiledId>,
+        id: string,
         options?: { mode?: "orthogonal" | "diagonal" | "all" },
-      ) => getSquareNeighbors(table, tiledId, id, options),
+      ) => squareNeighbors(state, id, options),
       distance: (
-        from: SquareSpaceIdOfTable<Table, typeof tiledId>,
-        to: SquareSpaceIdOfTable<Table, typeof tiledId>,
+        from: string,
+        to: string,
         options?: { metric?: "manhattan" | "chebyshev" },
-      ) => getSquareDistance(table, tiledId, from, to, options),
-    } as unknown as BoundBoardQueries<
-      Table["boards"]["byId"][BoardId],
-      ComponentIdOfTable<Table>
-    >;
+      ) => getSquareDistance(table, definitions, boardId, from, to, options),
+    };
   }
-  return common as BoundBoardQueries<
-    Table["boards"]["byId"][BoardId],
+
+  return result as BoundBoardQueries<
+    BoardTopologyOf<Table, Definitions, BoardId>,
     ComponentIdOfTable<Table>
   >;
 }
-
-type SpaceId<Board extends RuntimeBoardState> = keyof Board["spaces"] & string;
+type SpaceType<Space> = Space extends { typeId: infer Type }
+  ? Extract<Type, string>
+  : Space extends { typeId?: infer Type }
+    ? Extract<Type, string>
+    : never;
+type SpaceId<Board extends BoardTopology> = keyof Board["spaces"] & string;
 type CommonBoardQueries<
-  Board extends RuntimeBoardState,
+  Board extends BoardTopology,
   ComponentId extends string,
 > = {
   state: Board;
   space<Id extends SpaceId<Board>>(id: Id): Board["spaces"][Id];
   spacesByType(
-    id: Extract<Board["spaces"][keyof Board["spaces"]]["typeId"], string>,
+    id: SpaceType<Board["spaces"][keyof Board["spaces"]]>,
   ): SpaceId<Board>[];
   relatedSpaces(
     id: SpaceId<Board>,
@@ -687,11 +488,11 @@ type CommonBoardQueries<
   distance(from: SpaceId<Board>, to: SpaceId<Board>): number;
   spaceOccupants(id: SpaceId<Board>): ComponentId[];
 };
-type HexQueries<Board extends RuntimeBoardState> = ReturnType<
-  typeof createHexTopology<Extract<Board["baseId"], string>, SpaceId<Board>>
+type HexQueries<Board extends BoardTopology> = ReturnType<
+  typeof createHexTopology<Extract<Board["id"], string>, SpaceId<Board>>
 >;
 export type BoundBoardQueries<
-  Board extends RuntimeBoardState,
+  Board extends BoardTopology,
   ComponentId extends string,
 > = CommonBoardQueries<Board, ComponentId> &
   (Board extends { layout: "hex" }

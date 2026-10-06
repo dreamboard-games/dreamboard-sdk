@@ -1,3 +1,4 @@
+import type { TopologyDefinitions } from "../shared/domain/topology-definitions.js";
 import type { BoardSpaceTarget } from "../shared/board-target.js";
 import type {
   BoardIdOfTable,
@@ -44,40 +45,58 @@ export interface RuntimeInteractionDropTarget {
 }
 export type RuntimeDropTarget =
   RuntimeBoardDropTarget | RuntimeInteractionDropTarget;
-type TargetOnBoard<Table, B extends BoardIdOfTable<Table>> =
+type TargetOnBoard<
+  Table,
+  B extends BoardIdOfTable<Table>,
+  Definitions extends TopologyDefinitions,
+> =
   | ({ readonly valueKind: "board-id"; readonly boardId: B } & (
-      | { readonly kind: "space"; readonly value: SpaceIdOfTable<Table, B> }
-      | (B extends TiledBoardIdOfTable<Table>
+      | {
+          readonly kind: "space";
+          readonly value: SpaceIdOfTable<Table, B, Definitions>;
+        }
+      | (B extends TiledBoardIdOfTable<Table, Definitions>
           ? | {
                 readonly kind: "tile";
-                readonly value: SpaceIdOfTable<Table, B>;
+                readonly value: SpaceIdOfTable<Table, B, Definitions>;
               }
             | {
                 readonly kind: "edge";
-                readonly value: TiledEdgeIdOfTable<Table, B>;
+                readonly value: TiledEdgeIdOfTable<Table, B, Definitions>;
               }
             | {
                 readonly kind: "vertex";
-                readonly value: TiledVertexIdOfTable<Table, B>;
+                readonly value: TiledVertexIdOfTable<Table, B, Definitions>;
               }
           : never)
     ))
-  | (BoardStateOfTable<Table, B> extends {
+  | (BoardStateOfTable<Table, B, Definitions> extends {
       scope: "perPlayer";
       baseId: string;
     }
       ? {
           readonly valueKind: "board-space";
           readonly kind: "space";
-          readonly value: BoardSpaceTarget<B, SpaceIdOfTable<Table, B>>;
+          readonly value: BoardSpaceTarget<
+            B,
+            SpaceIdOfTable<Table, B, Definitions>
+          >;
         }
       : never);
 /** One target identity; board-space targets already contain their board identity. */
 export type BoardTarget<G> = [TableOfGame<G>] extends [never]
   ? RuntimeBoardTarget
-  : {
-      [B in BoardIdOfTable<TableOfGame<G>>]: TargetOnBoard<TableOfGame<G>, B>;
-    }[BoardIdOfTable<TableOfGame<G>>];
+  : G extends {
+        contract: { manifest: infer Definitions extends TopologyDefinitions };
+      }
+    ? {
+        [B in BoardIdOfTable<TableOfGame<G>>]: TargetOnBoard<
+          TableOfGame<G>,
+          B,
+          Definitions
+        >;
+      }[BoardIdOfTable<TableOfGame<G>>]
+    : never;
 export type SelectionTarget<G> =
   BoardTarget<G> | { readonly kind: "card"; readonly value: SeatCardId<G> };
 /** Input disambiguation belongs to a particular interaction. */

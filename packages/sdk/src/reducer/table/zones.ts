@@ -1,3 +1,10 @@
+import { deriveBoardTopology } from "../../shared/board-topology.js";
+import {
+  tileSpaceId,
+  parseTileSpaceId,
+} from "../../shared/domain/tile-space.js";
+import type { TopologyDefinitions } from "../../shared/domain/topology-definitions.js";
+import { parsePerPlayerInstanceId } from "../../shared/domain/per-player-instance.js";
 import {
   boardSpaceHostId,
   parseBoardSpaceHostId,
@@ -12,7 +19,9 @@ import type {
 /** Only state needed to admit zone hosts, memberships, and containment. */
 export type ZoneTable = {
   readonly playerOrder: readonly string[];
-  readonly zones: Record<string, Record<string, string[]>>;
+  readonly zones: Readonly<
+    Record<string, Readonly<Record<string, readonly string[]>>>
+  >;
   readonly cards: Record<string, { id: string; cardSetId: string }>;
   readonly pieces: Record<
     string,
@@ -29,23 +38,12 @@ export type ZoneTable = {
   readonly componentLocations: Readonly<
     Record<string, RuntimeTableRecord["componentLocations"][string]>
   >;
-  readonly boards: {
-    readonly byId: Record<
-      string,
-      {
-        id: string;
-        baseId?: string;
-        scope: "shared" | "perPlayer";
-        playerId?: string | null;
-        spaces: Record<string, unknown>;
-      }
-    >;
-  };
+  readonly boards: import("../model/table.js").RuntimeQueryTable["boards"];
 };
 
 export type ZoneHostTable = Pick<
   ZoneTable,
-  "playerOrder" | "boards" | "pieces" | "dice"
+  "playerOrder" | "boards" | "pieces" | "dice" | "tiles"
 >;
 
 export type ZoneInput = { readonly zoneId: string; readonly hostId?: string };
@@ -53,23 +51,36 @@ export type ZoneInput = { readonly zoneId: string; readonly hostId?: string };
 /** The actual state graph, rather than identity syntax, owns host membership. */
 export function enumerateZoneHosts(
   table: ZoneHostTable,
+  definitions: TopologyDefinitions,
   definition: ZoneDefinition,
 ): readonly string[] {
   if ("scope" in definition)
     return definition.scope === "shared" ? ["table"] : table.playerOrder;
   const attachment = definition.attachedTo;
   if ("board" in attachment) {
-    const boards = Object.values(table.boards.byId).filter(
-      (board) => (board.baseId ?? board.id) === attachment.board,
-    );
-    return boards.flatMap((board) =>
-      attachment.space === undefined
-        ? [board.id]
-        : Object.hasOwn(board.spaces, attachment.space)
-          ? [boardSpaceHostId(board.id, attachment.space)]
-          : [],
-    );
+    const definition = definitions.boardDefinitions[attachment.board];
+    return Object.entries(table.boards)
+      .filter(([, board]) => board.baseId === attachment.board)
+      .flatMap(([id]) =>
+        attachment.space === undefined
+          ? [id]
+          : definition?.layout === "generic" &&
+              Object.hasOwn(definition.spaces, attachment.space)
+            ? [boardSpaceHostId(id, attachment.space)]
+            : [],
+      );
   }
+  if ("tileType" in attachment)
+    return Object.entries(table.tiles)
+      .filter(([, tile]) => tile.tileTypeId === attachment.tileType)
+      .flatMap(([id]) =>
+        definitions.tileDefinitions[attachment.tileType]?.cells.some(
+          (cell) => cell.id === attachment.cell,
+        )
+          ? [tileSpaceId(id, attachment.cell)]
+          : [],
+      );
+
   if ("pieceType" in attachment)
     return Object.values(table.pieces)
       .filter((piece) => piece.pieceTypeId === attachment.pieceType)
@@ -82,6 +93,7 @@ export function enumerateZoneHosts(
 /** Resolve one live host without scanning its inventory family. */
 export function resolveZoneHost(
   table: ZoneHostTable,
+  definitions: TopologyDefinitions,
   definition: ZoneDefinition,
   hostId: string,
 ): { owner: string | null; shared: boolean; componentId: string | null } {
@@ -101,24 +113,55 @@ export function resolveZoneHost(
     const boardId =
       attachment.space === undefined ? hostId : spaceHost?.boardId;
     const board =
-      boardId && Object.hasOwn(table.boards.byId, boardId)
-        ? table.boards.byId[boardId]
+      boardId && Object.hasOwn(table.boards, boardId)
+        ? table.boards[boardId]
         : undefined;
+    const declared = Object.hasOwn(
+      definitions.boardDefinitions,
+      attachment.board,
+    )
+      ? definitions.boardDefinitions[attachment.board]
+      : undefined;
     if (
       !board ||
-      board.id !== boardId ||
-      (board.baseId ?? board.id) !== attachment.board ||
+      board.baseId !== attachment.board ||
+      !declared ||
       (attachment.space !== undefined &&
-        (spaceHost?.spaceId !== attachment.space ||
-          !Object.hasOwn(board.spaces, attachment.space)))
+        (declared.layout !== "generic" ||
+          spaceHost?.spaceId !== attachment.space ||
+          !Object.hasOwn(declared.spaces, attachment.space)))
     )
       throw invalid();
-    return {
-      owner: board.scope === "perPlayer" ? (board.playerId ?? null) : null,
-      shared: board.scope === "shared",
-      componentId: null,
-    };
+    const owner =
+      declared.scope === "perPlayer"
+        ? (parsePerPlayerInstanceId(boardId)?.playerId ?? null)
+        : null;
+    return { owner, shared: declared.scope === "shared", componentId: null };
   }
+  if ("tileType" in attachment) {
+    const parsed = parseTileSpaceId(hostId);
+    const tile =
+      parsed && Object.hasOwn(table.tiles, parsed.tileId)
+        ? table.tiles[parsed.tileId]
+        : undefined;
+    const declared = Object.hasOwn(
+      definitions.tileDefinitions,
+      attachment.tileType,
+    )
+      ? definitions.tileDefinitions[attachment.tileType]
+      : undefined;
+    if (
+      !parsed ||
+      !tile ||
+      tile.id !== parsed.tileId ||
+      tile.tileTypeId !== attachment.tileType ||
+      parsed.cellId !== attachment.cell ||
+      !declared?.cells.some((cell) => cell.id === attachment.cell)
+    )
+      throw invalid();
+    return { owner: tile.ownerId, shared: false, componentId: tile.id };
+  }
+
   const component =
     "pieceType" in attachment
       ? Object.hasOwn(table.pieces, hostId) &&
@@ -139,24 +182,31 @@ export function resolveZoneHost(
 
 export function resolveZoneOwner(
   table: ZoneHostTable,
+  definitions: TopologyDefinitions,
   definition: ZoneDefinition,
   hostId: string,
 ): string | null {
-  return resolveZoneHost(table, definition, hostId).owner;
+  return resolveZoneHost(table, definitions, definition, hostId).owner;
 }
 
 /** Audience admission is independent from individual card face visibility. */
 export function resolveZoneAccess(
   table: ZoneHostTable,
+  definitions: TopologyDefinitions,
   definition: ZoneDefinition,
   hostId: string,
   viewerId: string,
 ): boolean {
   if (definition.visibility === "public") {
-    resolveZoneHost(table, definition, hostId);
+    resolveZoneHost(table, definitions, definition, hostId);
     return true;
   }
-  const { owner, shared } = resolveZoneHost(table, definition, hostId);
+  const { owner, shared } = resolveZoneHost(
+    table,
+    definitions,
+    definition,
+    hostId,
+  );
   return (definition.visibility === "hidden" && shared) || owner === viewerId;
 }
 
@@ -183,7 +233,12 @@ export function assertContainmentAcyclic(
       ? definitions.zoneDefinitions[location.zoneId]
       : undefined;
     if (!definition) throw new Error(`Unknown zone '${location.zoneId}'.`);
-    const host = resolveZoneHost(table, definition, location.hostId);
+    const host = resolveZoneHost(
+      table,
+      definitions,
+      definition,
+      location.hostId,
+    );
     if (host.componentId !== null) parents.set(componentId, host.componentId);
   }
   const complete = new Set<string>();
@@ -201,6 +256,24 @@ export function assertContainmentAcyclic(
 }
 
 /** Resolve one declared, instantiated host; never infer scope from state keys. */
+type ResolvedZone = {
+  ref: ZoneRef;
+  definition: ZoneDefinition;
+  ids: readonly string[];
+};
+export type MutableZoneTable = Omit<ZoneTable, "zones"> & {
+  readonly zones: Record<string, Record<string, string[]>>;
+};
+export function resolveZone(
+  table: MutableZoneTable,
+  definitions: ZoneDefinitions,
+  zone: ZoneInput,
+): Omit<ResolvedZone, "ids"> & { ids: string[] };
+export function resolveZone(
+  table: ZoneTable,
+  definitions: ZoneDefinitions,
+  zone: ZoneInput,
+): ResolvedZone;
 export function resolveZone(
   table: ZoneTable,
   definitions: ZoneDefinitions,
@@ -208,7 +281,7 @@ export function resolveZone(
 ): {
   ref: ZoneRef;
   definition: ZoneDefinition;
-  ids: string[];
+  ids: readonly string[];
 } {
   const definition = Object.hasOwn(definitions.zoneDefinitions, zone.zoneId)
     ? definitions.zoneDefinitions[zone.zoneId]
@@ -220,7 +293,7 @@ export function resolveZone(
       ? "table"
       : undefined);
   if (!hostId) throw new Error(`Invalid host '' for zone '${zone.zoneId}'.`);
-  resolveZoneHost(table, definition, hostId);
+  resolveZoneHost(table, definitions, definition, hostId);
   const hosts = Object.hasOwn(table.zones, zone.zoneId)
     ? table.zones[zone.zoneId]
     : undefined;
@@ -229,7 +302,42 @@ export function resolveZone(
     throw new Error(
       `Zone '${zone.zoneId}' has no instantiated host '${hostId}'.`,
     );
+  if (ids.length) assertZoneHostLive(table, definitions, definition, hostId);
   return { ref: { zoneId: zone.zoneId, hostId }, definition, ids };
+}
+
+/** Empty tile-cell hosts exist independently of placement; contents require a live cell. */
+export function assertZoneHostLive(
+  table: ZoneTable,
+  definitions: TopologyDefinitions,
+  definition: ZoneDefinition,
+  hostId: string,
+): void {
+  resolveZoneHost(table, definitions, definition, hostId);
+  if (!("attachedTo" in definition) || !("tileType" in definition.attachedTo))
+    return;
+  const host = parseTileSpaceId(hostId);
+  const location =
+    host && Object.hasOwn(table.componentLocations, host.tileId)
+      ? table.componentLocations[host.tileId]
+      : undefined;
+  if (location?.type !== "OnBoard")
+    throw new Error(`Tile cell host '${hostId}' is not placed on a board.`);
+}
+
+export function resolveZoneDestination(
+  table: MutableZoneTable,
+  definitions: ZoneDefinitions,
+  zone: ZoneInput,
+) {
+  const resolved = resolveZone(table, definitions, zone);
+  assertZoneHostLive(
+    table,
+    definitions,
+    resolved.definition,
+    resolved.ref.hostId,
+  );
+  return resolved;
 }
 
 export function assertComponent(table: ZoneTable, componentId: string): void {
@@ -301,7 +409,7 @@ export function assertZoneConsistency(
       ? definitions.zoneDefinitions[zoneId]
       : undefined;
     if (!definition) throw new Error(`Unknown zone '${zoneId}'.`);
-    const expected = enumerateZoneHosts(table, definition);
+    const expected = enumerateZoneHosts(table, definitions, definition);
     if (
       Object.keys(hosts).length !== expected.length ||
       expected.some((host) => !Object.hasOwn(hosts, host))
@@ -336,13 +444,53 @@ export function assertZoneConsistency(
   for (const id of components)
     if (!Object.hasOwn(table.componentLocations, id))
       throw new Error(`Missing location for component '${id}'.`);
+  const topologies = new Map(
+    Object.keys(table.boards).map((boardId) => [
+      boardId,
+      deriveBoardTopology(table, definitions, boardId),
+    ]),
+  );
   for (const [id, location] of Object.entries(table.componentLocations)) {
+    if (location.type === "OnBoard") {
+      if (
+        !Object.hasOwn(table.tiles, id) ||
+        !Object.hasOwn(table.boards, location.boardId)
+      )
+        throw new Error(
+          `OnBoard requires a tile and a current board for '${id}'.`,
+        );
+    } else if (
+      location.type === "OnSpace" ||
+      location.type === "OnEdge" ||
+      location.type === "OnVertex"
+    ) {
+      if (Object.hasOwn(table.tiles, id))
+        throw new Error("Tiles require OnBoard placement.");
+      const board = topologies.get(location.boardId);
+      if (!board) throw new Error(`Unknown board '${location.boardId}'.`);
+      const exists =
+        location.type === "OnSpace"
+          ? Object.hasOwn(board.spaces, location.spaceId)
+          : board.layout !== "generic" &&
+            (location.type === "OnEdge"
+              ? board.edges.some((edge) => edge.id === location.edgeId)
+              : board.vertices.some(
+                  (vertex) => vertex.id === location.vertexId,
+                ));
+      if (!exists)
+        throw new Error(
+          `Component '${id}' references an absent board element.`,
+        );
+    }
     if (
       Object.hasOwn(table.tiles, id) &&
       location.type !== "Detached" &&
-      location.type !== "InZone"
+      location.type !== "InZone" &&
+      location.type !== "OnBoard"
     )
-      throw new Error("Tiles may only be detached or in public zones.");
+      throw new Error(
+        "Tiles may only be detached, in public zones, or placed on a compatible board.",
+      );
     if (
       location.type === "InZone" &&
       location.playedBy !== null &&

@@ -1,3 +1,4 @@
+import { BoardProjectionSchema } from "./board-topology-schema.js";
 import {
   PlayerIdSchema,
   PlayerRosterSchema,
@@ -273,29 +274,20 @@ export const ReducerRuntimeLogEntrySchema = z.discriminatedUnion("kind", [
   ReducerRuntimeLogEntryStateCommitSchema,
 ]);
 
-/** Authored views are records; boards is reserved for manifest geometry. */
+/** Authored views are records; boards is reserved for projected board topology. */
 export const AuthoredViewSchema = z
   .object({
     boards: z
       .never({
-        error: "The view field 'boards' is reserved for manifest geometry.",
+        error:
+          "The view field 'boards' is reserved for projected board topology.",
       })
       .optional(),
   })
   .catchall(RuntimeJsonSchema);
 
 /** SDK-owned board presentation, admitted independently of authored seat views. */
-export const BoardProjectionSchema = z.strictObject({
-  byId: z.record(z.string(), z.record(z.string(), RuntimeJsonSchema)),
-  hex: z.record(z.string(), z.record(z.string(), RuntimeJsonSchema)),
-  square: z.record(z.string(), z.record(z.string(), RuntimeJsonSchema)),
-  network: z
-    .record(z.string(), z.record(z.string(), RuntimeJsonSchema))
-    .optional(),
-  track: z
-    .record(z.string(), z.record(z.string(), RuntimeJsonSchema))
-    .optional(),
-});
+export { BoardProjectionSchema };
 
 export const SeatProjectionSchema = z.strictObject({
   view: AuthoredViewSchema.nullable().optional(),
@@ -353,10 +345,4 @@ export const SeatProjectionBundleSchema = z.strictObject({
 export const ProjectRequestSchema = z.strictObject({
   state: ReducerSessionStateSchema,
   playerIds: PlayerRosterSchema,
-});
-
-export const BoardStaticProjectionSchema = z.strictObject({
-  view: z.record(z.string(), RuntimeJsonSchema),
-  hash: z.string().min(1),
-  manifestVersion: z.string(),
 });

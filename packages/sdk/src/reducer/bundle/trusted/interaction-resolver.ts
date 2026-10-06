@@ -107,7 +107,7 @@ export function createInteractionResolver<
             pending.interactionId === interactionId
             ? pending.values
             : [],
-          scope.definition.contract.manifest,
+          scope.manifest,
         )
       : undefined;
     const collectors = prefix

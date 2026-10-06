@@ -9,7 +9,7 @@ import {
 } from "react";
 import "./tokens.css";
 import type { GameModel as Model } from "@game";
-type Board = NonNullable<ReturnType<Model["boards"]["get"]>>;
+type Board = ReturnType<Model["boards"]["getAll"]>[number];
 type Layout = ReturnType<Board["getLayout"]>;
 type Space = ReturnType<Layout["getSpaces"]>[number];
 type Edge = ReturnType<Layout["getEdges"]>[number];

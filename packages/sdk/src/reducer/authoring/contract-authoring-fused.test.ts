@@ -15,6 +15,8 @@ function createModel() {
   const literalIds = createManifestStringLiteralSchema;
   return {
     manifest: {
+      boardDefinitions: {},
+      tileDefinitions: {},
       literals: {
         tileTypeIds: [] as const,
         tileIds: [] as const,

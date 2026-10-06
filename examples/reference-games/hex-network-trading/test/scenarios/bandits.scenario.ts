@@ -1,3 +1,4 @@
+import { tileSpaceId } from "@dreamboard-games/sdk/reducer";
 import { defineScenario } from "../testing-types.ts";
 import { BANDITS_PREFIX_COMMANDS, bandits } from "../scenario-commands.ts";
 
@@ -13,10 +14,12 @@ export default defineScenario({
       completed: BANDITS_PREFIX_COMMANDS.length,
     },
   },
-  when: [...bandits(0, "northForest", 1)],
+  when: [...bandits(0, tileSpaceId("northForest", "cell"), 1)],
   then: ({ expect, state, view }) => {
     expect(state().flow.currentPhase).toBe("main");
-    expect(view({ seat: 0 }).banditsHexId).toBe("northForest");
+    expect(view({ seat: 0 }).banditsHexId).toBe(
+      tileSpaceId("northForest", "cell"),
+    );
     expect(state().publicState.lastSteal).toEqual({
       thiefPlayerId: "player-1",
       victimPlayerId: "player-2",

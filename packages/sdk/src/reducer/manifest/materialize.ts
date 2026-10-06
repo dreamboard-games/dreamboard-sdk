@@ -1,3 +1,17 @@
+import { tileSpaceId } from "../../shared/domain/tile-space.js";
+import {
+  deriveBoardTopology,
+  type BoardEdge,
+  type BoardVertex,
+  type BoardTopology,
+  type TilePlacement,
+} from "../../shared/board-topology.js";
+import type {
+  TopologyDefinitions,
+  BoardDefinition,
+  TileDefinition,
+} from "../../shared/domain/topology-definitions.js";
+import { RuntimeJsonSchema } from "../../shared/runtime-json.js";
 import { boardSpaceHostId } from "../../shared/domain/board-space-host.js";
 import {
   enumerateZoneHosts,
@@ -5,7 +19,11 @@ import {
   assertZoneConsistency,
   type ZoneTable,
 } from "../table/zones.js";
-import type { RuntimeComponentLocation, ZoneDefinition } from "../model";
+import type {
+  RuntimeComponentLocation,
+  RuntimeBoardInstance,
+  ZoneDefinition,
+} from "../model";
 import {
   PlayerRosterSchema,
   isPlayerIdValue,
@@ -16,11 +34,10 @@ import {
   scopedInstances,
   initialCardMetadata,
   createInstanceDeclaration,
+  createSpaceDeclaration,
+  createBoardElementDeclaration,
 } from "./identity-runtime.js";
-import {
-  perPlayerInstanceId,
-  parsePerPlayerInstanceId,
-} from "../../shared/domain/per-player-instance.js";
+import { perPlayerInstanceId } from "../../shared/domain/per-player-instance.js";
 import * as z from "zod";
 import {
   createFieldValidatorResolver,
@@ -28,115 +45,33 @@ import {
   type FieldReferenceContext,
 } from "./field-schemas";
 import type {
-  BoardEdgeRef,
   BoardCard,
   BoardRelationSpec,
   BoardSpec,
   BoardSpaceSpec,
-  BoardVertexRef,
-  GenericBoardSpec,
-  HexBoardSpec,
-  HexEdgeRef,
-  HexSpaceSpec,
-  HexVertexRef,
   CardSetDefinition,
   FieldSchemaJson,
   PieceSeedSpec,
-  SquareBoardSpec,
-  SquareEdgeSpec,
-  SquareSpaceSpec,
-  SquareVertexSpec,
   ZoneSpec,
 } from "../../shared/domain/contracts.js";
 import type { GameTopologyManifest } from "../../shared/domain/manifest.js";
 
-import { createHexTopology, resolveHexSpaces } from "../../shared/hex-board.js";
-
 import { assertValidManifest } from "./manifest-validation.js";
 
-interface AnalyzedGenericBoard {
-  layout: "generic";
-  board: GenericBoardSpec;
+interface AnalyzedBoard {
+  layout: "generic" | "hex" | "square";
+  board: BoardSpec;
   boardTypeId?: string | null;
   runtimeBoardIds: string[];
-  boardFieldsSchema?: FieldSchemaJson | null;
-  spaceFieldsSchema?: FieldSchemaJson | null;
-  relationFieldsSchema?: FieldSchemaJson | null;
+  topologies: Map<string, BoardTopology>;
+  boardFieldsSchema?: FieldSchemaJson;
+  spaceFieldsSchema?: FieldSchemaJson;
+  relationFieldsSchema?: FieldSchemaJson;
   spaces: BoardSpaceSpec[];
   relations: BoardRelationSpec[];
+  edges: readonly BoardEdge[];
+  vertices: readonly BoardVertex[];
 }
-
-interface AnalyzedHexBoard {
-  layout: "hex";
-  board: HexBoardSpec;
-  boardTypeId?: string | null;
-  runtimeBoardIds: string[];
-  boardFieldsSchema?: FieldSchemaJson | null;
-  spaceFieldsSchema?: FieldSchemaJson | null;
-  edgeFieldsSchema?: FieldSchemaJson | null;
-  vertexFieldsSchema?: FieldSchemaJson | null;
-  spaces: HexSpaceSpec[];
-  authoredEdges: Array<{
-    id: string;
-    ref: HexEdgeRef;
-    typeId?: string | null;
-    label?: string | null;
-    fields?: Record<string, unknown> | null;
-  }>;
-  authoredVertices: Array<{
-    id: string;
-    ref: HexVertexRef;
-    typeId?: string | null;
-    label?: string | null;
-    fields?: Record<string, unknown> | null;
-  }>;
-  edges: Array<{
-    id: string;
-    spaceIds: string[];
-    typeId?: string | null;
-    label?: string | null;
-    fields?: Record<string, unknown> | null;
-  }>;
-  vertices: Array<{
-    id: string;
-    spaceIds: string[];
-    typeId?: string | null;
-    label?: string | null;
-    fields?: Record<string, unknown> | null;
-  }>;
-}
-
-interface AnalyzedSquareBoard {
-  layout: "square";
-  board: SquareBoardSpec;
-  boardTypeId?: string | null;
-  runtimeBoardIds: string[];
-  boardFieldsSchema?: FieldSchemaJson | null;
-  spaceFieldsSchema?: FieldSchemaJson | null;
-  relationFieldsSchema?: FieldSchemaJson | null;
-  edgeFieldsSchema?: FieldSchemaJson | null;
-  vertexFieldsSchema?: FieldSchemaJson | null;
-  spaces: SquareSpaceSpec[];
-  relations: BoardRelationSpec[];
-  edges: Array<{
-    id: string;
-    spaceIds: string[];
-    typeId?: string | null;
-    label?: string | null;
-    fields?: Record<string, unknown> | null;
-  }>;
-  vertices: Array<{
-    id: string;
-    spaceIds: string[];
-    typeId?: string | null;
-    label?: string | null;
-    fields?: Record<string, unknown> | null;
-  }>;
-}
-
-type AnalyzedBoard =
-  AnalyzedGenericBoard | AnalyzedHexBoard | AnalyzedSquareBoard;
-
 interface ManifestAnalysis {
   manifest: GameTopologyManifest;
   playerIds: string[];
@@ -215,441 +150,94 @@ function createRecord<Value>(): Record<string, Value> {
   return Object.create(null) as Record<string, Value>;
 }
 
-function isHexBoardSpec(board: BoardSpec): board is HexBoardSpec {
-  return board.layout === "hex";
-}
-
-function isSquareBoardSpec(board: BoardSpec): board is SquareBoardSpec {
-  return board.layout === "square";
-}
-
-interface ResolvedHexEdge {
-  id: string;
-  geometryKey: string;
-  spaceIds: string[];
-  typeId?: string | null;
-  label?: string | null;
-  fields?: Record<string, unknown> | null;
-}
-
-interface ResolvedHexVertex {
-  id: string;
-  geometryKey: string;
-  spaceIds: string[];
-  typeId?: string | null;
-  label?: string | null;
-  fields?: Record<string, unknown> | null;
-}
-
-const SQUARE_SIDES = ["north", "east", "south", "west"] as const;
-
-const SQUARE_CORNERS = ["nw", "ne", "se", "sw"] as const;
-
-type SquareSide = (typeof SQUARE_SIDES)[number];
-
-type SquareCorner = (typeof SQUARE_CORNERS)[number];
-
-function squareEdgeIdFromGeometryKey(key: string): string {
-  return `square-edge:${key}`;
-}
-
-function squareVertexIdFromGeometryKey(key: string): string {
-  return `square-vertex:${key}`;
-}
-
-function squareCornerGeometryKey(
-  space: Pick<SquareSpaceSpec, "row" | "col">,
-  corner: SquareCorner,
-): string {
-  switch (corner) {
-    case "nw":
-      return `${space.col},${space.row}`;
-    case "ne":
-      return `${space.col + 1},${space.row}`;
-    case "se":
-      return `${space.col + 1},${space.row + 1}`;
-    case "sw":
-      return `${space.col},${space.row + 1}`;
-  }
-}
-
-function squareEdgeGeometryKey(
-  space: Pick<SquareSpaceSpec, "row" | "col">,
-  side: SquareSide,
-): string {
-  const endpoints =
-    side === "north"
-      ? [`${space.col},${space.row}`, `${space.col + 1},${space.row}`]
-      : side === "east"
-        ? [`${space.col + 1},${space.row}`, `${space.col + 1},${space.row + 1}`]
-        : side === "south"
-          ? [
-              `${space.col},${space.row + 1}`,
-              `${space.col + 1},${space.row + 1}`,
-            ]
-          : [`${space.col},${space.row}`, `${space.col},${space.row + 1}`];
-  return endpoints.sort((left, right) => left.localeCompare(right)).join("::");
-}
-
-function geometryKeyFromSquareEdgeRef(
-  ref: BoardEdgeRef,
-  spacesById: ReadonlyMap<string, SquareSpaceSpec>,
-): string {
-  const resolvedSpaces = [...ref.spaces]
-    .sort((a, b) => a.localeCompare(b))
-    .map((spaceId) => {
-      const space = spacesById.get(spaceId);
-      if (!space) {
-        throw new Error(
-          `Square edge ref references unknown space '${spaceId}'.`,
-        );
-      }
-      return space;
-    });
-  const keyCounts = new Map<string, number>();
-  for (const space of resolvedSpaces) {
-    for (const side of SQUARE_SIDES) {
-      const key = squareEdgeGeometryKey(space, side);
-      keyCounts.set(key, (keyCounts.get(key) ?? 0) + 1);
-    }
-  }
-  const candidates = [...keyCounts.entries()]
-    .filter(([, count]) => count === resolvedSpaces.length)
-    .map(([key]) => key)
-    .sort((left, right) => left.localeCompare(right));
-  if (candidates.length !== 1) {
-    throw new Error(
-      `Square edge ref spaces '${ref.spaces.join(", ")}' do not resolve to exactly one shared edge.`,
-    );
-  }
-  const [only] = candidates;
-  if (only === undefined) {
-    throw new Error(
-      "unreachable: candidates.length === 1 but first is undefined",
-    );
-  }
-  return only;
-}
-
-function geometryKeyFromSquareVertexRef(
-  ref: BoardVertexRef,
-  spacesById: ReadonlyMap<string, SquareSpaceSpec>,
-): string {
-  const resolvedSpaces = [...ref.spaces]
-    .sort((a, b) => a.localeCompare(b))
-    .map((spaceId) => {
-      const space = spacesById.get(spaceId);
-      if (!space) {
-        throw new Error(
-          `Square vertex ref references unknown space '${spaceId}'.`,
-        );
-      }
-      return space;
-    });
-  const keyCounts = new Map<string, number>();
-  for (const space of resolvedSpaces) {
-    for (const corner of SQUARE_CORNERS) {
-      const key = squareCornerGeometryKey(space, corner);
-      keyCounts.set(key, (keyCounts.get(key) ?? 0) + 1);
-    }
-  }
-  const candidates = [...keyCounts.entries()]
-    .filter(([, count]) => count === resolvedSpaces.length)
-    .map(([key]) => key)
-    .sort((left, right) => left.localeCompare(right));
-  if (candidates.length !== 1) {
-    throw new Error(
-      `Square vertex ref spaces '${ref.spaces.join(", ")}' do not resolve to exactly one shared vertex.`,
-    );
-  }
-  const [only] = candidates;
-  if (only === undefined) {
-    throw new Error(
-      "unreachable: candidates.length === 1 but first is undefined",
-    );
-  }
-  return only;
-}
-
-function resolveAuthoredHexEdges(
-  board: HexBoardSpec,
-  geometry: ReturnType<typeof createHexTopology>,
-): AnalyzedHexBoard["authoredEdges"] {
-  return (board.edges ?? []).map((edge) => ({
-    ...edge,
-    id:
-      "spaces" in edge.ref
-        ? geometry.edge(...edge.ref.spaces)
-        : geometry.edgeAt(edge.ref.space, edge.ref.side),
-  }));
-}
-function resolveAuthoredHexVertices(
-  board: HexBoardSpec,
-  geometry: ReturnType<typeof createHexTopology>,
-): AnalyzedHexBoard["authoredVertices"] {
-  return (board.vertices ?? []).map((vertex) => ({
-    ...vertex,
-    id:
-      "spaces" in vertex.ref
-        ? geometry.vertex(...vertex.ref.spaces)
-        : geometry.vertexAt(vertex.ref.space, vertex.ref.corner),
-  }));
-}
-
-function resolveSquareSpaces(board: SquareBoardSpec): SquareSpaceSpec[] {
-  return [...(board.spaces ?? [])].sort((left, right) =>
-    left.id.localeCompare(right.id),
-  );
-}
-
-function deriveSquareEdges(
-  spaces: readonly SquareSpaceSpec[],
-): ResolvedHexEdge[] {
-  const edgeMap = new Map<string, ResolvedHexEdge>();
-  for (const space of spaces) {
-    for (const side of SQUARE_SIDES) {
-      const geometryKey = squareEdgeGeometryKey(space, side);
-      const existing = edgeMap.get(geometryKey);
-      const nextSpaceIds = dedupeSorted([
-        ...(existing?.spaceIds ?? []),
-        space.id,
-      ]);
-      edgeMap.set(geometryKey, {
-        id: squareEdgeIdFromGeometryKey(geometryKey),
-        geometryKey,
-        spaceIds: nextSpaceIds,
-        typeId: existing?.typeId ?? null,
-        label: existing?.label ?? null,
-        fields: existing?.fields ?? null,
-      });
-    }
-  }
-  return [...edgeMap.values()].sort((left, right) =>
-    left.id.localeCompare(right.id),
-  );
-}
-
-function deriveSquareVertices(
-  spaces: readonly SquareSpaceSpec[],
-): ResolvedHexVertex[] {
-  const vertexMap = new Map<string, ResolvedHexVertex>();
-  for (const space of spaces) {
-    for (const corner of SQUARE_CORNERS) {
-      const geometryKey = squareCornerGeometryKey(space, corner);
-      const existing = vertexMap.get(geometryKey);
-      const nextSpaceIds = dedupeSorted([
-        ...(existing?.spaceIds ?? []),
-        space.id,
-      ]);
-      vertexMap.set(geometryKey, {
-        id: squareVertexIdFromGeometryKey(geometryKey),
-        geometryKey,
-        spaceIds: nextSpaceIds,
-        typeId: existing?.typeId ?? null,
-        label: existing?.label ?? null,
-        fields: existing?.fields ?? null,
-      });
-    }
-  }
-  return [...vertexMap.values()].sort((left, right) =>
-    left.id.localeCompare(right.id),
-  );
-}
-
-function indexSquareEdgeMetadata(
-  specs: readonly SquareEdgeSpec[],
-  spacesById: ReadonlyMap<string, SquareSpaceSpec>,
-  ownerLabel: string,
-): Map<string, Omit<ResolvedHexEdge, "id" | "spaceIds">> {
-  const metadataByKey = new Map<
+function seededTopologyInventory(
+  manifest: GameTopologyManifest,
+  playerIds: readonly string[],
+) {
+  const boards: Record<string, RuntimeBoardInstance> = {};
+  for (const board of manifest.boards ?? [])
+    for (const { id } of scopedInstances(
+      "board",
+      [board.id],
+      board.scope,
+      playerIds,
+    ))
+      boards[id] = { baseId: board.id, relations: [] };
+  const tiles: Record<
     string,
-    Omit<ResolvedHexEdge, "id" | "spaceIds">
-  >();
-  for (const spec of specs) {
-    const geometryKey = geometryKeyFromSquareEdgeRef(spec.ref, spacesById);
-    if (metadataByKey.has(geometryKey)) {
-      throw new Error(`${ownerLabel} contains duplicate square edge refs.`);
-    }
-    metadataByKey.set(geometryKey, {
-      geometryKey,
-      typeId: spec.typeId ?? null,
-      label: spec.label ?? null,
-      fields: spec.fields ?? null,
-    });
-  }
-  return metadataByKey;
-}
-
-function indexSquareVertexMetadata(
-  specs: readonly SquareVertexSpec[],
-  spacesById: ReadonlyMap<string, SquareSpaceSpec>,
-  ownerLabel: string,
-): Map<string, Omit<ResolvedHexVertex, "id" | "spaceIds">> {
-  const metadataByKey = new Map<
+    { id: string; tileTypeId: string; ownerId: string | null }
+  > = {};
+  const componentLocations: Record<
     string,
-    Omit<ResolvedHexVertex, "id" | "spaceIds">
-  >();
-  for (const spec of specs) {
-    const geometryKey = geometryKeyFromSquareVertexRef(spec.ref, spacesById);
-    if (metadataByKey.has(geometryKey)) {
-      throw new Error(`${ownerLabel} contains duplicate square vertex refs.`);
+    TilePlacement | { type: "Detached" }
+  > = {};
+  for (const seed of manifest.tileSeeds ?? [])
+    for (const { id, playerId: origin } of scopedInstances(
+      "tile",
+      expandSeedIds([seed]),
+      seed.scope,
+      playerIds,
+    )) {
+      tiles[id] = { id, tileTypeId: seed.typeId, ownerId: origin };
+      const home = seed.home;
+      if (home?.type === "board") {
+        const board = manifest.boards?.find(
+          (board) => board.id === home.boardId,
+        );
+        if (!board)
+          throw new Error(`Tile home names unknown board '${home.boardId}'.`);
+        const boardId =
+          board.scope === "perPlayer" && origin !== null
+            ? perPlayerInstanceId("board", board.id, origin)
+            : board.id;
+        componentLocations[id] = { ...home, type: "OnBoard", boardId };
+      } else componentLocations[id] = { type: "Detached" };
     }
-    metadataByKey.set(geometryKey, {
-      geometryKey,
-      typeId: spec.typeId ?? null,
-      label: spec.label ?? null,
-      fields: spec.fields ?? null,
-    });
-  }
-  return metadataByKey;
+  return { boards, tiles, componentLocations };
 }
-
-function resolveSquareEdges(
-  board: SquareBoardSpec,
-  spaces: readonly SquareSpaceSpec[],
-): ResolvedHexEdge[] {
-  const spacesById = new Map(spaces.map((space) => [space.id, space] as const));
-  const derived = deriveSquareEdges(spaces);
-  const edgesByGeometryKey = new Map(
-    derived.map((edge) => [edge.geometryKey, edge] as const),
-  );
-  const metadataByKey = indexSquareEdgeMetadata(
-    board.edges ?? [],
-    spacesById,
-    `Square board '${board.id}'`,
-  );
-
-  for (const [geometryKey, metadata] of metadataByKey.entries()) {
-    const edge = edgesByGeometryKey.get(geometryKey);
-    if (!edge) {
-      throw new Error(
-        `Square edge ref on board '${board.id}' does not resolve to a derived edge.`,
-      );
-    }
-    edgesByGeometryKey.set(geometryKey, {
-      ...edge,
-      typeId: metadata.typeId ?? null,
-      label: metadata.label ?? null,
-      fields: metadata.fields ?? null,
-    });
-  }
-
-  return [...edgesByGeometryKey.values()].sort((left, right) =>
-    left.id.localeCompare(right.id),
-  );
-}
-
-function resolveSquareVertices(
-  board: SquareBoardSpec,
-  spaces: readonly SquareSpaceSpec[],
-): ResolvedHexVertex[] {
-  const spacesById = new Map(spaces.map((space) => [space.id, space] as const));
-  const derived = deriveSquareVertices(spaces);
-  const verticesByGeometryKey = new Map(
-    derived.map((vertex) => [vertex.geometryKey, vertex] as const),
-  );
-  const metadataByKey = indexSquareVertexMetadata(
-    board.vertices ?? [],
-    spacesById,
-    `Square board '${board.id}'`,
-  );
-
-  for (const [geometryKey, metadata] of metadataByKey.entries()) {
-    const vertex = verticesByGeometryKey.get(geometryKey);
-    if (!vertex) {
-      throw new Error(
-        `Square vertex ref on board '${board.id}' does not resolve to a derived vertex.`,
-      );
-    }
-    verticesByGeometryKey.set(geometryKey, {
-      ...vertex,
-      typeId: metadata.typeId ?? null,
-      label: metadata.label ?? null,
-      fields: metadata.fields ?? null,
-    });
-  }
-
-  return [...verticesByGeometryKey.values()].sort((left, right) =>
-    left.id.localeCompare(right.id),
-  );
-}
-
 function analyzeBoards(manifest: GameTopologyManifest, playerIds: string[]) {
+  const inventory = seededTopologyInventory(manifest, playerIds);
+  const declarations = buildTopologyDefinitions(manifest, (_schema, values) =>
+    z.record(z.string(), RuntimeJsonSchema).parse(values ?? {}),
+  );
   return (manifest.boards ?? []).map((board): AnalyzedBoard => {
-    const runtimeBoardIds =
-      board.scope === "perPlayer"
-        ? playerIds.map((playerId) =>
-            perPlayerInstanceId("board", board.id, playerId),
-          )
-        : [board.id];
-
-    if (isHexBoardSpec(board)) {
-      const spaces = resolveHexSpaces(board);
-      const geometry = createHexTopology({ ...board, spaces });
-      const authoredEdges = resolveAuthoredHexEdges(board, geometry);
-      const authoredVertices = resolveAuthoredHexVertices(board, geometry);
-      return {
-        layout: "hex",
-        board,
-        boardTypeId: board.typeId,
-        runtimeBoardIds,
-        boardFieldsSchema: board.boardFieldsSchema,
-        spaceFieldsSchema: board.spaceFieldsSchema,
-        edgeFieldsSchema: board.edgeFieldsSchema,
-        vertexFieldsSchema: board.vertexFieldsSchema,
-        spaces,
-        authoredEdges,
-        authoredVertices,
-        edges: geometry.edges.map((edge) => ({
-          ...edge,
-          spaceIds: [...edge.spaceIds],
-          vertexIds: [...edge.vertexIds],
-          ...authoredEdges.find((authored) => authored.id === edge.id),
-        })),
-        vertices: geometry.vertices.map((vertex) => ({
-          ...vertex,
-          spaceIds: [...vertex.spaceIds],
-          edgeIds: [...vertex.edgeIds],
-          ...authoredVertices.find((authored) => authored.id === vertex.id),
-        })),
-      };
-    }
-
-    if (isSquareBoardSpec(board)) {
-      const squareBoard = board;
-      const spaces = resolveSquareSpaces(squareBoard);
-      return {
-        layout: "square",
-        board: squareBoard,
-
-        boardTypeId: squareBoard.typeId,
-        runtimeBoardIds,
-        boardFieldsSchema: squareBoard.boardFieldsSchema,
-        spaceFieldsSchema: squareBoard.spaceFieldsSchema,
-        relationFieldsSchema: squareBoard.relationFieldsSchema,
-        edgeFieldsSchema: squareBoard.edgeFieldsSchema,
-        vertexFieldsSchema: squareBoard.vertexFieldsSchema,
-        spaces,
-        relations: [...(squareBoard.relations ?? [])],
-        edges: resolveSquareEdges(squareBoard, spaces),
-        vertices: resolveSquareVertices(squareBoard, spaces),
-      };
-    }
-
-    const genericBoard = board;
+    const runtimeBoardIds = Object.entries(inventory.boards)
+      .filter(([, instance]) => instance.baseId === board.id)
+      .map(([id]) => id);
+    const topologies = new Map(
+      runtimeBoardIds.map((id) => [
+        id,
+        deriveBoardTopology(inventory, declarations, id),
+      ]),
+    );
+    const values = [...topologies.values()];
     return {
-      layout: "generic",
-      board: genericBoard,
-
-      boardTypeId: genericBoard.typeId,
+      layout: board.layout,
+      board,
+      boardTypeId: board.typeId,
       runtimeBoardIds,
-      boardFieldsSchema: genericBoard.boardFieldsSchema,
-      spaceFieldsSchema: genericBoard.spaceFieldsSchema,
-      relationFieldsSchema: genericBoard.relationFieldsSchema,
-      spaces: [...(genericBoard.spaces ?? [])].sort((left, right) =>
-        left.id.localeCompare(right.id),
+      topologies,
+      boardFieldsSchema: board.boardFieldsSchema,
+      spaceFieldsSchema:
+        board.layout === "generic" ? board.spaceFieldsSchema : undefined,
+      relationFieldsSchema: board.relationFieldsSchema,
+      spaces: values.length
+        ? values.flatMap((topology) =>
+            Object.values(topology.spaces).map((space) => ({
+              id: space.id,
+              ...(space.typeId == null ? {} : { typeId: space.typeId }),
+            })),
+          )
+        : board.layout === "generic"
+          ? [...(board.spaces ?? [])]
+          : [],
+      relations: [...(board.relations ?? [])],
+      edges: values.flatMap((topology) =>
+        topology.layout === "generic" ? [] : topology.edges,
       ),
-      relations: [...(genericBoard.relations ?? [])],
+      vertices: values.flatMap((topology) =>
+        topology.layout === "generic" ? [] : topology.vertices,
+      ),
     };
   });
 }
@@ -894,27 +482,23 @@ export function analyzeManifestStructure(
         analyzedBoard.board.id,
       ]),
     );
-    const runtimeSpaceIds = analyzedBoard.spaces.map((space) => space.id);
-    const runtimeSpaceTypeIds: Record<string, string | null> = sortedObject(
-      analyzedBoard.spaces.map(
-        (space) => [space.id, space.typeId ?? null] as const,
-      ),
+    const runtimeRelationTypeIds = dedupeSorted(
+      analyzedBoard.relations.map((relation) => relation.typeId),
     );
-    const runtimeRelationTypeIds =
-      analyzedBoard.layout === "hex"
-        ? ["adjacent"]
-        : analyzedBoard.layout === "square"
-          ? dedupeSorted([
-              "adjacent",
-              ...analyzedBoard.relations.map((relation) => relation.typeId),
-            ])
-          : dedupeSorted(
-              analyzedBoard.relations.map((relation) => relation.typeId),
-            );
     for (const runtimeBoardId of analyzedBoard.runtimeBoardIds) {
       boardLayoutById.set(runtimeBoardId, analyzedBoard.board.layout);
-      spaceIdsByBoardId.set(runtimeBoardId, runtimeSpaceIds);
-      spaceTypeIdByBoardId.set(runtimeBoardId, runtimeSpaceTypeIds);
+      spaceIdsByBoardId.set(
+        runtimeBoardId,
+        Object.keys(analyzedBoard.topologies.get(runtimeBoardId)?.spaces ?? {}),
+      );
+      spaceTypeIdByBoardId.set(
+        runtimeBoardId,
+        Object.fromEntries(
+          Object.values(
+            analyzedBoard.topologies.get(runtimeBoardId)?.spaces ?? {},
+          ).map((space) => [space.id, space.typeId ?? null]),
+        ),
+      );
       relationTypeIdsByBoardId.set(runtimeBoardId, runtimeRelationTypeIds);
     }
     if (analyzedBoard.boardTypeId) {
@@ -968,10 +552,30 @@ export function analyzeManifestStructure(
         ]);
       }
       for (const runtimeBoardId of analyzedBoard.runtimeBoardIds) {
-        edgeIdsByBoardIdAndTypeId.set(runtimeBoardId, edgeIdsForBoardByType);
+        const topology = analyzedBoard.topologies.get(runtimeBoardId);
+        const byType = (
+          elements: readonly { id: string; typeId?: string | null }[],
+        ) => {
+          const result: Record<string, string[]> = {};
+          for (const element of elements)
+            if (element.typeId)
+              result[element.typeId] = [
+                ...(result[element.typeId] ?? []),
+                element.id,
+              ];
+          return result;
+        };
+        edgeIdsByBoardIdAndTypeId.set(
+          runtimeBoardId,
+          byType(
+            topology && topology.layout !== "generic" ? topology.edges : [],
+          ),
+        );
         vertexIdsByBoardIdAndTypeId.set(
           runtimeBoardId,
-          vertexIdsForBoardByType,
+          byType(
+            topology && topology.layout !== "generic" ? topology.vertices : [],
+          ),
         );
       }
     }
@@ -1085,6 +689,15 @@ export function fieldReferenceContext(
           item.board.id === boardId || item.runtimeBoardIds.includes(boardId),
       )
     : undefined;
+  const runtimeTopology = boardId ? board?.topologies.get(boardId) : undefined;
+  const runtimeEdges =
+    runtimeTopology && runtimeTopology.layout !== "generic"
+      ? runtimeTopology.edges
+      : (board?.edges ?? []);
+  const runtimeVertices =
+    runtimeTopology && runtimeTopology.layout !== "generic"
+      ? runtimeTopology.vertices
+      : (board?.vertices ?? []);
   return {
     stage,
     deferred:
@@ -1092,6 +705,9 @@ export function fieldReferenceContext(
         ? [
             "playerId",
             "boardId",
+            "spaceId",
+            "edgeId",
+            "vertexId",
             ...(analysis.cardSets.some((set) =>
               set.cards.some((card) => card.scope === "perPlayer"),
             )
@@ -1118,6 +734,18 @@ export function fieldReferenceContext(
       stage === "manifest"
         ? {
             playerId: isPlayerIdValue,
+            edgeId: createBoardElementDeclaration(
+              analysis.manifest,
+              "edge",
+              board?.board.id,
+            ).accepts,
+            vertexId: createBoardElementDeclaration(
+              analysis.manifest,
+              "vertex",
+              board?.board.id,
+            ).accepts,
+            spaceId: createSpaceDeclaration(analysis.manifest, board?.board.id)
+              .accepts,
             boardId: createInstanceDeclaration(
               "board",
               (analysis.manifest.boards ?? []).map((board) => ({
@@ -1162,16 +790,19 @@ export function fieldReferenceContext(
       zoneId: analysis.zoneIds,
       playerId: analysis.playerIds,
       boardId: analysis.boardIds,
-      spaceId: board
-        ? board.spaces.map((space) => space.id)
-        : analysis.spaceIds,
+      spaceId:
+        boardId && analysis.spaceIdsByBoardId.has(boardId)
+          ? (analysis.spaceIdsByBoardId.get(boardId) ?? [])
+          : board
+            ? board.spaces.map((space) => space.id)
+            : analysis.spaceIds,
       edgeId:
         board && board.layout !== "generic"
-          ? board.edges.map((edge) => edge.id)
+          ? runtimeEdges.map((edge) => edge.id)
           : analysis.edgeIds,
       vertexId:
         board && board.layout !== "generic"
-          ? board.vertices.map((vertex) => vertex.id)
+          ? runtimeVertices.map((vertex) => vertex.id)
           : analysis.vertexIds,
       pieceId: analysis.pieceIds,
       dieId: analysis.dieIds,
@@ -1183,7 +814,7 @@ export function fieldReferenceContext(
 
 const fieldResolvers = new WeakMap<
   ManifestAnalysis,
-  ReturnType<typeof createFieldValidatorResolver>
+  Map<"manifest" | "session", ReturnType<typeof createFieldValidatorResolver>>
 >();
 function materializeFields(
   schema: FieldSchemaJson | null | undefined,
@@ -1193,12 +824,17 @@ function materializeFields(
   stage: "manifest" | "session" = "session",
 ): Record<string, unknown> {
   if (!schema) return z.record(z.string(), z.unknown()).parse(values ?? {});
-  let resolve = fieldResolvers.get(analysis);
+  let stages = fieldResolvers.get(analysis);
+  if (!stages) {
+    stages = new Map();
+    fieldResolvers.set(analysis, stages);
+  }
+  let resolve = stages.get(stage);
   if (!resolve) {
     resolve = createFieldValidatorResolver((board) =>
       fieldReferenceContext(analysis, stage, board),
     );
-    fieldResolvers.set(analysis, resolve);
+    stages.set(stage, resolve);
   }
   return z
     .record(z.string(), z.unknown())
@@ -1228,33 +864,18 @@ export function materializeEmptyZones(
         { id, dieTypeId },
       ]),
     ),
-    boards: {
-      byId: Object.fromEntries(
-        analysis.analyzedBoards.flatMap((board) =>
-          board.runtimeBoardIds.map((id) => [
-            id,
-            {
-              id,
-              baseId: board.board.id,
-              scope: board.board.scope,
-              playerId:
-                board.board.scope === "perPlayer"
-                  ? parsePerPlayerInstanceId(id)?.playerId
-                  : null,
-              spaces: Object.fromEntries(
-                board.spaces.map((space) => [space.id, {}]),
-              ),
-            },
-          ]),
-        ),
-      ),
-    },
+    ...seededTopologyInventory(analysis.manifest, analysis.playerIds),
   };
+  const definitions = buildTopologyDefinitions(
+    analysis.manifest,
+    (_schema, values) =>
+      z.record(z.string(), RuntimeJsonSchema).parse(values ?? {}),
+  );
   return Object.fromEntries(
     (analysis.manifest.zones ?? []).map((zone) => [
       zone.id,
       Object.fromEntries(
-        enumerateZoneHosts(hosts, {
+        enumerateZoneHosts(hosts, definitions, {
           ...("scope" in zone
             ? { scope: zone.scope }
             : { attachedTo: zone.attachedTo }),
@@ -1275,14 +896,132 @@ export function materializeManifestTable(
     "session",
   );
 }
-/** Compile shared board definitions without admitting a fictitious session. */
-export function materializeManifestStaticBoards(
+function freezeDefinition<T>(value: T): T {
+  if (value !== null && typeof value === "object") {
+    for (const child of Object.values(value)) freezeDefinition(child);
+    Object.freeze(value);
+  }
+  return value;
+}
+/** Normalize immutable rules without manufacturing session instances. */
+export function materializeTopologyDefinitions(
+  analysis: ManifestAnalysis,
+  stage: "manifest" | "session" = "manifest",
+): TopologyDefinitions {
+  const definitions = buildTopologyDefinitions(
+    analysis.manifest,
+    (schema, value, boardId) =>
+      z
+        .record(z.string(), RuntimeJsonSchema)
+        .parse(materializeFields(schema, analysis, value, boardId, stage)),
+  );
+  const inventory = seededTopologyInventory(
+    analysis.manifest,
+    analysis.playerIds,
+  );
+  for (const boardId of Object.keys(inventory.boards))
+    deriveBoardTopology(inventory, definitions, boardId);
+  return definitions;
+}
+
+function buildTopologyDefinitions(
   manifest: GameTopologyManifest,
-): unknown {
-  return materializeManifest(
-    { manifest, playerIds: [], shuffleItems: (values) => [...values] },
-    "manifest",
-  ).boards;
+  fields: (
+    schema: FieldSchemaJson | undefined,
+    value: unknown,
+    boardId?: string,
+  ) => Record<string, z.infer<typeof RuntimeJsonSchema>>,
+): TopologyDefinitions {
+  const boardDefinitions: Record<string, BoardDefinition> = {};
+  for (const board of manifest.boards ?? []) {
+    const base = {
+      id: board.id,
+      name: board.name,
+      scope: board.scope,
+      ...(board.typeId === undefined ? {} : { typeId: board.typeId }),
+      fields: fields(board.boardFieldsSchema, board.fields, board.id),
+    };
+    boardDefinitions[board.id] =
+      board.layout === "generic"
+        ? {
+            ...base,
+            layout: "generic",
+            spaces: Object.fromEntries(
+              (board.spaces ?? []).map((space) => [
+                space.id,
+                {
+                  ...space,
+                  fields: fields(
+                    board.spaceFieldsSchema,
+                    space.fields,
+                    board.id,
+                  ),
+                },
+              ]),
+            ),
+          }
+        : board.layout === "hex"
+          ? {
+              ...base,
+              layout: "hex",
+              orientation: board.orientation ?? "pointy",
+            }
+          : { ...base, layout: "square" };
+  }
+  const tileDefinitions: Record<string, TileDefinition> = {};
+  for (const type of manifest.tileTypes ?? []) {
+    const {
+      fieldsSchema,
+      // Strip the mutable instance schema from immutable rule definitions.
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Mutable instance schema must not enter immutable definitions.
+      propertiesSchema,
+      cellFieldsSchema,
+      edgeFieldsSchema,
+      vertexFieldsSchema,
+      ...definition
+    } = type;
+    const normalized = {
+      ...definition,
+      fields: fields(fieldsSchema, type.fields),
+    };
+    if (type.layout === "hex")
+      tileDefinitions[type.id] = {
+        ...normalized,
+        layout: "hex",
+        cells: type.cells.map((cell) => ({
+          ...cell,
+          fields: fields(cellFieldsSchema, cell.fields),
+        })),
+        edges: (type.edges ?? []).map((edge) => ({
+          ...edge,
+          fields: fields(edgeFieldsSchema, edge.fields),
+        })),
+        vertices: (type.vertices ?? []).map((vertex) => ({
+          ...vertex,
+          fields: fields(vertexFieldsSchema, vertex.fields),
+        })),
+      };
+    else
+      tileDefinitions[type.id] = {
+        ...normalized,
+        layout: "square",
+        cells: type.cells.map((cell) => ({
+          ...cell,
+          fields: fields(cellFieldsSchema, cell.fields),
+        })),
+        edges: (type.edges ?? []).map((edge) => ({
+          ...edge,
+          fields: fields(edgeFieldsSchema, edge.fields),
+        })),
+        vertices: (type.vertices ?? []).map((vertex) => ({
+          ...vertex,
+          fields: fields(vertexFieldsSchema, vertex.fields),
+        })),
+      };
+  }
+  return freezeDefinition(
+    structuredClone({ boardDefinitions, tileDefinitions }),
+  );
 }
 function materializeManifest(
   options: MaterializeOptions,
@@ -1330,27 +1069,27 @@ function materializeManifest(
   const vertexIdByBoardBaseIdAndSpaces = new Map<string, Map<string, string>>();
 
   for (const analyzedBoard of analysis.analyzedBoards) {
-    if (analyzedBoard.layout === "generic") {
-      continue;
+    for (const [boardId, topology] of analyzedBoard.topologies) {
+      if (topology.layout === "generic") continue;
+      edgeIdByBoardBaseIdAndSpaces.set(
+        boardId,
+        new Map(
+          topology.edges.map((edge) => [
+            boardSpaceRefKey(edge.spaceIds),
+            edge.id,
+          ]),
+        ),
+      );
+      vertexIdByBoardBaseIdAndSpaces.set(
+        boardId,
+        new Map(
+          topology.vertices.map((vertex) => [
+            boardSpaceRefKey(vertex.spaceIds),
+            vertex.id,
+          ]),
+        ),
+      );
     }
-    edgeIdByBoardBaseIdAndSpaces.set(
-      analyzedBoard.board.id,
-      new Map(
-        analyzedBoard.edges.map((edge) => [
-          boardSpaceRefKey(edge.spaceIds),
-          edge.id,
-        ]),
-      ),
-    );
-    vertexIdByBoardBaseIdAndSpaces.set(
-      analyzedBoard.board.id,
-      new Map(
-        analyzedBoard.vertices.map((vertex) => [
-          boardSpaceRefKey(vertex.spaceIds),
-          vertex.id,
-        ]),
-      ),
-    );
   }
 
   const nextLocationPosition = (location: Record<string, unknown>): number => {
@@ -1465,9 +1204,18 @@ function materializeManifest(
           throw new Error(
             `${context.path}.component: Component-attached zone requires a host base id.`,
           );
-        const family = "pieceType" in definition.attachedTo ? "piece" : "die";
+        const family =
+          "pieceType" in definition.attachedTo
+            ? "piece"
+            : "dieType" in definition.attachedTo
+              ? "die"
+              : "tile";
         const seeds =
-          family === "piece" ? manifest.pieceSeeds : manifest.dieSeeds;
+          family === "piece"
+            ? manifest.pieceSeeds
+            : family === "die"
+              ? manifest.dieSeeds
+              : manifest.tileSeeds;
         const seed = seeds?.find((seed) =>
           expandSeedIds([seed]).includes(home.component ?? ""),
         );
@@ -1482,6 +1230,8 @@ function materializeManifest(
             );
           hostId = perPlayerInstanceId(family, home.component, origin);
         } else hostId = home.component;
+        if ("tileType" in definition.attachedTo)
+          hostId = tileSpaceId(hostId, definition.attachedTo.cell);
       }
       return { type: "InZone", zoneId: home.zoneId, hostId, playedBy: null };
     }
@@ -1492,9 +1242,7 @@ function materializeManifest(
         origin,
         `${context.path}.boardId: ${context.label}`,
       );
-      if (
-        !analysis.spaceIdsByBoardId.get(home.boardId)?.includes(home.spaceId)
-      ) {
+      if (!analysis.spaceIdsByBoardId.get(boardId)?.includes(home.spaceId)) {
         throw new Error(
           `${context.path}.spaceId: ${context.label} targets unknown space '${home.spaceId}' on board '${home.boardId}'.`,
         );
@@ -1517,7 +1265,7 @@ function materializeManifest(
         origin,
         `${context.path}.boardId: ${context.label}`,
       );
-      const edgeId = resolveBoardEdgeId(home.boardId, home.ref.spaces);
+      const edgeId = resolveBoardEdgeId(boardId, home.ref.spaces);
       return {
         type: "OnEdge",
         boardId,
@@ -1536,7 +1284,7 @@ function materializeManifest(
         origin,
         `${context.path}.boardId: ${context.label}`,
       );
-      const vertexId = resolveBoardVertexId(home.boardId, home.ref.spaces);
+      const vertexId = resolveBoardVertexId(boardId, home.ref.spaces);
       return {
         type: "OnVertex",
         boardId,
@@ -1622,10 +1370,21 @@ function materializeManifest(
   const assignSeedLocation = (
     componentId: string,
     origin: string | null | undefined,
-    home: PieceSeedSpec["home"] | undefined,
+    home:
+      | PieceSeedSpec["home"]
+      | import("../../shared/domain/contracts.js").TileSeedSpec["home"]
+      | undefined,
     context: { path: string; label: string },
   ) => {
     componentLocations[componentId] = { type: "Detached" };
+    if (home?.type === "board") {
+      componentLocations[componentId] = {
+        ...home,
+        type: "OnBoard",
+        boardId: resolveRuntimeBoardId(home.boardId, origin, context.path),
+      };
+      return;
+    }
     if (home)
       pendingHomes.push(() => {
         componentLocations[componentId] = materializeComponentLocation(
@@ -1716,171 +1475,53 @@ function materializeManifest(
       });
     }
   }
-  const boardStatesById = createRecord<
-    ZoneTable["boards"]["byId"][string] & Record<string, unknown>
-  >();
-  const hexBoardStatesById = createRecord<Record<string, unknown>>();
-  const squareBoardStatesById = createRecord<Record<string, unknown>>();
-
-  for (const analyzedBoard of analysis.analyzedBoards) {
-    const sharedBoardState = {
-      baseId: analyzedBoard.board.id,
-      layout: analyzedBoard.layout,
-      typeId: analyzedBoard.boardTypeId ?? null,
-      scope: analyzedBoard.board.scope,
-      fields: fields(
-        analyzedBoard.boardFieldsSchema,
-        analysis,
-        analyzedBoard.board.fields,
-      ),
-    };
-
-    const buildSpaces = () =>
-      Object.fromEntries(
-        analyzedBoard.spaces.map((space) => {
-          const spaceId = space.id;
-          const baseSpaceState = {
-            id: spaceId,
-            name: "name" in space ? (space.name ?? null) : null,
-            typeId: space?.typeId ?? null,
-            fields: fields(
-              analyzedBoard.spaceFieldsSchema,
-              analysis,
-              space.fields,
+  const topologyDefinitions = materializeTopologyDefinitions(
+    analysis,
+    "session",
+  );
+  const boardStatesById: Record<string, RuntimeBoardInstance> = {};
+  for (const board of analysis.analyzedBoards)
+    for (const id of board.runtimeBoardIds)
+      boardStatesById[id] = {
+        baseId: board.board.id,
+        relations: board.relations.map((relation) => ({
+          ...(relation.id === undefined ? {} : { id: relation.id }),
+          typeId: relation.typeId,
+          fromSpaceId: relation.fromSpaceId,
+          toSpaceId: relation.toSpaceId,
+          directed: relation.directed ?? false,
+          fields: z
+            .record(z.string(), RuntimeJsonSchema)
+            .parse(
+              fields(board.relationFieldsSchema, analysis, relation.fields, id),
             ),
-          };
-
-          if (analyzedBoard.layout === "hex") {
-            const hexSpace = space as HexSpaceSpec;
-            return [
-              spaceId,
-              {
-                ...baseSpaceState,
-                q: hexSpace.q,
-                r: hexSpace.r,
-              },
-            ];
-          }
-
-          if (analyzedBoard.layout === "square") {
-            const squareSpace = space as SquareSpaceSpec;
-            return [
-              spaceId,
-              {
-                ...baseSpaceState,
-                row: squareSpace.row,
-                col: squareSpace.col,
-              },
-            ];
-          }
-
-          return [spaceId, baseSpaceState];
-        }),
-      );
-
-    const relations =
-      analyzedBoard.layout === "hex"
-        ? []
-        : analyzedBoard.relations.map((relation) => ({
-            id: relation.id ?? null,
-            typeId: relation.typeId,
-            fromSpaceId: relation.fromSpaceId,
-            toSpaceId: relation.toSpaceId,
-            directed: relation.directed ?? false,
-            fields: fields(
-              analyzedBoard.relationFieldsSchema,
-              analysis,
-              relation.fields,
-            ),
-          }));
-
-    const edges =
-      analyzedBoard.layout === "generic"
-        ? []
-        : analyzedBoard.edges.map((edge) => ({
-            id: edge.id,
-            spaceIds: [...edge.spaceIds],
-            typeId: edge.typeId ?? null,
-            label: edge.label ?? null,
-            ownerId: null,
-            fields: fields(
-              analyzedBoard.edgeFieldsSchema,
-              analysis,
-              edge.fields,
-            ),
-          }));
-
-    const vertices =
-      analyzedBoard.layout === "generic"
-        ? []
-        : analyzedBoard.vertices.map((vertex) => ({
-            id: vertex.id,
-            spaceIds: [...vertex.spaceIds],
-            typeId: vertex.typeId ?? null,
-            label: vertex.label ?? null,
-            ownerId: null,
-            fields: fields(
-              analyzedBoard.vertexFieldsSchema,
-              analysis,
-              vertex.fields,
-            ),
-          }));
-
-    for (const runtimeBoardId of analyzedBoard.runtimeBoardIds) {
-      const playerId =
-        analyzedBoard.board.scope === "perPlayer"
-          ? (parsePerPlayerInstanceId(runtimeBoardId)?.playerId ?? null)
-          : null;
-      const boardState = {
-        id: runtimeBoardId,
-        ...sharedBoardState,
-        playerId,
-        spaces: cloneJson(buildSpaces()),
-        relations: cloneJson(relations),
-        ...(analyzedBoard.layout === "hex"
-          ? {
-              orientation: analyzedBoard.board.orientation ?? "pointy",
-              edges: cloneJson(edges),
-              vertices: cloneJson(vertices),
-            }
-          : analyzedBoard.layout === "square"
-            ? {
-                edges: cloneJson(edges),
-                vertices: cloneJson(vertices),
-              }
-            : {}),
+        })),
       };
-
-      boardStatesById[runtimeBoardId] = boardState;
-      if (analyzedBoard.layout === "hex") {
-        hexBoardStatesById[runtimeBoardId] = boardState;
-      }
-      if (analyzedBoard.layout === "square") {
-        squareBoardStatesById[runtimeBoardId] = boardState;
-      }
-    }
-  }
-
+  const zones = materializeEmptyZones(analysis);
   const zoneTable: ZoneTable = {
     playerOrder: playerIds,
-    zones: materializeEmptyZones(analysis),
+    zones,
     cards,
     pieces,
     dice,
     tiles,
     componentLocations,
-    boards: { byId: boardStatesById },
+    boards: boardStatesById,
   };
-  const zones = zoneTable.zones;
+  for (const boardId of Object.keys(boardStatesById))
+    deriveBoardTopology(zoneTable, topologyDefinitions, boardId);
   for (const resolveHome of pendingHomes) resolveHome();
-  assertContainmentAcyclic(zoneTable, { zoneDefinitions });
+  assertContainmentAcyclic(zoneTable, {
+    zoneDefinitions,
+    ...topologyDefinitions,
+  });
   for (const [componentId, location] of Object.entries(componentLocations)) {
     if (location.type !== "InZone") continue;
     const ids = zones[String(location.zoneId)]?.[String(location.hostId)];
     if (!ids) throw new Error(`Missing zone host for '${componentId}'.`);
     ids.push(componentId);
   }
-  assertZoneConsistency(zoneTable, { zoneDefinitions });
+  assertZoneConsistency(zoneTable, { zoneDefinitions, ...topologyDefinitions });
   const { ownerOfCard, visibility } = initialCardMetadata(
     manifest.cardSets,
     playerIds,
@@ -1902,13 +1543,7 @@ function materializeManifest(
     ownerOfCard,
     visibility,
     resources: resourcesByPlayer,
-    boards: {
-      byId: boardStatesById,
-      hex: hexBoardStatesById,
-      square: squareBoardStatesById,
-      network: {},
-      track: {},
-    },
+    boards: boardStatesById,
     dice,
     tiles,
   });

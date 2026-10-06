@@ -1,3 +1,4 @@
+import { createSquareBoardLayout } from "../../shared/square-board-layout.js";
 import {
   runtimeFeatures,
   type RuntimeBoard,
@@ -8,19 +9,21 @@ import {
 import type { RuntimeTargetOptions } from "../targets.js";
 import type {
   BoardBase,
+  BoardDataOf,
+  IdOf,
   BoardCollection,
   BoardSpaceCollection,
   BoardSpace,
   CoreInstance,
   FeatureContext,
-  ReadonlyData,
   TargetOptions,
   ActionProps,
 } from "../model.js";
 import type {
-  RuntimeBoardSpaceState,
-  RuntimeSquareBoardState,
-} from "../../reducer/model/table.js";
+  BoardSpace as ProjectedBoardSpace,
+  BoardEdge,
+  BoardVertex,
+} from "../../shared/board-topology.js";
 import { requireLookup } from "../../shared/lookup.js";
 import { AmbiguousTargetError } from "../instance.js";
 import {
@@ -32,13 +35,44 @@ import type { ViewportTransform } from "./pan-zoom.js";
 
 interface RuntimeSpace {
   readonly id: string;
-  readonly data: ReadonlyData<RuntimeBoardSpaceState>;
+  readonly data: ProjectedBoardSpace;
   readonly board: RuntimeBoard;
   getIsEligible(): boolean;
   getIsSelectable(): boolean;
   getIsSelected(): boolean;
   getSelectHandler(options?: RuntimeTargetOptions): () => void;
   getTargetProps(options?: RuntimeTargetOptions): ActionProps;
+}
+interface RuntimeLayoutTarget {
+  readonly id: string;
+  getIsEligible(): boolean;
+  getIsSelectable(): boolean;
+  getIsSelected(): boolean;
+  getSelectHandler(options?: RuntimeTargetOptions): () => void;
+  getTargetProps(options?: RuntimeTargetOptions): ActionProps;
+}
+interface RuntimeLayout {
+  readonly viewBox: {
+    readonly x: number;
+    readonly y: number;
+    readonly width: number;
+    readonly height: number;
+  };
+  getSpaces(): readonly (RuntimeSpace & {
+    readonly center: Point;
+    points(): readonly Point[];
+    readonly transform: string;
+  })[];
+  getEdges(): readonly (RuntimeLayoutTarget & {
+    readonly data: BoardEdge | undefined;
+    readonly center: Point;
+    readonly line: readonly [Point, Point];
+  })[];
+  getVertices(): readonly (RuntimeLayoutTarget & {
+    readonly data: BoardVertex | undefined;
+    readonly center: Point;
+  })[];
+  pointToSpace(x: number, y: number): string | undefined;
 }
 type TargetKind = "space" | "edge" | "vertex";
 export interface BoardLayoutOptions {
@@ -57,74 +91,6 @@ interface Geometry {
   readonly edges: readonly { id: string; from: Point; to: Point }[];
   readonly vertices: readonly { id: string; center: Point }[];
   pointToSpace(point: Point): string | undefined;
-}
-
-function squareGeometry(
-  board: ReadonlyData<RuntimeSquareBoardState>,
-  size: number,
-  origin: Point,
-): Geometry {
-  const spaces = Object.values(board.spaces).map((space) => {
-    const x = origin.x + space.col * size;
-    const y = origin.y + space.row * size;
-    return {
-      id: space.id,
-      center: { x: x + size / 2, y: y + size / 2 },
-      corners: [
-        { x, y },
-        { x: x + size, y },
-        { x: x + size, y: y + size },
-        { x, y: y + size },
-      ],
-    };
-  });
-  const byId = new Map(spaces.map((space) => [space.id, space]));
-  function sharedCorners(ids: readonly string[]) {
-    const first = byId.get(ids[0] ?? "")?.corners ?? [];
-    return first.filter((point) =>
-      ids.every((id) =>
-        byId
-          .get(id)
-          ?.corners.some(
-            (candidate) => candidate.x === point.x && candidate.y === point.y,
-          ),
-      ),
-    );
-  }
-  const points = spaces.flatMap((space) => space.corners);
-  const xs = points.map((point) => point.x);
-  const ys = points.map((point) => point.y);
-  const x = xs.length ? Math.min(...xs) : 0;
-  const y = ys.length ? Math.min(...ys) : 0;
-  return {
-    viewBox: {
-      x,
-      y,
-      width: xs.length ? Math.max(...xs) - x : 0,
-      height: ys.length ? Math.max(...ys) - y : 0,
-    },
-    spaces,
-    // Incidence is authored. Only a unique geometric line/point is representable.
-    edges: board.edges.flatMap((edge) => {
-      const corners = sharedCorners(edge.spaceIds);
-      return corners.length === 2
-        ? [{ id: edge.id, from: corners[0], to: corners[1] }]
-        : [];
-    }),
-    vertices: board.vertices.flatMap((vertex) => {
-      const corners = sharedCorners(vertex.spaceIds);
-      return corners.length === 1
-        ? [{ id: vertex.id, center: corners[0] }]
-        : [];
-    }),
-    pointToSpace(point) {
-      const col = Math.floor((point.x - origin.x) / size);
-      const row = Math.floor((point.y - origin.y) / size);
-      return Object.values(board.spaces).find(
-        (space) => space.col === col && space.row === row,
-      )?.id;
-    },
-  };
 }
 
 /** Semantic board spaces and captured selection, with optional spatial geometry. */
@@ -162,7 +128,7 @@ function createRuntimeBoardFeature(context: RuntimeFeatureContext) {
       const geometry =
         data.layout === "hex"
           ? cachedHexTopology({
-              id: data.baseId ?? data.id,
+              id: data.id,
               orientation: data.orientation,
               spaces: Object.values(data.spaces),
             })
@@ -342,7 +308,10 @@ function createRuntimeBoardFeature(context: RuntimeFeatureContext) {
       get spaces(): RuntimeCollection<RuntimeSpace> {
         return spacesFor(this);
       },
-      getLayout(this: RuntimeBoard, options: BoardLayoutOptions) {
+      getLayout(
+        this: RuntimeBoard,
+        options: BoardLayoutOptions,
+      ): RuntimeLayout {
         const board = this.data;
         if (board.layout === "generic")
           throw new Error(
@@ -370,7 +339,7 @@ function createRuntimeBoardFeature(context: RuntimeFeatureContext) {
         const geometry: Geometry =
           board.layout === "hex"
             ? captured.geometry!.getLayout({ hexSize, origin })
-            : squareGeometry(board, hexSize, origin);
+            : createSquareBoardLayout(board, hexSize, origin);
         const point = (value: Point): Point =>
           Object.freeze({
             x: value.x * viewport.scale + viewport.x,
@@ -429,15 +398,27 @@ function createRuntimeBoardFeature(context: RuntimeFeatureContext) {
   };
 }
 
-type RuntimeLayout = ReturnType<
-  ReturnType<typeof createRuntimeBoardFeature>["board"]["getLayout"]
->;
 type LayoutTarget<G, Value> = Omit<
   Value,
   "getSelectHandler" | "getTargetProps"
 > & {
   getSelectHandler(options?: TargetOptions<G>): () => void;
   getTargetProps(options?: TargetOptions<G>): ActionProps;
+};
+type LayoutElementData<G, Kind extends "edges" | "vertices"> =
+  BoardDataOf<G, IdOf<G, "boardId">> extends infer Topology
+    ? Topology extends Record<Kind, readonly (infer Element)[]>
+      ? Element
+      : never
+    : never;
+type LayoutElement<G, Kind extends "edges" | "vertices", Value> = LayoutTarget<
+  G,
+  Omit<Value, "data" | "id">
+> & {
+  readonly id: LayoutElementData<G, Kind> extends { readonly id: infer Id }
+    ? Id
+    : never;
+  readonly data: LayoutElementData<G, Kind> | undefined;
 };
 type BoardLayout<G> = Omit<
   RuntimeLayout,
@@ -448,12 +429,14 @@ type BoardLayout<G> = Omit<
     points(): readonly Point[];
     readonly transform: string;
   })[];
-  getEdges(): readonly LayoutTarget<
+  getEdges(): readonly LayoutElement<
     G,
+    "edges",
     ReturnType<RuntimeLayout["getEdges"]>[number]
   >[];
-  getVertices(): readonly LayoutTarget<
+  getVertices(): readonly LayoutElement<
     G,
+    "vertices",
     ReturnType<RuntimeLayout["getVertices"]>[number]
   >[];
 };

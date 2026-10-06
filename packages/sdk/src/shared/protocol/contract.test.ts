@@ -1,8 +1,4 @@
-import {
-  BoardStaticProjectionSchema,
-  GameOutcomeSchema,
-  SeatProjectionBundleSchema,
-} from "./schema";
+import { GameOutcomeSchema, SeatProjectionBundleSchema } from "./schema";
 import * as ReducerWireZod from "../runtime-schema";
 import { describe, expect, test } from "vitest";
 import {
@@ -211,11 +207,6 @@ describe("shared plugin runtime contract", () => {
       perspectivePlayerId: "player-1",
       version: 8,
       actionSetVersion,
-      staticProjection: {
-        view: { board: { id: "shared-board" } },
-        hash: "static-hash",
-        manifestVersion: "manifest-v1",
-      },
       dynamicProjection: ReducerWireZod.SeatProjectionBundleSchema.parse({
         events: [],
         simultaneousPhase: null,
@@ -255,7 +246,6 @@ describe("shared plugin runtime contract", () => {
       perspectivePlayerId: "player-1",
     });
     expect(frame.view).toEqual({
-      board: { id: "shared-board" },
       market: ["card-1"],
       handSize: 1,
     });
@@ -276,11 +266,6 @@ describe("shared plugin runtime contract", () => {
           perspectivePlayerId: "player-1",
           version: 8,
           actionSetVersion: "sha256:actions",
-          staticProjection: {
-            view: { board: { id: "shared-board", optional: undefined } },
-            hash: "static-hash",
-            manifestVersion: "manifest-v1",
-          },
           dynamicProjection: {
             events: [],
             schedulerFlow: {
@@ -325,7 +310,6 @@ describe("shared plugin runtime contract", () => {
     );
 
     expect(frame.view).toEqual({
-      board: { id: "shared-board" },
       handSize: 1,
     });
     expect(frame.availableInteractions[0]?.inputs[0]?.domain).toEqual({
@@ -443,9 +427,6 @@ describe("shared plugin runtime contract", () => {
 });
 
 test("worker and plugin boundaries share canonical output admission", () => {
-  expect(BoardStaticProjectionSchema).toBe(
-    ReducerWireZod.BoardStaticProjectionSchema,
-  );
   expect(SeatProjectionBundleSchema).toBe(
     ReducerWireZod.SeatProjectionBundleSchema,
   );
@@ -460,26 +441,17 @@ test("worker and plugin boundaries share canonical output admission", () => {
       standings: [{ playerId: "player-1", rank: 1, result: "win" }],
     }).success,
   ).toBe(false);
-  expect(
-    BoardStaticProjectionSchema.safeParse({ view: {}, manifestVersion: "1" })
-      .success,
-  ).toBe(false);
 });
 
 describe("manifest-owned boards in the single seat view", () => {
-  const boards = { byId: {}, hex: {}, square: {} };
-  test("spectators receive static geometry without another seat's private view", () => {
+  const boards = {};
+  test("an absent seat receives neither board data nor another seat's private view", () => {
     const frame = materializePluginGameplayFrame({
       currentPhase: "play",
       activePlayers: ["player-1"],
       perspectivePlayerId: "spectator",
       version: 1,
       actionSetVersion: "actions-1",
-      staticProjection: {
-        view: { boards },
-        hash: "static-1",
-        manifestVersion: "1",
-      },
       dynamicProjection: {
         events: [],
         seats: {
@@ -490,7 +462,7 @@ describe("manifest-owned boards in the single seat view", () => {
         },
       },
     });
-    expect(frame.view).toEqual({ boards });
+    expect(frame.view).toBeNull();
     expect(frame.availableInteractions).toEqual([]);
     expect(frame.zones).toEqual({});
     expect(JSON.stringify(frame)).not.toContain("private");
@@ -509,19 +481,14 @@ describe("manifest-owned boards in the single seat view", () => {
       perspectivePlayerId: "player-1",
       version: 1,
       actionSetVersion: "actions-1",
-      staticProjection: {
-        view: { boards },
-        hash: "static-1",
-        manifestVersion: "1",
-      },
       // Deliberately cross the external admission boundary with untrusted data.
       dynamicProjection: {
         events: [],
-        seats: { "player-1": { view, availableInteractionRefs: [] } },
+        seats: { "player-1": { view, boards, availableInteractionRefs: [] } },
       } as ReducerSeatProjectionBundle,
     });
   }
-  test("merges a seat record with canonical static boards, including a null seat view", () => {
+  test("merges a seat record with its projected boards, including a null seat view", () => {
     expect(materialize({ score: 3 }).view).toEqual({ boards, score: 3 });
     expect(materialize(null).view).toEqual({ boards });
   });
@@ -531,18 +498,25 @@ describe("manifest-owned boards in the single seat view", () => {
       expect(() => materialize(view)).toThrow();
     },
   );
-  test("rejects authored boards instead of overwriting manifest geometry", () => {
+  test("rejects authored boards instead of overwriting projected topology", () => {
     expect(() => materialize({ boards: {} })).toThrow(
-      "reserved for manifest geometry",
+      "reserved for projected board topology",
     );
   });
 });
 
-test("seat board projection replaces the complete static collection without merging stale instances", () => {
+test("seat board projection uses only the selected seat's current collection", () => {
   const current = {
-    byId: { current: { id: "current", fields: { score: 2 } } },
-    hex: {},
-    square: {},
+    current: {
+      id: "current",
+      baseId: "current",
+      name: "Current",
+      scope: "shared" as const,
+      layout: "generic" as const,
+      fields: { score: 2 },
+      spaces: {},
+      relations: [],
+    },
   };
   const frame = materializePluginGameplayFrame({
     currentPhase: "play",
@@ -550,13 +524,6 @@ test("seat board projection replaces the complete static collection without merg
     perspectivePlayerId: "player-1",
     version: 2,
     actionSetVersion: "actions-2",
-    staticProjection: {
-      view: {
-        boards: { byId: { stale: { id: "stale" } }, hex: {}, square: {} },
-      },
-      hash: "static",
-      manifestVersion: "1",
-    },
     dynamicProjection: {
       events: [],
       seats: {
@@ -566,7 +533,18 @@ test("seat board projection replaces the complete static collection without merg
           availableInteractionRefs: [],
         },
         "player-2": {
-          boards: { byId: { other: { id: "other" } }, hex: {}, square: {} },
+          boards: {
+            other: {
+              id: "other",
+              baseId: "other",
+              name: "Other",
+              scope: "shared",
+              layout: "generic",
+              fields: {},
+              spaces: {},
+              relations: [],
+            },
+          },
         },
       },
     },

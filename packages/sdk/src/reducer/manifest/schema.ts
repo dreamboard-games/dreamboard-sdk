@@ -1,5 +1,8 @@
+import { BoardRelationSchema } from "../../shared/board-topology-schema.js";
+import { RuntimeJsonSchema } from "../../shared/runtime-json.js";
+import { deriveBoardTopology } from "../../shared/board-topology.js";
+import { TilePlacementSchema } from "../../shared/domain/tile-placement.js";
 import { asPlayerId } from "../per-player.js";
-import { parsePerPlayerInstanceId } from "../../shared/domain/per-player-instance.js";
 import * as z from "zod";
 import type { FieldSchemaJson } from "../../shared/domain/contracts.js";
 import {
@@ -8,7 +11,7 @@ import {
 } from "./field-schemas";
 import { fieldReferenceContext } from "./materialize";
 import { assertZoneConsistency } from "../table/zones";
-import type { ZoneDefinitions, RuntimeTableRecord } from "../model";
+import type { ZoneDefinitions } from "../model";
 import type { ManifestIds } from "../model";
 
 import type { analyzeManifest } from "./materialize";
@@ -20,10 +23,6 @@ function property(value: unknown, key: string): unknown {
 }
 function recordEntries(value: unknown): [string, unknown][] {
   return isRecord(value) ? Object.entries(value) : [];
-}
-function arrayEntries(value: unknown): IterableIterator<[number, unknown]> {
-  const values: readonly unknown[] = Array.isArray(value) ? value : [];
-  return values.entries();
 }
 type Analysis = ReturnType<typeof analyzeManifest>;
 export type RuntimeManifestIds = {
@@ -40,19 +39,21 @@ export function createTableSchema(
   const activeBoardId = membership(analysis.boardIds);
   const activeCardId = membership(analysis.cardIds);
   const activePlayerId = membership(analysis.playerIds).transform(asPlayerId);
-  const unknownRecordSchema = z.record(z.string(), z.unknown());
+  const unknownRecordSchema = z.record(z.string(), RuntimeJsonSchema);
   const resolveStatic = createFieldValidatorResolver((boardId) =>
     fieldReferenceContext(analysis, "manifest", boardId),
   );
   const objectSchema = (
     schema: FieldSchemaJson | null | undefined,
     boardId?: string,
-  ): z.ZodType =>
-    schema ? resolveStatic(schema, boardId) : unknownRecordSchema;
-  const shape = <T>(
+  ) =>
+    schema
+      ? resolveStatic(schema, boardId).pipe(unknownRecordSchema)
+      : unknownRecordSchema;
+  const shape = <T, S extends z.ZodType>(
     items: readonly T[],
     getKey: (item: T) => string,
-    getSchema: (item: T) => z.ZodTypeAny,
+    getSchema: (item: T) => S,
   ) =>
     z.object(
       Object.fromEntries(items.map((item) => [getKey(item), getSchema(item)])),
@@ -129,182 +130,28 @@ export function createTableSchema(
       });
     },
   ).strict();
-  const boardSpaceTypeIdSchema = ids.spaceTypeId.nullable().optional();
-  const boardSpaceStateSchema = z.strictObject({
-    id: ids.spaceId,
-    name: z.string().nullable().optional(),
-    typeId: boardSpaceTypeIdSchema,
-    fields: unknownRecordSchema,
-  });
-  const hexSpaceStateSchema = boardSpaceStateSchema.extend({
-    q: z.number().int(),
-    r: z.number().int(),
-  });
-  const squareSpaceStateSchema = boardSpaceStateSchema.extend({
-    row: z.number().int(),
-    col: z.number().int(),
-  });
-  const boardRelationStateSchema = z.object({
-    id: z.string().nullable().optional(),
-    typeId: ids.relationTypeId,
-    fromSpaceId: ids.spaceId,
-    toSpaceId: ids.spaceId,
-    directed: z.boolean(),
-    fields: unknownRecordSchema,
-  });
-  const runtimeGenericBoardStateSchema = z.strictObject({
-    id: activeBoardId,
-    baseId: ids.boardBaseId,
-    layout: z.literal("generic"),
-    typeId: ids.boardTypeId.nullable().optional(),
-    scope: z.enum(["shared", "perPlayer"]),
-    playerId: activePlayerId.nullable().optional(),
-    fields: unknownRecordSchema,
-    spaces: z.record(z.string(), boardSpaceStateSchema),
-    relations: z.array(boardRelationStateSchema),
-  });
-  const hexEdgeStateSchema = z.object({
-    id: ids.edgeId,
-    spaceIds: z.array(ids.spaceId).min(1).max(2),
-    typeId: ids.edgeTypeId.nullable().optional(),
-    label: z.string().nullable().optional(),
-    ownerId: activePlayerId.nullable().optional(),
-    fields: unknownRecordSchema,
-  });
-  const hexVertexStateSchema = z.object({
-    id: ids.vertexId,
-    spaceIds: z.array(ids.spaceId).min(1).max(3),
-    typeId: ids.vertexTypeId.nullable().optional(),
-    label: z.string().nullable().optional(),
-    ownerId: activePlayerId.nullable().optional(),
-    fields: unknownRecordSchema,
-  });
-  const squareVertexStateSchema = z.object({
-    id: ids.vertexId,
-    spaceIds: z.array(ids.spaceId).min(1).max(4),
-    typeId: ids.vertexTypeId.nullable().optional(),
-    label: z.string().nullable().optional(),
-    ownerId: activePlayerId.nullable().optional(),
-    fields: unknownRecordSchema,
-  });
-  const runtimeHexBoardStateSchema = runtimeGenericBoardStateSchema.extend({
-    layout: z.literal("hex"),
-    spaces: z.record(z.string(), hexSpaceStateSchema),
-    relations: z.array(boardRelationStateSchema),
-    orientation: z.enum(["pointy", "flat"]),
-    edges: z.array(hexEdgeStateSchema),
-    vertices: z.array(hexVertexStateSchema),
-  });
-  const runtimeSquareBoardStateSchema = runtimeGenericBoardStateSchema.extend({
-    layout: z.literal("square"),
-    spaces: z.record(z.string(), squareSpaceStateSchema),
-    relations: z.array(boardRelationStateSchema),
-    edges: z.array(hexEdgeStateSchema),
-    vertices: z.array(squareVertexStateSchema),
-  });
   const boards = analysis.analyzedBoards.flatMap((board) =>
-    board.runtimeBoardIds.map((id) => {
-      const base = {
-        id: z.literal(id),
-        playerId:
-          board.board.scope === "perPlayer"
-            ? z.literal(parsePerPlayerInstanceId(id)?.playerId)
-            : z.null(),
+    board.runtimeBoardIds.map((id) => ({
+      id,
+      schema: z.strictObject({
         baseId: z.literal(board.board.id),
-        scope: z.literal(board.board.scope),
-        fields: objectSchema(board.boardFieldsSchema),
-      };
-      const spaces = boardSpaceStateSchema.extend({
-        fields: objectSchema(board.spaceFieldsSchema),
-      });
-      const relations = z.array(
-        boardRelationStateSchema.extend({
-          fields: objectSchema(
-            "relationFieldsSchema" in board
-              ? board.relationFieldsSchema
-              : undefined,
-          ),
-        }),
-      );
-      if (board.layout === "generic")
-        return {
-          id,
-          scope: board.board.scope,
-          layout: board.layout,
-          schema: runtimeGenericBoardStateSchema.extend({
-            ...base,
-            spaces: shape(
-              board.spaces,
-              (space) => space.id,
-              (space) => spaces.extend({ id: z.literal(space.id) }),
-            ).strict(),
-            relations,
+        relations: z.array(
+          BoardRelationSchema.extend({
+            fields: objectSchema(board.relationFieldsSchema),
           }),
-        };
-      const edges = z.array(
-        hexEdgeStateSchema.extend({
-          fields: objectSchema(board.edgeFieldsSchema),
-        }),
-      );
-      const vertices = z.array(
-        (board.layout === "hex"
-          ? hexVertexStateSchema
-          : squareVertexStateSchema
-        ).extend({ fields: objectSchema(board.vertexFieldsSchema) }),
-      );
-      return {
-        id,
-        scope: board.board.scope,
-        layout: board.layout,
-        schema:
-          board.layout === "hex"
-            ? runtimeHexBoardStateSchema.extend({
-                ...base,
-                spaces: shape(
-                  board.spaces,
-                  (space) => space.id,
-                  (space) =>
-                    spaces.extend({
-                      id: z.literal(space.id),
-                      q: z.number().int(),
-                      r: z.number().int(),
-                    }),
-                ).strict(),
-                edges,
-                vertices,
-              })
-            : runtimeSquareBoardStateSchema.extend({
-                ...base,
-                spaces: shape(
-                  board.spaces,
-                  (space) => space.id,
-                  (space) =>
-                    spaces.extend({
-                      id: z.literal(space.id),
-                      row: z.number().int(),
-                      col: z.number().int(),
-                    }),
-                ).strict(),
-                relations,
-                edges,
-                vertices,
-              }),
-      };
-    }),
+        ),
+      }),
+    })),
   );
-  const boardCollection = (entries: typeof boards) =>
-    shape(
-      entries,
-      (board) => board.id,
-      (board) => board.schema,
-    ).strict();
-  const boardStateByIdSchema = boardCollection(boards);
-  const hexBoardStateByIdSchema = boardCollection(
-    boards.filter((board) => board.layout === "hex"),
-  );
-  const squareBoardStateByIdSchema = boardCollection(
-    boards.filter((board) => board.layout === "square"),
-  );
+  const boardStateByIdSchema = shape(
+    boards,
+    (board) => board.id,
+    (board) => board.schema,
+  ).strict();
+  const tilePlacement = z.discriminatedUnion("layout", [
+    TilePlacementSchema.options[0].extend({ boardId: activeBoardId }),
+    TilePlacementSchema.options[1].extend({ boardId: activeBoardId }),
+  ]);
   let sessionKey = "";
   let resolveSession:
     ReturnType<typeof createFieldValidatorResolver> | undefined;
@@ -317,7 +164,8 @@ export function createTableSchema(
       componentLocations: z.record(
         z.string(),
         z.union([
-          z.object({ type: z.literal("Detached") }),
+          tilePlacement,
+          z.strictObject({ type: z.literal("Detached") }),
           z
             .object({
               type: z.literal("InZone"),
@@ -326,22 +174,22 @@ export function createTableSchema(
               playedBy: activePlayerId.nullable(),
             })
             .strict(),
-          z.object({
+          z.strictObject({
             type: z.literal("OnSpace"),
             boardId: activeBoardId,
-            spaceId: ids.spaceId,
+            spaceId: z.string().min(1),
             position: z.number().int().nullable().optional(),
           }),
-          z.object({
+          z.strictObject({
             type: z.literal("OnEdge"),
             boardId: activeBoardId,
-            edgeId: ids.edgeId,
+            edgeId: z.string().min(1),
             position: z.number().int().nullable().optional(),
           }),
-          z.object({
+          z.strictObject({
             type: z.literal("OnVertex"),
             boardId: activeBoardId,
-            vertexId: ids.vertexId,
+            vertexId: z.string().min(1),
             position: z.number().int().nullable().optional(),
           }),
         ]),
@@ -358,13 +206,7 @@ export function createTableSchema(
         activePlayerId,
         z.record(ids.resourceId, z.number().int()),
       ),
-      boards: z.object({
-        byId: boardStateByIdSchema,
-        hex: hexBoardStateByIdSchema,
-        square: squareBoardStateByIdSchema,
-        network: z.record(z.string(), unknownRecordSchema).default({}),
-        track: z.record(z.string(), unknownRecordSchema).default({}),
-      }),
+      boards: boardStateByIdSchema,
       dice: dieStateByIdSchema,
       tiles: tileStateByIdSchema,
     })
@@ -400,16 +242,54 @@ export function createTableSchema(
         }
       };
       const playerIds = [...table.playerOrder];
-      const boardEntries = Object.entries(table.boards.byId).map(
+      const boardEntries = Object.entries(table.boards).map(
         ([id, board]) => [id, property(board, "baseId")] as const,
       );
       const boardIds = boardEntries.map(([id]) => id);
-      const baseById = new Map(boardEntries);
       const referenceContext = fieldReferenceContext(analysis);
+      const topologyIds = new Map<
+        string,
+        { spaceId: string[]; edgeId: string[]; vertexId: string[] }
+      >();
+      try {
+        for (const id of boardIds) {
+          const topology = deriveBoardTopology(table, definitions, id);
+          topologyIds.set(id, {
+            spaceId: Object.keys(topology.spaces),
+            edgeId:
+              topology.layout === "generic"
+                ? []
+                : topology.edges.map((edge) => edge.id),
+            vertexId:
+              topology.layout === "generic"
+                ? []
+                : topology.vertices.map((vertex) => vertex.id),
+          });
+        }
+      } catch (error) {
+        context.addIssue({
+          code: "custom",
+          path: ["boards"],
+          message: error instanceof Error ? error.message : String(error),
+        });
+        return;
+      }
+      const geometryIds = {
+        spaceId: [
+          ...new Set([...topologyIds.values()].flatMap((ids) => ids.spaceId)),
+        ],
+        edgeId: [
+          ...new Set([...topologyIds.values()].flatMap((ids) => ids.edgeId)),
+        ],
+        vertexId: [
+          ...new Set([...topologyIds.values()].flatMap((ids) => ids.vertexId)),
+        ],
+      };
       const fieldContext = {
         ...referenceContext,
         ids: {
           ...referenceContext.ids,
+          ...geometryIds,
           playerId: playerIds,
           boardId: boardIds,
         },
@@ -417,20 +297,18 @@ export function createTableSchema(
       const key = JSON.stringify([
         playerIds,
         [...boardEntries].sort(([a], [b]) => a.localeCompare(b)),
+        [...topologyIds].sort(([a], [b]) => a.localeCompare(b)),
       ]);
       if (!resolveSession || key !== sessionKey) {
+        const nextResolver = createFieldValidatorResolver((boardId) => ({
+          ...fieldContext,
+          ids: {
+            ...fieldContext.ids,
+            ...(boardId ? topologyIds.get(boardId) : geometryIds),
+          },
+        }));
         sessionKey = key;
-        resolveSession = createFieldValidatorResolver((boardId) => {
-          const baseId = boardId ? baseById.get(boardId) : undefined;
-          const scoped =
-            typeof baseId === "string"
-              ? fieldReferenceContext(analysis, "session", baseId)
-              : referenceContext;
-          return {
-            ...fieldContext,
-            ids: { ...scoped.ids, playerId: playerIds, boardId: boardIds },
-          };
-        });
+        resolveSession = nextResolver;
       }
       const sessionResolver = resolveSession;
       const validateFields = (
@@ -485,6 +363,30 @@ export function createTableSchema(
           property(die, "properties"),
           ["dice", id, "properties"],
         );
+      for (const [i, authored] of (analysis.manifest.boards ?? []).entries()) {
+        for (const [runtimeId, baseId] of boardEntries) {
+          if (baseId !== authored.id) continue;
+          const definition = definitions.boardDefinitions[authored.id];
+          validateFields(
+            authored.boardFieldsSchema,
+            definition.fields,
+            ["manifest", "boards", i, "fields"],
+            runtimeId,
+          );
+          if (
+            authored.layout === "generic" &&
+            definition.layout === "generic"
+          ) {
+            for (const [spaceId, space] of Object.entries(definition.spaces))
+              validateFields(
+                authored.spaceFieldsSchema,
+                space.fields,
+                ["manifest", "boards", i, "spaces", spaceId, "fields"],
+                runtimeId,
+              );
+          }
+        }
+      }
       for (const [i, type] of (analysis.manifest.tileTypes ?? []).entries()) {
         validateFields(type.fieldsSchema, type.fields ?? {}, [
           "manifest",
@@ -528,58 +430,52 @@ export function createTableSchema(
           property(tile, "properties"),
           ["tiles", id, "properties"],
         );
-      for (const [id, board] of recordEntries(table.boards.byId)) {
-        const definition = analysis.analyzedBoards.find(
-          (item) => item.board.id === property(board, "baseId"),
+      for (const [id, board] of Object.entries(table.boards)) {
+        const declaration = analysis.analyzedBoards.find(
+          (item) => item.board.id === board.baseId,
         );
-        if (!definition) continue;
-        const path = ["boards", "byId", id];
-        validateFields(
-          definition.boardFieldsSchema,
-          property(board, "fields"),
-          [...path, "fields"],
-          id,
-        );
-        for (const [spaceId, space] of recordEntries(property(board, "spaces")))
-          validateFields(
-            definition.spaceFieldsSchema,
-            property(space, "fields"),
-            [...path, "spaces", spaceId, "fields"],
-            id,
-          );
-        if (definition.layout !== "hex") {
-          for (const [index, relation] of arrayEntries(
-            property(board, "relations"),
-          ))
+        if (declaration)
+          for (const [index, relation] of board.relations.entries())
             validateFields(
-              definition.relationFieldsSchema,
-              property(relation, "fields"),
-              [...path, "relations", index, "fields"],
+              declaration.relationFieldsSchema,
+              relation.fields,
+              ["boards", id, "relations", index, "fields"],
               id,
             );
-        }
-        if (definition.layout !== "generic") {
-          for (const [index, edge] of arrayEntries(property(board, "edges")))
-            validateFields(
-              definition.edgeFieldsSchema,
-              property(edge, "fields"),
-              [...path, "edges", index, "fields"],
-              id,
-            );
-          for (const [index, vertex] of arrayEntries(
-            property(board, "vertices"),
-          ))
-            validateFields(
-              definition.vertexFieldsSchema,
-              property(vertex, "fields"),
-              [...path, "vertices", index, "fields"],
-              id,
-            );
-        }
+      }
+      for (const [id, location] of Object.entries(table.componentLocations)) {
+        if (location.type !== "OnBoard") continue;
+        const tile = Object.hasOwn(table.tiles, id)
+          ? table.tiles[id]
+          : undefined;
+        const board = Object.hasOwn(table.boards, location.boardId)
+          ? table.boards[location.boardId]
+          : undefined;
+        const tileDefinition =
+          tile && Object.hasOwn(definitions.tileDefinitions, tile.tileTypeId)
+            ? definitions.tileDefinitions[tile.tileTypeId]
+            : undefined;
+        const boardDefinition =
+          board && Object.hasOwn(definitions.boardDefinitions, board.baseId)
+            ? definitions.boardDefinitions[board.baseId]
+            : undefined;
+        if (
+          !tile ||
+          !tileDefinition ||
+          !boardDefinition ||
+          boardDefinition.layout === "generic" ||
+          tileDefinition.layout !== location.layout ||
+          boardDefinition.layout !== location.layout
+        )
+          context.addIssue({
+            code: "custom",
+            path: ["componentLocations", id],
+            message: "OnBoard requires a tile and matching tiled board layout.",
+          });
       }
       checkPlayers(table.resources, ["resources"]);
       try {
-        assertZoneConsistency(table as RuntimeTableRecord, definitions);
+        assertZoneConsistency(table, definitions);
       } catch (error) {
         context.addIssue({
           code: "custom",

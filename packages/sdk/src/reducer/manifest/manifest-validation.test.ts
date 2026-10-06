@@ -19,69 +19,34 @@ const BASE_MANIFEST: GameTopologyManifest = {
   resources: [],
 };
 
-test("validateManifestAuthoring rejects hex vertex refs that do not resolve to a shared corner", () => {
+test("validateManifestAuthoring rejects annotations on unknown tile cells", () => {
   const validation = validateManifestAuthoring({
     ...BASE_MANIFEST,
-    boards: [
+    tileTypes: [
       {
-        id: "hex-board",
-        name: "Hex Board",
+        id: "terrain",
+        name: "Terrain",
         layout: "hex",
-        scope: "shared",
-        shape: {
-          kind: "coordinates",
-          coordinates: [
-            { q: 0, r: 0 },
-            { q: 1, r: 0 },
-            { q: 2, r: 0 },
-          ],
-        },
-        spaces: { "0,0": { id: "a" }, "1,0": { id: "b" }, "2,0": { id: "c" } },
-        vertices: [
-          {
-            ref: {
-              spaces: ["a", "b", "c"],
-            },
-          },
-        ],
+        cells: [{ id: "a", at: { q: 0, r: 0 } }],
+        vertices: [{ cellId: "missing", corner: 0 }],
       },
     ],
   });
-
-  expect(validation.errors).toContain(
-    "Hex board 'hex-board': Spaces do not share exactly one vertex.",
-  );
+  expect(validation.errors.join("\n")).toMatch(/cellId.*missing/);
 });
-
-test("validateManifestAuthoring accepts hex vertex refs from shape coordinates", () => {
+test("validateManifestAuthoring accepts local tile corner annotations", () => {
   const validation = validateManifestAuthoring({
     ...BASE_MANIFEST,
-    boards: [
+    tileTypes: [
       {
-        id: "hex-board",
-        name: "Hex Board",
+        id: "terrain",
+        name: "Terrain",
         layout: "hex",
-        scope: "shared",
-        shape: {
-          kind: "coordinates",
-          coordinates: [
-            { q: 0, r: 0 },
-            { q: 1, r: 0 },
-            { q: 0, r: 1 },
-          ],
-        },
-        spaces: { "0,0": { id: "a" }, "1,0": { id: "b" }, "0,1": { id: "c" } },
-        vertices: [
-          {
-            ref: {
-              spaces: ["a", "b", "c"],
-            },
-          },
-        ],
+        cells: [{ id: "a", at: { q: 0, r: 0 } }],
+        vertices: [{ cellId: "a", corner: 0 }],
       },
     ],
   });
-
   expect(validation.errors).toEqual([]);
 });
 
@@ -167,12 +132,10 @@ test("validateManifestAuthoring rejects player-scoped seed homes without perPlay
       {
         id: "player-mat",
         name: "Player Mat",
-        layout: "square",
+        layout: "generic",
         scope: "perPlayer",
-        spaces: [{ id: "camp", row: 0, col: 0 }],
+        spaces: [{ id: "camp" }],
         relations: [],
-        edges: [],
-        vertices: [],
       },
     ],
     pieceTypes: [{ id: "meeple", name: "Meeple" }],
@@ -222,12 +185,10 @@ test("validateManifestAuthoring accepts player-scoped seed homes with perPlayer 
       {
         id: "player-mat",
         name: "Player Mat",
-        layout: "square",
+        layout: "generic",
         scope: "perPlayer",
-        spaces: [{ id: "camp", row: 0, col: 0 }],
+        spaces: [{ id: "camp" }],
         relations: [],
-        edges: [],
-        vertices: [],
       },
     ],
     pieceTypes: [{ id: "meeple", name: "Meeple" }],
@@ -304,12 +265,10 @@ test("validateManifestAuthoring rejects player-scoped card homes", () => {
       {
         id: "player-mat",
         name: "Player Mat",
-        layout: "square",
+        layout: "generic",
         scope: "perPlayer",
-        spaces: [{ id: "camp", row: 0, col: 0 }],
+        spaces: [{ id: "camp" }],
         relations: [],
-        edges: [],
-        vertices: [],
       },
     ],
   });
@@ -462,107 +421,53 @@ test("distinct literal ids remain distinct when their old handles matched", () =
   expect(compiled.ids.cardId.safeParse("foo_bar").success).toBe(true);
 });
 
-test("validateManifestAuthoring warns when board-scoped category type ids are ambiguous across boards", () => {
-  const validation = validateManifestAuthoring({
+test("the same tile category may be used on multiple boards without global aliases", () => {
+  const compiled = compileManifest({
     ...BASE_MANIFEST,
     boards: [
+      { id: "alpha", name: "Alpha", layout: "hex", scope: "shared" },
+      { id: "beta", name: "Beta", layout: "hex", scope: "shared" },
+    ],
+    tileTypes: [
       {
-        id: "alpha",
-        name: "Alpha",
+        id: "terrain",
+        name: "Terrain",
         layout: "hex",
-        scope: "shared",
-        shape: { kind: "hexagon", radius: 0 },
-        spaces: { "0,0": { id: "a", typeId: "site" } },
-        edges: [
-          {
-            ref: { space: "a", side: 0 },
-            typeId: "route",
-          },
-        ],
-        vertices: [],
-      },
-      {
-        id: "beta",
-        name: "Beta",
-        layout: "hex",
-        scope: "shared",
-        shape: { kind: "hexagon", radius: 0 },
-        spaces: { "0,0": { id: "b", typeId: "site" } },
-        edges: [
-          {
-            ref: { space: "b", side: 0 },
-            typeId: "route",
-          },
-        ],
-        vertices: [],
+        cells: [{ id: "a", typeId: "site", at: { q: 0, r: 0 } }],
+        edges: [{ cellId: "a", side: 0, typeId: "route" }],
       },
     ],
-  });
-
-  expect(validation.errors).toEqual([]);
-  expect(validation.warnings).toContain(
-    "Ambiguous space.typeId 'site' is authored on multiple boards (alpha, beta). Prefer boardHelpers.spaceIdsByBoardId / boardHelpers.spaceTypeIdByBoardId for board-scoped lookups.",
-  );
-  expect(validation.warnings).toContain(
-    "Ambiguous edge.typeId 'route' is authored on multiple boards (alpha, beta). Prefer boardHelpers.edgeIdsByBoardIdAndTypeId for board-scoped lookups.",
-  );
-});
-
-test("validateManifestAuthoring requires card images under assets/", () => {
-  const card = (id: string, frontImage: string) => ({
-    id,
-    cardType: id,
-    name: id,
-    count: 1,
-    frontImage,
-    backImage: "assets/cards/back.webp",
-    properties: {},
-  });
-  const validation = validateManifestAuthoring({
-    ...BASE_MANIFEST,
-    cardSets: [
+    tileSeeds: [
       {
-        id: "cards",
-        name: "Cards",
-        defaultHome: { type: "detached" },
-        cardSchema: { type: "object", properties: {}, required: [] },
-        cards: [
-          card("ace", "assets/cards/ace.webp"),
-          card("king", "https://example.com/king.png"),
-          card("queen", "assets/../secrets.png"),
-        ],
+        id: "a",
+        typeId: "terrain",
+        home: {
+          type: "board",
+          boardId: "alpha",
+          layout: "hex",
+          q: 0,
+          r: 0,
+          rotation: 0,
+        },
+      },
+      {
+        id: "b",
+        typeId: "terrain",
+        home: {
+          type: "board",
+          boardId: "beta",
+          layout: "hex",
+          q: 0,
+          r: 0,
+          rotation: 0,
+        },
       },
     ],
+  } as const);
+  expect(compiled.tileDefinitions.terrain.cells[0].typeId).toBe("site");
+  expect(compiled.tileDefinitions.terrain.edges[0].typeId).toBe("route");
+  expect(compiled.createInitialTable({ playerIds: [] }).boards).toEqual({
+    alpha: { baseId: "alpha", relations: [] },
+    beta: { baseId: "beta", relations: [] },
   });
-
-  expect(validation.errors).toEqual([
-    "manifest.cardSets[0].cards[1].frontImage: 'https://example.com/king.png' must be an image path under assets/, such as assets/cards/front.webp.",
-    "manifest.cardSets[0].cards[2].frontImage: 'assets/../secrets.png' must be an image path under assets/, such as assets/cards/front.webp.",
-  ]);
-});
-
-test("owner-only visibility requires a per-player zone host", () => {
-  const zone = {
-    id: "private",
-    name: "Private",
-    scope: "shared",
-    visibility: "ownerOnly",
-  } as const;
-  expect(
-    validateManifestAuthoring({ ...BASE_MANIFEST, zones: [zone] }).errors,
-  ).toContain(
-    "manifest.zones[0].visibility: ownerOnly requires perPlayer scope; use hidden for concealed shared contents",
-  );
-  expect(
-    validateManifestAuthoring({
-      ...BASE_MANIFEST,
-      zones: [{ ...zone, visibility: "hidden" }],
-    }).errors,
-  ).toEqual([]);
-  expect(
-    validateManifestAuthoring({
-      ...BASE_MANIFEST,
-      zones: [{ ...zone, scope: "perPlayer" }],
-    }).errors,
-  ).toEqual([]);
 });

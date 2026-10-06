@@ -322,7 +322,6 @@ describe("direct reducer lifecycle and seeded operations", () => {
     });
     const warm = createReducerBundle(game);
     expect(Object.keys(warm).sort()).toEqual([
-      "boardStatic",
       "dispatch",
       "initialize",
       "project",

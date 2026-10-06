@@ -1,6 +1,20 @@
-import { test, expect, type Locator } from "@playwright/test";
+import { tileSpaceId } from "@dreamboard-games/sdk/reducer";
+import { test, expect, type Locator, type Page } from "@playwright/test";
 import { gameDriver } from "../helpers/browser-game";
 import { injectAxe, checkA11y } from "axe-playwright";
+
+async function boardValue(page: Page, value: string) {
+  const escaped = await page.evaluate((id) => CSS.escape(id), value);
+  return page.locator(`svg [data-value="${escaped}"]`);
+}
+
+async function hexCell(page: Page, tileId: string) {
+  const escaped = await page.evaluate(
+    (id) => CSS.escape(id),
+    tileSpaceId(tileId, "cell"),
+  );
+  return page.locator(`[data-stormtrail-hex="${escaped}"]`);
+}
 
 async function choose(target: Locator, touch: boolean) {
   if (touch) await target.tap();
@@ -71,17 +85,23 @@ test("Bandits saved step cancels and completes explicit no-victim choice", async
   isMobile,
 }) => {
   await page.goto("/?scenario=bandits&at=ready-to-move&as=player-1");
-  await choose(page.locator('svg [data-value="northForest"]'), isMobile);
+  await choose(
+    await boardValue(page, tileSpaceId("northForest", "cell")),
+    isMobile,
+  );
   const key = '[data-interaction="moveBandits.moveBandits"]';
   await expect(page.getByLabel("Saved choices")).toBeVisible();
   await expect(
-    page.locator(
-      '[data-stormtrail-hex="centralBarrens"] [aria-label="Bandits"]',
-    ),
+    (await hexCell(page, "centralBarrens")).getByLabel("Bandits", {
+      exact: true,
+    }),
   ).toBeVisible();
   await choose(page.locator(`${key}[data-action="cancel"]`), isMobile);
   await expect(page.getByText("Step 1 of 2", { exact: true })).toBeVisible();
-  await choose(page.locator('svg [data-value="southWestClay"]'), isMobile);
+  await choose(
+    await boardValue(page, tileSpaceId("southWestClay", "cell")),
+    isMobile,
+  );
   await choose(
     page.locator(`${key}[data-input="targetPlayerId"][data-value="null"]`),
     isMobile,
@@ -89,9 +109,9 @@ test("Bandits saved step cancels and completes explicit no-victim choice", async
   await choose(page.locator(`${key}[data-action="submit"]`), isMobile);
   await expect(page.locator('[data-reference-phase="main"]')).toBeVisible();
   await expect(
-    page.locator(
-      '[data-stormtrail-hex="southWestClay"] [aria-label="Bandits"]',
-    ),
+    (await hexCell(page, "southWestClay")).getByLabel("Bandits", {
+      exact: true,
+    }),
   ).toBeVisible();
 });
 
@@ -100,8 +120,13 @@ test("saved Bandits prefix restores and seat switches preserve privacy", async (
   isMobile,
 }) => {
   await page.goto("/?scenario=bandits&at=ready-to-move&as=player-1");
-  await choose(page.locator('svg [data-value="northForest"]'), isMobile);
-  await expect(page.getByLabel("Saved choices")).toContainText("northForest");
+  await choose(
+    await boardValue(page, tileSpaceId("northForest", "cell")),
+    isMobile,
+  );
+  await expect(page.getByLabel("Saved choices")).toContainText(
+    tileSpaceId("northForest", "cell"),
+  );
   await choose(
     page.getByRole("button", { name: "Save checkpoint", exact: true }),
     isMobile,
@@ -124,7 +149,9 @@ test("saved Bandits prefix restores and seat switches preserve privacy", async (
     page.getByRole("button", { name: "Restore checkpoint", exact: true }),
     isMobile,
   );
-  await expect(page.getByLabel("Saved choices")).toContainText("northForest");
+  await expect(page.getByLabel("Saved choices")).toContainText(
+    tileSpaceId("northForest", "cell"),
+  );
   await choose(
     page.locator('[data-input="targetPlayerId"][data-value="player-2"]'),
     isMobile,

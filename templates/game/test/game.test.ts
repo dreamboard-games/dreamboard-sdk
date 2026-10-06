@@ -1,19 +1,19 @@
 import { expect, test } from "vitest";
 import { compileManifest } from "@dreamboard-games/sdk/reducer";
+import { RuntimeJsonSchema } from "@dreamboard-games/sdk";
 import manifest from "../manifest";
 import bundle from "../app/index";
-test("the authored template compiles without generated workspace files", () => {
-  expect(
-    compileManifest(manifest).createInitialTable({ playerIds: ["player-1"] })
-      .playerOrder,
-  ).toEqual(["player-1"]);
-  expect(Object.keys(bundle).sort()).toEqual([
-    "boardStatic",
-    "dispatch",
-    "initialize",
-    "project",
-    "reducerContractVersion",
-  ]);
+test("the authored template initializes without generated workspace files", async () => {
+  const table = compileManifest(manifest).createInitialTable({
+    playerIds: ["player-1"],
+  });
+  expect(table.playerOrder).toEqual(["player-1"]);
+  const initialized = await bundle.initialize({
+    table: RuntimeJsonSchema.parse(table),
+    playerIds: ["player-1"],
+    rngSeed: 1,
+  });
+  expect(initialized.state.domain.publicState).toEqual({ count: 0 });
 });
 
 test("the headless template submits through its production-shaped local source", async () => {

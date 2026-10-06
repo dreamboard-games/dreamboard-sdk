@@ -1,3 +1,6 @@
+import type { ReadonlyRuntimeData } from "../../shared/runtime-json.js";
+import { BoardRelationSchema } from "../../shared/board-topology-schema.js";
+import { BoardTopologyError } from "../../shared/board-topology.js";
 import {
   PlayerIdSchema,
   PlayerRosterSchema,
@@ -7,6 +10,8 @@ import {
   renderCardInstanceIds,
   initialCardMetadata,
   createInstanceDeclaration,
+  createSpaceDeclaration,
+  createBoardElementDeclaration,
 } from "./identity-runtime.js";
 import { parseTopologyManifestJson } from "./parse-json";
 import type { TypedTopologyManifest } from "./authoring";
@@ -19,7 +24,7 @@ import {
   analyzeManifest,
   analyzeManifestStructure,
   materializeManifestTable,
-  materializeManifestStaticBoards,
+  materializeTopologyDefinitions,
   materializeEmptyZones,
 } from "./materialize";
 import { createTableSchema, type RuntimeManifestIds } from "./schema";
@@ -39,21 +44,39 @@ import type {
   CompiledManifest,
 } from "./types";
 
-export type ManifestInput<M> = M &
-  ManifestCountValidation<NoInfer<M>> &
-  (M extends AuthoredManifest
+type JsonManifestInput = ReadonlyRuntimeData<GameTopologyManifest>;
+export type ManifestDocumentInput =
+  AuthoredManifest | ValidatedManifest | JsonManifestInput;
+type ManifestAdmission<M> = [M] extends [ValidatedManifest<unknown>]
+  ? unknown
+  : [M] extends [ManifestDocumentInput]
     ? AuthoredManifest extends M
       ? unknown
-      : TypedTopologyManifest<NoInfer<M>>
-    : unknown);
+      : M extends AuthoredManifest
+        ? TypedTopologyManifest<M>
+        : unknown
+    : ManifestDocumentInput;
+export type ManifestInput<M> = M &
+  ManifestCountValidation<NoInfer<M>> &
+  ManifestAdmission<NoInfer<M>>;
 
 /** Compile authored topology once, in memory, with the same validation used by initialization. */
-export function compileManifest<
-  const M extends AuthoredManifest | ValidatedManifest | GameTopologyManifest,
->(manifest: ManifestInput<M>): CompiledManifest<AuthoredOf<M>> {
+export function compileManifest<const M>(
+  manifest: ManifestInput<M>,
+): CompiledManifest<AuthoredOf<M>> {
+  // Runtime admission establishes the facade; this boundary preserves its authored input witness.
+  // eslint-disable-next-line no-restricted-syntax -- Validated compilation correlates inferred IDs and portable fields with this exact authored source.
+  return compileManifestRuntime(manifest) as unknown as CompiledManifest<
+    AuthoredOf<M>
+  >;
+}
+/** Internal erased entry for already type-checked authoring factories; admission still runs once. */
+export function compileManifestRuntime(
+  manifest: unknown,
+): CompiledManifest<AuthoredManifest> {
   const source = parseTopologyManifestJson(toManifestJson(manifest));
   const analysis = analyzeManifest(source);
-  const staticBoards = materializeManifestStaticBoards(source);
+  const topologyDefinitions = materializeTopologyDefinitions(analysis);
   const literals = {
     cardSetIds: analysis.cardSetIds,
     cardTypes: analysis.cardTypes,
@@ -118,18 +141,20 @@ export function compileManifest<
     "spaceId",
     "spaceTypeId",
   ] as const;
-  // eslint-disable-next-line no-restricted-syntax -- The complete families list constructs each ID schema from its matching literals; playerId is added explicitly.
+  // eslint-disable-next-line no-restricted-syntax -- The complete families list constructs each ID schema from its matching literals; playerId is added explicitly; relation tags use their open schema.
   const ids = {
     ...Object.fromEntries(
       families.map((family) => {
         const values = literals[`${family}s`];
         return [
           family,
-          family === "phaseName"
-            ? markManifestScopedSchema(z.string(), family)
-            : values.length
-              ? createManifestStringLiteralSchema(values, family)
-              : markManifestScopedSchema(z.never(), family),
+          family === "relationTypeId"
+            ? BoardRelationSchema.shape.typeId
+            : family === "phaseName"
+              ? markManifestScopedSchema(z.string(), family)
+              : values.length
+                ? createManifestStringLiteralSchema(values, family)
+                : markManifestScopedSchema(z.never(), family),
         ];
       }),
     ),
@@ -138,6 +163,18 @@ export function compileManifest<
       "playerId",
     ),
   } as unknown as RuntimeManifestIds;
+  ids.edgeId = markManifestScopedSchema(
+    createBoardElementDeclaration(source, "edge").schema,
+    "edgeId",
+  );
+  ids.vertexId = markManifestScopedSchema(
+    createBoardElementDeclaration(source, "vertex").schema,
+    "vertexId",
+  );
+  ids.spaceId = markManifestScopedSchema(
+    createSpaceDeclaration(source).schema,
+    "spaceId",
+  );
   ids.boardId = markManifestScopedSchema(
     createInstanceDeclaration(
       "board",
@@ -227,13 +264,23 @@ export function compileManifest<
       const key = JSON.stringify(header.data.playerOrder);
       if (!rosterSchema || key !== rosterKey) {
         // Source was admitted once; runtime roster analysis is structural only.
-        const nextSchema = createTableSchema(
-          analyzeManifestStructure(source, header.data.playerOrder),
-          ids,
-          { zoneDefinitions },
-        );
-        rosterSchema = nextSchema;
-        rosterKey = key;
+        try {
+          const nextSchema = createTableSchema(
+            analyzeManifestStructure(source, header.data.playerOrder),
+            ids,
+            { zoneDefinitions, ...topologyDefinitions },
+          );
+          rosterSchema = nextSchema;
+          rosterKey = key;
+        } catch (error) {
+          if (!(error instanceof BoardTopologyError)) throw error;
+          context.addIssue({
+            code: "custom",
+            path: ["boards"],
+            message: error.message,
+          });
+          return z.NEVER;
+        }
       }
       const parsed = rosterSchema.safeParse(table);
       if (!parsed.success) {
@@ -293,7 +340,7 @@ export function compileManifest<
       }),
     );
   };
-  // eslint-disable-next-line no-restricted-syntax -- Analysis of M supplies every literal, schema, record, and setup factory; this compiler binds those runtime results to the M-derived facade.
+  // eslint-disable-next-line no-restricted-syntax -- Runtime admission supplies every literal, schema, record, and setup factory; this internal boundary binds those results to the erased compiled facade.
   return {
     zoneDefinitions,
     literals,
@@ -330,7 +377,7 @@ export function compileManifest<
     tableSchema,
     runtimeSchema,
     schemas: { table: tableSchema, runtime: runtimeSchema },
-    staticBoards,
+    ...topologyDefinitions,
     createInitialTable,
     normalSetup: {
       minPlayers: source.players.minPlayers,
@@ -339,7 +386,7 @@ export function compileManifest<
     },
     createGameStateSchema: (
       config: Parameters<
-        CompiledManifest<AuthoredOf<M>>["createGameStateSchema"]
+        CompiledManifest<AuthoredManifest>["createGameStateSchema"]
       >[0],
     ) =>
       createManifestGameStateSchema({
@@ -347,5 +394,5 @@ export function compileManifest<
         tableSchema,
         playerIdSchema: ids.playerId,
       }),
-  } as unknown as CompiledManifest<AuthoredOf<M>>;
+  } as unknown as CompiledManifest<AuthoredManifest>;
 }

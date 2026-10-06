@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { compileManifest, createTableQueries } from "../src/reducer";
+import {
+  compileManifest,
+  createTableQueries,
+  tileSpaceId,
+} from "../src/reducer";
 import type { GameTopologyManifest, SquareBoardSpec } from "../src/reducer";
 // @ts-expect-error Reusable board template contracts are removed.
 import type { BoardTemplateSpec } from "../src/reducer";
@@ -10,13 +14,36 @@ const square = {
   layout: "square",
   scope: "shared",
   boardFieldsSchema: z.object({ round: z.number().int().default(0) }),
-  spaceFieldsSchema: z.object({ terrain: z.string() }),
-  spaces: [{ id: "home", row: 0, col: 0, fields: { terrain: "grass" } }],
 } as const;
 const manifest = compileManifest({
   players: { minPlayers: 1, maxPlayers: 1 },
   cardSets: [],
   zones: [],
+  tileTypes: [
+    {
+      id: "terrain",
+      name: "Terrain",
+      layout: "square",
+      cellFieldsSchema: z.object({ terrain: z.string() }),
+      cells: [
+        { id: "home", at: { row: 0, col: 0 }, fields: { terrain: "grass" } },
+      ],
+    },
+  ],
+  tileSeeds: [
+    {
+      id: "terrain",
+      typeId: "terrain",
+      home: {
+        type: "board",
+        boardId: "map",
+        layout: "square",
+        row: 0,
+        col: 0,
+        rotation: 0,
+      },
+    },
+  ],
   boards: [
     square,
     {
@@ -37,13 +64,20 @@ const manifest = compileManifest({
   ],
 } as const);
 const table = manifest.createInitialTable({ playerIds: [] });
-const round: number = table.boards.byId.map.fields.round;
-const terrain: string = table.boards.byId.map.spaces.home.fields.terrain;
 const q = createTableQueries(table, manifest);
+const round: number = q.board("map").state.fields.round;
+const terrain: string = q.board("map").space(tileSpaceId("terrain", "home"))
+  .fields.terrain;
 q.board("map");
 q.board("track");
-// @ts-expect-error Inline space identity is retained.
-table.boards.byId.map.spaces.missing;
+// @ts-expect-error Declared local cell identity is retained.
+q.board("map").space(tileSpaceId("terrain", "missing"));
+// @ts-expect-error Runtime board instances contain no geometry mirror.
+table.boards.map.spaces;
+// @ts-expect-error Board fields are immutable definition metadata.
+q.board("map").state.fields.round = 1;
+// @ts-expect-error Cell fields are immutable definition metadata.
+q.board("map").space(tileSpaceId("terrain", "home")).fields.terrain = "water";
 // @ts-expect-error Board identities remain literal.
 q.board("unknown");
 const removedBoard: SquareBoardSpec = {
@@ -51,8 +85,7 @@ const removedBoard: SquareBoardSpec = {
   name: "Removed",
   layout: "square",
   scope: "shared",
-  spaces: [],
-  // @ts-expect-error Boards contain topology directly.
+  // @ts-expect-error Reusable board templates are removed.
   templateId: "old-map",
 };
 const removedManifest: GameTopologyManifest = {

@@ -114,19 +114,14 @@ export type ManifestNormalSetup<Table extends RuntimeTableRecord> = {
   }) => Table;
 };
 
-export type StaticBoards<Table extends RuntimeTableRecord> = Pick<
-  Table["boards"],
-  "byId" | "hex" | "square"
->;
-
 export type ReducerManifestContract<
   Table extends RuntimeTableRecord,
   PhaseName extends string,
   PlayerId extends string,
   ZoneId extends string,
   CardId extends string,
-> = {
-  zoneDefinitions: ZoneDefinitions["zoneDefinitions"];
+  Definitions extends ZoneDefinitions = ZoneDefinitions,
+> = Definitions & {
   literals: ManifestLiterals<PlayerId, ZoneId, CardId, PhaseName>;
   ids: ManifestIds<PlayerId, ZoneId, CardId, PhaseName>;
   defaults: ManifestDefaults<Table>;
@@ -138,7 +133,6 @@ export type ReducerManifestContract<
    * topology metadata. Compiled manifests always provide it.
    */
   normalSetup?: ManifestNormalSetup<Table>;
-  staticBoards?: StaticBoards<Table>;
   tableSchema: z.ZodType<Table>;
   runtimeSchema: AnySchema;
   createGameStateSchema: (config: {
@@ -158,14 +152,17 @@ export type ReducerManifestContractLike<
   CardId extends string = string,
 > = ReducerManifestContract<Table, PhaseName, PlayerId, ZoneId, CardId>;
 
-export type ManifestContract<Table extends RuntimeTableRecord> =
-  ReducerManifestContract<
-    Table,
-    string,
-    PlayerIdOfTable<Table>,
-    ZoneIdOfTable<Table>,
-    CardIdOfTable<Table>
-  >;
+export type ManifestContract<
+  Table extends RuntimeTableRecord,
+  Definitions extends ZoneDefinitions = ZoneDefinitions,
+> = ReducerManifestContract<
+  Table,
+  string,
+  PlayerIdOfTable<Table>,
+  ZoneIdOfTable<Table>,
+  CardIdOfTable<Table>,
+  Definitions
+>;
 
 function toNonEmptyStringTuple<Values extends readonly string[]>(
   values: Values,
@@ -403,5 +400,5 @@ export type InitContext<
   playerIds: PlayerIdOfTable<Table>[];
   rngSeed?: number | null;
   options: Options;
-  q: TableQueriesOfState<{ table: Table }>;
+  q: TableQueriesOfState<{ table: Table }, Manifest>;
 };

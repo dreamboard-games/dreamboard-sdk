@@ -11,7 +11,6 @@ export interface ReducerBundleContract {
     input: Wire.InitializeRequest,
   ): MaybePromise<Wire.InitializeResult>;
   dispatch(input: Wire.DispatchRequest): MaybePromise<Wire.DispatchResult>;
-  boardStatic(): Wire.BoardStaticProjection | null;
   project(input: Wire.ProjectRequest): Wire.SeatProjectionBundle;
 }
 
@@ -23,7 +22,6 @@ const bundleSchema = z.object({
   reducerContractVersion: z.literal(REDUCER_CONTRACT_VERSION),
   initialize: callable,
   dispatch: callable,
-  boardStatic: callable,
   project: callable,
 });
 

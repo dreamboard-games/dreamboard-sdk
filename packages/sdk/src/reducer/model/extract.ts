@@ -1,3 +1,6 @@
+import type { TopologyDefinitions } from "../../shared/domain/topology-definitions.js";
+import type { BoardTopologyOf } from "./topology.js";
+export type { BoardTopologyOf } from "./topology.js";
 import type {
   RuntimeTableRecord,
   StringKeyOf,
@@ -16,9 +19,9 @@ export type TableOfState<State> = State extends { table: infer Table }
   ? Table
   : never;
 export type TableOfManifest<Manifest> = Manifest extends {
-  tableSchema: z.ZodType<infer Table extends RuntimeTableRecord>;
+  tableSchema: z.ZodType<infer Table>;
 }
-  ? Table
+  ? Extract<Table, RuntimeTableRecord>
   : Manifest extends ReducerManifestContractLike<infer Table>
     ? Table
     : never;
@@ -193,7 +196,7 @@ export type CardIdOfManifest<Manifest> = Manifest extends {
     ? Extract<Id, string>
     : string;
 export type BoardMapOfTable<Table> = Table extends {
-  boards: { byId: infer Boards };
+  boards: infer Boards;
 }
   ? Boards
   : never;
@@ -201,26 +204,36 @@ export type BoardIdOfTable<Table> = StringKeyOf<BoardMapOfTable<Table>>;
 export type BoardStateOfTable<
   Table,
   BoardId extends BoardIdOfTable<Table>,
-> = BoardMapOfTable<Table>[BoardId];
-export type BoardTypeIdOfTable<Table> =
-  BoardStateOfTable<Table, BoardIdOfTable<Table>> extends {
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
+> = BoardTopologyOf<Table, Definitions, BoardId>;
+export type BoardTypeIdOfTable<
+  Table,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
+> =
+  BoardStateOfTable<Table, BoardIdOfTable<Table>, Definitions> extends {
     typeId?: infer BoardTypeId | null;
   }
     ? Extract<BoardTypeId, string>
     : never;
-export type TiledBoardIdOfTable<Table> = {
-  [BoardId in BoardIdOfTable<Table>]: BoardStateOfTable<
-    Table,
-    BoardId
-  > extends { layout: "hex" | "square" }
-    ? BoardId
-    : never;
+export type TiledBoardIdOfTable<
+  Table,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
+> = {
+  [BoardId in BoardIdOfTable<Table>]: [
+    Extract<
+      BoardStateOfTable<Table, BoardId, Definitions>,
+      { layout: "hex" | "square" }
+    >,
+  ] extends [never]
+    ? never
+    : BoardId;
 }[BoardIdOfTable<Table>];
 export type TiledBoardStateOfTable<
   Table,
-  BoardId extends TiledBoardIdOfTable<Table>,
+  BoardId extends TiledBoardIdOfTable<Table, Definitions>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > =
-  BoardStateOfTable<Table, BoardId> extends infer BoardState
+  BoardStateOfTable<Table, BoardId, Definitions> extends infer BoardState
     ? BoardState extends {
         layout: "hex" | "square";
         spaces: Record<string, unknown>;
@@ -230,19 +243,22 @@ export type TiledBoardStateOfTable<
       ? BoardState
       : never
     : never;
-export type HexBoardIdOfTable<Table> = {
-  [BoardId in BoardIdOfTable<Table>]: BoardStateOfTable<
-    Table,
-    BoardId
-  > extends { layout: "hex" }
-    ? BoardId
-    : never;
+export type HexBoardIdOfTable<
+  Table,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
+> = {
+  [BoardId in BoardIdOfTable<Table>]: [
+    Extract<BoardStateOfTable<Table, BoardId, Definitions>, { layout: "hex" }>,
+  ] extends [never]
+    ? never
+    : BoardId;
 }[BoardIdOfTable<Table>];
 export type HexBoardStateOfTable<
   Table,
-  BoardId extends HexBoardIdOfTable<Table>,
+  BoardId extends HexBoardIdOfTable<Table, Definitions>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > =
-  BoardStateOfTable<Table, BoardId> extends infer BoardState
+  BoardStateOfTable<Table, BoardId, Definitions> extends infer BoardState
     ? BoardState extends {
         layout: "hex";
         spaces: Record<string, unknown>;
@@ -252,19 +268,25 @@ export type HexBoardStateOfTable<
       ? BoardState
       : never
     : never;
-export type SquareBoardIdOfTable<Table> = {
-  [BoardId in BoardIdOfTable<Table>]: BoardStateOfTable<
-    Table,
-    BoardId
-  > extends { layout: "square" }
-    ? BoardId
-    : never;
+export type SquareBoardIdOfTable<
+  Table,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
+> = {
+  [BoardId in BoardIdOfTable<Table>]: [
+    Extract<
+      BoardStateOfTable<Table, BoardId, Definitions>,
+      { layout: "square" }
+    >,
+  ] extends [never]
+    ? never
+    : BoardId;
 }[BoardIdOfTable<Table>];
 export type SquareBoardStateOfTable<
   Table,
-  BoardId extends SquareBoardIdOfTable<Table>,
+  BoardId extends SquareBoardIdOfTable<Table, Definitions>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > =
-  BoardStateOfTable<Table, BoardId> extends infer BoardState
+  BoardStateOfTable<Table, BoardId, Definitions> extends infer BoardState
     ? BoardState extends {
         layout: "square";
         spaces: Record<string, unknown>;
@@ -274,12 +296,22 @@ export type SquareBoardStateOfTable<
       ? BoardState
       : never
     : never;
-export type SpaceIdOfTable<Table, BoardId extends BoardIdOfTable<Table>> =
-  BoardStateOfTable<Table, BoardId> extends { spaces: infer Spaces }
-    ? StringKeyOf<Spaces>
+export type SpaceIdOfTable<
+  Table,
+  BoardId extends BoardIdOfTable<Table>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
+> =
+  BoardStateOfTable<Table, BoardId, Definitions> extends infer Board
+    ? Board extends { spaces: infer Spaces }
+      ? StringKeyOf<Spaces>
+      : never
     : never;
-export type SpaceTypeIdOfTable<Table, BoardId extends BoardIdOfTable<Table>> =
-  BoardStateOfTable<Table, BoardId> extends {
+export type SpaceTypeIdOfTable<
+  Table,
+  BoardId extends BoardIdOfTable<Table>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
+> =
+  BoardStateOfTable<Table, BoardId, Definitions> extends {
     spaces: infer Spaces extends Record<string, unknown>;
   }
     ? Spaces[StringKeyOf<Spaces>] extends { typeId?: infer SpaceTypeId | null }
@@ -289,8 +321,9 @@ export type SpaceTypeIdOfTable<Table, BoardId extends BoardIdOfTable<Table>> =
 export type RelationTypeIdOfTable<
   Table,
   BoardId extends BoardIdOfTable<Table>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > =
-  BoardStateOfTable<Table, BoardId> extends {
+  BoardStateOfTable<Table, BoardId, Definitions> extends {
     relations: readonly (infer Relation)[];
   }
     ? Relation extends { typeId: infer RelationTypeId }
@@ -299,27 +332,40 @@ export type RelationTypeIdOfTable<
     : never;
 export type TiledSpaceIdOfTable<
   Table,
-  BoardId extends TiledBoardIdOfTable<Table>,
+  BoardId extends TiledBoardIdOfTable<Table, Definitions>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > =
-  TiledBoardStateOfTable<Table, BoardId> extends { spaces: infer Spaces }
+  TiledBoardStateOfTable<Table, BoardId, Definitions> extends {
+    spaces: infer Spaces;
+  }
     ? StringKeyOf<Spaces>
     : never;
-export type HexSpaceIdOfTable<Table, BoardId extends HexBoardIdOfTable<Table>> =
-  HexBoardStateOfTable<Table, BoardId> extends { spaces: infer Spaces }
+export type HexSpaceIdOfTable<
+  Table,
+  BoardId extends HexBoardIdOfTable<Table, Definitions>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
+> =
+  HexBoardStateOfTable<Table, BoardId, Definitions> extends {
+    spaces: infer Spaces;
+  }
     ? StringKeyOf<Spaces>
     : never;
 export type SquareSpaceIdOfTable<
   Table,
-  BoardId extends SquareBoardIdOfTable<Table>,
+  BoardId extends SquareBoardIdOfTable<Table, Definitions>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > =
-  SquareBoardStateOfTable<Table, BoardId> extends { spaces: infer Spaces }
+  SquareBoardStateOfTable<Table, BoardId, Definitions> extends {
+    spaces: infer Spaces;
+  }
     ? StringKeyOf<Spaces>
     : never;
 export type HexSpaceTypeIdOfTable<
   Table,
-  BoardId extends HexBoardIdOfTable<Table>,
+  BoardId extends HexBoardIdOfTable<Table, Definitions>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > =
-  HexBoardStateOfTable<Table, BoardId> extends {
+  HexBoardStateOfTable<Table, BoardId, Definitions> extends {
     spaces: infer Spaces extends Record<string, unknown>;
   }
     ? Spaces[StringKeyOf<Spaces>] extends { typeId?: infer SpaceTypeId | null }
@@ -328,9 +374,10 @@ export type HexSpaceTypeIdOfTable<
     : never;
 export type SquareSpaceTypeIdOfTable<
   Table,
-  BoardId extends SquareBoardIdOfTable<Table>,
+  BoardId extends SquareBoardIdOfTable<Table, Definitions>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > =
-  SquareBoardStateOfTable<Table, BoardId> extends {
+  SquareBoardStateOfTable<Table, BoardId, Definitions> extends {
     spaces: infer Spaces extends Record<string, unknown>;
   }
     ? Spaces[StringKeyOf<Spaces>] extends { typeId?: infer SpaceTypeId | null }
@@ -339,17 +386,22 @@ export type SquareSpaceTypeIdOfTable<
     : never;
 export type TiledEdgeIdOfTable<
   Table,
-  BoardId extends TiledBoardIdOfTable<Table>,
+  BoardId extends TiledBoardIdOfTable<Table, Definitions>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > =
-  TiledBoardStateOfTable<Table, BoardId> extends {
+  TiledBoardStateOfTable<Table, BoardId, Definitions> extends {
     edges: readonly (infer Edge)[];
   }
     ? Edge extends { id: infer EdgeId }
       ? Extract<EdgeId, string>
       : never
     : never;
-export type HexEdgeIdOfTable<Table, BoardId extends HexBoardIdOfTable<Table>> =
-  HexBoardStateOfTable<Table, BoardId> extends {
+export type HexEdgeIdOfTable<
+  Table,
+  BoardId extends HexBoardIdOfTable<Table, Definitions>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
+> =
+  HexBoardStateOfTable<Table, BoardId, Definitions> extends {
     edges: readonly (infer Edge)[];
   }
     ? Edge extends { id: infer EdgeId }
@@ -358,9 +410,10 @@ export type HexEdgeIdOfTable<Table, BoardId extends HexBoardIdOfTable<Table>> =
     : never;
 export type SquareEdgeIdOfTable<
   Table,
-  BoardId extends SquareBoardIdOfTable<Table>,
+  BoardId extends SquareBoardIdOfTable<Table, Definitions>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > =
-  SquareBoardStateOfTable<Table, BoardId> extends {
+  SquareBoardStateOfTable<Table, BoardId, Definitions> extends {
     edges: readonly (infer Edge)[];
   }
     ? Edge extends { id: infer EdgeId }
@@ -377,10 +430,11 @@ export type SquareEdgeIdOfTable<
  */
 export type TiledEdgeStateOfTable<
   Table,
-  BoardId extends TiledBoardIdOfTable<Table>,
-  EdgeId extends TiledEdgeIdOfTable<Table, BoardId>,
+  BoardId extends TiledBoardIdOfTable<Table, Definitions>,
+  EdgeId extends TiledEdgeIdOfTable<Table, BoardId, Definitions>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > =
-  TiledBoardStateOfTable<Table, BoardId> extends {
+  TiledBoardStateOfTable<Table, BoardId, Definitions> extends {
     edges: readonly (infer Edge)[];
   }
     ? Edge extends { id: string }
@@ -390,10 +444,11 @@ export type TiledEdgeStateOfTable<
 
 export type HexEdgeStateOfTable<
   Table,
-  BoardId extends HexBoardIdOfTable<Table>,
-  EdgeId extends HexEdgeIdOfTable<Table, BoardId>,
+  BoardId extends HexBoardIdOfTable<Table, Definitions>,
+  EdgeId extends HexEdgeIdOfTable<Table, BoardId, Definitions>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > =
-  HexBoardStateOfTable<Table, BoardId> extends {
+  HexBoardStateOfTable<Table, BoardId, Definitions> extends {
     edges: readonly (infer Edge)[];
   }
     ? Edge extends { id: string }
@@ -403,10 +458,11 @@ export type HexEdgeStateOfTable<
 
 export type SquareEdgeStateOfTable<
   Table,
-  BoardId extends SquareBoardIdOfTable<Table>,
-  EdgeId extends SquareEdgeIdOfTable<Table, BoardId>,
+  BoardId extends SquareBoardIdOfTable<Table, Definitions>,
+  EdgeId extends SquareEdgeIdOfTable<Table, BoardId, Definitions>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > =
-  SquareBoardStateOfTable<Table, BoardId> extends {
+  SquareBoardStateOfTable<Table, BoardId, Definitions> extends {
     edges: readonly (infer Edge)[];
   }
     ? Edge extends { id: string }
@@ -416,9 +472,10 @@ export type SquareEdgeStateOfTable<
 
 export type TiledEdgeTypeIdOfTable<
   Table,
-  BoardId extends TiledBoardIdOfTable<Table>,
+  BoardId extends TiledBoardIdOfTable<Table, Definitions>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > =
-  TiledBoardStateOfTable<Table, BoardId> extends {
+  TiledBoardStateOfTable<Table, BoardId, Definitions> extends {
     edges: readonly (infer Edge)[];
   }
     ? Edge extends { typeId?: infer EdgeTypeId | null }
@@ -427,9 +484,10 @@ export type TiledEdgeTypeIdOfTable<
     : never;
 export type HexEdgeTypeIdOfTable<
   Table,
-  BoardId extends HexBoardIdOfTable<Table>,
+  BoardId extends HexBoardIdOfTable<Table, Definitions>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > =
-  HexBoardStateOfTable<Table, BoardId> extends {
+  HexBoardStateOfTable<Table, BoardId, Definitions> extends {
     edges: readonly (infer Edge)[];
   }
     ? Edge extends { typeId?: infer EdgeTypeId | null }
@@ -438,9 +496,10 @@ export type HexEdgeTypeIdOfTable<
     : never;
 export type SquareEdgeTypeIdOfTable<
   Table,
-  BoardId extends SquareBoardIdOfTable<Table>,
+  BoardId extends SquareBoardIdOfTable<Table, Definitions>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > =
-  SquareBoardStateOfTable<Table, BoardId> extends {
+  SquareBoardStateOfTable<Table, BoardId, Definitions> extends {
     edges: readonly (infer Edge)[];
   }
     ? Edge extends { typeId?: infer EdgeTypeId | null }
@@ -449,9 +508,10 @@ export type SquareEdgeTypeIdOfTable<
     : never;
 export type TiledVertexIdOfTable<
   Table,
-  BoardId extends TiledBoardIdOfTable<Table>,
+  BoardId extends TiledBoardIdOfTable<Table, Definitions>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > =
-  TiledBoardStateOfTable<Table, BoardId> extends {
+  TiledBoardStateOfTable<Table, BoardId, Definitions> extends {
     vertices: readonly (infer Vertex)[];
   }
     ? Vertex extends { id: infer VertexId }
@@ -460,9 +520,10 @@ export type TiledVertexIdOfTable<
     : never;
 export type HexVertexIdOfTable<
   Table,
-  BoardId extends HexBoardIdOfTable<Table>,
+  BoardId extends HexBoardIdOfTable<Table, Definitions>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > =
-  HexBoardStateOfTable<Table, BoardId> extends {
+  HexBoardStateOfTable<Table, BoardId, Definitions> extends {
     vertices: readonly (infer Vertex)[];
   }
     ? Vertex extends { id: infer VertexId }
@@ -471,9 +532,10 @@ export type HexVertexIdOfTable<
     : never;
 export type SquareVertexIdOfTable<
   Table,
-  BoardId extends SquareBoardIdOfTable<Table>,
+  BoardId extends SquareBoardIdOfTable<Table, Definitions>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > =
-  SquareBoardStateOfTable<Table, BoardId> extends {
+  SquareBoardStateOfTable<Table, BoardId, Definitions> extends {
     vertices: readonly (infer Vertex)[];
   }
     ? Vertex extends { id: infer VertexId }
@@ -486,10 +548,11 @@ export type SquareVertexIdOfTable<
  */
 export type TiledVertexStateOfTable<
   Table,
-  BoardId extends TiledBoardIdOfTable<Table>,
-  VertexId extends TiledVertexIdOfTable<Table, BoardId>,
+  BoardId extends TiledBoardIdOfTable<Table, Definitions>,
+  VertexId extends TiledVertexIdOfTable<Table, BoardId, Definitions>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > =
-  TiledBoardStateOfTable<Table, BoardId> extends {
+  TiledBoardStateOfTable<Table, BoardId, Definitions> extends {
     vertices: readonly (infer Vertex)[];
   }
     ? Vertex extends { id: string }
@@ -499,10 +562,11 @@ export type TiledVertexStateOfTable<
 
 export type HexVertexStateOfTable<
   Table,
-  BoardId extends HexBoardIdOfTable<Table>,
-  VertexId extends HexVertexIdOfTable<Table, BoardId>,
+  BoardId extends HexBoardIdOfTable<Table, Definitions>,
+  VertexId extends HexVertexIdOfTable<Table, BoardId, Definitions>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > =
-  HexBoardStateOfTable<Table, BoardId> extends {
+  HexBoardStateOfTable<Table, BoardId, Definitions> extends {
     vertices: readonly (infer Vertex)[];
   }
     ? Vertex extends { id: string }
@@ -512,10 +576,11 @@ export type HexVertexStateOfTable<
 
 export type SquareVertexStateOfTable<
   Table,
-  BoardId extends SquareBoardIdOfTable<Table>,
-  VertexId extends SquareVertexIdOfTable<Table, BoardId>,
+  BoardId extends SquareBoardIdOfTable<Table, Definitions>,
+  VertexId extends SquareVertexIdOfTable<Table, BoardId, Definitions>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > =
-  SquareBoardStateOfTable<Table, BoardId> extends {
+  SquareBoardStateOfTable<Table, BoardId, Definitions> extends {
     vertices: readonly (infer Vertex)[];
   }
     ? Vertex extends { id: string }
@@ -525,9 +590,10 @@ export type SquareVertexStateOfTable<
 
 export type TiledVertexTypeIdOfTable<
   Table,
-  BoardId extends TiledBoardIdOfTable<Table>,
+  BoardId extends TiledBoardIdOfTable<Table, Definitions>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > =
-  TiledBoardStateOfTable<Table, BoardId> extends {
+  TiledBoardStateOfTable<Table, BoardId, Definitions> extends {
     vertices: readonly (infer Vertex)[];
   }
     ? Vertex extends { typeId?: infer VertexTypeId | null }
@@ -536,9 +602,10 @@ export type TiledVertexTypeIdOfTable<
     : never;
 export type HexVertexTypeIdOfTable<
   Table,
-  BoardId extends HexBoardIdOfTable<Table>,
+  BoardId extends HexBoardIdOfTable<Table, Definitions>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > =
-  HexBoardStateOfTable<Table, BoardId> extends {
+  HexBoardStateOfTable<Table, BoardId, Definitions> extends {
     vertices: readonly (infer Vertex)[];
   }
     ? Vertex extends { typeId?: infer VertexTypeId | null }
@@ -547,9 +614,10 @@ export type HexVertexTypeIdOfTable<
     : never;
 export type SquareVertexTypeIdOfTable<
   Table,
-  BoardId extends SquareBoardIdOfTable<Table>,
+  BoardId extends SquareBoardIdOfTable<Table, Definitions>,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > =
-  SquareBoardStateOfTable<Table, BoardId> extends {
+  SquareBoardStateOfTable<Table, BoardId, Definitions> extends {
     vertices: readonly (infer Vertex)[];
   }
     ? Vertex extends { typeId?: infer VertexTypeId | null }
@@ -558,19 +626,22 @@ export type SquareVertexTypeIdOfTable<
     : never;
 export type TiledSpaceMap<
   Table,
-  BoardId extends TiledBoardIdOfTable<Table>,
+  BoardId extends TiledBoardIdOfTable<Table, Definitions>,
   Value,
-> = Partial<Record<TiledSpaceIdOfTable<Table, BoardId>, Value>>;
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
+> = Partial<Record<TiledSpaceIdOfTable<Table, BoardId, Definitions>, Value>>;
 export type TiledEdgeMap<
   Table,
-  BoardId extends TiledBoardIdOfTable<Table>,
+  BoardId extends TiledBoardIdOfTable<Table, Definitions>,
   Value,
-> = Partial<Record<TiledEdgeIdOfTable<Table, BoardId>, Value>>;
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
+> = Partial<Record<TiledEdgeIdOfTable<Table, BoardId, Definitions>, Value>>;
 export type TiledVertexMap<
   Table,
-  BoardId extends TiledBoardIdOfTable<Table>,
+  BoardId extends TiledBoardIdOfTable<Table, Definitions>,
   Value,
-> = Partial<Record<TiledVertexIdOfTable<Table, BoardId>, Value>>;
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
+> = Partial<Record<TiledVertexIdOfTable<Table, BoardId, Definitions>, Value>>;
 export type TileIdOfTable<Table> = Table extends { tiles: infer Tiles }
   ? StringKeyOf<Tiles>
   : never;
@@ -643,11 +714,9 @@ export type BoardBaseIdOfManifest<Manifest> = Manifest extends {
 }
   ? Extract<BoardBaseId, string>
   : string;
-export type RelationTypeIdOfManifest<Manifest> = Manifest extends {
-  literals: { relationTypeIds: readonly (infer RelationTypeId)[] };
-}
-  ? Extract<RelationTypeId, string>
-  : string;
+// Relation tags are open; retain the manifest parameter for the extraction API.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- The public extraction signature remains generic without deriving tag membership from setup.
+export type RelationTypeIdOfManifest<Manifest> = string;
 export type EdgeTypeIdOfManifest<Manifest> = Manifest extends {
   literals: { edgeTypeIds: readonly (infer EdgeTypeId)[] };
 }
@@ -730,11 +799,24 @@ export type PhaseNameOfContract<Contract> =
   keyof PhaseSchemasOfContract<Contract> extends string
     ? keyof PhaseSchemasOfContract<Contract> & string
     : PhaseNameOfManifest<ManifestOf<Contract>>;
+type DefinitionMapsOf<Manifest> = Manifest extends {
+  boardDefinitions: infer Boards extends
+    TopologyDefinitions["boardDefinitions"];
+  tileDefinitions: infer Tiles extends TopologyDefinitions["tileDefinitions"];
+  zoneDefinitions: infer Zones extends
+    import("./table.js").ZoneDefinitions["zoneDefinitions"];
+}
+  ? { boardDefinitions: Boards; tileDefinitions: Tiles; zoneDefinitions: Zones }
+  : import("./table.js").ZoneDefinitions;
 export type ManifestContractOf<Contract> = ManifestContract<
-  TableOfManifest<ManifestOf<Contract>>
+  TableOfManifest<ManifestOf<Contract>>,
+  DefinitionMapsOf<ManifestOf<Contract>>
 >;
 export type ExactManifestContractOf<Contract> = ManifestOf<Contract> &
-  ReducerManifestContractLike<TableOfManifest<ManifestOf<Contract>>>;
+  Omit<
+    ReducerManifestContractLike<TableOfManifest<ManifestOf<Contract>>>,
+    "boardDefinitions" | "tileDefinitions" | "zoneDefinitions"
+  >;
 export type PhaseNameOf<Source> = Source extends {
   flow: { currentPhase: infer PhaseName };
 }

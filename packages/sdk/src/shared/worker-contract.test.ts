@@ -8,7 +8,6 @@ function validBundle(): Record<string, unknown> {
     reducerContractVersion: REDUCER_CONTRACT_VERSION,
     initialize: () => ({}),
     dispatch: () => ({}),
-    boardStatic: () => null,
     project: () => ({}),
   };
 }
@@ -50,7 +49,7 @@ describe("assertReducerBundleContract", () => {
     );
   });
 
-  test.each(["initialize", "dispatch", "boardStatic", "project"])(
+  test.each(["initialize", "dispatch", "project"])(
     "rejects a missing or noncallable %s operation",
     (method) => {
       const candidate = validBundle();

@@ -28,7 +28,10 @@ import type {
   ViewCardOfTable,
 } from "../shared/domain/cards.js";
 export type { HiddenCardId } from "../shared/domain/cards.js";
-import type { RuntimeJson } from "../shared/runtime-json.js";
+import type {
+  RuntimeJson,
+  ReadonlyRuntimeData,
+} from "../shared/runtime-json.js";
 import type {
   GameSource,
   SourceState,
@@ -194,10 +197,21 @@ export type ZoneHostId<G, K extends IdOf<G, "zoneId"> = IdOf<G, "zoneId">> = [
     : never;
 
 export type BoardDataOf<G, K extends string> = [TableOfGame<G>] extends [never]
-  ? ReadonlyData<import("../reducer/model/table.js").RuntimeBoardState>
-  : TableOfGame<G> extends { boards: { byId: infer Boards } }
-    ? K extends keyof Boards
-      ? ReadonlyData<Boards[K]> & { readonly id: K }
+  ? import("../shared/board-topology.js").BoardTopology
+  : G extends {
+        contract: {
+          manifest: infer Definitions extends
+            import("../shared/domain/topology-definitions.js").TopologyDefinitions;
+        };
+      }
+    ? TableOfGame<G> extends { boards: infer Boards }
+      ? K extends Extract<keyof Boards, string>
+        ? import("../reducer/model/topology.js").BoardTopologyOf<
+            TableOfGame<G>,
+            Definitions,
+            K
+          >
+        : never
       : never
     : never;
 export type BoardSpaceId<G, B extends IdOf<G, "boardId">> = B extends unknown
@@ -212,7 +226,7 @@ export type BoardSpaceData<
 > = B extends unknown
   ? BoardDataOf<G, B> extends { readonly spaces: infer Spaces }
     ? S extends keyof Spaces
-      ? ReadonlyData<Spaces[S]> & { readonly id: S }
+      ? Spaces[S] & { readonly id: S }
       : never
     : never
   : never;
@@ -412,11 +426,7 @@ export type Interaction<
     findInput<N extends InputKey<G, K>>(key: N): Input<G, F, K, N> | undefined;
     getInputs(): readonly AnyInput<G, F, K>[];
   };
-export type ReadonlyData<T> = T extends readonly (infer Item)[]
-  ? readonly ReadonlyData<Item>[]
-  : T extends object
-    ? { readonly [K in keyof T]: ReadonlyData<T[K]> }
-    : T;
+export type ReadonlyData<T> = ReadonlyRuntimeData<T>;
 export type CardDataOf<G, K extends string> = [TableOfGame<G>] extends [never]
   ? ReadonlyData<ViewCard<K>>
   : TableOfGame<G> extends {

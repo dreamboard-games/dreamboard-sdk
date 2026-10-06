@@ -1,6 +1,5 @@
-import { literals, type PlayerId } from "../manifest";
+import { type PlayerId } from "../manifest";
 import type { ProductionGrant } from "../types";
-import { HEX_RULES } from "../model";
 import {
   appendHistory,
   banditsHexId,
@@ -55,8 +54,9 @@ const rollDice = roll.interaction({
 
     const grants: ProductionGrant[] = [];
     const camps = campsByIntersectionId(tx.state);
-    for (const hexId of literals.spaceIds) {
-      const rule = HEX_RULES[hexId];
+    for (const space of Object.values(q.board("frontier").state.spaces)) {
+      const hexId = space.id;
+      const rule = space.fields;
       if (
         rule.number !== total ||
         !rule.resourceId ||

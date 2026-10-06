@@ -99,4 +99,3 @@ export interface PluginGameplayFrame<
 
 export type ReducerSeatProjectionBundle =
   ReadonlyProjection<Wire.SeatProjectionBundle>;
-export type ReducerBoardStaticProjection = Readonly<Wire.BoardStaticProjection>;

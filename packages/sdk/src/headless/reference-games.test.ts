@@ -1,3 +1,4 @@
+import { tileSpaceId } from "../shared/domain/tile-space.js";
 import { expect, it } from "vitest";
 import hearts from "../../../../examples/reference-games/hearts/app/game.ts";
 import hex from "../../../../examples/reference-games/hex-network-trading/app/game.ts";
@@ -45,7 +46,7 @@ it("uses real Hex committed steps, restore, cancel and explicit null intent", as
   const key = "moveBandits.moveBandits" as const;
   const first = game.interactions.get(key);
   expect(first.getInputs().map((input) => input.key)).toEqual(["hexId"]);
-  first.getInput("hexId").setValue("northForest");
+  first.getInput("hexId").setValue(tileSpaceId("northForest", "cell"));
   expect(await game.interactions.get(key).submit()).toEqual({
     accepted: true,
   });
@@ -57,7 +58,7 @@ it("uses real Hex committed steps, restore, cancel and explicit null intent", as
       .map((input) => input.key),
   ).toEqual(["targetPlayerId"]);
   expect(game.interactions.get(key).getStep()?.selected).toEqual({
-    hexId: "northForest",
+    hexId: tileSpaceId("northForest", "cell"),
   });
   expect(game.state.drafts[key]).toBeUndefined();
   expect(await game.interactions.get(key).cancel()).toEqual({
@@ -69,7 +70,10 @@ it("uses real Hex committed steps, restore, cancel and explicit null intent", as
   expect(await game.interactions.get(key).cancel()).toEqual({
     accepted: true,
   });
-  game.interactions.get(key).getInput("hexId").setValue("southWestClay");
+  game.interactions
+    .get(key)
+    .getInput("hexId")
+    .setValue(tileSpaceId("southWestClay", "cell"));
   expect(await game.interactions.get(key).submit()).toEqual({
     accepted: true,
   });

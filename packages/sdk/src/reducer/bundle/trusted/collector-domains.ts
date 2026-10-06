@@ -1,4 +1,3 @@
-import type { ZoneDefinitions } from "../../model";
 import { createStateQueries } from "../../table-queries";
 import type {
   AnyInteractionSpec,
@@ -19,8 +18,8 @@ export function collectInteractionInputs<
   domainState: DomainState,
   playerId: PlayerId,
   options: {
-    readonly queries?: TableQueriesOfState<DomainState>;
-    readonly definitions: ZoneDefinitions;
+    readonly queries?: TableQueriesOfState<DomainState, Manifest>;
+    readonly definitions: Manifest;
   },
 ): InteractionInputDescriptorShape[] {
   const q =

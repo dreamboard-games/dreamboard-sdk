@@ -1,4 +1,4 @@
-import type { RuntimeBoardState, RuntimeTableRecord } from "../model";
+import type { RuntimeTableRecord } from "../model";
 
 let cloneRuntimeTableCallCount = 0;
 
@@ -8,12 +8,6 @@ export function resetCloneRuntimeTableCallCount(): void {
 
 export function getCloneRuntimeTableCallCount(): number {
   return cloneRuntimeTableCallCount;
-}
-
-function cloneRuntimeBoardState<Board extends RuntimeBoardState>(
-  board: Board,
-): Board {
-  return structuredClone(board);
 }
 
 export function cloneRuntimeTable<Table extends RuntimeTableRecord>(
@@ -46,27 +40,7 @@ export function cloneRuntimeTable<Table extends RuntimeTableRecord>(
         { ...table.resources[playerId] },
       ]),
     ),
-    boards: {
-      ...table.boards,
-      byId: Object.fromEntries(
-        Object.entries(table.boards.byId).map(([boardId, board]) => [
-          boardId,
-          cloneRuntimeBoardState(board),
-        ]),
-      ),
-      hex: Object.fromEntries(
-        Object.entries(table.boards.hex ?? {}).map(([boardId, board]) => [
-          boardId,
-          cloneRuntimeBoardState(board),
-        ]),
-      ),
-      square: Object.fromEntries(
-        Object.entries(table.boards.square ?? {}).map(([boardId, board]) => [
-          boardId,
-          cloneRuntimeBoardState(board),
-        ]),
-      ),
-    },
+    boards: structuredClone(table.boards),
     dice: Object.fromEntries(
       Object.entries(table.dice).map(([dieId, die]) => [dieId, { ...die }]),
     ),

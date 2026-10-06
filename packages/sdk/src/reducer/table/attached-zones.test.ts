@@ -16,6 +16,25 @@ import {
 } from "./zones";
 
 const definitions: ZoneDefinitions = {
+  tileDefinitions: {},
+  boardDefinitions: {
+    map: {
+      id: "map",
+      name: "Map",
+      scope: "shared",
+      layout: "generic",
+      fields: {},
+      spaces: { "port:#雪": { id: "port:#雪", fields: {} } },
+    },
+    mat: {
+      id: "mat",
+      name: "Mat",
+      scope: "perPlayer",
+      layout: "generic",
+      fields: {},
+      spaces: { "cell:#": { id: "cell:#", fields: {} } },
+    },
+  },
   zoneDefinitions: {
     cargo: {
       attachedTo: { pieceType: "ship" },
@@ -71,20 +90,7 @@ function table(): RuntimeTableRecord {
       harbor: { [boardSpaceHostId("map", "port:#雪")]: [] },
     },
     boards: {
-      byId: {
-        map: {
-          id: "map",
-          scope: "shared",
-          layout: "generic",
-          fields: {},
-          relations: [],
-          spaces: { "port:#雪": { id: "port:#雪", fields: {} } },
-        },
-      },
-      hex: {},
-      square: {},
-      network: {},
-      track: {},
+      map: { baseId: "map", relations: [] },
     },
     resources: {},
     ownerOfCard: {},
@@ -95,10 +101,10 @@ describe("attached zone runtime admission", () => {
   test("enumerates actual host families and admits encoded board-space hosts", () => {
     const state = table();
     expect(
-      enumerateZoneHosts(state, definitions.zoneDefinitions.cargo),
+      enumerateZoneHosts(state, definitions, definitions.zoneDefinitions.cargo),
     ).toEqual(["a", "b"]);
     expect(
-      enumerateZoneHosts(state, definitions.zoneDefinitions.vault),
+      enumerateZoneHosts(state, definitions, definitions.zoneDefinitions.vault),
     ).toEqual(["die"]);
     expect(
       resolveZone(state, definitions, {
@@ -205,26 +211,56 @@ describe("attached zone runtime admission", () => {
       to: { zoneId: "cargo", hostId: "a" },
     });
     expect(
-      resolveZoneAccess(state, definitions.zoneDefinitions.cargo, "a", "alice"),
+      resolveZoneAccess(
+        state,
+        definitions,
+        definitions.zoneDefinitions.cargo,
+        "a",
+        "alice",
+      ),
     ).toBe(true);
     state.pieces.a.ownerId = "table";
     expect(
-      resolveZoneOwner(state, definitions.zoneDefinitions.cargo, "a"),
+      resolveZoneOwner(
+        state,
+        definitions,
+        definitions.zoneDefinitions.cargo,
+        "a",
+      ),
     ).toBe("table");
     expect(
-      resolveZoneAccess(state, definitions.zoneDefinitions.cargo, "a", "alice"),
-    ).toBe(false);
-    expect(
-      resolveZoneAccess(state, definitions.zoneDefinitions.cargo, "a", "table"),
-    ).toBe(true);
-    expect(state.pieces.c.ownerId).toBeUndefined();
-    state.pieces.a.ownerId = null;
-    expect(
-      resolveZoneAccess(state, definitions.zoneDefinitions.cargo, "a", "table"),
+      resolveZoneAccess(
+        state,
+        definitions,
+        definitions.zoneDefinitions.cargo,
+        "a",
+        "alice",
+      ),
     ).toBe(false);
     expect(
       resolveZoneAccess(
         state,
+        definitions,
+        definitions.zoneDefinitions.cargo,
+        "a",
+        "table",
+      ),
+    ).toBe(true);
+    expect(state.pieces.c.ownerId).toBeUndefined();
+    state.pieces.a.ownerId = null;
+    expect(
+      resolveZoneAccess(
+        state,
+        definitions,
+        definitions.zoneDefinitions.cargo,
+        "a",
+        "table",
+      ),
+    ).toBe(false);
+    expect(
+      resolveZoneAccess(
+        state,
+        definitions,
         definitions.zoneDefinitions.market,
         "map",
         "alice",
@@ -234,18 +270,9 @@ describe("attached zone runtime admission", () => {
   test("per-player board and space audiences use actual replication hosts", () => {
     const state = table();
     const boardId = perPlayerInstanceId("board", "mat", "table");
-    state.boards.byId[boardId] = {
-      id: boardId,
+    state.boards[boardId] = {
       baseId: "mat",
-      scope: "perPlayer",
-      playerId: "table",
-      layout: "hex",
-      orientation: "pointy",
-      fields: {},
       relations: [],
-      spaces: { "cell:#": { id: "cell:#", q: 0, r: 0, fields: {} } },
-      edges: [],
-      vertices: [],
     };
     const definition = {
       attachedTo: { board: "mat", space: "cell:#" },
@@ -253,16 +280,20 @@ describe("attached zone runtime admission", () => {
       allowedCardSetIds: [],
     } as const;
     const host = boardSpaceHostId(boardId, "cell:#");
-    expect(enumerateZoneHosts(state, definition)).toEqual([host]);
-    expect(resolveZoneAccess(state, definition, host, "table")).toBe(true);
-    expect(resolveZoneAccess(state, definition, host, "alice")).toBe(false);
+    expect(enumerateZoneHosts(state, definitions, definition)).toEqual([host]);
+    expect(
+      resolveZoneAccess(state, definitions, definition, host, "table"),
+    ).toBe(true);
+    expect(
+      resolveZoneAccess(state, definitions, definition, host, "alice"),
+    ).toBe(false);
     const forged = boardSpaceHostId(
       perPlayerInstanceId("board", "mat", "absent"),
       "cell:#",
     );
-    expect(() => resolveZoneAccess(state, definition, forged, "table")).toThrow(
-      "Invalid zone host",
-    );
+    expect(() =>
+      resolveZoneAccess(state, definitions, definition, forged, "table"),
+    ).toThrow("Invalid zone host");
   });
   test("rejects cycles spanning piece and die hosts", () => {
     const state = table();

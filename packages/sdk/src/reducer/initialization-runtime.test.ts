@@ -53,13 +53,7 @@ function createEmptyTable(
     ownerOfCard: {},
     visibility: {},
     resources: {},
-    boards: {
-      byId: {},
-      hex: {},
-      network: {},
-      square: {},
-      track: {},
-    },
+    boards: {},
     dice: {},
   };
 }
@@ -448,13 +442,7 @@ describe("initialization runtime", () => {
           ownerOfCard: {},
           visibility: {},
           resources: ppEmpty(["player-1", "player-2"]),
-          boards: {
-            byId: {},
-            hex: {},
-            network: {},
-            square: {},
-            track: {},
-          },
+          boards: {},
           dice: {},
         },
         playerIds: ["player-1", "player-2"],
@@ -636,27 +624,7 @@ describe("initialization runtime", () => {
         },
         resources: ppEmpty(["player-1", "player-2"]),
         boards: {
-          byId: {
-            "main-board": {
-              id: "main-board",
-              layout: "generic",
-              typeId: "track",
-              scope: "shared",
-              fields: {},
-              spaces: {
-                "space-a": {
-                  id: "space-a",
-                  typeId: "slot",
-                  fields: {},
-                },
-              },
-              relations: [],
-            },
-          },
-          hex: {},
-          network: {},
-          square: {},
-          track: {},
+          "main-board": { baseId: "main-board" as const, relations: [] },
         },
         dice: {
           "die-1": {
@@ -683,6 +651,18 @@ describe("initialization runtime", () => {
 
     const random = createTestRandom(initialState.runtime.rng.seed);
     const tx = createReducerTransaction(initialState, random, {
+      tileDefinitions: {},
+      boardDefinitions: {
+        "main-board": {
+          id: "main-board",
+          name: "Main board",
+          layout: "generic",
+          scope: "shared",
+          typeId: "track",
+          fields: {},
+          spaces: { "space-a": { id: "space-a", typeId: "slot", fields: {} } },
+        },
+      },
       zoneDefinitions: {
         "draw-deck": {
           scope: "shared",
@@ -776,21 +756,7 @@ describe("initialization runtime", () => {
         },
         resources: ppEmpty(["player-1"]),
         boards: {
-          byId: {
-            "main-board": {
-              id: "main-board",
-              layout: "generic",
-              typeId: "track",
-              scope: "shared",
-              fields: {},
-              spaces: {},
-              relations: [],
-            },
-          },
-          hex: {},
-          network: {},
-          square: {},
-          track: {},
+          "main-board": { baseId: "main-board" as const, relations: [] },
         },
         dice: {},
       } satisfies RuntimeTableRecord,
@@ -809,6 +775,18 @@ describe("initialization runtime", () => {
     };
 
     const tx = createTestTransaction(initialState, {
+      tileDefinitions: {},
+      boardDefinitions: {
+        "main-board": {
+          id: "main-board",
+          name: "Main board",
+          layout: "generic",
+          scope: "shared",
+          typeId: "track",
+          fields: {},
+          spaces: {},
+        },
+      },
       zoneDefinitions: {
         "draw-deck": {
           scope: "shared",

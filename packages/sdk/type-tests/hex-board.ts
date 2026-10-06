@@ -1,7 +1,7 @@
 import {
   compileManifest,
   createTableQueries,
-  fromCoordinates,
+  tileSpaceId,
 } from "../src/reducer";
 import { createHexTopology } from "../src/shared/hex-board";
 const manifest = compileManifest({
@@ -14,11 +14,31 @@ const manifest = compileManifest({
       name: "Island",
       scope: "shared",
       layout: "hex",
-      shape: fromCoordinates([
-        { q: 0, r: 0 },
-        { q: 1, r: 0 },
-      ]),
-      spaces: { "0,0": { id: "home", typeId: "city" } },
+    },
+  ],
+  tileTypes: [
+    {
+      id: "land",
+      name: "Land",
+      layout: "hex",
+      cells: [
+        { id: "home", at: { q: 0, r: 0 }, typeId: "city" },
+        { id: "neighbor", at: { q: 1, r: 0 } },
+      ],
+    },
+  ],
+  tileSeeds: [
+    {
+      id: "land",
+      typeId: "land",
+      home: {
+        type: "board",
+        boardId: "island",
+        layout: "hex",
+        q: 0,
+        r: 0,
+        rotation: 0,
+      },
     },
   ],
 } as const);
@@ -26,11 +46,11 @@ const q = createTableQueries(
   manifest.createInitialTable({ playerIds: [] }),
   manifest,
 );
-q.board("island").neighbors("home");
-q.board("island").neighbors("1,0");
-// @ts-expect-error Explicit coordinates exclude absent axial spaces.
-q.board("island").neighbors("2,0");
-// @ts-expect-error Override replaces the coordinate's default ID.
+q.board("island").neighbors(tileSpaceId("land", "home"));
+q.board("island").neighbors(tileSpaceId("land", "neighbor"));
+// @ts-expect-error Declared tile cells exclude absent local IDs.
+q.board("island").neighbors(tileSpaceId("land", "missing"));
+// @ts-expect-error Raw local names are not stable tile-space identities.
 q.board("island").neighbors("0,0");
 // @ts-expect-error Unknown board.
 q.board("missing");
@@ -60,14 +80,46 @@ const pair = compileManifest({
       name: "First",
       layout: "hex",
       scope: "shared",
-      shape: fromCoordinates([{ q: 0, r: 0 }]),
     },
     {
       id: "second",
       name: "Second",
       layout: "hex",
       scope: "shared",
-      shape: fromCoordinates([{ q: 0, r: 0 }]),
+    },
+  ],
+  tileTypes: [
+    {
+      id: "single",
+      name: "Single",
+      layout: "hex",
+      cells: [{ id: "center", at: { q: 0, r: 0 } }],
+    },
+  ],
+  tileSeeds: [
+    {
+      id: "first-land",
+      typeId: "single",
+      home: {
+        type: "board",
+        boardId: "first",
+        layout: "hex",
+        q: 0,
+        r: 0,
+        rotation: 0,
+      },
+    },
+    {
+      id: "second-land",
+      typeId: "single",
+      home: {
+        type: "board",
+        boardId: "second",
+        layout: "hex",
+        q: 0,
+        r: 0,
+        rotation: 0,
+      },
     },
   ],
 } as const);
@@ -77,16 +129,16 @@ const publicQueries = createTableQueries(
 );
 const first = publicQueries.board("first");
 const second = publicQueries.board("second");
-first.verticesOf(first.edgeAt("0,0", 0));
-first.edgesOf(first.vertexAt("0,0", 0));
+first.verticesOf(first.edgeAt(tileSpaceId("first-land", "center"), 0));
+first.edgesOf(first.vertexAt(tileSpaceId("first-land", "center"), 0));
 // @ts-expect-error Public bound queries reject another board's edge.
-first.verticesOf(second.edgeAt("0,0", 0));
+first.verticesOf(second.edgeAt(tileSpaceId("second-land", "center"), 0));
 // @ts-expect-error Public bound queries reject another board's vertex.
-first.edgesOf(second.vertexAt("0,0", 0));
+first.edgesOf(second.vertexAt(tileSpaceId("second-land", "center"), 0));
 
 const city: (typeof manifest.literals.spaceTypeIds)[number] = "city";
 q.board("island").spacesByType(city);
-// @ts-expect-error Hex coordinate override type IDs are inferred.
+// @ts-expect-error Tile cell type IDs are inferred.
 q.board("island").spacesByType("unknown");
 const links = compileManifest({
   players: { minPlayers: 1, maxPlayers: 1 },
@@ -110,14 +162,22 @@ const track = createTableQueries(
   links,
 ).board("track");
 track.relatedSpaces("start", "route");
-// @ts-expect-error Bound relation kinds stay manifest scoped.
-track.relatedSpaces("start", "unknown");
+// Runtime relation tags are game-defined, independently of initial relations.
+track.relatedSpaces("start", "new-route");
+// @ts-expect-error Relation endpoints retain board membership.
+track.relatedSpaces("missing", "route");
 // @ts-expect-error Bound generic space kinds stay manifest scoped.
 track.spacesByType("unknown");
 
-q.board("island").gridDistance("home", "1,0");
-// @ts-expect-error gridDistance preserves the board's space vocabulary.
-q.board("island").gridDistance("home", "missing");
+q.board("island").gridDistance(
+  tileSpaceId("land", "home"),
+  tileSpaceId("land", "neighbor"),
+);
+q.board("island").gridDistance(
+  tileSpaceId("land", "home"),
+  // @ts-expect-error gridDistance preserves the board's space vocabulary.
+  tileSpaceId("land", "missing"),
+);
 
 // @ts-expect-error Cached topology collections are immutable.
 a.edges[0] = a.edges[1];
@@ -125,3 +185,15 @@ a.edges[0] = a.edges[1];
 a.edges[0].spaceIds[0] = "home";
 // @ts-expect-error Cached layout polygons are immutable.
 a.getLayout({ hexSize: 20 }).spaces[0].corners[0] = { x: 0, y: 0 };
+
+// A scenario snapshot is a valid query input without cloning or mutable casts.
+const observed: import("../src/shared/board-topology-schema").ReadonlyTopology<
+  ReturnType<typeof manifest.createInitialTable>
+> = manifest.createInitialTable({ playerIds: [] });
+const observedQueries = createTableQueries(observed, manifest);
+const observedOrder: readonly string[] = observedQueries.player.order();
+void observedOrder;
+
+observedQueries.board("island").spacesByType("city");
+// @ts-expect-error Read-only queries retain exact declaration metadata.
+observedQueries.board("island").spacesByType("unknown");

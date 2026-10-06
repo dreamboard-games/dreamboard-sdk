@@ -211,7 +211,7 @@ export function DrawPile({
   function start(event: PointerEvent<HTMLButtonElement>) {
     if (event.button !== 0) return;
     suppressClick.current = false;
-    if (press.current || ghost || !available) return;
+    if (press.current || ghost) return;
     const box = event.currentTarget.getBoundingClientRect();
     const grab = {
       x: event.clientX - box.x,

@@ -1,6 +1,7 @@
+import { tileSpaceId } from "@dreamboard-games/sdk/reducer";
 import { RuntimeJsonSchema } from "@dreamboard-games/sdk";
 import { materializeScenarioRuntimeCheckpoint } from "@dreamboard-games/sdk/testing";
-import { FRONTIER_GEOMETRY } from "../app/model";
+import { FRONTIER_GEOMETRY } from "./topology";
 import {
   asPlayerId,
   createReducerBundle,
@@ -19,7 +20,7 @@ import {
 } from "@dreamboard-games/sdk/testing";
 import game from "../app/game.ts";
 import { defineScenario } from "./testing-types.ts";
-import { EDGE_IDS, FRONTIER, INTERSECTION_IDS } from "../app/model.ts";
+import { EDGE_IDS, FRONTIER, INTERSECTION_IDS } from "./topology.ts";
 import completeGame from "./scenarios/complete-game.scenario.ts";
 import discardBarrier from "./scenarios/discard-barrier.scenario.ts";
 import bilateralTrade, {
@@ -118,7 +119,7 @@ test("piece supplies use the actual seated crews instead of authored player numb
   assert.deepEqual(admitted.componentLocations.bandits, {
     type: "OnSpace",
     boardId: "frontier",
-    spaceId: "centralBarrens",
+    spaceId: tileSpaceId("centralBarrens", "cell"),
     position: 0,
   });
   assert.partialDeepStrictEqual(initialized.state.domain, {
@@ -496,12 +497,12 @@ test("Bandits exploration commits the destination before discovering victims", a
   assert.deepEqual(
     explored.candidates.map(({ command }) => command),
     [
-      "northEastClay",
-      "northForest",
-      "northWestFields",
-      "southEastFields",
-      "southForest",
-      "southWestClay",
+      tileSpaceId("northEastClay", "cell"),
+      tileSpaceId("northForest", "cell"),
+      tileSpaceId("northWestFields", "cell"),
+      tileSpaceId("southEastFields", "cell"),
+      tileSpaceId("southForest", "cell"),
+      tileSpaceId("southWestClay", "cell"),
     ].map((hexId) => ({
       actor: { seat: 0 },
       interactionId: "moveBandits",
@@ -509,9 +510,9 @@ test("Bandits exploration commits the destination before discovering victims", a
     })),
   );
   for (const [hexId, expected] of [
-    ["northForest", [{ seat: 1 }, { seat: 2 }]],
-    ["northEastClay", [{ seat: 2 }]],
-    ["southWestClay", [null]],
+    [tileSpaceId("northForest", "cell"), [{ seat: 1 }, { seat: 2 }]],
+    [tileSpaceId("northEastClay", "cell"), [{ seat: 2 }]],
+    [tileSpaceId("southWestClay", "cell"), [null]],
   ] as const) {
     const scenario = defineScenario({
       id: `bandits-${hexId}`,
@@ -554,12 +555,12 @@ test("Bandits rejects the current hex and invalid victim values without changing
   const digest = replay.checkpointDigest;
   const currentHex = await probeScenarioCommand({
     replay,
-    command: bandits(0, "centralBarrens")[0],
+    command: bandits(0, tileSpaceId("centralBarrens", "cell"))[0],
   });
   assert.equal(currentHex.kind, "rejected");
   for (const [hexId, targetPlayerId] of [
-    ["northForest", null],
-    ["southWestClay", { seat: 1 }],
+    [tileSpaceId("northForest", "cell"), null],
+    [tileSpaceId("southWestClay", "cell"), { seat: 1 }],
   ] as const) {
     const pending = await replayScenario({
       game,
@@ -708,13 +709,41 @@ test("fixed Stormtrail topology is exactly the approved seven-hex graph", () => 
       ]),
     ),
     {
-      northForest: { q: 0, r: -1, typeId: "pineForest" },
-      northEastClay: { q: 1, r: -1, typeId: "clayFlats" },
-      southEastFields: { q: 1, r: 0, typeId: "grainFields" },
-      southForest: { q: 0, r: 1, typeId: "pineForest" },
-      southWestClay: { q: -1, r: 1, typeId: "clayFlats" },
-      northWestFields: { q: -1, r: 0, typeId: "grainFields" },
-      centralBarrens: { q: 0, r: 0, typeId: "barrens" },
+      [tileSpaceId("northForest", "cell")]: {
+        q: 0,
+        r: -1,
+        typeId: "pineForest",
+      },
+      [tileSpaceId("northEastClay", "cell")]: {
+        q: 1,
+        r: -1,
+        typeId: "clayFlats",
+      },
+      [tileSpaceId("southEastFields", "cell")]: {
+        q: 1,
+        r: 0,
+        typeId: "grainFields",
+      },
+      [tileSpaceId("southForest", "cell")]: {
+        q: 0,
+        r: 1,
+        typeId: "pineForest",
+      },
+      [tileSpaceId("southWestClay", "cell")]: {
+        q: -1,
+        r: 1,
+        typeId: "clayFlats",
+      },
+      [tileSpaceId("northWestFields", "cell")]: {
+        q: -1,
+        r: 0,
+        typeId: "grainFields",
+      },
+      [tileSpaceId("centralBarrens", "cell")]: {
+        q: 0,
+        r: 0,
+        typeId: "barrens",
+      },
     },
   );
   assert.deepEqual(
@@ -726,13 +755,13 @@ test("fixed Stormtrail topology is exactly the approved seven-hex graph", () => 
     new Set([6]),
   );
   assert.deepEqual(Object.keys(FRONTIER.spaces).sort(), [
-    "centralBarrens",
-    "northEastClay",
-    "northForest",
-    "northWestFields",
-    "southEastFields",
-    "southForest",
-    "southWestClay",
+    tileSpaceId("centralBarrens", "cell"),
+    tileSpaceId("northEastClay", "cell"),
+    tileSpaceId("northForest", "cell"),
+    tileSpaceId("northWestFields", "cell"),
+    tileSpaceId("southEastFields", "cell"),
+    tileSpaceId("southForest", "cell"),
+    tileSpaceId("southWestClay", "cell"),
   ]);
 });
 
@@ -781,9 +810,9 @@ test("setup action discovery follows seat order and adjacent trail domains", asy
     assert.deepEqual(
       afterCamp.candidates.map(({ command }) => command.params.edgeId),
       [
-        FRONTIER_GEOMETRY.edgeAt("northEastClay", 2),
-        FRONTIER_GEOMETRY.edgeAt("northForest", 1),
-        FRONTIER_GEOMETRY.edgeAt("northForest", 0),
+        FRONTIER_GEOMETRY.edgeAt(tileSpaceId("northEastClay", "cell"), 2),
+        FRONTIER_GEOMETRY.edgeAt(tileSpaceId("northForest", "cell"), 1),
+        FRONTIER_GEOMETRY.edgeAt(tileSpaceId("northForest", "cell"), 0),
       ].sort(),
     );
   }
@@ -884,7 +913,7 @@ test("setup rejects occupied camps and non-adjacent or occupied trails", async (
     replay: afterFirstCamp,
     command: trail(
       0,
-      FRONTIER_GEOMETRY.edgeAt("southEastFields", 2),
+      FRONTIER_GEOMETRY.edgeAt(tileSpaceId("southEastFields", "cell"), 2),
       "placeStartingTrail",
     ),
   });
@@ -902,7 +931,7 @@ test("setup rejects occupied camps and non-adjacent or occupied trails", async (
     replay: afterFirstPair,
     command: camp(
       1,
-      FRONTIER_GEOMETRY.vertexAt("northForest", 0),
+      FRONTIER_GEOMETRY.vertexAt(tileSpaceId("northForest", "cell"), 0),
       "placeStartingCamp",
     ),
   });
@@ -920,7 +949,7 @@ test("setup rejects occupied camps and non-adjacent or occupied trails", async (
     replay: afterSecondCamp,
     command: trail(
       1,
-      FRONTIER_GEOMETRY.edgeAt("northForest", 0),
+      FRONTIER_GEOMETRY.edgeAt(tileSpaceId("northForest", "cell"), 0),
       "placeStartingTrail",
     ),
   });
@@ -936,18 +965,38 @@ test("seeded production covers every terrain number and all no-token totals", as
       completed: 7,
       total: 8,
       resourceId: "provisions",
-      hexId: "southEastFields",
+      hexId: tileSpaceId("southEastFields", "cell"),
     },
-    { completed: 9, total: 5, resourceId: "timber", hexId: "northForest" },
+    {
+      completed: 9,
+      total: 5,
+      resourceId: "timber",
+      hexId: tileSpaceId("northForest", "cell"),
+    },
     {
       completed: 11,
       total: 10,
       resourceId: "provisions",
-      hexId: "northWestFields",
+      hexId: tileSpaceId("northWestFields", "cell"),
     },
-    { completed: 29, total: 9, resourceId: "timber", hexId: "southForest" },
-    { completed: 76, total: 6, resourceId: "brick", hexId: "northEastClay" },
-    { completed: 84, total: 4, resourceId: "brick", hexId: "southWestClay" },
+    {
+      completed: 29,
+      total: 9,
+      resourceId: "timber",
+      hexId: tileSpaceId("southForest", "cell"),
+    },
+    {
+      completed: 76,
+      total: 6,
+      resourceId: "brick",
+      hexId: tileSpaceId("northEastClay", "cell"),
+    },
+    {
+      completed: 84,
+      total: 4,
+      resourceId: "brick",
+      hexId: tileSpaceId("southWestClay", "cell"),
+    },
   ] as const;
   for (const expected of checkpoints) {
     const replay = await replayScenario({
@@ -1001,7 +1050,10 @@ test("Bandits suppress production and multiple adjacent camps each produce", asy
     at: { segment: "given", completed: 117 },
   });
   assert.equal(suppressed.state().publicState.lastRoll?.total, 5);
-  assert.equal(suppressed.view({ seat: 0 }).banditsHexId, "northForest");
+  assert.equal(
+    suppressed.view({ seat: 0 }).banditsHexId,
+    tileSpaceId("northForest", "cell"),
+  );
   assert.deepEqual(suppressed.state().publicState.lastProduction, []);
 
   const twoCamps = await replayScenario({
@@ -1014,7 +1066,7 @@ test("Bandits suppress production and multiple adjacent camps each produce", asy
       playerId: "player-2",
       resourceId: "provisions",
       count: 2,
-      hexId: "southEastFields",
+      hexId: tileSpaceId("southEastFields", "cell"),
     },
   ]);
   const threeCamps = await replayScenario({
@@ -1027,7 +1079,7 @@ test("Bandits suppress production and multiple adjacent camps each produce", asy
       playerId: "player-2",
       resourceId: "timber",
       count: 3,
-      hexId: "southForest",
+      hexId: tileSpaceId("southForest", "cell"),
     },
   ]);
 });
@@ -1129,7 +1181,10 @@ test("trail costs pay atomically and exhausted piece supply disables further bui
   const digest = exhausted.checkpointDigest;
   const extra = await probeScenarioCommand({
     replay: exhausted,
-    command: trail(0, FRONTIER_GEOMETRY.edgeAt("southForest", 2)),
+    command: trail(
+      0,
+      FRONTIER_GEOMETRY.edgeAt(tileSpaceId("southForest", "cell"), 2),
+    ),
   });
   assert.equal(extra.kind, "rejected");
   assert.equal(exhausted.checkpointDigest, digest);
@@ -1148,7 +1203,10 @@ test("opponent camps interrupt continuity while own camps and trails connect", a
   const digest = replay.checkpointDigest;
   const throughOpponent = await probeScenarioCommand({
     replay,
-    command: trail(0, FRONTIER_GEOMETRY.edgeAt("northEastClay", 4)),
+    command: trail(
+      0,
+      FRONTIER_GEOMETRY.edgeAt(tileSpaceId("northEastClay", "cell"), 4),
+    ),
   });
   assert.equal(throughOpponent.kind, "rejected");
   if (throughOpponent.kind === "rejected") {
@@ -1156,7 +1214,10 @@ test("opponent camps interrupt continuity while own camps and trails connect", a
   }
   const disconnected = await probeScenarioCommand({
     replay,
-    command: trail(0, FRONTIER_GEOMETRY.edgeAt("southForest", 2)),
+    command: trail(
+      0,
+      FRONTIER_GEOMETRY.edgeAt(tileSpaceId("southForest", "cell"), 2),
+    ),
   });
   assert.equal(disconnected.kind, "rejected");
   if (disconnected.kind === "rejected") {
@@ -1164,7 +1225,10 @@ test("opponent camps interrupt continuity while own camps and trails connect", a
   }
   const occupied = await probeScenarioCommand({
     replay,
-    command: trail(0, FRONTIER_GEOMETRY.edgeAt("northForest", 0)),
+    command: trail(
+      0,
+      FRONTIER_GEOMETRY.edgeAt(tileSpaceId("northForest", "cell"), 0),
+    ),
   });
   assert.equal(occupied.kind, "rejected");
   if (occupied.kind === "rejected") {
@@ -1172,7 +1236,10 @@ test("opponent camps interrupt continuity while own camps and trails connect", a
   }
   const connected = await probeScenarioCommand({
     replay,
-    command: trail(0, FRONTIER_GEOMETRY.edgeAt("northEastClay", 2)),
+    command: trail(
+      0,
+      FRONTIER_GEOMETRY.edgeAt(tileSpaceId("northEastClay", "cell"), 2),
+    ),
   });
   assert.equal(connected.kind, "accepted");
   assert.equal(replay.checkpointDigest, digest);
@@ -1195,7 +1262,10 @@ test("camp targets require an owned trail, an empty vertex, and full atomic cost
   });
   const occupied = await probeScenarioCommand({
     replay: funded,
-    command: camp(1, FRONTIER_GEOMETRY.vertexAt("northForest", 0)),
+    command: camp(
+      1,
+      FRONTIER_GEOMETRY.vertexAt(tileSpaceId("northForest", "cell"), 0),
+    ),
   });
   assert.equal(occupied.kind, "rejected");
   if (occupied.kind === "rejected") {
@@ -1203,7 +1273,10 @@ test("camp targets require an owned trail, an empty vertex, and full atomic cost
   }
   const disconnected = await probeScenarioCommand({
     replay: funded,
-    command: camp(1, FRONTIER_GEOMETRY.vertexAt("southForest", 1)),
+    command: camp(
+      1,
+      FRONTIER_GEOMETRY.vertexAt(tileSpaceId("southForest", "cell"), 1),
+    ),
   });
   assert.equal(disconnected.kind, "rejected");
   if (disconnected.kind === "rejected") {
@@ -1211,7 +1284,10 @@ test("camp targets require an owned trail, an empty vertex, and full atomic cost
   }
   const insufficient = await probeScenarioCommand({
     replay,
-    command: camp(0, FRONTIER_GEOMETRY.vertexAt("northForest", 5)),
+    command: camp(
+      0,
+      FRONTIER_GEOMETRY.vertexAt(tileSpaceId("northForest", "cell"), 5),
+    ),
   });
   assert.equal(insufficient.kind, "rejected");
   if (insufficient.kind === "rejected") {

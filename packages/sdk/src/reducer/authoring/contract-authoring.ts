@@ -1,3 +1,4 @@
+import type { TopologyDefinitions } from "../../shared/domain/topology-definitions.js";
 import type { PerPlayerInstanceId } from "../../shared/domain/per-player-instance.js";
 import { validatedReducerDefinition } from "../model/definition";
 import type { ViewData } from "../model/spec/views";
@@ -8,7 +9,6 @@ import type {
   ZoneIdOfTable,
   CardIdOfManifest,
   BoardIdOfTable,
-  BoardStateOfTable,
   SpaceIdOfTable,
   InputCollector,
   InteractionMap,
@@ -89,68 +89,96 @@ type BoundBoardInputOptions<
   boardId: BoardId;
   where?: BoundWhere<Contract, Id>;
 };
-type PlayerBoardBaseId<Table> = {
-  [B in BoardIdOfTable<Table>]: BoardStateOfTable<Table, B> extends {
+type PlayerBoardBaseId<Contract extends ContractWithPhases> = {
+  [
+    B in keyof BoundManifest<Contract>["boardDefinitions"] & string
+  ]: BoundManifest<Contract>["boardDefinitions"][B] extends {
     scope: "perPlayer";
-    baseId: infer Base extends string;
   }
-    ? Base
+    ? B
     : never;
-}[BoardIdOfTable<Table>];
+}[keyof BoundManifest<Contract>["boardDefinitions"] & string];
 type PlayerBoardRuntimeId<Table, Base extends string> = Extract<
   BoardIdOfTable<Table>,
   PerPlayerInstanceId<"board", Base>
 >;
 type BoundBoardInputs<Contract extends ContractWithPhases> = {
-  vertex<B extends TiledBoardIdOfTable<BoundTable<Contract>>>(
+  vertex<
+    B extends TiledBoardIdOfTable<
+      BoundTable<Contract>,
+      BoundManifest<Contract>
+    >,
+  >(
     options: BoundBoardInputOptions<
       Contract,
       B,
-      TiledVertexIdOfTable<BoundTable<Contract>, NoInfer<B>>
+      TiledVertexIdOfTable<
+        BoundTable<Contract>,
+        NoInfer<B>,
+        BoundManifest<Contract>
+      >
     >,
   ): InputCollector<
     z.ZodString,
     BoundState<Contract>,
     "board-vertex",
-    TiledVertexIdOfTable<BoundTable<Contract>, B>
+    TiledVertexIdOfTable<BoundTable<Contract>, B, BoundManifest<Contract>>
   >;
-  edge<B extends TiledBoardIdOfTable<BoundTable<Contract>>>(
+  edge<
+    B extends TiledBoardIdOfTable<
+      BoundTable<Contract>,
+      BoundManifest<Contract>
+    >,
+  >(
     options: BoundBoardInputOptions<
       Contract,
       B,
-      TiledEdgeIdOfTable<BoundTable<Contract>, NoInfer<B>>
+      TiledEdgeIdOfTable<
+        BoundTable<Contract>,
+        NoInfer<B>,
+        BoundManifest<Contract>
+      >
     >,
   ): InputCollector<
     z.ZodString,
     BoundState<Contract>,
     "board-edge",
-    TiledEdgeIdOfTable<BoundTable<Contract>, B>
+    TiledEdgeIdOfTable<BoundTable<Contract>, B, BoundManifest<Contract>>
   >;
-  tile<B extends TiledBoardIdOfTable<BoundTable<Contract>>>(
+  tile<
+    B extends TiledBoardIdOfTable<
+      BoundTable<Contract>,
+      BoundManifest<Contract>
+    >,
+  >(
     options: BoundBoardInputOptions<
       Contract,
       B,
-      TiledSpaceIdOfTable<BoundTable<Contract>, NoInfer<B>>
+      TiledSpaceIdOfTable<
+        BoundTable<Contract>,
+        NoInfer<B>,
+        BoundManifest<Contract>
+      >
     >,
   ): InputCollector<
     z.ZodString,
     BoundState<Contract>,
     "board-tile",
-    TiledSpaceIdOfTable<BoundTable<Contract>, B>
+    TiledSpaceIdOfTable<BoundTable<Contract>, B, BoundManifest<Contract>>
   >;
   space<B extends BoardIdOfTable<BoundTable<Contract>>>(
     options: BoundBoardInputOptions<
       Contract,
       B,
-      SpaceIdOfTable<BoundTable<Contract>, NoInfer<B>>
+      SpaceIdOfTable<BoundTable<Contract>, NoInfer<B>, BoundManifest<Contract>>
     >,
   ): InputCollector<
     z.ZodString,
     BoundState<Contract>,
     "board-space",
-    SpaceIdOfTable<BoundTable<Contract>, B>
+    SpaceIdOfTable<BoundTable<Contract>, B, BoundManifest<Contract>>
   >;
-  playerSpace<B extends PlayerBoardBaseId<BoundTable<Contract>>>(options: {
+  playerSpace<B extends PlayerBoardBaseId<Contract>>(options: {
     boardId: B;
     where?: BoundWhere<
       Contract,
@@ -158,7 +186,8 @@ type BoundBoardInputs<Contract extends ContractWithPhases> = {
         PerPlayerInstanceId<"board", NoInfer<B>>,
         SpaceIdOfTable<
           BoundTable<Contract>,
-          PlayerBoardRuntimeId<BoundTable<Contract>, NoInfer<B>>
+          PlayerBoardRuntimeId<BoundTable<Contract>, NoInfer<B>>,
+          BoundManifest<Contract>
         >
       >
     >;
@@ -170,7 +199,8 @@ type BoundBoardInputs<Contract extends ContractWithPhases> = {
       PerPlayerInstanceId<"board", B>,
       SpaceIdOfTable<
         BoundTable<Contract>,
-        PlayerBoardRuntimeId<BoundTable<Contract>, B>
+        PlayerBoardRuntimeId<BoundTable<Contract>, B>,
+        BoundManifest<Contract>
       >
     >
   >;
@@ -183,7 +213,10 @@ type BoundBoardInputs<Contract extends ContractWithPhases> = {
 export type BoundTargetPredicate<
   Contract extends ContractWithPhases,
   Target,
-> = Omit<TargetPredicate<BoundState<Contract>, Target>, "errorCode"> & {
+> = Omit<
+  TargetPredicate<BoundState<Contract>, Target, BoundManifest<Contract>>,
+  "errorCode"
+> & {
   errorCode: ContractErrorCode<Contract>;
 };
 
@@ -239,7 +272,11 @@ export type PhaseAuthoring<
   Contract extends ContractWithPhases,
   PhaseStateSchema extends SchemaLike<object>,
 > = {
-  steps(): InteractionSteps<BoundPhaseState<Contract, PhaseStateSchema>>;
+  steps(): InteractionSteps<
+    BoundPhaseState<Contract, PhaseStateSchema>,
+    Record<never, never>,
+    BoundManifest<Contract>
+  >;
   interaction<Collectors extends Record<string, InputCollector>>(
     spec: Extract<
       InteractionSpec<
@@ -345,7 +382,8 @@ export type PhaseTypes<
   readonly PhaseState: z.infer<PhaseStateSchema>;
   readonly Tx: ReducerTransaction<
     BoundPhaseState<Contract, PhaseStateSchema>,
-    ContractErrorCode<Contract>
+    ContractErrorCode<Contract>,
+    BoundManifest<Contract>
   >;
 };
 
@@ -361,10 +399,14 @@ export type ContractTypes<Contract extends ContractWithPhases> = {
   readonly Manifest: BoundManifest<Contract>;
   readonly ErrorCode: ContractErrorCode<Contract>;
   readonly PlayerId: PlayerIdOfState<BoundState<Contract>>;
-  readonly Queries: TableQueriesOfState<BoundState<Contract>>;
+  readonly Queries: TableQueriesOfState<
+    BoundState<Contract>,
+    BoundManifest<Contract>
+  >;
   readonly Tx: ReducerTransaction<
     BoundState<Contract>,
-    ContractErrorCode<Contract>
+    ContractErrorCode<Contract>,
+    BoundManifest<Contract>
   >;
 };
 
@@ -405,14 +447,15 @@ function phantomTypes<Types>(): Types {
 function applyWhere<
   State extends CollectorState,
   Target,
-  Rule extends TargetRule<State, Target>,
+  Rule extends TargetRule<State, Target, Definitions>,
+  Definitions extends TopologyDefinitions,
 >(
-  builder: TargetRuleBuilder<State, Target, Rule>,
+  builder: TargetRuleBuilder<State, Target, Rule, Definitions>,
   where:
-    | TargetPredicate<State, Target>
-    | readonly TargetPredicate<State, Target>[]
+    | TargetPredicate<State, Target, Definitions>
+    | readonly TargetPredicate<State, Target, Definitions>[]
     | undefined,
-): TargetRuleBuilder<State, Target, Rule> {
+): TargetRuleBuilder<State, Target, Rule, Definitions> {
   const predicates =
     where === undefined ? [] : "test" in where ? [where] : where;
   return predicates.reduce(
@@ -430,7 +473,8 @@ function createFusedCardInput<
         cardTarget.zones<
           BoundState<Contract>,
           CardIdOfManifest<BoundManifest<Contract>>,
-          typeof options.from
+          typeof options.from,
+          BoundManifest<Contract>
         >(options.from),
         options.where,
       ).build(),
@@ -446,7 +490,12 @@ function createFusedBoardInputs<
         target: applyWhere(
           boardTarget.vertex<
             BoundState<Contract>,
-            TiledVertexIdOfTable<BoundTable<Contract>, typeof options.boardId>
+            TiledVertexIdOfTable<
+              BoundTable<Contract>,
+              typeof options.boardId,
+              BoundManifest<Contract>
+            >,
+            BoundManifest<Contract>
           >(options.boardId),
           options.where,
         ).build(),
@@ -456,7 +505,12 @@ function createFusedBoardInputs<
         target: applyWhere(
           boardTarget.edge<
             BoundState<Contract>,
-            TiledEdgeIdOfTable<BoundTable<Contract>, typeof options.boardId>
+            TiledEdgeIdOfTable<
+              BoundTable<Contract>,
+              typeof options.boardId,
+              BoundManifest<Contract>
+            >,
+            BoundManifest<Contract>
           >(options.boardId),
           options.where,
         ).build(),
@@ -466,7 +520,12 @@ function createFusedBoardInputs<
         target: applyWhere(
           boardTarget.tile<
             BoundState<Contract>,
-            TiledSpaceIdOfTable<BoundTable<Contract>, typeof options.boardId>
+            TiledSpaceIdOfTable<
+              BoundTable<Contract>,
+              typeof options.boardId,
+              BoundManifest<Contract>
+            >,
+            BoundManifest<Contract>
           >(options.boardId),
           options.where,
         ).build(),
@@ -476,7 +535,12 @@ function createFusedBoardInputs<
         target: applyWhere(
           boardTarget.space<
             BoundState<Contract>,
-            SpaceIdOfTable<BoundTable<Contract>, typeof options.boardId>
+            SpaceIdOfTable<
+              BoundTable<Contract>,
+              typeof options.boardId,
+              BoundManifest<Contract>
+            >,
+            BoundManifest<Contract>
           >(options.boardId),
           options.where,
         ).build(),
@@ -489,8 +553,13 @@ function createFusedBoardInputs<
             typeof options.boardId,
             SpaceIdOfTable<
               BoundTable<Contract>,
-              PlayerBoardRuntimeId<BoundTable<Contract>, typeof options.boardId>
-            >
+              PlayerBoardRuntimeId<
+                BoundTable<Contract>,
+                typeof options.boardId
+              >,
+              BoundManifest<Contract>
+            >,
+            BoundManifest<Contract>
           >(options.boardId),
           options.where,
         ).build(),

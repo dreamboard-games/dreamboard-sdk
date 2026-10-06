@@ -191,7 +191,8 @@ test("static board fields reject references to another board and carry field pat
     ],
   };
   expect(
-    () => void Reflect.apply(defineTopologyManifest, undefined, [source]),
+    () =>
+      void Reflect.apply(defineTopologyManifest<unknown>, undefined, [source]),
   ).toThrow("manifest.boards[0].spaces[0].fields.next");
 });
 
@@ -269,7 +270,8 @@ test("schema-shaped data does not become an authoring schema slot", () => {
     pieceSeeds: [{ typeId: "token", fields: { fieldsSchema: z.object({}) } }],
   };
   expect(
-    () => void Reflect.apply(defineTopologyManifest, undefined, [source]),
+    () =>
+      void Reflect.apply(defineTopologyManifest<unknown>, undefined, [source]),
   ).toThrow("declared manifest schema");
 });
 
@@ -327,10 +329,27 @@ test("custom roster board fields resolve within the instantiated board's definit
   const compiled = compileManifest(source);
   const table = compiled.createInitialTable({ playerIds: ["alice"] });
   expect(compiled.tableSchema.safeParse(table).success).toBe(true);
-  table.boards.byId[
-    perPlayerInstanceId("board", "personal", "alice")
-  ].fields.selected = "other";
-  expect(compiled.tableSchema.safeParse(table).success).toBe(false);
+  expect(compiled.boardDefinitions.personal.fields.selected).toBe("own");
+  expect(() =>
+    compileManifest({
+      ...source,
+      boards: source.boards.map((board) =>
+        board.id === "personal"
+          ? { ...board, fields: { selected: "other" } }
+          : board,
+      ),
+    }),
+  ).toThrow();
+  const boardId = perPlayerInstanceId("board", "personal", "alice");
+  expect(
+    compiled.tableSchema.safeParse({
+      ...table,
+      boards: {
+        ...table.boards,
+        [boardId]: { ...table.boards[boardId], fields: { selected: "other" } },
+      },
+    }).success,
+  ).toBe(false);
 });
 
 test("concrete defaults must already conform to output instead of being transformed", () => {

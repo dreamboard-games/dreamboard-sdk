@@ -1,3 +1,4 @@
+import { boardEdgeId, boardVertexId } from "../shared/domain/board-element.js";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
@@ -97,7 +98,6 @@ const manifest = {
       name: "Map",
       scope: "shared",
       layout: "hex",
-      shape: { kind: "hexagon", radius: 0 },
     },
   ],
 } as const;
@@ -205,19 +205,17 @@ describe("tile inventory projection boundary", () => {
     "rejects a tile's nonpublic initial home: $zoneId",
     (home) => {
       expect(() =>
-        compileManifest(
-          parseTopologyManifestJson({
-            ...defineTopologyManifest(manifest),
-            tileSeeds: [
-              {
-                id: "forest-instance",
-                typeId: "forest-face",
-                scope: "perPlayer",
-                home: { type: "zone", ...home },
-              },
-            ],
-          }),
-        ),
+        parseTopologyManifestJson({
+          ...defineTopologyManifest(manifest),
+          tileSeeds: [
+            {
+              id: "forest-instance",
+              typeId: "forest-face",
+              scope: "perPlayer",
+              home: { type: "zone", ...home },
+            },
+          ],
+        }),
       ).toThrow(
         /manifest\.tileSeeds\[0\]\.home: Tile inventory requires a public zone/,
       );
@@ -269,12 +267,6 @@ describe("tile inventory projection boundary", () => {
 
   test("rejects every non-tile spatial location before unlinking inventory", () => {
     const { compiled, table } = setup();
-    const board = table.boards.hex.map;
-    // Keep actual tiled layout evidence while admitting a dynamic component ID.
-    const tiledTable = {
-      ...table,
-      boards: { ...table.boards, byId: table.boards.hex },
-    };
     const before = structuredClone(table);
     const attempts = [
       () =>
@@ -287,18 +279,18 @@ describe("tile inventory projection boundary", () => {
         ),
       () =>
         moveComponentToEdgeInPlace(
-          tiledTable,
+          table,
           "forest-instance",
           "map",
-          board.edges[0].id,
+          boardEdgeId("hex", "map", "100,100:e0"),
           compiled,
         ),
       () =>
         moveComponentToVertexInPlace(
-          tiledTable,
+          table,
           "forest-instance",
           "map",
-          board.vertices[0].id,
+          boardVertexId("hex", "map", "100,100:v0"),
           compiled,
         ),
     ];
@@ -308,13 +300,12 @@ describe("tile inventory projection boundary", () => {
     }
   });
 
-  test("static, seat and UI bridge payloads do not automatically carry tile assignments", async () => {
+  test("held tile assignments stay out of seat and UI bridge payloads", async () => {
     const definition = game();
     const source = await localSource(definition, { players: 2, seed: 1 });
     try {
       const bundle = createReducerBundle(definition);
       const payloads: unknown[] = [
-        bundle.boardStatic(),
         bundle.project({
           state: source.checkpoint().state,
           playerIds: ["player-1", "player-2"],

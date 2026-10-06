@@ -1,9 +1,10 @@
+import { RuntimeJsonSchema } from "../shared/runtime-json.js";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { compileManifest, createGame, createReducerBundle } from "../reducer";
 
-describe("manifest static projection", () => {
-  test("derives stable static boards from the manifest without evaluating a seat view", () => {
+describe("seat topology projection", () => {
+  test("derives public topology only through the requested seat", async () => {
     const manifest = compileManifest({
       players: { minPlayers: 1, maxPlayers: 2 },
       cardSets: [],
@@ -37,13 +38,29 @@ describe("manifest static projection", () => {
       }),
     });
     const bundle = createReducerBundle(definition);
-    const first = bundle.boardStatic();
-    const second = bundle.boardStatic();
-    expect(first?.view).toEqual({ boards: manifest.staticBoards });
-    expect(first?.hash).toBe(second?.hash);
-    expect(first?.hash).toMatch(/^[0-9a-f]+$/);
-    expect(typeof first?.manifestVersion).toBe("string");
-    expect(viewCalls).toBe(0);
-    expect(JSON.stringify(first)).not.toContain("privateSeat");
+    const initialized = await bundle.initialize({
+      table: RuntimeJsonSchema.parse(
+        manifest.createInitialTable({ playerIds: ["player-1"] }),
+      ),
+      playerIds: ["player-1"],
+      rngSeed: 1,
+    });
+    const projection = bundle.project({
+      state: initialized.state,
+      playerIds: ["player-1"],
+    });
+    expect(projection.seats["player-1"].boards).toMatchObject({
+      island: {
+        id: "island",
+        baseId: "island",
+        layout: "generic",
+        spaces: { home: { id: "home", name: "Home", fields: {} } },
+      },
+    });
+    expect(viewCalls).toBe(1);
+    expect(projection.seats["player-1"].view).toEqual({
+      privateSeat: "player-1",
+    });
+    expect(bundle).not.toHaveProperty("boardStatic");
   });
 });

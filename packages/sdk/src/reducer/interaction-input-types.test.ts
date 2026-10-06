@@ -38,6 +38,8 @@ function buildContract() {
   const playerZoneIds = ["hand", "in-play", "discard"] as const;
   const phaseNames = ["play"] as const;
   const manifest = {
+    boardDefinitions: {},
+    tileDefinitions: {},
     literals: {
       tileTypeIds: [] as const,
       tileIds: [] as const,

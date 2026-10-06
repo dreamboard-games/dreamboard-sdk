@@ -23,92 +23,201 @@ import {
   getTiledBoard,
   getVertex,
 } from "./index";
-import { createSpatialTable } from "./table-test-fixtures";
+import {
+  createSpatialTable,
+  spatialDefinitions,
+  spatialIds,
+  spatialElements,
+} from "./table-test-fixtures";
 
 describe("table ops spatial helpers", () => {
   test("board helpers expose typed board metadata and adjacency for generic and hex boards", () => {
     const table = createSpatialTable();
 
-    expect(getBoard(table, "main-board").layout).toBe("generic");
-    expect(getBoard(table, "main-board").typeId).toBe("track");
-    expect(getHexBoard(table, "hex-board").layout).toBe("hex");
-    expect(getHexSpace(table, "hex-board", "tile-a").q).toBe(0);
-    expect(getHexSpaceAt(table, "hex-board", 1, 0)?.id).toBe("tile-b");
-    expect(getEdge(table, "hex-board", "tile-a$$tile-b").spaceIds).toEqual([
-      "tile-a",
-      "tile-b",
-    ]);
+    expect(getBoard(table, spatialDefinitions, "main-board").layout).toBe(
+      "generic",
+    );
+    expect(getBoard(table, spatialDefinitions, "main-board").typeId).toBe(
+      "track",
+    );
+    expect(getHexBoard(table, spatialDefinitions, "hex-board").layout).toBe(
+      "hex",
+    );
     expect(
-      getVertex(table, "hex-board", "tile-a$$tile-a$$tile-b").spaceIds,
-    ).toEqual(["tile-a", "tile-a", "tile-b"]);
-    expect(getSpace(table, "main-board", "space-a")).toEqual({
+      getHexSpace(table, spatialDefinitions, "hex-board", spatialIds.hexA).q,
+    ).toBe(0);
+    expect(
+      getHexSpaceAt(table, spatialDefinitions, "hex-board", 1, 0)?.id,
+    ).toBe(spatialIds.hexB);
+    expect(
+      getEdge(table, spatialDefinitions, "hex-board", spatialElements().hexEdge)
+        .spaceIds,
+    ).toEqual([spatialIds.hexA, spatialIds.hexB]);
+    expect(
+      getVertex(
+        table,
+        spatialDefinitions,
+        "hex-board",
+        spatialElements().hexVertex,
+      ).spaceIds,
+    ).toEqual([spatialIds.hexA, spatialIds.hexB, spatialIds.hexC]);
+    expect(
+      getSpace(table, spatialDefinitions, "main-board", "space-a"),
+    ).toEqual({
       id: "space-a",
       typeId: "slot",
       fields: {},
     });
-    expect(getBoardsByTypeId(table, "track")).toEqual(["main-board"]);
-    expect(getSpacesByTypeId(table, "main-board", "slot")).toEqual([
-      "space-a",
-      "space-b",
+    expect(getBoardsByTypeId(table, spatialDefinitions, "track")).toEqual([
+      "main-board",
     ]);
-    expect(getSpacesByTypeId(table, "hex-board", "forest")).toEqual(["tile-a"]);
     expect(
-      getRelatedSpaces(table, "main-board", "space-a", "adjacent"),
+      getSpacesByTypeId(table, spatialDefinitions, "main-board", "slot"),
+    ).toEqual(["space-a", "space-b"]);
+    expect(
+      getSpacesByTypeId(table, spatialDefinitions, "hex-board", "land"),
+    ).toEqual([spatialIds.hexA, spatialIds.hexB, spatialIds.hexC]);
+    expect(
+      getRelatedSpaces(
+        table,
+        spatialDefinitions,
+        "main-board",
+        "space-a",
+        "adjacent",
+      ),
     ).toEqual(["space-b"]);
-    expect(getAdjacentSpaces(table, "main-board", "space-a")).toEqual([
-      "space-b",
-    ]);
-    expect(getAdjacentSpaces(table, "hex-board", "tile-a")).toEqual(["tile-b"]);
-    expect(getTiledBoard(table, "hex-board").layout).toBe("hex");
+    expect(
+      getAdjacentSpaces(table, spatialDefinitions, "main-board", "space-a"),
+    ).toEqual(["space-b"]);
+    expect(
+      getAdjacentSpaces(
+        table,
+        spatialDefinitions,
+        "hex-board",
+        spatialIds.hexA,
+      ),
+    ).toEqual([spatialIds.hexB, spatialIds.hexC]);
+    expect(getTiledBoard(table, spatialDefinitions, "hex-board").layout).toBe(
+      "hex",
+    );
   });
 
   test("shared tiled helpers expose square topology, range, and incidence", () => {
     const table = createSpatialTable();
 
-    expect(getSquareBoard(table, "square-board").layout).toBe("square");
-    expect(getSquareSpace(table, "square-board", "cell-a1").row).toBe(0);
-    expect(getSquareSpaceAt(table, "square-board", 1, 1)?.id).toBe("cell-b2");
-    expect(getAdjacentSpaces(table, "square-board", "cell-a1")).toEqual([
-      "cell-a2",
-      "cell-b1",
-    ]);
-    expect(getSquareNeighbors(table, "square-board", "cell-a1")).toEqual([
-      "cell-a2",
-      "cell-b1",
-    ]);
     expect(
-      getSquareNeighbors(table, "square-board", "cell-a1", {
-        mode: "diagonal",
-      }),
-    ).toEqual(["cell-b2"]);
+      getSquareBoard(table, spatialDefinitions, "square-board").layout,
+    ).toBe("square");
     expect(
-      getSquareNeighbors(table, "square-board", "cell-a1", {
-        mode: "all",
-      }),
-    ).toEqual(["cell-a2", "cell-b1", "cell-b2"]);
-    expect(getSpaceDistance(table, "square-board", "cell-a1", "cell-b2")).toBe(
-      2,
-    );
-    expect(getSquareDistance(table, "square-board", "cell-a1", "cell-b2")).toBe(
-      2,
-    );
+      getSquareSpace(
+        table,
+        spatialDefinitions,
+        "square-board",
+        spatialIds.squareA1,
+      ).row,
+    ).toBe(0);
     expect(
-      getSquareDistance(table, "square-board", "cell-a1", "cell-b2", {
-        metric: "chebyshev",
-      }),
+      getSquareSpaceAt(table, spatialDefinitions, "square-board", 1, 1)?.id,
+    ).toBe(spatialIds.squareB2);
+    expect(
+      getAdjacentSpaces(
+        table,
+        spatialDefinitions,
+        "square-board",
+        spatialIds.squareA1,
+      ),
+    ).toEqual([spatialIds.squareA2, spatialIds.squareB1]);
+    expect(
+      getSquareNeighbors(
+        table,
+        spatialDefinitions,
+        "square-board",
+        spatialIds.squareA1,
+      ),
+    ).toEqual([spatialIds.squareA2, spatialIds.squareB1]);
+    expect(
+      getSquareNeighbors(
+        table,
+        spatialDefinitions,
+        "square-board",
+        spatialIds.squareA1,
+        {
+          mode: "diagonal",
+        },
+      ),
+    ).toEqual([spatialIds.squareB2]);
+    expect(
+      getSquareNeighbors(
+        table,
+        spatialDefinitions,
+        "square-board",
+        spatialIds.squareA1,
+        {
+          mode: "all",
+        },
+      ),
+    ).toEqual([spatialIds.squareA2, spatialIds.squareB1, spatialIds.squareB2]);
+    expect(
+      getSpaceDistance(
+        table,
+        spatialDefinitions,
+        "square-board",
+        spatialIds.squareA1,
+        spatialIds.squareB2,
+      ),
+    ).toBe(2);
+    expect(
+      getSquareDistance(
+        table,
+        spatialDefinitions,
+        "square-board",
+        spatialIds.squareA1,
+        spatialIds.squareB2,
+      ),
+    ).toBe(2);
+    expect(
+      getSquareDistance(
+        table,
+        spatialDefinitions,
+        "square-board",
+        spatialIds.squareA1,
+        spatialIds.squareB2,
+        {
+          metric: "chebyshev",
+        },
+      ),
     ).toBe(1);
-    expect(getSpaceEdges(table, "square-board", "cell-a1")).toEqual([
-      "square-edge:a1-a2",
-      "square-edge:a1-b1",
-    ]);
-    expect(getSpaceVertices(table, "square-board", "cell-a1")).toEqual([
-      "square-vertex:center",
-    ]);
-    expect(
-      getIncidentEdges(table, "square-board", "square-vertex:center"),
-    ).toEqual(["square-edge:a1-a2", "square-edge:a1-b1"]);
-    expect(
-      getIncidentVertices(table, "square-board", "square-edge:a1-a2"),
-    ).toEqual(["square-vertex:center"]);
+    const edges = getSpaceEdges(
+      table,
+      spatialDefinitions,
+      "square-board",
+      spatialIds.squareA1,
+    );
+    const vertices = getSpaceVertices(
+      table,
+      spatialDefinitions,
+      "square-board",
+      spatialIds.squareA1,
+    );
+    expect(edges).toHaveLength(4);
+    expect(edges).toContain(spatialElements().squareEdge);
+    expect(vertices).toHaveLength(4);
+    expect(vertices).toContain(spatialElements().squareVertex);
+    const incident = getIncidentEdges(
+      table,
+      spatialDefinitions,
+      "square-board",
+      spatialElements().squareVertex,
+    );
+    expect(incident).toHaveLength(4);
+    expect(incident).toContain(spatialElements().squareEdge);
+    const endpoints = getIncidentVertices(
+      table,
+      spatialDefinitions,
+      "square-board",
+      spatialElements().squareEdge,
+    );
+    expect(endpoints).toHaveLength(2);
+    expect(endpoints).toContain(spatialElements().squareVertex);
   });
 });

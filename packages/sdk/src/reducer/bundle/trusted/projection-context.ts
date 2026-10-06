@@ -5,17 +5,21 @@ import type {
   ZoneDefinitions,
 } from "../../model";
 
-export type ProjectionContext<State extends { table: RuntimeTableRecord }> = {
+export type ProjectionContext<
+  State extends { table: RuntimeTableRecord },
+  Definitions extends ZoneDefinitions,
+> = {
   readonly domainState: State;
-  readonly q: TableQueriesOfState<State>;
+  readonly q: TableQueriesOfState<State, Definitions>;
 };
 
 export function createProjectionContext<
   State extends { table: RuntimeTableRecord },
+  Definitions extends ZoneDefinitions,
 >(options: {
   domainState: State;
-  definitions: ZoneDefinitions;
-}): ProjectionContext<State> {
+  definitions: Definitions;
+}): ProjectionContext<State, Definitions> {
   const q = createStateQueries(options.domainState, options.definitions);
   return {
     domainState: options.domainState,

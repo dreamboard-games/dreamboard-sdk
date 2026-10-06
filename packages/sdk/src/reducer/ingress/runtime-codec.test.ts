@@ -142,7 +142,7 @@ function rawCanonicalTable() {
     },
     resources: Object.fromEntries(players.map((id) => [id, {}])),
     pieces: {},
-    boards: { byId: {}, hex: {}, square: {}, network: {}, track: {} },
+    boards: {},
     dice: {},
   } satisfies RuntimeTableRecord;
 }

@@ -1,3 +1,4 @@
+import type { BoardVertexId } from "../shared/domain/board-identities.js";
 import { perPlayerInstanceId } from "../shared/domain/per-player-instance.js";
 import { createInputTestState, inputDefinitions } from "./input-test-fixtures";
 import { createStateQueries } from "./table-queries";
@@ -10,37 +11,51 @@ import {
   choiceTarget,
 } from "./inputs";
 import type { CollectorState } from "./model/spec";
+import type { ZoneDefinitions } from "./model";
 
 const state = createInputTestState();
-const q = createStateQueries(state, inputDefinitions);
+const q = createStateQueries<CollectorState, ZoneDefinitions>(
+  state,
+  inputDefinitions,
+);
 const ctx = { state, playerId: "player-1", q };
+const [firstVertex, secondVertex] = createStateQueries(
+  state,
+  inputDefinitions,
+).board("board").state.vertices;
+if (!firstVertex || !secondVertex)
+  throw new Error("Target fixture needs two vertices.");
+const v1 = firstVertex.id;
+const v2 = secondVertex.id;
 
 describe("target rules", () => {
   test("board targets expose eligible, validate, isEligible, and bind", () => {
     const target = boardTarget
-      .vertex<CollectorState, "v1" | "v2">("board")
+      .vertex<CollectorState, BoardVertexId<"board">>("board")
       .where({
         id: "only-v1",
         errorCode: "not-v1",
         message: "Only v1 is legal.",
-        test: ({ targetId }) => targetId === "v1",
+        test: ({ targetId }) => targetId === v1,
       })
       .build();
 
-    expect(target.eligible(ctx)).toEqual(["v1"]);
-    expect(target.isEligible(ctx, "v1")).toBe(true);
-    expect(target.validate(ctx, "v2")).toEqual({
+    expect(target.eligible(ctx)).toEqual([v1]);
+    expect(target.isEligible(ctx, v1)).toBe(true);
+    expect(target.validate(ctx, v2)).toEqual({
       errorCode: "not-v1",
       message: "Only v1 is legal.",
     });
-    expect(target.bind(ctx).eligible()).toEqual(["v1"]);
+    expect(target.bind(ctx).eligible()).toEqual([v1]);
 
-    const input = boardInput.vertex<CollectorState, "v1" | "v2">({ target });
+    const input = boardInput.vertex<CollectorState, BoardVertexId<"board">>({
+      target,
+    });
     expect(input.meta).toMatchObject({
       targetKind: "vertex",
       boardId: "board",
     });
-    expect(input.validateTarget?.(state, "player-1", q, "v2")).toEqual({
+    expect(input.validateTarget?.(state, "player-1", q, v2)).toEqual({
       errorCode: "not-v1",
       message: "Only v1 is legal.",
     });
@@ -88,7 +103,7 @@ describe("target rules", () => {
 
   test("board target predicates capture selected step values", () => {
     const target = boardTarget
-      .space<CollectorState, "s1" | "s2">("board")
+      .space<CollectorState, "s1" | "s2">("main-board")
       .where({
         id: "selected-mode",
         errorCode: "wrong-mode",

@@ -13,6 +13,8 @@ function buildMinimalManifest() {
   const playerIds = ["player-1", "player-2"] as const;
   const resourceIds = ["brick", "grain", "lumber"] as const;
   return {
+    boardDefinitions: {},
+    tileDefinitions: {},
     literals: {
       tileTypeIds: [] as const,
       tileIds: [] as const,

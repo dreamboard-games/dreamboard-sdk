@@ -27,13 +27,11 @@ export function createReducerScenarioRunner(
           state,
           playerIds: [options.viewer.playerId],
         });
-        const staticProjection = options.bundle.boardStatic();
         const flow = readFlowState(state);
         const materialized = materializePluginGameplayFrame({
           currentPhase: flow.currentPhase,
           activePlayers: flow.activePlayers,
           dynamicProjection,
-          staticProjection,
           perspectivePlayerId: options.viewer.playerId,
           version: gameVersion,
           actionSetVersion: "pending",
@@ -46,7 +44,6 @@ export function createReducerScenarioRunner(
           id,
           reducerState: structuredClone(state),
           dynamicProjection,
-          staticProjection,
           gameVersion,
           actionSetVersion,
           projectionDigest: digestScenarioJson({
@@ -54,7 +51,6 @@ export function createReducerScenarioRunner(
             scenarioId: options.scenarioId,
             frameId: id,
             dynamicProjection,
-            staticProjection,
             gameVersion,
             actionSetVersion,
           }),

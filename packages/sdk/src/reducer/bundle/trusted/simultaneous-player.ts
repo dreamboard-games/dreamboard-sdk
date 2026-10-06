@@ -61,7 +61,10 @@ export function resolveSimultaneousActors<
   scope: TrustedRuntimeScope<Contract, Definitions, View>,
   state: TrustedState<Contract>,
   phase: ErasedPhase<Contract, Definitions, View>,
-  projection?: ProjectionContext<TrustedDomainState<Contract>>,
+  projection?: ProjectionContext<
+    TrustedDomainState<Contract>,
+    TrustedManifest<Contract>
+  >,
 ): TrustedPlayerId<Contract>[] {
   type PlayerId = TrustedPlayerId<Contract>;
   const selector = phase.actors ?? phase.actor;

@@ -1,4 +1,4 @@
-import { createGame, hexagon } from "@dreamboard-games/sdk/reducer";
+import { createGame } from "@dreamboard-games/sdk/reducer";
 import { z } from "zod";
 const target = z.object({
   boardId: z.string(),
@@ -34,13 +34,35 @@ const model = createGame({
         allowedCardSetIds: ["cards"],
       },
     ],
+    tileTypes: [
+      {
+        id: "cell",
+        name: "Cell",
+        layout: "hex",
+        cells: [{ id: "cell", at: { q: 0, r: 0 } }],
+      },
+    ],
+    tileSeeds: [
+      {
+        id: "cell",
+        typeId: "cell",
+        scope: "perPlayer",
+        home: {
+          type: "board",
+          boardId: "mat",
+          layout: "hex",
+          q: 0,
+          r: 0,
+          rotation: 0,
+        },
+      },
+    ],
     boards: [
       {
         id: "mat",
         name: "Mat",
         scope: "perPlayer",
         layout: "hex",
-        shape: hexagon({ radius: 0 }),
       },
     ],
   },

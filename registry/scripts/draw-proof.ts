@@ -336,9 +336,26 @@ export async function proveDraw(
   await expect(pile).toHaveAttribute("data-draw-available", "false");
   // The menu opener stays enabled to explain the unavailable draw.
   await expect(pile).toBeEnabled();
-  if (touch) await pile.tap();
-  else await pile.click();
-  await expect(menu).toBeDisabled();
+  // Unavailable touch draws still explain their restriction without requiring a
+  // browser compatibility click, just like available menu activation.
+  const blockedClick = touch
+    ? await pile.evaluateHandle((element) => {
+        const block = (event: Event) => event.stopImmediatePropagation();
+        element.addEventListener("click", block, { capture: true, once: true });
+        return {
+          stop: () => element.removeEventListener("click", block, true),
+        };
+      })
+    : null;
+  try {
+    if (touch) await pile.tap();
+    else await pile.click();
+    await expect(pile).toHaveAttribute("aria-expanded", "true");
+    await expect(menu).toBeDisabled();
+  } finally {
+    await blockedClick?.evaluate((listener) => listener.stop());
+    await blockedClick?.dispose();
+  }
   await page.keyboard.press("Escape");
 }
 

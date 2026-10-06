@@ -23,8 +23,13 @@ function reindexSpaceOccupants<
   Table extends RuntimeTableRecord,
   BoardId extends BoardIdOfTable<Table>,
   SpaceId extends SpaceIdOfTable<Table, BoardId>,
->(table: Table, boardId: BoardId, spaceId: SpaceId): void {
-  getComponentsOnSpace(table, boardId, spaceId).forEach(
+>(
+  table: Table,
+  boardId: BoardId,
+  spaceId: SpaceId,
+  definitions: ZoneDefinitions,
+): void {
+  getComponentsOnSpace(table, definitions, boardId, spaceId).forEach(
     (componentId, index) => {
       const location = table.componentLocations[componentId];
       if (location?.type === "OnSpace") {
@@ -87,6 +92,10 @@ export function removeComponentFromCurrentLocation<
 >(table: Table, componentId: ComponentId, definitions: ZoneDefinitions): void {
   assertComponent(table, componentId);
   const currentLocation = table.componentLocations[componentId];
+  if (currentLocation?.type === "OnBoard")
+    throw new Error(
+      "Placed tiles require dependency-aware removal before moving.",
+    );
   if (!currentLocation) {
     return;
   }
@@ -96,7 +105,8 @@ export function removeComponentFromCurrentLocation<
     reindexSpaceOccupants(
       table,
       currentLocation.boardId as BoardIdOfTable<Table>,
-      currentLocation.spaceId as SpaceIdOfTable<Table, BoardIdOfTable<Table>>,
+      currentLocation.spaceId,
+      definitions,
     );
     return;
   }
@@ -151,7 +161,12 @@ export function moveComponentToSpaceInPlace<
     throw new Error(
       "Tiles cannot use spatial component locations before board placement is supported.",
     );
-  const position = getComponentsOnSpace(table, boardId, spaceId).length;
+  const position = getComponentsOnSpace(
+    table,
+    definitions,
+    boardId,
+    spaceId,
+  ).length;
   removeComponentFromCurrentLocation(table, componentId, definitions);
   table.componentLocations[componentId] = {
     type: "OnSpace",
@@ -185,8 +200,13 @@ export function moveComponentToEdgeInPlace<
     throw new Error(
       "Tiles cannot use spatial component locations before board placement is supported.",
     );
-  getEdge(table, boardId, edgeId);
-  const position = getComponentsOnEdge(table, boardId, edgeId).length;
+  getEdge(table, definitions, boardId, edgeId);
+  const position = getComponentsOnEdge(
+    table,
+    definitions,
+    boardId,
+    edgeId,
+  ).length;
   removeComponentFromCurrentLocation(table, componentId, definitions);
   table.componentLocations[componentId] = {
     type: "OnEdge",
@@ -212,8 +232,13 @@ export function moveComponentToVertexInPlace<
     throw new Error(
       "Tiles cannot use spatial component locations before board placement is supported.",
     );
-  getVertex(table, boardId, vertexId);
-  const position = getComponentsOnVertex(table, boardId, vertexId).length;
+  getVertex(table, definitions, boardId, vertexId);
+  const position = getComponentsOnVertex(
+    table,
+    definitions,
+    boardId,
+    vertexId,
+  ).length;
   removeComponentFromCurrentLocation(table, componentId, definitions);
   table.componentLocations[componentId] = {
     type: "OnVertex",

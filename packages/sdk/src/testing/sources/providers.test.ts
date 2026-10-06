@@ -1,3 +1,4 @@
+import { tileSpaceId } from "../../shared/domain/tile-space.js";
 import { describe, expect, it, vi } from "vitest";
 import hearts from "../../../../../examples/reference-games/hearts/app/game.ts";
 import hex from "../../../../../examples/reference-games/hex-network-trading/app/game.ts";
@@ -111,6 +112,8 @@ describe("production-backed local sources", () => {
     scenario.dispose();
   });
 
+  // Full-game exploration dispatches every bounded candidate before replaying
+  // all commands, so this integration proof needs more time on hosted runners.
   it("deterministically fuzzes a full Hearts game with a bounded solver budget", async () => {
     const result = await fuzz(hearts, {
       seed: 1,
@@ -125,7 +128,7 @@ describe("production-backed local sources", () => {
       expect((await replay.apply(command)).accepted).toBe(true);
     expect(replay.checkpoint()).toEqual(result.checkpoint);
     replay.dispose();
-  }, 15_000);
+  }, 30_000);
 
   it("plays complete Hearts through typed actor commands while retaining selected view", async () => {
     const source = await localSource(hearts, {
@@ -176,7 +179,9 @@ describe("production-backed local sources", () => {
       as: "player-1",
     });
     expect(
-      await source.submit("moveBandits", { hexId: "northForest" }),
+      await source.submit("moveBandits", {
+        hexId: tileSpaceId("northForest", "cell"),
+      }),
     ).toEqual({ accepted: true });
     const saved: unknown = JSON.parse(JSON.stringify(source.checkpoint()));
     const oldVersion = source.inspect().version;
@@ -185,7 +190,9 @@ describe("production-backed local sources", () => {
       .frame.availableInteractions.find(
         (item) => item.interactionId === "moveBandits",
       )!.step;
-    expect(step?.selected).toEqual({ hexId: "northForest" });
+    expect(step?.selected).toEqual({
+      hexId: tileSpaceId("northForest", "cell"),
+    });
     expect(
       (await source.submit("moveBandits", { targetPlayerId: "player-1" }))
         .accepted,
@@ -201,10 +208,12 @@ describe("production-backed local sources", () => {
         .frame.availableInteractions.find(
           (item) => item.interactionId === "moveBandits",
         )!.step?.selected,
-    ).toEqual({ hexId: "northForest" });
+    ).toEqual({ hexId: tileSpaceId("northForest", "cell") });
     expect(await source.cancel("moveBandits")).toEqual({ accepted: true });
     expect(
-      await source.submit("moveBandits", { hexId: "southWestClay" }),
+      await source.submit("moveBandits", {
+        hexId: tileSpaceId("southWestClay", "cell"),
+      }),
     ).toEqual({ accepted: true });
     expect(
       await source.submit("moveBandits", { targetPlayerId: null }),
@@ -217,7 +226,9 @@ describe("production-backed local sources", () => {
       at: "ready-to-move",
       as: "player-1",
     });
-    await source.submit("moveBandits", { hexId: "northForest" });
+    await source.submit("moveBandits", {
+      hexId: tileSpaceId("northForest", "cell"),
+    });
     const before = source.checkpoint();
     const commands = await source.explore({ maxEvaluations: 100 });
     expect(commands.length).toBeGreaterThan(0);

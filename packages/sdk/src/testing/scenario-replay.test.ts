@@ -1,7 +1,6 @@
 import { perPlayerInstanceId } from "../shared/domain/per-player-instance.js";
 import { compileManifest } from "../reducer/manifest/compiler";
 import { createGame as createModel } from "../reducer";
-import { InteractionSteps } from "../reducer/authoring/steps";
 
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
@@ -91,7 +90,9 @@ function createScenarioGame() {
         actor: ({ q }) => q.player.order()[0] ?? null,
         interactions: {
           dependentTask: contract.phase("play").interaction({
-            steps: new InteractionSteps()
+            steps: contract
+              .phase("play")
+              .steps()
               .input(
                 "mode",
                 formInput.choice({
@@ -142,7 +143,9 @@ function createScenarioGame() {
             reduce: () => {},
           }),
           optionalRecipient: contract.phase("play").interaction({
-            steps: new InteractionSteps()
+            steps: contract
+              .phase("play")
+              .steps()
               .input(
                 "mode",
                 formInput.choice({

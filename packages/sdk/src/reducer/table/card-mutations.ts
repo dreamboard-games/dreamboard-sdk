@@ -5,6 +5,7 @@ import {
   assertComponent,
   assertComponentAllowed,
   resolveZone,
+  resolveZoneDestination,
   type ZoneInput,
 } from "./zones";
 import { assertNonNegativeSafeInteger } from "./numeric";
@@ -30,6 +31,10 @@ function validateSource(
 ): void {
   assertComponent(table, id);
   const source = table.componentLocations[id];
+  if (source.type === "OnBoard")
+    throw new Error(
+      "Placed tiles require dependency-aware removal before moving.",
+    );
   if (source.type === "InZone") {
     const { ids } = resolveZone(table, definitions, source);
     if (ids.filter((candidate) => candidate === id).length !== 1)
@@ -60,7 +65,7 @@ export function moveComponentToZoneInPlace(options: {
   playedBy?: string | null;
 }): void {
   const { table, definitions, componentId } = options;
-  const destination = resolveZone(table, definitions, options.to);
+  const destination = resolveZoneDestination(table, definitions, options.to);
   assertComponentAllowed(table, destination.definition, componentId);
   validateSource(table, definitions, componentId);
   if (options.playedBy != null && !table.playerOrder.includes(options.playedBy))
@@ -102,7 +107,7 @@ export function dealComponentsInPlace(options: {
   const { table, definitions } = options;
   assertNonNegativeSafeInteger(options.count, "Deal count");
   const source = resolveZone(table, definitions, options.from);
-  const destination = resolveZone(table, definitions, options.to);
+  const destination = resolveZoneDestination(table, definitions, options.to);
   if (
     source.ref.zoneId === destination.ref.zoneId &&
     source.ref.hostId === destination.ref.hostId

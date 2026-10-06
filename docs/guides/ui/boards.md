@@ -13,7 +13,17 @@ export const game = createGameInstance<unknown>()({
 export const boards = game.boards.getAll();
 ```
 
-Boards exist only with boardFeature enabled. Layout and hit testing use canonical materialized geometry; static metadata is not guessed from arbitrary view keys. Board controls route through current canonical inputs, with canonical runtime board identity preserved. All boards expose semantic `spaces`; hex and square boards also have layout support. The registry owns SVG rendering, touch areas and converting browser pixels into layout coordinates.
+Boards exist only with boardFeature enabled. Layout and hit testing use the
+current seat's projected topology from the flat `frame.view.boards` map. There is
+no separate static-board cache to merge into it. Board controls route through
+current canonical inputs, preserving runtime board identity. All boards expose
+semantic `spaces`; hex and square boards also have layout support. The registry
+owns SVG rendering, touch areas and converting browser pixels into layout coordinates.
+
+Tiled cells keep their identity when their tile moves. Use projected cell IDs;
+do not derive them from coordinates. World edge and vertex IDs belong to the
+exact runtime board instance. Headless geometry never reads authoritative tile
+inventory or infers missing cells from authored definitions.
 
 With your authored game type bound to the instance, board and space IDs are
 checked together. Required lookups return values directly and throw when missing;

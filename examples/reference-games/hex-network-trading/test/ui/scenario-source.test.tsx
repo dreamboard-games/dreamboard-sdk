@@ -1,3 +1,4 @@
+import { tileSpaceId } from "@dreamboard-games/sdk/reducer";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { boardFeature, createGameInstance } from "@dreamboard-games/sdk";
@@ -64,17 +65,19 @@ test("Bandits saved district survives restore, cancels, and accepts explicit no-
     as: "player-1",
   });
   const ui = instance(source);
-  ui.inputs.get("moveBandits.moveBandits", "hexId").setValue("northForest");
+  ui.inputs
+    .get("moveBandits.moveBandits", "hexId")
+    .setValue(tileSpaceId("northForest", "cell"));
   assert.equal(
     (await ui.interactions.get("moveBandits.moveBandits").submit()).accepted,
     true,
   );
-  assert.equal(ui.view!.banditsHexId, "centralBarrens");
+  assert.equal(ui.view!.banditsHexId, tileSpaceId("centralBarrens", "cell"));
   const saved: unknown = JSON.parse(JSON.stringify(source.checkpoint()));
   source.restore(saved);
   assert.deepEqual(
     ui.interactions.get("moveBandits.moveBandits").getStep()!.selected,
-    { hexId: "northForest" },
+    { hexId: tileSpaceId("northForest", "cell") },
   );
   source.switchSeat("player-3");
   assert.equal(ui.interactions.find("moveBandits.moveBandits"), undefined);
@@ -88,14 +91,16 @@ test("Bandits saved district survives restore, cancels, and accepts explicit no-
     ui.interactions.get("moveBandits.moveBandits").getStepIndex(),
     0,
   );
-  ui.inputs.get("moveBandits.moveBandits", "hexId").setValue("southWestClay");
+  ui.inputs
+    .get("moveBandits.moveBandits", "hexId")
+    .setValue(tileSpaceId("southWestClay", "cell"));
   await ui.interactions.get("moveBandits.moveBandits").submit();
   ui.inputs.get("moveBandits.moveBandits", "targetPlayerId").setValue(null);
   assert.equal(
     (await ui.interactions.get("moveBandits.moveBandits").submit()).accepted,
     true,
   );
-  assert.equal(ui.view!.banditsHexId, "southWestClay");
+  assert.equal(ui.view!.banditsHexId, tileSpaceId("southWestClay", "cell"));
   assert.equal(ui.view!.currentPhase, "main");
   ui.dispose();
 });

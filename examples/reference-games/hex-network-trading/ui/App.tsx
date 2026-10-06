@@ -35,9 +35,6 @@ const TERRAIN_STYLE = {
 } as const;
 
 export function StormtrailBoard({ view }: { view: GameView }) {
-  const hexById = new Map<string, GameView["hexes"][number]>(
-    view.hexes.map((hex) => [hex.id, hex]),
-  );
   const trails = new Map(Object.entries(view.trailsByEdgeId));
   const camps = new Map(Object.entries(view.campsByIntersectionId));
   return (
@@ -51,11 +48,9 @@ export function StormtrailBoard({ view }: { view: GameView }) {
         className="h-full max-w-none"
         label="Stormtrail frontier"
         renderSpace={(space) => {
-          const hex = hexById.get(space.id);
-          if (!hex) return null;
-          const terrain = TERRAIN_STYLE[hex.terrain];
+          const terrain = TERRAIN_STYLE[space.data.typeId];
           return (
-            <g data-stormtrail-hex={hex.id}>
+            <g data-stormtrail-hex={space.id}>
               <polygon
                 points={space
                   .points()
@@ -79,16 +74,16 @@ export function StormtrailBoard({ view }: { view: GameView }) {
                 <text
                   y={15}
                   textAnchor="middle"
-                  fontSize={hex.number === null ? 10 : 20}
+                  fontSize={space.data.fields.number === null ? 10 : 20}
                   fontWeight={800}
                   fill="#292524"
                 >
-                  {hex.number ?? "BARRENS"}
+                  {space.data.fields.number ?? "BARRENS"}
                 </text>
                 <text y={34} textAnchor="middle" fontSize={8} fill="#57534e">
                   {terrain.label.toUpperCase()}
                 </text>
-                {view.banditsHexId === hex.id ? (
+                {view.banditsHexId === space.id ? (
                   <text
                     y={-42}
                     textAnchor="middle"

@@ -50,10 +50,8 @@ function authoredGame(
           id: "mat",
           name: "Mat",
           scope: "perPlayer",
-          layout: "square",
-          spaces: [{ id: "slot", row: 0, col: 0 }],
-          edges: [],
-          vertices: [],
+          layout: "generic",
+          spaces: [{ id: "slot" }],
           relations: [],
         },
       ],
@@ -162,8 +160,7 @@ async function setup() {
   return {
     source,
     game,
-    space: (id: string) =>
-      game.boards.get(id).getLayout({ hexSize: 20 }).getSpaces()[0],
+    space: (id: string) => game.boards.get(id).spaces.get("slot"),
   };
 }
 
@@ -348,39 +345,32 @@ describe("per-player board target identity through local sources", () => {
 });
 
 describe("current roster board projection", () => {
-  it("projects admitted custom identities and current board fields independently of static compilation", async () => {
+  it("derives complete topology for admitted custom identities without persisted geometry", async () => {
     const playerIds = ['seat:one/"', "table"];
     const game = authoredGame(
       perPlayerInstanceId("board", "mat", playerIds[1]),
     );
     const table = game.contract.manifest.createInitialTable({ playerIds });
-    const boardId = perPlayerInstanceId("board", "mat", playerIds[0]);
     const runtime = createReducerTestingRuntime(game);
     const initial = await runtime.initialize({
       table: RuntimeJsonSchema.parse(table),
       playerIds,
       rngSeed: 1,
     });
-    const first = runtime.project({ state: initial.state, playerIds });
-    expect(first.seats[playerIds[0]].boards).toEqual(table.boards);
-    expect(Object.keys(first.seats[playerIds[0]].boards!.byId)).toEqual(
+    const projection = runtime.project({ state: initial.state, playerIds });
+    const boards = projection.seats[playerIds[0]].boards!;
+    expect(Object.keys(boards)).toEqual(
       playerIds.map((id) => perPlayerInstanceId("board", "mat", id)),
     );
-    table.boards.byId[boardId].fields = { score: 7 };
-    const updated = runtime.project({
-      state: {
-        ...initial.state,
-        domain: {
-          ...initial.state.domain,
-          table: RuntimeJsonSchema.parse(table),
-        },
-      },
-      playerIds,
-    });
-    expect(updated.seats[playerIds[0]].boards!.byId[boardId].fields).toEqual({
-      score: 7,
-    });
-    expect(first.seats[playerIds[0]].boards!.byId[boardId].fields).toEqual({});
-    expect(game.contract.manifest.staticBoards.byId).toEqual({});
+    for (const playerId of playerIds) {
+      const id = perPlayerInstanceId("board", "mat", playerId);
+      expect(table.boards[id]).toEqual({ baseId: "mat", relations: [] });
+      expect(boards[id]).toMatchObject({
+        id,
+        baseId: "mat",
+        layout: "generic",
+        spaces: { slot: { id: "slot", fields: {} } },
+      });
+    }
   });
 });

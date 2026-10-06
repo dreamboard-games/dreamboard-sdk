@@ -1,3 +1,4 @@
+import type { TopologyDefinitions } from "../../shared/domain/topology-definitions.js";
 import type { PerPlayerInstanceId } from "../../shared/domain/per-player-instance.js";
 import type { PlayerIdOfState, TableQueriesOfState } from "../model";
 import * as z from "zod";
@@ -47,20 +48,22 @@ function makeBoardCollector<
   return function collector<
     State extends CollectorState = CollectorState,
     Id extends string = string,
+    Definitions extends TopologyDefinitions = TopologyDefinitions,
   >(options: {
     target: BoardIdTargetRule<
       State,
       Id,
       Kind extends `board-${infer Target extends Exclude<TargetKind, "card">}`
         ? Target
-        : never
+        : never,
+      Definitions
     >;
   }): InputCollector<z.ZodString, State, Kind, Id> {
     const target = options.target;
     const eligible = (
       state: State,
       playerId: PlayerIdOfState<State>,
-      q: TableQueriesOfState<State>,
+      q: TableQueriesOfState<State, Definitions>,
     ) => target.eligible({ state, playerId, q });
     // Assembly binds state/player/queries to one validated game contract.
     // Schemas check wire shape only; validateTarget must resolve a canonical
@@ -74,13 +77,13 @@ function makeBoardCollector<
       validateTarget: (
         state: State,
         playerId: PlayerIdOfState<State>,
-        q: TableQueriesOfState<State>,
+        q: TableQueriesOfState<State, Definitions>,
         targetId: unknown,
       ) => target.validate({ state, playerId, q }, targetId),
       domain: (
         state: State,
         playerId: PlayerIdOfState<State>,
-        q: TableQueriesOfState<State>,
+        q: TableQueriesOfState<State, Definitions>,
       ) =>
         ({
           type: "boardTarget",
@@ -108,8 +111,9 @@ export function playerSpaceInput<
   State extends CollectorState = CollectorState,
   BoardId extends string = string,
   SpaceId extends string = string,
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 >(options: {
-  target: BoardSpaceTargetRule<State, BoardId, SpaceId>;
+  target: BoardSpaceTargetRule<State, BoardId, SpaceId, Definitions>;
 }): InputCollector<
   BoardSpaceInputSchema,
   State,
@@ -121,7 +125,7 @@ export function playerSpaceInput<
   const eligible = (
     state: State,
     playerId: PlayerIdOfState<State>,
-    q: TableQueriesOfState<State>,
+    q: TableQueriesOfState<State, Definitions>,
   ) => target.eligible({ state, playerId, q });
   // Assembly binds state/player/queries to one validated game contract.
   // Schemas check wire shape only; validateTarget must resolve a canonical
@@ -138,13 +142,13 @@ export function playerSpaceInput<
     validateTarget: (
       state: State,
       playerId: PlayerIdOfState<State>,
-      q: TableQueriesOfState<State>,
+      q: TableQueriesOfState<State, Definitions>,
       targetValue: unknown,
     ) => target.validate({ state, playerId, q }, targetValue),
     domain: (
       state: State,
       playerId: PlayerIdOfState<State>,
-      q: TableQueriesOfState<State>,
+      q: TableQueriesOfState<State, Definitions>,
     ) =>
       ({
         type: "boardTarget",

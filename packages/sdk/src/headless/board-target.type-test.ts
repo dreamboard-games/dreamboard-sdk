@@ -17,11 +17,14 @@ const model = createGame({
       {
         id: "mat",
         name: "Mat",
-        layout: "square",
+        layout: "generic",
         scope: "perPlayer",
-        spaces: [{ id: "slot", row: 0, col: 0 }],
-        edges: [],
-        vertices: [],
+        relationFieldsSchema: z.object({
+          cost: z.number(),
+          tag: z.string().optional(),
+        }),
+        spaceFieldsSchema: z.object({ score: z.number() }),
+        spaces: [{ id: "slot", fields: { score: 2 } }],
         relations: [],
       },
     ],
@@ -103,8 +106,8 @@ const duplicateBoard: SelectionTarget<typeof game> = {
   boardId: perPlayerInstanceId("board", "mat", "player-1"),
 };
 const tupleEdge: SelectionTarget<typeof game> = {
+  // @ts-expect-error This generic board has no edge targets.
   kind: "edge",
-  // @ts-expect-error Tuple targets are spaces, not edges.
   valueKind: "board-space",
   value: selectedSpace,
 };
@@ -114,11 +117,11 @@ const noBoard: SelectionTarget<typeof game> = {
   valueKind: "board-id",
   value: "slot",
 };
-// @ts-expect-error Space identity belongs to this board.
 const missingSpace: SelectionTarget<typeof game> = {
   kind: "space",
   valueKind: "board-id",
   boardId: perPlayerInstanceId("board", "mat", "player-2"),
+  // @ts-expect-error Space identity belongs to this board.
   value: "missing",
 };
 void [target, duplicateBoard, tupleEdge, noBoard, missingSpace];
@@ -134,7 +137,7 @@ const spaceIdentity: "slot" = board.data.spaces.slot.id;
 // @ts-expect-error Board data preserves the declared topology.
 void board.data.spaces.missing;
 // @ts-expect-error Projected data is deeply readonly.
-board.data.spaces.slot.row = 2;
+board.data.spaces.slot.fields.score = 2;
 void [boardScope, boardIdentity, spaceIdentity];
 
 import { createGameInstance } from "./instance.js";
@@ -150,7 +153,7 @@ const semanticSpace = ui.boards
   .spaces.get("slot");
 const semanticId: "slot" = semanticSpace.id;
 const ownerId: PerPlayerInstanceId<"board", "mat"> = semanticSpace.board.id;
-const row: number = semanticSpace.data.row;
+const score: number = semanticSpace.data.fields.score;
 semanticSpace.board.game.boards
   .get(perPlayerInstanceId("board", "mat", "player-2"))
   .spaces.get("slot");
@@ -165,4 +168,14 @@ const scopedSpaces = ui.boards.get(
 scopedSpaces.get("missing");
 // @ts-expect-error Space selection retains interaction identity.
 semanticSpace.getSelectHandler({ interaction: "play.missing" });
-void [semanticId, ownerId, row];
+void [semanticId, ownerId, score];
+
+const relationCost: number = board.data.relations[0].fields.cost;
+const relationTag: string | undefined = board.data.relations[0].fields.tag;
+// @ts-expect-error Derived relation fields retain exact authored property names.
+board.data.relations[0].fields.unknown;
+// @ts-expect-error Derived relation fields preserve their authored value types.
+const wrongRelationCost: string = board.data.relations[0].fields.cost;
+// @ts-expect-error Derived relations cannot mutate authoritative relation fields.
+board.data.relations[0].fields.cost = 2;
+void [relationCost, relationTag, wrongRelationCost];

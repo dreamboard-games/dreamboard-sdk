@@ -1,7 +1,8 @@
+import type { RuntimeTableRecord } from "../../model";
+import { createBoardTopologyCache } from "../../../shared/board-topology.js";
 import { BoardProjectionSchema } from "../../../shared/runtime-schema.js";
 import type { ViewCard } from "../../../shared/domain/cards.js";
 import { createTableQueries } from "../../table-queries";
-import type { RuntimeTableRecord } from "../../model";
 import type { RuntimeJson } from "../../../shared/runtime-json";
 import {
   canonicalizePluginRuntimeJson as toCanonicalJson,
@@ -20,6 +21,7 @@ import type {
 } from "./interaction-resolver";
 import type {
   TrustedDomainState,
+  TrustedManifest,
   TrustedPhaseName,
   TrustedPlayerId,
   TrustedRuntimeScope,
@@ -69,6 +71,7 @@ export function createProjectionBuilder<
   scope: TrustedRuntimeScope<Contract, Definitions, View>,
   interactions: InteractionResolverFor<Contract, Definitions, View>,
 ) {
+  const topologyOf = createBoardTopologyCache();
   type SessionState = TrustedSessionState<Contract>;
   type DomainState = TrustedDomainState<Contract>;
   type State = TrustedState<Contract>;
@@ -132,14 +135,14 @@ export function createProjectionBuilder<
     combinedState: State,
     playerId: PlayerId,
     actorSeat: number,
-    projection: ProjectionContext<DomainState>,
+    projection: ProjectionContext<DomainState, TrustedManifest<Contract>>,
     registry: DescriptorRegistry,
     concealment: CardConcealment,
   ) {
     const phaseName = combinedState.flow.currentPhase as PhaseName;
-    const q = createTableQueries<RuntimeTableRecord>(
+    const q = createTableQueries<RuntimeTableRecord, typeof scope.manifest>(
       combinedState.table,
-      scope.definition.contract.manifest,
+      scope.manifest,
     );
     const result: Record<
       string,
@@ -230,7 +233,7 @@ export function createProjectionBuilder<
 
   function resolveSchedulerFlowFor(
     state: SessionState,
-    projection?: ProjectionContext<DomainState>,
+    projection?: ProjectionContext<DomainState, TrustedManifest<Contract>>,
   ): Wire.SchedulerFlowAuthorityProjection {
     const combinedState = scope.toCombinedState(state);
     const phaseName = combinedState.flow.currentPhase as PhaseName;
@@ -392,7 +395,7 @@ export function createProjectionBuilder<
     playerId: PlayerId,
   ): Record<string, Record<string, number>> {
     const ownerOnly = new Set<string>(
-      scope.definition.contract.manifest.literals.ownerResourceIds ?? [],
+      scope.manifest.literals.ownerResourceIds ?? [],
     );
     const balances = combinedState.table.resources as Record<
       string,
@@ -413,7 +416,7 @@ export function createProjectionBuilder<
   function resolvePlayerViewFor(
     combinedState: State,
     playerId: PlayerId,
-    projection: ProjectionContext<DomainState>,
+    projection: ProjectionContext<DomainState, TrustedManifest<Contract>>,
   ): unknown {
     const view = scope.definition.view;
     // eslint-disable-next-line no-restricted-syntax -- Context, projected state, queries, and player all come from the same Contract bound to this view callback.
@@ -436,9 +439,12 @@ export function createProjectionBuilder<
     projectionMode?: ProjectionMode;
   }) {
     const combinedState = scope.toCombinedState(state);
-    const projection = createProjectionContext({
+    const projection = createProjectionContext<
+      DomainState,
+      TrustedManifest<Contract>
+    >({
       domainState: scope.toDomainState(combinedState),
-      definitions: scope.definition.contract.manifest,
+      definitions: scope.manifest,
     });
     const timing = createProjectionTimingMetadata();
     const registry = createDescriptorRegistry(timing);
@@ -449,12 +455,27 @@ export function createProjectionBuilder<
       zones?: ReturnType<typeof resolveZoneHandlesFor>;
       resources?: ReturnType<typeof resolveResourcesFor>;
     };
+    // Every board is public in this layer; private board policy remains unsupported.
+    // Derive from the admitted current inventory, once for all requested seats.
+    const boards =
+      projectionMode === "full" && playerIds.length > 0
+        ? BoardProjectionSchema.parse(
+            toCanonicalJson(
+              Object.fromEntries(
+                Object.keys(combinedState.table.boards).map((boardId) => [
+                  boardId,
+                  topologyOf(combinedState.table, scope.manifest, boardId),
+                ]),
+              ),
+            ),
+          )
+        : undefined;
     const seats: Record<string, SeatProjection> = {};
     for (const [actorSeat, playerId] of playerIds.entries()) {
       const concealment = concealCards(
         combinedState.table,
         playerId,
-        scope.definition.contract.manifest,
+        scope.manifest,
       );
       const availableInteractions = measureProjectionTiming(
         timing,
@@ -477,11 +498,7 @@ export function createProjectionBuilder<
       const fullProjection =
         projectionMode === "full"
           ? {
-              // All board state is public until the private-board projection layer.
-              // Use the admitted current table; compilation has no runtime roster.
-              boards: BoardProjectionSchema.parse(
-                toCanonicalJson(combinedState.table.boards),
-              ),
+              boards,
               view: measureProjectionTiming(timing, "resolveViewMs", () =>
                 resolvePlayerViewFor(combinedState, playerId, projection),
               ),

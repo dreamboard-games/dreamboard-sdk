@@ -24,6 +24,8 @@ function createModel() {
   const handIds = ["hand"] as const;
   return {
     manifest: {
+      boardDefinitions: {},
+      tileDefinitions: {},
       literals: {
         boardLayouts: [] as const,
         boardTypeIds: [] as const,

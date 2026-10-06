@@ -1,5 +1,11 @@
 import { perPlayerInstanceId } from "../../shared/domain/per-player-instance.js";
 import { compileManifest } from "./compiler";
+import { createTableQueries } from "../table-queries";
+import { tileSpaceId } from "../../shared/domain/tile-space.js";
+import {
+  boardEdgeId,
+  boardVertexId,
+} from "../../shared/domain/board-element.js";
 import * as z from "zod";
 import { expect, test } from "vitest";
 import type { GameTopologyManifest } from "../../shared/domain/manifest.js";
@@ -21,7 +27,7 @@ const EMPTY_MANIFEST: GameTopologyManifest = {
 };
 
 test("materializeManifestTable keeps runtime board topology and attached zones board-local", () => {
-  const table = compileManifest({
+  const compiled = compileManifest({
     players: EMPTY_MANIFEST.players,
     cardSets: [],
     boards: [
@@ -56,26 +62,23 @@ test("materializeManifestTable keeps runtime board topology and attached zones b
         attachedTo: { board: "player-board" },
       },
     ],
-  } as const).createInitialTable({ playerIds: ["player-1", "player-2"] });
+  } as const);
+  const table = compiled.createInitialTable({
+    playerIds: ["player-1", "player-2"],
+  });
+  const q = createTableQueries(table, compiled);
   const first = perPlayerInstanceId("board", "player-board", "player-1");
   const second = perPlayerInstanceId("board", "player-board", "player-2");
-  expect(Object.keys(table.boards.byId["board-a"].spaces)).toEqual([
-    "a-1",
-    "a-2",
-  ]);
-  expect(Object.keys(table.boards.byId["board-b"].spaces)).toEqual(["b-1"]);
-  expect(table.boards.byId["board-a"].spaces).not.toHaveProperty("b-1");
+  expect(Object.keys(q.board("board-a").state.spaces)).toEqual(["a-1", "a-2"]);
+  expect(Object.keys(q.board("board-b").state.spaces)).toEqual(["b-1"]);
+  expect(q.board("board-a").state.spaces).not.toHaveProperty("b-1");
   expect(table.zones["a-row"]).toEqual({ "board-a": [] });
   expect(table.zones["b-row"]).not.toHaveProperty("board-a");
-  expect(Object.keys(table.boards.byId[first].spaces)).toEqual([
-    "player-space",
-  ]);
+  expect(Object.keys(q.board(first).state.spaces)).toEqual(["player-space"]);
   expect(Object.keys(table.zones["player-row"])).toEqual([first, second]);
-  expect(table.boards.byId[first].spaces).not.toBe(
-    table.boards.byId[second].spaces,
-  );
-  expect(table.boards.byId[first].spaces["player-space"]).not.toBe(
-    table.boards.byId[second].spaces["player-space"],
+  expect(q.board(first).state.spaces).not.toBe(q.board(second).state.spaces);
+  expect(q.board(first).state.spaces["player-space"]).not.toBe(
+    q.board(second).state.spaces["player-space"],
   );
   expect(table.zones["player-row"][first]).not.toBe(
     table.zones["player-row"][second],
@@ -134,7 +137,7 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
                   home: {
                     type: "space",
                     boardId: "square-board",
-                    spaceId: "a1",
+                    spaceId: tileSpaceId("terrain", "a1"),
                   },
                   properties: {},
                 },
@@ -157,7 +160,12 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
                   home: {
                     type: "edge",
                     boardId: "square-board",
-                    ref: { spaces: ["a1", "a2"] },
+                    ref: {
+                      spaces: [
+                        tileSpaceId("terrain", "a1"),
+                        tileSpaceId("terrain", "a2"),
+                      ],
+                    },
                   },
                   properties: {},
                 },
@@ -169,7 +177,11 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
                   home: {
                     type: "vertex",
                     boardId: "square-board",
-                    ref: { spaces: ["a1", "a2", "b1", "b2"] },
+                    ref: {
+                      spaces: ["a1", "a2", "b1", "b2"].map((id) =>
+                        tileSpaceId("terrain", id),
+                      ),
+                    },
                   },
                   properties: {},
                 },
@@ -218,15 +230,33 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
               name: "Square Board",
               layout: "square",
               scope: "shared",
-              spaces: [
-                { id: "a1", row: 0, col: 0 },
-                { id: "a2", row: 0, col: 1 },
-                { id: "b1", row: 1, col: 0 },
-                { id: "b2", row: 1, col: 1 },
+            },
+          ],
+          tileTypes: [
+            {
+              id: "terrain",
+              name: "Terrain",
+              layout: "square",
+              cells: [
+                { id: "a1", at: { row: 0, col: 0 } },
+                { id: "a2", at: { row: 0, col: 1 } },
+                { id: "b1", at: { row: 1, col: 0 } },
+                { id: "b2", at: { row: 1, col: 1 } },
               ],
-              relations: [],
-              edges: [],
-              vertices: [],
+            },
+          ],
+          tileSeeds: [
+            {
+              id: "terrain",
+              typeId: "terrain",
+              home: {
+                type: "board",
+                boardId: "square-board",
+                layout: "square",
+                col: 0,
+                row: 0,
+                rotation: 0,
+              },
             },
           ],
           pieceTypes: [
@@ -242,17 +272,20 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
       }),
     );
 
-  expect(Object.keys(table.componentLocations)).toEqual([
-    "omitted",
-    "detached",
-    "zone-card",
-    "space-card",
-    "board-zone-card",
-    "edge-card",
-    "vertex-card",
-    "component-zone-card",
-    "holder-a",
-  ]);
+  expect(Object.keys(table.componentLocations).sort()).toEqual(
+    [
+      "omitted",
+      "detached",
+      "zone-card",
+      "space-card",
+      "board-zone-card",
+      "edge-card",
+      "vertex-card",
+      "component-zone-card",
+      "holder-a",
+      "terrain",
+    ].sort(),
+  );
   expect(table.componentLocations.omitted).toEqual({
     type: "InZone",
     zoneId: "shared-deck",
@@ -271,7 +304,7 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
   expect(table.componentLocations["space-card"]).toMatchObject({
     type: "OnSpace",
     boardId: "square-board",
-    spaceId: "a1",
+    spaceId: tileSpaceId("terrain", "a1"),
   });
   expect(table.componentLocations["board-zone-card"]).toMatchObject({
     type: "InZone",
@@ -281,12 +314,12 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
   expect(table.componentLocations["edge-card"]).toMatchObject({
     type: "OnEdge",
     boardId: "square-board",
-    edgeId: "square-edge:1,0::1,1",
+    edgeId: boardEdgeId("square", "square-board", "1,0:v"),
   });
   expect(table.componentLocations["vertex-card"]).toMatchObject({
     type: "OnVertex",
     boardId: "square-board",
-    vertexId: "square-vertex:1,1",
+    vertexId: boardVertexId("square", "square-board", "1,1"),
   });
   expect(table.componentLocations["component-zone-card"]).toMatchObject({
     type: "InZone",
@@ -328,81 +361,102 @@ test("materializeManifestTable rejects unsafe manifest keys before materializati
   ).toThrow("Invalid topology manifest");
 });
 
-test("inline square metadata and schemas survive topology materialization", () => {
-  const board = {
-    id: "map",
-    name: "Map",
-    layout: "square" as const,
-    scope: "shared" as const,
-    boardFieldsSchema: {
-      type: "object",
-      properties: { round: { type: "integer", default: 2 } },
-      required: [],
-    },
-    spaceFieldsSchema: {
-      type: "object",
-      properties: { terrain: { type: "string", default: "" } },
-      required: [],
-    },
-    edgeFieldsSchema: {
-      type: "object",
-      properties: { cost: { type: "integer", default: 0 } },
-      required: [],
-    },
-    vertexFieldsSchema: {
-      type: "object",
-      properties: { points: { type: "integer", default: 0 } },
-      required: [],
-    },
-    spaces: [
-      { id: "a", row: 0, col: 0, fields: { terrain: "grass" } },
-      { id: "b", row: 0, col: 1 },
-      { id: "c", row: 1, col: 0 },
-      { id: "d", row: 1, col: 1 },
-    ],
-    edges: [
+test("square tile metadata and defaults survive topology derivation", () => {
+  const source = {
+    players: { minPlayers: 1, maxPlayers: 2 },
+    cardSets: [],
+    boards: [
       {
-        ref: { spaces: ["a", "b"] },
-        typeId: "road",
-        label: "Bridge",
-        fields: { cost: 3 },
+        id: "map",
+        name: "Map",
+        layout: "square",
+        scope: "shared",
+        boardFieldsSchema: z.object({ round: z.number().int().default(2) }),
       },
     ],
-    vertices: [
+    tileTypes: [
       {
-        ref: { spaces: ["a", "b", "c", "d"] },
-        typeId: "city",
-        fields: { points: 4 },
+        id: "terrain",
+        name: "Terrain",
+        layout: "square",
+        cellFieldsSchema: z.object({ terrain: z.string().default("") }),
+        edgeFieldsSchema: z.object({ cost: z.number().int().default(0) }),
+        vertexFieldsSchema: z.object({ points: z.number().int().default(0) }),
+        cells: [
+          { id: "a", at: { row: 0, col: 0 }, fields: { terrain: "grass" } },
+          { id: "b", at: { row: 0, col: 1 } },
+          { id: "c", at: { row: 1, col: 0 } },
+          { id: "d", at: { row: 1, col: 1 } },
+        ],
+        edges: [
+          {
+            cellId: "a",
+            side: 0,
+            typeId: "road",
+            label: "Bridge",
+            fields: { cost: 3 },
+          },
+        ],
+        vertices: [
+          { cellId: "a", corner: 0, typeId: "city", fields: { points: 4 } },
+        ],
       },
     ],
-  };
-  const materialize = (input = board) =>
-    materializeManifestTable({
-      manifest: { ...EMPTY_MANIFEST, boards: [input] },
-      playerIds: ["player-1"],
-      shuffleItems: (values) => [...values],
-    });
-  const result = compileManifest({
-    ...EMPTY_MANIFEST,
-    boards: [board],
-  }).tableSchema.parse(materialize()).boards.byId.map;
-  if (result.layout !== "square") throw new Error("Expected square board");
+    tileSeeds: [
+      {
+        id: "tile",
+        typeId: "terrain",
+        home: {
+          type: "board",
+          boardId: "map",
+          layout: "square",
+          row: 0,
+          col: 0,
+          rotation: 0,
+        },
+      },
+    ],
+  } as const;
+  const compiled = compileManifest(source);
+  const table = compiled.createInitialTable({ playerIds: ["player-1"] });
+  expect(compiled.tableSchema.safeParse(table).success).toBe(true);
+  const result = createTableQueries(table, compiled).board("map").state;
   expect(result.fields).toEqual({ round: 2 });
-  expect(result.spaces.a.fields).toEqual({ terrain: "grass" });
+  expect(result.spaces[tileSpaceId("tile", "a")].fields).toEqual({
+    terrain: "grass",
+  });
+  expect(result.spaces[tileSpaceId("tile", "b")].fields).toEqual({
+    terrain: "",
+  });
+  expect(result.edges.find((edge) => edge.typeId === "road")).toMatchObject({
+    label: "Bridge",
+    fields: { cost: 3 },
+  });
   expect(
-    Object.values(result.edges).find((edge) => edge.typeId === "road"),
-  ).toMatchObject({ label: "Bridge", fields: { cost: 3 } });
-  expect(
-    Object.values(result.vertices).find((vertex) => vertex.typeId === "city"),
+    result.vertices.find((vertex) => vertex.typeId === "city"),
   ).toMatchObject({ fields: { points: 4 } });
-  expect(result).not.toHaveProperty("templateId");
+  expect(table.boards.map).toEqual({ baseId: "map", relations: [] });
   expect(() =>
-    materialize({ ...board, edges: [...board.edges, ...board.edges] }),
-  ).toThrow("duplicate square edge refs");
-  expect(() =>
-    materialize({
-      ...board,
-      vertices: [{ ...board.vertices[0], ref: { spaces: ["missing"] } }],
+    compileManifest({
+      ...source,
+      tileTypes: [
+        {
+          ...source.tileTypes[0],
+          edges: [...source.tileTypes[0].edges, ...source.tileTypes[0].edges],
+        },
+      ],
     }),
-  ).toThrow("unknown space 'missing'");
+  ).toThrow(/duplicate/i);
+  expect(() =>
+    compileManifest({
+      ...source,
+      // @ts-expect-error Runtime admission also rejects unknown local annotation cells.
+      tileTypes: [
+        {
+          ...source.tileTypes[0],
+          vertices: [{ ...source.tileTypes[0].vertices[0], cellId: "missing" }],
+        },
+      ],
+    }),
+  ).toThrow(/missing/);
 });

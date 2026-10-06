@@ -98,10 +98,6 @@ export type SeatProjectionBundle = z.infer<
   typeof Schemas.SeatProjectionBundleSchema
 >;
 export type ProjectRequest = z.infer<typeof Schemas.ProjectRequestSchema>;
-export type BoardStaticProjection = z.infer<
-  typeof Schemas.BoardStaticProjectionSchema
->;
-
 export type RuntimePendingInteraction = z.infer<
   typeof Schemas.RuntimePendingInteractionSchema
 >;

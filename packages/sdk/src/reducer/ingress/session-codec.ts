@@ -1,3 +1,5 @@
+import { BoardRelationSchema } from "../../shared/board-topology-schema.js";
+import { TilePlacementSchema } from "../../shared/domain/tile-placement.js";
 import { PlayerRosterSchema } from "../../shared/domain/player-identity";
 import { assertZoneConsistency } from "../table/zones";
 import { collectReducerDefinitionIndex } from "../definition-index";
@@ -27,6 +29,7 @@ import { collectIngressPhaseSchemas } from "./phase-schemas";
 
 const runtimeRecordSchema = z.record(z.string(), runtimePayloadSchema);
 const runtimeComponentLocationSchema = z.discriminatedUnion("type", [
+  TilePlacementSchema,
   z.object({ type: z.literal("Detached") }).strict(),
   z
     .object({
@@ -106,26 +109,13 @@ const currentRuntimeTableSchema = z
         .strict(),
     ),
     resources: z.record(z.string().min(1), runtimeRecordSchema),
-    boards: z
-      .object({
-        byId: z.record(
-          z.string(),
-          z
-            .object({
-              id: z.string(),
-              baseId: z.string().optional(),
-              scope: z.enum(["shared", "perPlayer"]),
-              playerId: z.string().nullable().optional(),
-              spaces: z.record(z.string(), runtimePayloadSchema),
-            })
-            .catchall(runtimePayloadSchema),
-        ),
-        hex: z.record(z.string(), runtimeRecordSchema),
-        square: z.record(z.string(), runtimeRecordSchema),
-        network: z.record(z.string(), runtimeRecordSchema).optional(),
-        track: z.record(z.string(), runtimeRecordSchema).optional(),
-      })
-      .strict(),
+    boards: z.record(
+      z.string(),
+      z.strictObject({
+        baseId: z.string(),
+        relations: z.array(BoardRelationSchema),
+      }),
+    ),
     tiles: z.record(
       z.string(),
       z

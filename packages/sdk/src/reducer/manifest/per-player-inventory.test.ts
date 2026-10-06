@@ -2,6 +2,7 @@ import { ref, FIELD_REF_KEY } from "./field-schemas.js";
 import * as z from "zod";
 import { describe, expect, test } from "vitest";
 import { compileManifest } from "./compiler";
+import { createTableQueries } from "../table-queries";
 import { parseTopologyManifestJson } from "./parse-json";
 import { perPlayerInstanceId } from "../../shared/domain/per-player-instance.js";
 
@@ -93,7 +94,7 @@ describe("per-player inventory", () => {
       expect(Object.keys(table.cards)).toHaveLength(count * 2);
       expect(Object.keys(table.pieces)).toHaveLength(count * 11 + 1);
       expect(Object.keys(table.dice)).toHaveLength(count);
-      expect(Object.keys(table.boards.byId)).toHaveLength(count);
+      expect(Object.keys(table.boards)).toHaveLength(count);
       expect(table.pieces["shared-piece"].ownerId).toBeNull();
       for (const playerId of playerIds) {
         const pieceId = perPlayerInstanceId("piece", "trail-3", playerId);
@@ -114,8 +115,9 @@ describe("per-player inventory", () => {
           hostId: perPlayerInstanceId("piece", "holder", playerId),
         });
         expect(
-          table.boards.byId[perPlayerInstanceId("board", "mat", playerId)]
-            .playerId,
+          createTableQueries(table, compiled).board(
+            perPlayerInstanceId("board", "mat", playerId),
+          ).state.playerId,
         ).toBe(playerId);
       }
       expect(compiled.tableSchema.safeParse(table).success).toBe(true);
@@ -123,7 +125,7 @@ describe("per-player inventory", () => {
         Object.keys(compiled.records.pieceIds(() => 0, { playerIds })),
       ).toEqual(Object.keys(table.pieces));
       expect(compiled.literals.pieceIds).toEqual(["shared-piece"]);
-      expect(Object.keys(compiled.staticBoards.byId)).toEqual([]);
+      expect(Object.keys(compiled.boardDefinitions)).toEqual(["mat"]);
     },
   );
 
@@ -148,10 +150,11 @@ describe("per-player inventory", () => {
       pieces: { ...table.pieces, [foreign]: { ...data, id: foreign } },
     };
     expect(compiled.tableSchema.safeParse(forged).success).toBe(false);
-    const tampered = structuredClone(table);
-    tampered.boards.byId[
-      perPlayerInstanceId("board", "mat", "north")
-    ].playerId = compiled.ids.playerId.parse("absent");
+    const board = table.boards[perPlayerInstanceId("board", "mat", "north")];
+    const tampered = {
+      ...table,
+      boards: { [perPlayerInstanceId("board", "mat", "absent")]: board },
+    };
     expect(compiled.tableSchema.safeParse(tampered).success).toBe(false);
   });
 
@@ -243,7 +246,9 @@ test("manifest defaults admit declared future instances, then the actual session
     boards: [...source.boards, sharedBoard],
   });
   const table = compiled.createInitialTable({ playerIds: ["future:seat"] });
-  expect(table.boards.byId["public-board"].fields.data).toEqual({
+  expect(
+    createTableQueries(table, compiled).board("public-board").state.fields.data,
+  ).toEqual({
     [FIELD_REF_KEY]: "ordinary data",
   });
   expect(compiled.tableSchema.safeParse(table).success).toBe(true);

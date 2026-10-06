@@ -1,13 +1,11 @@
+import { BoardProjectionSchema } from "../shared/board-topology-schema.js";
+import type { BoardTopology } from "../shared/board-topology.js";
 import type { ViewCard } from "../shared/domain/cards.js";
 import {
   runtimeFeatures,
   type RuntimeFeatureContext,
   type RuntimeCollection,
 } from "./runtime-features.js";
-import type {
-  RuntimeBoardCollections,
-  RuntimeBoardState,
-} from "../reducer/model/table.js";
 import type { ReadonlyData } from "./model.js";
 import { createInputControl } from "./input-control.js";
 import { requireLookup } from "../shared/lookup.js";
@@ -751,17 +749,27 @@ class Controller {
             }
           ).explore(...args),
       });
+    const boardProjections = new WeakMap<
+      object,
+      Readonly<Record<string, BoardTopology>>
+    >();
     const runtime: RuntimeFeatureContext = {
       game: this.instance,
       getBoards: () => {
-        // The materializer owns the reserved boards projection. Source/game binding
-        // admits that projection once; feature algorithms never cast facade values.
-        const view = this.instance.view as {
-          boards?: Pick<RuntimeBoardCollections, "byId">;
-        } | null;
-        return view?.boards?.byId ?? {};
+        const view = this.instance.view;
+        if (view === null || typeof view !== "object" || Array.isArray(view))
+          return {};
+        const cached = boardProjections.get(view);
+        if (cached) return cached;
+        const payload: unknown = Reflect.get(view, "boards");
+        const boards =
+          payload === undefined
+            ? {}
+            : immutableCopy(BoardProjectionSchema.parse(payload));
+        boardProjections.set(view, boards);
+        return boards;
       },
-      createBoard: (data: ReadonlyData<RuntimeBoardState>) =>
+      createBoard: (data: BoardTopology) =>
         this.object("board", {
           id: data.id,
           data: immutableCopy(data),

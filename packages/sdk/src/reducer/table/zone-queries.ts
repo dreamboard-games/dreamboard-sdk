@@ -3,19 +3,19 @@ import type {
   CardCollection,
   ViewCardOfTable,
 } from "../../shared/domain/cards.js";
-import type { CardIdOfTable, RuntimeTableRecord } from "../model";
+import type { CardIdOfTable, RuntimeQueryTable } from "../model";
 import { enumerateZoneHosts, resolveZone, type ZoneInput } from "./zones";
 import type { ZoneDefinitions } from "../model";
 
 export function getZoneComponents(
-  table: RuntimeTableRecord,
+  table: RuntimeQueryTable,
   definitions: ZoneDefinitions,
   zone: ZoneInput,
 ): readonly string[] {
   return [...resolveZone(table, definitions, zone).ids];
 }
 export function getZones(
-  table: RuntimeTableRecord,
+  table: RuntimeQueryTable,
   definitions: ZoneDefinitions,
   zoneId: string,
 ): Readonly<Record<string, readonly string[]>> {
@@ -24,17 +24,17 @@ export function getZones(
     : undefined;
   if (!definition) throw new Error(`Unknown zone '${zoneId}'.`);
   return Object.fromEntries(
-    enumerateZoneHosts(table, definition).map((hostId) => [
+    enumerateZoneHosts(table, definitions, definition).map((hostId) => [
       hostId,
       getZoneComponents(table, definitions, { zoneId, hostId }),
     ]),
   );
 }
 export function getZoneCardCollection(
-  table: RuntimeTableRecord,
+  table: RuntimeQueryTable,
   definitions: ZoneDefinitions,
   zone: ZoneInput,
-): CardCollection {
+): CardCollection<string, ViewCardOfTable<RuntimeQueryTable, string>> {
   const cardIds = getZoneComponents(table, definitions, zone).filter((id) =>
     Object.hasOwn(table.cards, id),
   );
@@ -47,7 +47,7 @@ export function getZoneCardCollection(
 }
 
 export function getCard<
-  Table extends RuntimeTableRecord,
+  Table extends RuntimeQueryTable,
   CardId extends CardIdOfTable<NoInfer<Table>>,
 >(table: Table, cardId: CardId): ViewCardOfTable<Table, CardId> {
   const card = requireLookup(
@@ -68,7 +68,7 @@ export function getCard<
 }
 
 export function getCardsById<
-  Table extends RuntimeTableRecord,
+  Table extends RuntimeQueryTable,
   const CardIds extends readonly CardIdOfTable<NoInfer<Table>>[],
 >(
   table: Table,
@@ -82,14 +82,14 @@ export function getCardsById<
 }
 
 export function getCardOwner<
-  Table extends RuntimeTableRecord,
+  Table extends RuntimeQueryTable,
   CardId extends CardIdOfTable<NoInfer<Table>>,
 >(table: Table, cardId: CardId): Table["ownerOfCard"][CardId] {
   return table.ownerOfCard[cardId] as Table["ownerOfCard"][CardId];
 }
 
 export function getCardVisibility<
-  Table extends RuntimeTableRecord,
+  Table extends RuntimeQueryTable,
   CardId extends CardIdOfTable<NoInfer<Table>>,
 >(table: Table, cardId: CardId): Table["visibility"][CardId] {
   return table.visibility[cardId] as Table["visibility"][CardId];

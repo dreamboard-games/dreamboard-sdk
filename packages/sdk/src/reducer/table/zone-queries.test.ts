@@ -24,8 +24,14 @@ import {
   getSquareBoard,
   getVertex,
 } from "./index";
-import { createSpatialTable, spatialDefinitions } from "./table-test-fixtures";
+import {
+  createSpatialTable,
+  spatialDefinitions,
+  spatialElements,
+  spatialIds,
+} from "./table-test-fixtures";
 const definitions = {
+  ...spatialDefinitions,
   zoneDefinitions: {
     ...spatialDefinitions.zoneDefinitions,
     "worker-rest": {
@@ -124,13 +130,13 @@ describe("table ops spatial helpers", () => {
     table.componentLocations["piece-4"] = {
       type: "OnEdge",
       boardId: "square-board",
-      edgeId: "square-edge:a1-a2",
+      edgeId: spatialElements().squareEdge,
       position: 0,
     };
     table.componentLocations["piece-5"] = {
       type: "OnVertex",
       boardId: "square-board",
-      vertexId: "square-vertex:center",
+      vertexId: spatialElements().squareVertex,
       position: 0,
     };
     table.componentLocations["piece-6"] = {
@@ -207,7 +213,9 @@ describe("table ops spatial helpers", () => {
         playedBy: null,
       },
     });
-    expect(getComponentSpaceLocation(table, "piece-2")).toMatchObject({
+    expect(
+      getComponentSpaceLocation(table, definitions, "piece-2"),
+    ).toMatchObject({
       componentId: "piece-2",
       boardId: "main-board",
       spaceId: "space-a",
@@ -224,25 +232,29 @@ describe("table ops spatial helpers", () => {
       hostId: "main-board",
       location: table.componentLocations["piece-3"],
     });
-    expect(getComponentEdgeLocation(table, "piece-4")).toMatchObject({
+    expect(
+      getComponentEdgeLocation(table, definitions, "piece-4"),
+    ).toMatchObject({
       componentId: "piece-4",
       boardId: "square-board",
-      edgeId: "square-edge:a1-a2",
+      edgeId: spatialElements().squareEdge,
       location: {
         type: "OnEdge",
         boardId: "square-board",
-        edgeId: "square-edge:a1-a2",
+        edgeId: spatialElements().squareEdge,
         position: 0,
       },
     });
-    expect(getComponentVertexLocation(table, "piece-5")).toMatchObject({
+    expect(
+      getComponentVertexLocation(table, definitions, "piece-5"),
+    ).toMatchObject({
       componentId: "piece-5",
       boardId: "square-board",
-      vertexId: "square-vertex:center",
+      vertexId: spatialElements().squareVertex,
       location: {
         type: "OnVertex",
         boardId: "square-board",
-        vertexId: "square-vertex:center",
+        vertexId: spatialElements().squareVertex,
         position: 0,
       },
     });
@@ -260,9 +272,11 @@ describe("table ops spatial helpers", () => {
     ).toEqual(["piece-6"]);
     expect(table.pieces["piece-6"].ownerId).toBe("player-2");
     expect(table.pieces["piece-6"].properties).toEqual({ strength: 2 });
-    expect(getComponentSpaceLocation(table, "piece-7")).toBeNull();
-    expect(getComponentEdgeLocation(table, "piece-7")).toBeNull();
-    expect(getComponentVertexLocation(table, "piece-7")).toBeNull();
+    expect(getComponentSpaceLocation(table, definitions, "piece-7")).toBeNull();
+    expect(getComponentEdgeLocation(table, definitions, "piece-7")).toBeNull();
+    expect(
+      getComponentVertexLocation(table, definitions, "piece-7"),
+    ).toBeNull();
   });
 
   test("table query facade matches the existing read helpers", () => {
@@ -314,35 +328,58 @@ describe("table ops spatial helpers", () => {
     );
     const q = createTableQueries(table, definitions);
 
-    expect(q.board("main-board").state).toBe(getBoard(table, "main-board"));
-    expect(q.board("hex-board").state).toBe(getHexBoard(table, "hex-board"));
+    expect(q.board("main-board").state).toBe(
+      getBoard(table, definitions, "main-board"),
+    );
+    expect(q.board("hex-board").state).toBe(
+      getHexBoard(table, definitions, "hex-board"),
+    );
     expect(q.board("square-board").state).toBe(
-      getSquareBoard(table, "square-board"),
+      getSquareBoard(table, definitions, "square-board"),
     );
     expect(q.board("main-board").space("space-a")).toBe(
-      getSpace(table, "main-board", "space-a"),
+      getSpace(table, definitions, "main-board", "space-a"),
     );
     expect(q.zone("market-row", "main-board")).toEqual([]);
     expect(
       q
         .board("hex-board")
-        .state.edges.find((edge) => edge.id === "tile-a$$tile-b"),
-    ).toBe(getEdge(table, "hex-board", "tile-a$$tile-b"));
+        .state.edges.find((edge) => edge.id === spatialElements().hexEdge),
+    ).toBe(getEdge(table, definitions, "hex-board", spatialElements().hexEdge));
     expect(
       q
         .board("hex-board")
         .state.vertices.find(
-          (vertex) => vertex.id === "tile-a$$tile-a$$tile-b",
+          (vertex) => vertex.id === spatialElements().hexVertex,
         ),
-    ).toBe(getVertex(table, "hex-board", "tile-a$$tile-a$$tile-b"));
+    ).toBe(
+      getVertex(table, definitions, "hex-board", spatialElements().hexVertex),
+    );
     expect(q.board("main-board").neighbors("space-a")).toEqual(
-      getAdjacentSpaces(table, "main-board", "space-a"),
+      getAdjacentSpaces(table, definitions, "main-board", "space-a"),
     );
-    expect(q.board("square-board").edgesOf("square-vertex:center")).toEqual(
-      getIncidentEdges(table, "square-board", "square-vertex:center"),
+    expect(
+      q.board("square-board").edgesOf(spatialElements().squareVertex),
+    ).toEqual(
+      getIncidentEdges(
+        table,
+        definitions,
+        "square-board",
+        spatialElements().squareVertex,
+      ),
     );
-    expect(q.board("square-board").distance("cell-a1", "cell-b2")).toBe(
-      getSpaceDistance(table, "square-board", "cell-a1", "cell-b2"),
+    expect(
+      q
+        .board("square-board")
+        .distance(spatialIds.squareA1, spatialIds.squareB2),
+    ).toBe(
+      getSpaceDistance(
+        table,
+        definitions,
+        "square-board",
+        spatialIds.squareA1,
+        spatialIds.squareB2,
+      ),
     );
     expect(q.zone("draw-deck")).toEqual(
       getZoneComponents(table, definitions, { zoneId: "draw-deck" }),
@@ -353,6 +390,10 @@ describe("table ops spatial helpers", () => {
         "card-1": {
           id: "card-1",
           cardType: "card",
+          name: "Card",
+          frontImage: undefined,
+          backImage: undefined,
+          text: undefined,
           properties: {},
         },
       },
@@ -379,12 +420,19 @@ describe("table ops spatial helpers", () => {
       "card-1": {
         id: "card-1",
         cardType: "card",
+        name: "Card",
+        frontImage: undefined,
+        backImage: undefined,
+        text: undefined,
         properties: {},
       },
       "card-2": {
         id: "card-2",
         cardType: "card",
         name: "Second Card",
+        frontImage: undefined,
+        backImage: undefined,
+        text: undefined,
         properties: {},
       },
     });
@@ -416,7 +464,9 @@ describe("table ops spatial helpers", () => {
 
     const q = createStateQueries(state, definitions);
 
-    expect(q.board("hex-board").state).toBe(getHexBoard(table, "hex-board"));
+    expect(q.board("hex-board").state).toBe(
+      getHexBoard(table, definitions, "hex-board"),
+    );
     expect(q.zone("draw-deck")).toEqual(
       getZoneComponents(table, definitions, { zoneId: "draw-deck" }),
     );

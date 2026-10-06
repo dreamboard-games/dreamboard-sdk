@@ -14,6 +14,8 @@ import {
 } from "./table/clone";
 
 const definitions = {
+  boardDefinitions: {},
+  tileDefinitions: {},
   zoneDefinitions: {
     hand: {
       scope: "perPlayer",
@@ -129,7 +131,7 @@ function createState(): TestState {
           id === player("player-1") ? { coins: 3 } : {},
         ]),
       ),
-      boards: { byId: {}, hex: {}, square: {}, network: {}, track: {} },
+      boards: {},
     },
     flow: { currentPhase: "draft", activePlayers: players },
     phase: { round: 1 },
@@ -231,7 +233,9 @@ describe("reducer transactions", () => {
   test("tx.q refreshes after each operation without mutating the callback q", () => {
     const state = createState();
     const callbackQ = createStateQueries(state, definitions);
-    const tx = createTestEdit<TestState>(definitions)(state);
+    const tx = createTestEdit<TestState, typeof definitions>(definitions)(
+      state,
+    );
 
     tx.moveComponentToZone({
       componentId: "card-a",
@@ -251,7 +255,9 @@ describe("reducer transactions", () => {
   });
 
   test("tx.rotateZone rotates selected cards while preserving ownership", () => {
-    const tx = createTestEdit<TestState>(definitions)(createState());
+    const tx = createTestEdit<TestState, typeof definitions>(definitions)(
+      createState(),
+    );
 
     tx.rotateZone({
       zoneId: "hand",
@@ -275,7 +281,9 @@ describe("reducer transactions", () => {
   test("tx mutations clone the table once and retain one draft state", () => {
     const state = deepFreeze(createState());
     resetCloneRuntimeTableCallCount();
-    const tx = createTestEdit<TestState>(definitions)(state);
+    const tx = createTestEdit<TestState, typeof definitions>(definitions)(
+      state,
+    );
 
     const afterAdd = tx.addResources({
       playerId: player("player-1"),
@@ -304,7 +312,9 @@ describe("reducer transactions", () => {
   test("one spatial transaction refreshes queries and isolates its sibling", () => {
     const state = deepFreeze({ table: createSpatialTable() });
     const before = structuredClone(state);
-    const edit = createTestEdit<typeof state>(spatialDefinitions);
+    const edit = createTestEdit<typeof state, typeof spatialDefinitions>(
+      spatialDefinitions,
+    );
     const tx = edit(state);
     const sibling = edit(state);
     const siblingBefore = structuredClone(sibling.state);
@@ -325,24 +335,30 @@ describe("reducer transactions", () => {
       type: "OnSpace",
       spaceId: "space-a",
     });
+    const square = tx.q.board("square-board").state;
+    if (square.layout !== "square") throw new Error("Expected square board.");
+    const edge = square.edges[0];
+    const vertex = square.vertices[0];
+    if (!edge || !vertex)
+      throw new Error("Spatial fixture needs square topology.");
     tx.moveComponentToEdge({
       componentId: "piece-1",
       boardId: "square-board",
-      edgeId: "square-edge:a1-a2",
+      edgeId: edge.id,
     });
     expect(tx.q.component.location("piece-1")).toMatchObject({
       type: "OnEdge",
-      edgeId: "square-edge:a1-a2",
+      edgeId: edge.id,
     });
     expect(tx.q.component.space("piece-1")).toBeNull();
     tx.moveComponentToVertex({
       componentId: "piece-1",
       boardId: "square-board",
-      vertexId: "square-vertex:center",
+      vertexId: vertex.id,
     });
     expect(tx.q.component.location("piece-1")).toMatchObject({
       type: "OnVertex",
-      vertexId: "square-vertex:center",
+      vertexId: vertex.id,
     });
     expect(tx.q.component.edge("piece-1")).toBeNull();
     tx.moveComponentToDetached({ componentId: "piece-1" });
@@ -356,8 +372,12 @@ describe("reducer transactions", () => {
 
   test("independent transactions isolate mutations and refresh cached queries", () => {
     const state = deepFreeze(createState());
-    const first = createTestEdit<TestState>(definitions)(state);
-    const second = createTestEdit<TestState>(definitions)(state);
+    const first = createTestEdit<TestState, typeof definitions>(definitions)(
+      state,
+    );
+    const second = createTestEdit<TestState, typeof definitions>(definitions)(
+      state,
+    );
     const secondBefore = structuredClone(second.state);
     const firstDraft = first.state;
     const initialQueries = first.q;
@@ -396,7 +416,7 @@ describe("reducer transactions", () => {
   });
 
   test("edit factories reuse the transaction method surface", () => {
-    const edit = createTestEdit<TestState>(definitions);
+    const edit = createTestEdit<TestState, typeof definitions>(definitions);
     const first = edit(createState());
     const second = edit(createState());
 
@@ -419,7 +439,9 @@ describe("reducer transactions", () => {
 
   test("transactions rotate whole hands to the right", () => {
     const state = createState();
-    const tx = createTestEdit<TestState>(definitions)(state);
+    const tx = createTestEdit<TestState, typeof definitions>(definitions)(
+      state,
+    );
     const next = tx.rotateZone({
       zoneId: "hand",
       direction: "right",

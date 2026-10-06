@@ -1,3 +1,4 @@
+import type { TopologyDefinitions } from "../shared/domain/topology-definitions.js";
 import type {
   ZoneDefinitions,
   ZoneArg,
@@ -76,6 +77,7 @@ export type StatePatch<T> = Partial<T> | { update(prev: T): T }["update"];
  */
 export interface TransactionMutations<
   State extends { table: RuntimeTableRecord },
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 > {
   // --- Flow ------------------------------------------------------------
 
@@ -168,7 +170,7 @@ export interface TransactionMutations<
   /** Move a component onto a board space. */
   moveComponentToSpace<
     BoardId extends BoardIdOfTable<TableOfState<State>>,
-    SpaceId extends SpaceIdOfTable<TableOfState<State>, BoardId>,
+    SpaceId extends SpaceIdOfTable<TableOfState<State>, BoardId, Definitions>,
     ComponentId extends SpatialComponentIdOfTable<TableOfState<State>>,
   >(args: {
     componentId: ComponentId;
@@ -178,8 +180,12 @@ export interface TransactionMutations<
 
   /** Move a component onto a tiled board edge. */
   moveComponentToEdge<
-    BoardId extends TiledBoardIdOfTable<TableOfState<State>>,
-    EdgeId extends TiledEdgeIdOfTable<TableOfState<State>, BoardId>,
+    BoardId extends TiledBoardIdOfTable<TableOfState<State>, Definitions>,
+    EdgeId extends TiledEdgeIdOfTable<
+      TableOfState<State>,
+      BoardId,
+      Definitions
+    >,
     ComponentId extends SpatialComponentIdOfTable<TableOfState<State>>,
   >(args: {
     componentId: ComponentId;
@@ -189,8 +195,12 @@ export interface TransactionMutations<
 
   /** Move a component onto a tiled board vertex. */
   moveComponentToVertex<
-    BoardId extends TiledBoardIdOfTable<TableOfState<State>>,
-    VertexId extends TiledVertexIdOfTable<TableOfState<State>, BoardId>,
+    BoardId extends TiledBoardIdOfTable<TableOfState<State>, Definitions>,
+    VertexId extends TiledVertexIdOfTable<
+      TableOfState<State>,
+      BoardId,
+      Definitions
+    >,
     ComponentId extends SpatialComponentIdOfTable<TableOfState<State>>,
   >(args: {
     componentId: ComponentId;

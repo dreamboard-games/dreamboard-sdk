@@ -1,4 +1,4 @@
-import type { SchemaAuthoring } from "./types";
+import type { SchemaAuthoring, TileSpaceIds } from "./types";
 import { toManifestJson, type FieldsInput } from "./field-schemas";
 import { parseTopologyManifestJson } from "./parse-json";
 import type { ValidatedManifest } from "./types";
@@ -6,7 +6,6 @@ import type {
   ManifestCountValidation,
   RuntimeIdsFromCount,
 } from "./identity-types";
-import type { HexSpaceId } from "../../shared/domain/board-identities.js";
 import type {
   BoardEdgeRef,
   BoardVertexRef,
@@ -46,13 +45,15 @@ type BoardOf<
   Manifest extends GameTopologyManifest,
   CurrentBoardId extends BoardId<Manifest>,
 > = Extract<ArrayItem<NonNullable<Manifest["boards"]>>, { id: CurrentBoardId }>;
-type SpaceIdOf<BoardLike> = BoardLike extends { layout: "hex" }
-  ? HexSpaceId<BoardLike>
+type SpaceIdOf<BoardLike, Manifest> = BoardLike extends {
+  layout: "hex" | "square";
+}
+  ? TileSpaceIds<Manifest, BoardLike["layout"]>
   : IdsOf<BoardLike extends { spaces?: infer Spaces } ? Spaces : never>;
 type SpaceIdForBoard<
   Manifest extends GameTopologyManifest,
   CurrentBoardId extends BoardId<Manifest>,
-> = SpaceIdOf<BoardOf<Manifest, CurrentBoardId>>;
+> = SpaceIdOf<BoardOf<Manifest, CurrentBoardId>, Manifest>;
 type PieceTypeOf<
   Manifest extends GameTopologyManifest,
   T extends PieceTypeId<Manifest>,
@@ -145,7 +146,13 @@ type ZoneHomeFor<
                 Extract<DieSeedOf<Manifest>, { typeId: T }>,
                 Shared
               >
-            : never
+            : Zone extends { attachedTo: { tileType: infer T } }
+              ? ComponentZoneHome<
+                  Z,
+                  Extract<ArrayItem<Manifest["tileSeeds"]>, { typeId: T }>,
+                  Shared
+                >
+              : never
   : never;
 type ComponentZoneHome<Z extends string, Seed, Shared extends boolean> = (
   Shared extends true ? Exclude<Seed, { scope: "perPlayer" }> : Seed
@@ -208,8 +215,8 @@ type TypedBoardRelation<
       TypedFields<Relation, RelationSchema, Manifest, BoardLike>,
       "fromSpaceId" | "toSpaceId"
     > & {
-      fromSpaceId: SpaceIdOf<BoardLike>;
-      toSpaceId: SpaceIdOf<BoardLike>;
+      fromSpaceId: SpaceIdOf<BoardLike, Manifest>;
+      toSpaceId: SpaceIdOf<BoardLike, Manifest>;
     }
   : Relation;
 type TypedOptionalArray<
@@ -255,96 +262,37 @@ type TypedGenericBoardLike<
     SchemaForEntry<Entry, "relationFieldsSchema">
   >
 >;
-type TypedHexBoardLike<
-  Entry,
-  Manifest extends GameTopologyManifest,
-  BoardLike,
-> = TypedOptionalArray<
-  TypedOptionalArray<
-    TypedFields<
-      Omit<Entry, "spaces" | "edges" | "vertices">,
-      SchemaForEntry<Entry, "boardFieldsSchema">,
-      Manifest,
-      BoardLike
-    > &
-      (Entry extends { spaces: infer Spaces }
-        ? {
-            spaces: {
-              [Key in keyof Spaces]: TypedFields<
-                Spaces[Key],
-                SchemaForEntry<Entry, "spaceFieldsSchema">,
-                Manifest,
-                BoardLike
-              >;
-            };
-          }
-        : unknown),
-    Entry,
-    "edges",
-    TypedFields<
-      ArrayItem<
-        NonNullable<Entry extends { edges?: infer Edges } ? Edges : never>
-      >,
-      SchemaForEntry<Entry, "edgeFieldsSchema">,
-      Manifest,
-      BoardLike
-    >
-  >,
-  Entry,
-  "vertices",
-  TypedFields<
-    ArrayItem<
-      NonNullable<
-        Entry extends { vertices?: infer Vertices } ? Vertices : never
-      >
-    >,
-    SchemaForEntry<Entry, "vertexFieldsSchema">,
-    Manifest,
-    BoardLike
-  >
->;
-type TypedSquareBoardLike<
-  Entry,
-  Manifest extends GameTopologyManifest,
-  BoardLike,
-> = TypedOptionalArray<
-  TypedOptionalArray<
-    Omit<
-      TypedGenericBoardLike<Entry, Manifest, BoardLike>,
-      "edges" | "vertices"
-    >,
-    Entry,
-    "edges",
-    TypedFields<
-      ArrayItem<NonNullable<Entry extends { edges?: infer E } ? E : never>>,
-      SchemaForEntry<Entry, "edgeFieldsSchema">,
-      Manifest,
-      BoardLike
-    >
-  >,
-  Entry,
-  "vertices",
-  TypedFields<
-    ArrayItem<NonNullable<Entry extends { vertices?: infer V } ? V : never>>,
-    SchemaForEntry<Entry, "vertexFieldsSchema">,
-    Manifest,
-    BoardLike
-  >
->;
-type TypedBoardLikeEntry<
-  Entry,
-  Manifest extends GameTopologyManifest,
-> = "containers" extends keyof Entry
-  ? never
-  : "containerFieldsSchema" extends keyof Entry
-    ? never
-    : Entry extends { layout: "generic" }
+type AuthoredKeys<T> = {
+  [K in keyof T]-?: Record<never, never> extends Pick<T, K>
+    ? [Exclude<T[K], undefined>] extends [never]
+      ? never
+      : K
+    : K;
+}[keyof T];
+type TypedBoardLikeEntry<Entry, Manifest extends GameTopologyManifest> =
+  | "containers"
+  | "containerFieldsSchema"
+  | "shape"
+  | "exclude"
+  | "edges"
+  | "vertices"
+  | "edgeFieldsSchema"
+  | "vertexFieldsSchema" extends infer Legacy
+  ? Extract<Legacy, AuthoredKeys<Entry>> extends never
+    ? Entry extends { layout: "generic" }
       ? TypedGenericBoardLike<Entry, Manifest, Entry>
-      : Entry extends { layout: "hex" }
-        ? TypedHexBoardLike<Entry, Manifest, Entry>
-        : Entry extends { layout: "square" }
-          ? TypedSquareBoardLike<Entry, Manifest, Entry>
-          : Entry;
+      : "spaces" | "spaceFieldsSchema" extends infer Geometry
+        ? Extract<Geometry, AuthoredKeys<Entry>> extends never
+          ? TypedFields<
+              Entry,
+              SchemaForEntry<Entry, "boardFieldsSchema">,
+              Manifest,
+              Entry
+            >
+          : never
+        : never
+    : never
+  : never;
 
 type AuthoredCardType<Card> = Card extends {
   cardType: infer Category extends string;
@@ -401,14 +349,26 @@ type TypedZone<
         attachedTo: A extends { board: infer B }
           ? B extends BoardId<Manifest>
             ? A extends { space: unknown }
-              ? { board: B; space: SpaceIdForBoard<Manifest, B> }
+              ? BoardOf<Manifest, B> extends { layout: "generic" }
+                ? { board: B; space: SpaceIdForBoard<Manifest, B> }
+                : never
               : { board: B }
             : never
           : A extends { pieceType: unknown }
             ? { pieceType: PieceTypeId<Manifest> }
             : A extends { dieType: unknown }
               ? { dieType: DieTypeId<Manifest> }
-              : never;
+              : A extends { tileType: infer T }
+                ? {
+                    tileType: T;
+                    cell: IdsOf<
+                      Extract<
+                        ArrayItem<Manifest["tileTypes"]>,
+                        { id: T }
+                      >["cells"]
+                    >;
+                  }
+                : never;
       }
     : unknown);
 
@@ -490,6 +450,23 @@ type TypedTileType<T, Manifest extends GameTopologyManifest> = T extends object
       >;
     }
   : never;
+type TileBoardHome<Seed, Manifest extends GameTopologyManifest, T> =
+  ArrayItem<Manifest["boards"]> extends infer B
+    ? B extends { id: infer I; layout: infer L extends "hex" | "square" }
+      ? Extract<ArrayItem<Manifest["tileTypes"]>, { id: T }> extends {
+          layout: L;
+        }
+        ? Seed extends { scope: "perPlayer" }
+          ? TileBoardCoordinates<L> & { type: "board"; boardId: I; layout: L }
+          : B extends { scope: "shared" }
+            ? TileBoardCoordinates<L> & { type: "board"; boardId: I; layout: L }
+            : never
+        : never
+      : never
+    : never;
+type TileBoardCoordinates<L> = L extends "hex"
+  ? { q: number; r: number; rotation: 0 | 1 | 2 | 3 | 4 | 5 }
+  : { col: number; row: number; rotation: 0 | 1 | 2 | 3 };
 type TypedTileSeed<Seed, Manifest extends GameTopologyManifest> = Seed extends {
   typeId: infer T;
 }
@@ -506,6 +483,7 @@ type TypedTileSeed<Seed, Manifest extends GameTopologyManifest> = Seed extends {
       >;
       home?:
         | { type: "detached" }
+        | TileBoardHome<Seed, Manifest, T>
         | ZoneHomeFor<
             Exclude<
               ArrayItem<NonNullable<Manifest["zones"]>>,
@@ -573,16 +551,12 @@ export type TopologyManifestValidation<Manifest> =
     ? TypedTopologyManifest<Manifest>
     : GameTopologyManifest;
 
-type DefinedTopologyManifest<Manifest> = Manifest extends GameTopologyManifest
-  ? ValidatedManifest<Manifest>
-  : ValidatedManifest<GameTopologyManifest>;
-
 export function defineTopologyManifest<const Manifest>(
   manifest: Manifest &
     TopologyManifestValidation<NoInfer<Manifest>> &
     ManifestCountValidation<NoInfer<Manifest>>,
-): DefinedTopologyManifest<Manifest> {
+): ValidatedManifest<Manifest> {
   const validated = parseTopologyManifestJson(toManifestJson(manifest));
   // eslint-disable-next-line no-restricted-syntax -- Semantic validation establishes the JSON boundary and its authored-type witness.
-  return validated as unknown as DefinedTopologyManifest<Manifest>;
+  return validated as unknown as ValidatedManifest<Manifest>;
 }

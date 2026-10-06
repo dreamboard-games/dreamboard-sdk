@@ -8,12 +8,15 @@ import {
   moveComponentToZoneInPlace,
 } from "./card-mutations";
 import {
+  moveComponentToDetachedInPlace,
   moveComponentToSpaceInPlace,
   moveComponentToEdgeInPlace,
   moveComponentToVertexInPlace,
 } from "./component-mutations";
 import { assertZoneConsistency } from "./zones";
 const definitions: ZoneDefinitions = {
+  boardDefinitions: {},
+  tileDefinitions: {},
   zoneDefinitions: {
     supply: { scope: "shared", visibility: "public", allowedCardSetIds: [] },
     destination: {
@@ -66,7 +69,7 @@ function table(): RuntimeTableRecord {
     resources: {},
     ownerOfCard: { card: null },
     visibility: { card: { faceUp: true } },
-    boards: { byId: {}, hex: {}, square: {}, network: {}, track: {} },
+    boards: {},
   };
 }
 describe("tile inventory operations", () => {
@@ -187,7 +190,7 @@ describe("tile inventory operations", () => {
       spaceId: "missing",
     };
     expect(() => assertZoneConsistency(state, definitions)).toThrow(
-      "Tiles may only",
+      "Tiles require OnBoard placement.",
     );
     state.componentLocations.tile = {
       type: "InZone",
@@ -199,6 +202,86 @@ describe("tile inventory operations", () => {
     expect(() => assertZoneConsistency(state, definitions)).toThrow(
       "Tiles require public",
     );
+  });
+  test("rejects generic outgoing moves of a placed tile before touching memberships", () => {
+    const placedDefinitions: ZoneDefinitions = {
+      ...definitions,
+      boardDefinitions: {
+        islandBoard: {
+          id: "islandBoard",
+          name: "Island",
+          scope: "shared",
+          layout: "square",
+          fields: {},
+        },
+      },
+      tileDefinitions: {
+        island: {
+          id: "island",
+          name: "Island",
+          layout: "square",
+          fields: {},
+          cells: [{ id: "land", at: { col: 0, row: 0 }, fields: {} }],
+          edges: [],
+          vertices: [],
+        },
+      },
+    };
+    const state = table();
+    state.zones.supply.table.splice(1, 1);
+    state.boards.islandBoard = { baseId: "islandBoard", relations: [] };
+    state.componentLocations.tile = {
+      type: "OnBoard",
+      layout: "square",
+      boardId: "islandBoard",
+      col: 0,
+      row: 0,
+      rotation: 0,
+    };
+    assertZoneConsistency(state, placedDefinitions);
+    const before = structuredClone(state);
+    const transaction = createTestTransaction(
+      { table: state },
+      placedDefinitions,
+    );
+    const attempts = [
+      () => transaction.moveComponentToDetached({ componentId: "tile" }),
+      () =>
+        transaction.moveComponentToZone({
+          componentId: "tile",
+          to: { zoneId: "destination", hostId: "table" },
+        }),
+      () =>
+        transaction.moveComponentToZone({
+          componentId: "tile",
+          to: { zoneId: "hand", hostId: "alice" },
+        }),
+      () => moveComponentToDetachedInPlace(state, "tile", placedDefinitions),
+      () =>
+        moveComponentToZoneInPlace({
+          table: state,
+          definitions: placedDefinitions,
+          componentId: "tile",
+          to: { zoneId: "destination", hostId: "table" },
+        }),
+    ];
+    for (const attempt of attempts) {
+      expect(attempt).toThrow();
+      expect(state).toEqual(before);
+    }
+    // Even a malformed bulk source must not consume its valid card prefix.
+    state.zones.supply.table.splice(1, 0, "tile");
+    const malformedBefore = structuredClone(state);
+    expect(() =>
+      dealComponentsInPlace({
+        table: state,
+        definitions: placedDefinitions,
+        from: { zoneId: "supply", hostId: "table" },
+        to: { zoneId: "destination", hostId: "table" },
+        count: 2,
+      }),
+    ).toThrow();
+    expect(state).toEqual(malformedBefore);
   });
   test("rejects global component ID collisions involving tiles", () => {
     const state = table();

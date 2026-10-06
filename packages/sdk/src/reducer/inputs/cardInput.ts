@@ -1,3 +1,4 @@
+import type { TopologyDefinitions } from "../../shared/domain/topology-definitions.js";
 import * as z from "zod";
 import type { CollectorState, InputCollector } from "../model/spec";
 import type { TableQueriesOfState } from "../model/queries";
@@ -16,8 +17,9 @@ export function cardInput<
   State extends CollectorState = CollectorState,
   Id extends string = CardIdOfState<State>,
   const ZoneIds extends readonly string[] = readonly string[],
+  Definitions extends TopologyDefinitions = TopologyDefinitions,
 >(options: {
-  target: CardTargetRule<State, Id, ZoneIds>;
+  target: CardTargetRule<State, Id, ZoneIds, Definitions>;
 }): InputCollector<z.ZodString, State, "card", Id> & {
   readonly meta: {
     readonly zoneId: ZoneIds[number];
@@ -29,7 +31,7 @@ export function cardInput<
   const eligible = (
     state: State,
     playerId: PlayerIdOfState<State>,
-    q: TableQueriesOfState<State>,
+    q: TableQueriesOfState<State, Definitions>,
   ) => target.eligible({ state, playerId, q });
   // Assembly binds state, player, and queries to one validated game contract.
   // The string schema checks wire shape only. The runtime must also call
@@ -44,13 +46,13 @@ export function cardInput<
     validateTarget: (
       state: State,
       playerId: PlayerIdOfState<State>,
-      q: TableQueriesOfState<State>,
+      q: TableQueriesOfState<State, Definitions>,
       targetId: unknown,
     ) => target.validate({ state, playerId, q }, targetId),
     domain: (
       state: State,
       playerId: PlayerIdOfState<State>,
-      q: TableQueriesOfState<State>,
+      q: TableQueriesOfState<State, Definitions>,
     ) => ({
       type: "cardTarget" as const,
       projection: "resolved" as const,

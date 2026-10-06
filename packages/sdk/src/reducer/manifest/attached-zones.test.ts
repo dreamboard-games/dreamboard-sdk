@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import * as z from "zod";
 import { compileManifest } from "./compiler";
-import { boardSpaceHostId } from "../../shared/domain/board-space-host.js";
+import { tileSpaceId } from "../../shared/domain/tile-space.js";
 import { perPlayerInstanceId } from "../../shared/domain/per-player-instance.js";
 
 const manifest = {
@@ -13,7 +13,29 @@ const manifest = {
       name: "Map",
       scope: "perPlayer",
       layout: "hex",
-      shape: { kind: "hexagon", radius: 0 },
+    },
+  ],
+  tileTypes: [
+    {
+      id: "terrain",
+      name: "Terrain",
+      layout: "hex",
+      cells: [{ id: "center", at: { q: 0, r: 0 } }],
+    },
+  ],
+  tileSeeds: [
+    {
+      id: "terrain",
+      typeId: "terrain",
+      scope: "perPlayer",
+      home: {
+        type: "board",
+        boardId: "map",
+        layout: "hex",
+        q: 0,
+        r: 0,
+        rotation: 0,
+      },
     },
   ],
   pieceTypes: [
@@ -36,7 +58,11 @@ const manifest = {
       attachedTo: { pieceType: "ship" },
       visibility: "ownerOnly",
     },
-    { id: "port", name: "Port", attachedTo: { board: "map", space: "0,0" } },
+    {
+      id: "port",
+      name: "Port",
+      attachedTo: { tileType: "terrain", cell: "center" },
+    },
   ],
 } as const;
 
@@ -52,7 +78,10 @@ describe("attached zone initialization", () => {
     expect(Object.keys(table.zones.cargo)).toHaveLength(4);
     expect(
       table.zones.port[
-        boardSpaceHostId(perPlayerInstanceId("board", "map", "seat:/雪"), "0,0")
+        tileSpaceId(
+          perPlayerInstanceId("tile", "terrain", "seat:/雪"),
+          "center",
+        )
       ],
     ).toEqual([]);
     expect(table.componentLocations[crate]).toEqual({
@@ -66,37 +95,18 @@ describe("attached zone initialization", () => {
     const compiled = compileManifest(manifest);
     const table = compiled.createInitialTable({ playerIds: ["seat"] });
     const boardId = perPlayerInstanceId("board", "map", "seat");
-    const board = table.boards.byId[boardId];
-    expect(
-      compiled.tableSchema.safeParse({
-        ...table,
-        boards: {
-          ...table.boards,
-          byId: {
-            ...table.boards.byId,
-            [boardId]: { ...board, containers: {} },
-          },
-        },
-      }).success,
-    ).toBe(false);
-    expect(
-      compiled.tableSchema.safeParse({
-        ...table,
-        boards: {
-          ...table.boards,
-          byId: {
-            ...table.boards.byId,
-            [boardId]: {
-              ...board,
-              spaces: {
-                ...board.spaces,
-                "0,0": { ...board.spaces["0,0"], zoneId: "legacy" },
-              },
-            },
-          },
-        },
-      }).success,
-    ).toBe(false);
+    const board = table.boards[boardId];
+    for (const staleFields of [
+      { containers: {} },
+      { spaces: { "0,0": { id: "0,0", zoneId: "legacy" } } },
+    ]) {
+      expect(
+        compiled.tableSchema.safeParse({
+          ...table,
+          boards: { ...table.boards, [boardId]: { ...board, ...staleFields } },
+        }).success,
+      ).toBe(false);
+    }
     const pieceId = perPlayerInstanceId("piece", "crate", "seat");
     for (const legacyLocation of [
       {
@@ -116,7 +126,7 @@ describe("attached zone initialization", () => {
         }).success,
       ).toBe(false);
   });
-  it("rejects removed, rekeyed and mismatched declared static spaces", () => {
+  it("keeps generic spaces immutable and rejects copied or missing hosts", () => {
     const compiled = compileManifest({
       players: manifest.players,
       cardSets: [],
@@ -138,31 +148,26 @@ describe("attached zone initialization", () => {
       ],
     } as const);
     const table = compiled.createInitialTable({ playerIds: [] });
-    const board = table.boards.byId.map;
+    const board = table.boards.map;
+    const declaredSpace = compiled.boardDefinitions.map.spaces.cell;
     expect(compiled.tableSchema.safeParse(table).success).toBe(true);
-    for (const spaces of [{}, { other: board.spaces.cell }]) {
+    expect(Reflect.set(declaredSpace, "id", "other")).toBe(false);
+    expect(
+      compiled.tableSchema.safeParse({ ...table, zones: { cargo: {} } })
+        .success,
+    ).toBe(false);
+    for (const spaces of [
+      {},
+      { other: declaredSpace },
+      { cell: { ...declaredSpace, id: "other" } },
+    ]) {
       expect(
         compiled.tableSchema.safeParse({
           ...table,
-          boards: { ...table.boards, byId: { map: { ...board, spaces } } },
-          zones: { cargo: {} },
+          boards: { map: { ...board, spaces } },
         }).success,
       ).toBe(false);
     }
-    expect(
-      compiled.tableSchema.safeParse({
-        ...table,
-        boards: {
-          ...table.boards,
-          byId: {
-            map: {
-              ...board,
-              spaces: { cell: { ...board.spaces.cell, id: "other" } },
-            },
-          },
-        },
-      }).success,
-    ).toBe(false);
     const empty = compileManifest({
       players: manifest.players,
       cardSets: [],
@@ -189,7 +194,7 @@ describe("attached zone initialization", () => {
           },
         ],
         zones: [manifest.zones[0]],
-      }),
+      }).createInitialTable({ playerIds: [] }),
     ).toThrow(/cycle|itself|self/i);
     expect(() =>
       compileManifest({
@@ -209,13 +214,13 @@ describe("attached zone initialization", () => {
           },
         ],
         zones: [manifest.zones[0]],
-      }),
+      }).createInitialTable({ playerIds: [] }),
     ).toThrow(/cycle/i);
   });
   it("rejects undeclared attachment destinations and unavailable host bases", () => {
     expect(
       () =>
-        void Reflect.apply(compileManifest, undefined, [
+        void Reflect.apply(compileManifest<unknown>, undefined, [
           {
             ...manifest,
             zones: [
@@ -226,7 +231,7 @@ describe("attached zone initialization", () => {
     ).toThrow(/Unknown board/);
     expect(
       () =>
-        void Reflect.apply(compileManifest, undefined, [
+        void Reflect.apply(compileManifest<unknown>, undefined, [
           {
             ...manifest,
             pieceSeeds: [
@@ -241,7 +246,7 @@ describe("attached zone initialization", () => {
     ).toThrow(/component/);
     expect(
       () =>
-        void Reflect.apply(compileManifest, undefined, [
+        void Reflect.apply(compileManifest<unknown>, undefined, [
           {
             players: manifest.players,
             cardSets: [

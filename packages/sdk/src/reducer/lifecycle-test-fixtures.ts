@@ -10,6 +10,8 @@ export function buildMinimalManifest<
   const playerIds = ["player-1", "player-2"] as const;
   const handIds = ["hand"] as const;
   return {
+    boardDefinitions: {},
+    tileDefinitions: {},
     zoneDefinitions: {
       hand: { scope: "perPlayer", visibility: "public", allowedCardSetIds: [] },
     },
@@ -99,13 +101,7 @@ export function createTable(
     ownerOfCard: {},
     visibility: {},
     resources: Object.fromEntries(ids.map((id) => [id, {}])),
-    boards: {
-      byId: {},
-      hex: {},
-      network: {},
-      square: {},
-      track: {},
-    },
+    boards: {},
     tiles: {},
     dice: {
       "die-1": {
