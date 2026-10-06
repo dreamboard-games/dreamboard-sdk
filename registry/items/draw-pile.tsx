@@ -241,7 +241,11 @@ export function DrawPile({
           const over = kind === "drag" && isOver(at.x, at.y);
           press.current?.detach();
           press.current = null;
-          suppressClick.current = kind !== "tap";
+          const touchTap = kind === "tap" && event.pointerType === "touch";
+          suppressClick.current = kind !== "tap" || touchTap;
+          if (touchTap) {
+            setOpen((current) => !current);
+          }
           if (kind !== "drag") {
             clearTarget();
             return;
