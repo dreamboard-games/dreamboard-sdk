@@ -22,51 +22,14 @@ export function cloneRuntimeTable<Table extends RuntimeTableRecord>(
   cloneRuntimeTableCallCount += 1;
   return {
     ...table,
-    zones: {
-      shared: Object.fromEntries(
-        Object.entries(table.zones.shared).map(([zoneId, componentIds]) => [
-          zoneId,
-          [...componentIds],
-        ]),
-      ),
-      perPlayer: Object.fromEntries(
-        Object.entries(table.zones.perPlayer).map(([zoneId, players]) => [
-          zoneId,
-          Object.fromEntries(
-            table.playerOrder.map((playerId) => [
-              playerId,
-              [...players[playerId]],
-            ]),
-          ),
-        ]),
-      ),
-      visibility: { ...table.zones.visibility },
-      cardSetIdsByZoneId: table.zones.cardSetIdsByZoneId
-        ? Object.fromEntries(
-            Object.entries(table.zones.cardSetIdsByZoneId).map(
-              ([zoneId, cardSetIds]) => [zoneId, [...cardSetIds]],
-            ),
-          )
-        : table.zones.cardSetIdsByZoneId,
-    },
-    decks: Object.fromEntries(
-      Object.entries(table.decks).map(([deckId, cards]) => [
-        deckId,
-        [...cards],
-      ]),
-    ),
-    hands: Object.fromEntries(
-      Object.entries(table.hands).map(([handId, players]) => [
-        handId,
+    zones: Object.fromEntries(
+      Object.entries(table.zones).map(([zoneId, hosts]) => [
+        zoneId,
         Object.fromEntries(
-          table.playerOrder.map((playerId) => [
-            playerId,
-            [...players[playerId]],
-          ]),
+          Object.entries(hosts).map(([hostId, ids]) => [hostId, [...ids]]),
         ),
       ]),
     ),
-    handVisibility: { ...table.handVisibility },
     pieces: Object.fromEntries(
       Object.entries(table.pieces).map(([pieceId, piece]) => [
         pieceId,

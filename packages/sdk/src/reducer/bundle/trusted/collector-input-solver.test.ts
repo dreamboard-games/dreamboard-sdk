@@ -1,4 +1,7 @@
-import { createInputTestState } from "../../input-test-fixtures";
+import {
+  createInputTestState,
+  inputDefinitions,
+} from "../../input-test-fixtures";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
@@ -46,6 +49,7 @@ describe("trusted collector input solver", () => {
       hasAnyCollectorInputAssignment({
         interaction: interaction,
         domainState: domainState,
+        definitions: inputDefinitions,
         playerId: "player-1",
       }),
     ).toEqual({ status: "yes" });
@@ -53,6 +57,7 @@ describe("trusted collector input solver", () => {
     const enumeration = enumerateCollectorInputAssignments({
       interaction: interaction,
       domainState: domainState,
+      definitions: inputDefinitions,
       playerId: "player-1",
       maxEvaluations: 100,
     });
@@ -71,6 +76,7 @@ describe("trusted collector input solver", () => {
       hasAnyCollectorInputAssignment({
         interaction: interaction,
         domainState: domainState,
+        definitions: inputDefinitions,
         playerId: "player-1",
       }),
     ).toMatchObject({ status: "no" });
@@ -78,6 +84,7 @@ describe("trusted collector input solver", () => {
       enumerateCollectorInputAssignments({
         interaction: interaction,
         domainState: domainState,
+        definitions: inputDefinitions,
         playerId: "player-1",
         maxEvaluations: 100,
       }),
@@ -92,6 +99,7 @@ describe("trusted collector input solver", () => {
       hasAnyCollectorInputAssignment({
         interaction: interaction,
         domainState: domainState,
+        definitions: inputDefinitions,
         playerId: "player-1",
         acceptsAssignment: (assignment) => {
           evaluatedForActionability.push(assignment);
@@ -108,6 +116,7 @@ describe("trusted collector input solver", () => {
       enumerateCollectorInputAssignments({
         interaction: interaction,
         domainState: domainState,
+        definitions: inputDefinitions,
         playerId: "player-1",
         acceptsAssignment: (assignment) => assignment.task === "two",
         maxEvaluations: 100,
@@ -120,6 +129,7 @@ describe("trusted collector input solver", () => {
       hasAnyCollectorInputAssignment({
         interaction: interaction,
         domainState: domainState,
+        definitions: inputDefinitions,
         playerId: "player-1",
         acceptsAssignment: () => false,
       }),
@@ -133,6 +143,7 @@ describe("trusted collector input solver", () => {
       enumerateCollectorInputAssignments({
         interaction: interaction,
         domainState: domainState,
+        definitions: inputDefinitions,
         playerId: "player-1",
         maxEvaluations: 1,
       }),
@@ -141,6 +152,7 @@ describe("trusted collector input solver", () => {
       hasAnyCollectorInputAssignment({
         interaction: interaction,
         domainState: domainState,
+        definitions: inputDefinitions,
         playerId: "player-1",
       }),
     ).toEqual({ status: "yes" });
@@ -156,6 +168,7 @@ describe("trusted collector input solver", () => {
       hasAnyCollectorInputAssignment({
         interaction: opaqueInteraction,
         domainState: domainState,
+        definitions: inputDefinitions,
         playerId: "player-1",
       }),
     ).toEqual({ status: "notEnumerable" });
@@ -176,6 +189,7 @@ describe("trusted collector input solver", () => {
       hasAnyCollectorInputAssignment({
         interaction: unboundedInteraction,
         domainState: domainState,
+        definitions: inputDefinitions,
         playerId: "player-1",
       }),
     ).toEqual({ status: "yes" });
@@ -183,6 +197,7 @@ describe("trusted collector input solver", () => {
       enumerateCollectorInputAssignments({
         interaction: unboundedInteraction,
         domainState: domainState,
+        definitions: inputDefinitions,
         playerId: "player-1",
         maxEvaluations: 100,
       }),
@@ -198,6 +213,7 @@ describe("trusted collector input solver", () => {
       enumerateCollectorInputAssignments({
         interaction: finiteFormInteraction(),
         domainState: domainState,
+        definitions: inputDefinitions,
         playerId: "player-1",
         maxEvaluations: 0,
       }),
@@ -230,6 +246,7 @@ describe("trusted collector input solver", () => {
     const enumeration = enumerateCollectorInputAssignments({
       interaction: interaction,
       domainState,
+      definitions: inputDefinitions,
       playerId: "player-1",
       acceptsAssignment: (assignment) =>
         playerSpace.schema.safeParse(assignment.playerSpace).success &&

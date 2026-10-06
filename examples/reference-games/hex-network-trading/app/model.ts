@@ -42,6 +42,7 @@ export const RESOURCE_IDS = literals.resourceIds;
 export const FRONTIER = staticBoards.byId.frontier;
 export const FRONTIER_GEOMETRY = createTableQueries(
   manifestContract.createInitialTable(),
+  manifestContract,
 ).board(BOARD_ID);
 export const INTERSECTION_IDS = FRONTIER_GEOMETRY.vertices.map(
   (vertex) => vertex.id,

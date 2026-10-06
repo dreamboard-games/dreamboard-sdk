@@ -133,21 +133,23 @@ function source(board: RuntimeBoardState = hexBoard()) {
       availableInteractions: [action],
       zones: {
         hand: {
-          cardIds: ["red", "blue", "hidden"],
-          cardViewsById: {
-            red: {
-              id: "red",
-              cardType: "ranked",
-              properties: { rank: 2 },
+          alice: {
+            cardIds: ["red", "blue", "hidden"],
+            cardViewsById: {
+              red: {
+                id: "red",
+                cardType: "ranked",
+                properties: { rank: 2 },
+              },
+              blue: {
+                id: "blue",
+                cardType: "ranked",
+                properties: { rank: 1 },
+              },
             },
-            blue: {
-              id: "blue",
-              cardType: "ranked",
-              properties: { rank: 1 },
-            },
+            cardBacksById: {},
+            playableByCardId: { red: [action], blue: [action] },
           },
-          cardBacksById: {},
-          playableByCardId: { red: [action], blue: [action] },
         },
       },
     },
@@ -204,7 +206,7 @@ function pointer() {
 describe("headless features", () => {
   it("sorts projected hands without mutating zone order or exposing hidden data", () => {
     const { game } = setup();
-    const hand = game.zones.get("hand");
+    const hand = game.zones.get("hand", "alice");
     expect(hand.getSortedCardIds()).toEqual(["blue", "red", "hidden"]);
     expect(hand.getCards().map((card) => card.id)).toEqual([
       "red",
@@ -214,7 +216,9 @@ describe("headless features", () => {
     expect(hand.getSelectableCardIds()).toEqual(["red", "blue"]);
     expect(hand.getCards()[2].view).toBeNull();
     game.cards.get("red").select();
-    expect(game.zones.get("hand").getSelectedCardIds()).toEqual(["red"]);
+    expect(game.zones.get("hand", "alice").getSelectedCardIds()).toEqual([
+      "red",
+    ]);
     expect(hand.getSelectedCardIds()).toEqual([]);
     game.dispose();
   });
@@ -467,8 +471,10 @@ describe("headless features", () => {
         availableInteractions: [broad],
         zones: {
           hand: {
-            ...input.store.get().snapshot!.frame.zones.hand,
-            playableByCardId: { red: [narrow(ids)] },
+            alice: {
+              ...input.store.get().snapshot!.frame.zones.hand.alice,
+              playableByCardId: { red: [narrow(ids)] },
+            },
           },
         },
       });
@@ -531,7 +537,9 @@ describe("headless features", () => {
     expect(game).not.toHaveProperty("drag");
     expect(game).not.toHaveProperty("viewport");
     expect(game.cards.get("red")).not.toHaveProperty("getDragProps");
-    expect(game.zones.get("hand")).not.toHaveProperty("getSelectedCardIds");
+    expect(game.zones.get("hand", "alice")).not.toHaveProperty(
+      "getSelectedCardIds",
+    );
     game.dispose();
   });
   it("leaves drafts untouched on cancellation or a drop without a destination", () => {
@@ -575,7 +583,7 @@ it("reports missing boards and distinguishes card membership from identity", () 
   });
   expect(() => game.boards.get("missing")).toThrow('Board "missing"');
   expect(game.boards.find("missing")).toBeUndefined();
-  const hand = game.zones.get("hand");
+  const hand = game.zones.get("hand", "alice");
   expect(game.cards.get("red")).toBe(hand.getCard("red"));
   expect(hand.findCard("missing")).toBeUndefined();
   expect(() => hand.getCard("missing")).toThrow('Card in zone hand "missing"');
@@ -599,8 +607,10 @@ it("retains both input keys when one interaction has multiple card and board inp
     availableInteractions: [multi],
     zones: {
       hand: {
-        ...frame.zones.hand,
-        playableByCardId: { red: [multi], blue: [multi] },
+        alice: {
+          ...frame.zones.hand.alice,
+          playableByCardId: { red: [multi], blue: [multi] },
+        },
       },
     },
   });

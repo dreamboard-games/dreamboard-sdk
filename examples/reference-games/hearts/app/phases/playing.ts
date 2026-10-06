@@ -59,11 +59,9 @@ const playCard = playing.interaction({
     const phase = state.phase;
     const newPlays = [...phase.plays, { playerId, cardId }];
     const leadSuit = phase.leadSuit ?? properties.suit;
-    tx.moveCardFromPlayerZoneToSharedZone({
-      playerId,
-      fromZoneId: "hand",
-      toZoneId: "current-trick",
-      cardId,
+    tx.moveComponentToZone({
+      componentId: cardId,
+      to: { zoneId: "current-trick" },
       playedBy: playerId,
     });
 
@@ -90,10 +88,9 @@ const playCard = playing.interaction({
     );
 
     for (const play of newPlays) {
-      tx.moveCardBetweenSharedZones({
-        fromZoneId: "current-trick",
-        toZoneId: "discard",
-        cardId: play.cardId,
+      tx.moveComponentToZone({
+        componentId: play.cardId,
+        to: { zoneId: "discard" },
       });
     }
 
@@ -143,7 +140,7 @@ export default playing.define({
   actor: ({ state }) => state.flow.activePlayers,
   enter({ tx, q }) {
     for (const playerId of q.player.order()) {
-      if (q.zone.playerCards(playerId, "hand").includes("clubs-2")) {
+      if (q.zone("hand", playerId).includes("clubs-2")) {
         tx.setActivePlayers([playerId]);
         return;
       }

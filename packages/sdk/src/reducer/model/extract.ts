@@ -117,11 +117,54 @@ export type PrivateStateOfState<State> = State extends {
 }
   ? PrivateState
   : never;
-export type DeckIdOfTable<Table> = Table extends { decks: infer Decks }
-  ? StringKeyOf<Decks>
+export type ZoneIdOfTable<Table> = Table extends { zones: infer Zones }
+  ? StringKeyOf<Zones>
   : never;
-export type HandIdOfTable<Table> = Table extends { hands: infer Hands }
-  ? StringKeyOf<Hands>
+export type ZoneHostsOfTable<
+  Table,
+  Z extends ZoneIdOfTable<Table>,
+> = Table extends { zones: infer Zones }
+  ? StringKeyOf<Zones[Z & keyof Zones]>
+  : never;
+/** Broad runtime host maps defer scope admission to compiled definitions. */
+export type ZoneScopeOfTable<Table, Z extends ZoneIdOfTable<Table>> =
+  string extends ZoneHostsOfTable<Table, Z>
+    ? "shared" | "perPlayer"
+    : ZoneHostsOfTable<Table, Z> extends "table"
+      ? "shared"
+      : "perPlayer";
+export type SharedZoneIdOfTable<Table> = {
+  [Z in ZoneIdOfTable<Table>]: "shared" extends ZoneScopeOfTable<Table, Z>
+    ? Z
+    : never;
+}[ZoneIdOfTable<Table>];
+export type PlayerZoneIdOfTable<Table> = {
+  [Z in ZoneIdOfTable<Table>]: "perPlayer" extends ZoneScopeOfTable<Table, Z>
+    ? Z
+    : never;
+}[ZoneIdOfTable<Table>];
+type ScopedZoneArg<
+  Table,
+  Z extends ZoneIdOfTable<Table>,
+  Scope,
+> = Scope extends "shared"
+  ? { readonly zoneId: Z; readonly hostId?: "table" }
+  : { readonly zoneId: Z; readonly hostId: PlayerIdOfTable<Table> };
+export type ZoneArg<
+  Table,
+  Z extends ZoneIdOfTable<Table> = ZoneIdOfTable<Table>,
+> =
+  Z extends ZoneIdOfTable<Table>
+    ? ScopedZoneArg<Table, Z, ZoneScopeOfTable<Table, Z>>
+    : never;
+export type ZoneComponentsOfTable<
+  Table,
+  Z extends ZoneIdOfTable<Table>,
+> = Table extends { zones: infer Zones }
+  ? Zones[Z & keyof Zones][keyof Zones[Z &
+      keyof Zones]] extends readonly (infer Id)[]
+    ? Extract<Id, string>
+    : never
   : never;
 export type CardIdOfTable<Table> = Table extends { cards: infer Cards }
   ? StringKeyOf<Cards>
@@ -131,8 +174,6 @@ export type CardTypeOfTable<Table> = Table extends {
 }
   ? Extract<CardType, string>
   : string;
-export type DeckIdOfState<State> = DeckIdOfTable<TableOfState<State>>;
-export type HandIdOfState<State> = HandIdOfTable<TableOfState<State>>;
 export type CardIdOfState<State> = CardIdOfTable<TableOfState<State>>;
 export type CardTypeOfState<State> = CardTypeOfTable<TableOfState<State>>;
 export type CardIdOfManifest<Manifest> = Manifest extends {
@@ -140,8 +181,6 @@ export type CardIdOfManifest<Manifest> = Manifest extends {
 }
   ? Extract<CardId, string>
   : string;
-export type SharedZoneIdOfTable<Table> = DeckIdOfTable<Table>;
-export type PlayerZoneIdOfTable<Table> = HandIdOfTable<Table>;
 export type BoardMapOfTable<Table> = Table extends {
   boards: { byId: infer Boards };
 }
@@ -534,17 +573,29 @@ export type ComponentIdOfTable<Table> = Table extends {
   ? StringKeyOf<ComponentLocations>
   : never;
 export type SharedZoneIdOfManifest<Manifest> = Manifest extends {
-  literals: { sharedZoneIds: readonly (infer ZoneId)[] };
+  zoneDefinitions: infer Zones;
 }
-  ? Extract<ZoneId, string>
+  ? {
+      [Z in keyof Zones & string]: Zones[Z] extends { scope: "shared" }
+        ? Z
+        : never;
+    }[keyof Zones & string]
   : string;
 export type PlayerZoneIdOfManifest<Manifest> = Manifest extends {
-  literals: { playerZoneIds: readonly (infer ZoneId)[] };
+  zoneDefinitions: infer Zones;
 }
-  ? Extract<ZoneId, string>
+  ? {
+      [Z in keyof Zones & string]: Zones[Z] extends { scope: "perPlayer" }
+        ? Z
+        : never;
+    }[keyof Zones & string]
   : string;
-export type SharedZoneIdOfState<State> = DeckIdOfState<State>;
-export type PlayerZoneIdOfState<State> = HandIdOfState<State>;
+export type SharedZoneIdOfState<State> = SharedZoneIdOfTable<
+  TableOfState<State>
+>;
+export type PlayerZoneIdOfState<State> = PlayerZoneIdOfTable<
+  TableOfState<State>
+>;
 export type BoardIdOfManifest<Manifest> = Manifest extends {
   literals: { boardIds: readonly (infer BoardId)[] };
 }
@@ -663,60 +714,8 @@ export type PhaseNameOf<Source> = Source extends {
 }
   ? Extract<PhaseName, string>
   : PhaseNameOfContract<Source>;
-export type DeckCardsOfTable<
-  Table,
-  DeckId extends DeckIdOfTable<Table>,
-> = Table extends {
-  decks: infer Decks extends Record<string, readonly unknown[]>;
-}
-  ? Decks[DeckId]
-  : never;
 type PlayerRecordValue<T> =
   T extends Record<string, infer Value> ? Value : never;
-export type HandCardsOfTable<
-  Table,
-  HandId extends HandIdOfTable<Table>,
-> = Table extends {
-  hands: infer Hands extends Record<string, unknown>;
-}
-  ? HandId extends keyof Hands
-    ? PlayerRecordValue<Hands[HandId]> extends infer Value
-      ? Value extends readonly unknown[]
-        ? Value
-        : never
-      : never
-    : never
-  : never;
-export type CardIdOfDeck<
-  Table,
-  DeckId extends DeckIdOfTable<Table>,
-> = DeckCardsOfTable<Table, DeckId>[number];
-export type CardIdOfHand<
-  Table,
-  HandId extends HandIdOfTable<Table>,
-> = HandCardsOfTable<Table, HandId>[number];
-export type CompatibleHandIdForDeck<
-  Table,
-  DeckId extends DeckIdOfTable<Table>,
-> = {
-  [CandidateHandId in HandIdOfTable<Table>]: Extract<
-    CardIdOfDeck<Table, DeckId>,
-    CardIdOfHand<Table, CandidateHandId>
-  > extends never
-    ? never
-    : CandidateHandId;
-}[HandIdOfTable<Table>];
-export type CompatibleCardIdForHandAndDeck<
-  Table,
-  HandId extends HandIdOfTable<Table>,
-  DeckId extends DeckIdOfTable<Table>,
-> = Extract<CardIdOfHand<Table, HandId>, CardIdOfDeck<Table, DeckId>>;
-export type CompatibleCardIdForTwoPlayerZones<
-  Table,
-  FromZoneId extends HandIdOfTable<Table>,
-  ToZoneId extends HandIdOfTable<Table>,
-> = Extract<CardIdOfHand<Table, FromZoneId>, CardIdOfHand<Table, ToZoneId>>;
-
 export type OptionsSchemaOfContract<Contract> = Contract extends {
   options: infer Schema extends SchemaLike<import("./table").RuntimeRecord>;
 }

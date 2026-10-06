@@ -1,9 +1,6 @@
 export { ensureArray } from "./internal";
 export { cloneRuntimeTable } from "./clone";
-export {
-  assertCardAllowedInContainer,
-  assertCardAllowedInZone,
-} from "./card-validation";
+export { assertCardAllowedInContainer } from "./card-validation";
 export {
   getAdjacentSpaces,
   getBoard,
@@ -37,9 +34,7 @@ export {
 } from "./board-queries";
 export {
   getComponentContainerLocation,
-  getComponentDeckLocation,
   getComponentEdgeLocation,
-  getComponentHandLocation,
   getComponentLocation,
   getComponentSlotLocation,
   getComponentSpaceLocation,
@@ -47,16 +42,10 @@ export {
   getComponentZoneLocation,
 } from "./component-locations";
 export {
-  getAllPlayerZoneCards,
-  getAllSharedZoneCards,
   getCard,
   getCardOwner,
   getCardsById,
   getCardVisibility,
-  getPlayerZoneCardCollection,
-  getPlayerZoneCards,
-  getSharedZoneCardCollection,
-  getSharedZoneCards,
   getSlotOccupants,
   getSlotOccupantsByHost,
 } from "./zone-queries";
@@ -81,16 +70,15 @@ export {
   moveComponentToVertexInPlace,
 } from "./component-mutations";
 export {
-  addCardToSharedZoneInPlace,
-  dealCardsBetweenPlayerZonesInPlace,
-  dealCardsFromDeckToHandInPlace,
+  moveComponentToZoneInPlace,
+  dealComponentsInPlace,
+  rotateZoneInPlace,
   flipCardInPlace,
-  moveCardBetweenPlayerZonesInPlace,
-  moveCardBetweenSharedZonesInPlace,
-  moveCardFromPlayerZoneToSharedZoneInPlace,
-  moveCardFromSharedZoneToPlayerZoneInPlace,
-  removeCardFromSharedZoneInPlace,
-  shufflePlayerZoneCards,
 } from "./card-mutations";
+export {
+  getZoneComponents,
+  getZoneCardCollection,
+  getZones,
+} from "./zone-queries";
 
 export type { RuntimeTableRecord, TableOfState, CardIdOfState } from "../model";

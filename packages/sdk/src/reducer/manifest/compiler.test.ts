@@ -6,6 +6,7 @@ import { compileManifest } from "./compiler";
 import { createGame } from "../authoring/game";
 import { createTableQueries } from "../table-queries";
 import { cloneRuntimeTable } from "../table/clone";
+import { asPlayerId } from "../per-player";
 import { createReducerTestingRuntime } from "../../testing/reducer-runtime.js";
 import { createIngressRuntimeCodec } from "../ingress/runtime-codec";
 
@@ -364,13 +365,13 @@ describe("in-memory manifests", () => {
     const table = compiled.createInitialTable({
       playerIds: ["north", "south"],
     });
-    expect(table.decks.draw).toEqual(["ace-1", "ace-2"]);
+    expect(table.zones.draw.table).toEqual(["ace-1", "ace-2"]);
     expect(table).toEqual(JSON.parse(JSON.stringify(table)));
     expect(table.cards["ace-1"].properties).toEqual({
       points: 0,
       color: "red",
     });
-    expect(Object.keys(table.hands.hand)).toEqual(["north", "south"]);
+    expect(Object.keys(table.zones.hand)).toEqual(["north", "south"]);
     expect(compiled.ids.cardId.safeParse("ace-3").success).toBe(false);
     expect(
       compiled.tableSchema.safeParse({
@@ -384,8 +385,8 @@ describe("in-memory manifests", () => {
         },
       }).success,
     ).toBe(false);
-    table.decks.draw.pop();
-    expect(compiled.createInitialTable().decks.draw).toHaveLength(2);
+    table.zones.draw.table.pop();
+    expect(compiled.createInitialTable().zones.draw.table).toHaveLength(2);
   });
   test("runs authoring validation during compilation", () => {
     // @ts-expect-error The declared default home is deliberately missing its zone.
@@ -490,12 +491,14 @@ describe("active player records", () => {
     const playerIds = ["zulu", "alpha"];
     const table = game.contract.manifest.createInitialTable({ playerIds });
     const bundle = createReducerTestingRuntime(definition);
+    const { hand: omittedHand, ...sharedZones } = table.zones;
+    void omittedHand;
     const initialized = (
       await bundle.initialize({
         table: RuntimeJsonSchema.parse({
           ...table,
-          hands: {},
-          zones: { ...table.zones, perPlayer: {} },
+
+          zones: sharedZones,
           resources: {},
         }),
         playerIds,
@@ -507,8 +510,7 @@ describe("active player records", () => {
       ReducerSessionStateSchema.parse(JSON.parse(JSON.stringify(initialized))),
     );
     expect(restored.domain.table.playerOrder).toEqual(playerIds);
-    expect(restored.domain.table.hands.hand).toEqual({ zulu: [], alpha: [] });
-    expect(restored.domain.table.zones.perPlayer.hand).toEqual({
+    expect(restored.domain.table.zones.hand).toEqual({
       zulu: [],
       alpha: [],
     });
@@ -599,28 +601,26 @@ describe("active player records", () => {
     expect(restored.playerOrder).toEqual(["10", "2"]);
     // Integer-like record keys have a different JS enumeration order.
     expect(Object.keys(restored.resources)).toEqual(["2", "10"]);
-    const q = createTableQueries(restored);
+    const q = createTableQueries(restored, compiled);
     expect(q.player.order()).toEqual(["10", "2"]);
     expect(q.player.nextInOrder(restored.playerOrder[0])).toBe("2");
-    expect(restored.hands.hand).toEqual({ "10": [], "2": [] });
-    expect(restored.zones.perPlayer.hand).toEqual({ "10": [], "2": [] });
+    expect(restored.zones.hand).toEqual({ "10": [], "2": [] });
     expect(restored.resources).toEqual({
       "10": { points: 0 },
       "2": { points: 0 },
     });
     const clone = cloneRuntimeTable(restored);
-    clone.hands.hand[restored.playerOrder[0]].push("ace-1");
-    clone.zones.perPlayer.hand["10"].push("ace-2");
+    clone.zones.hand[restored.playerOrder[0]].push("ace-1");
+    clone.zones.hand[asPlayerId("10")].push("ace-2");
     clone.resources[restored.playerOrder[0]].points = 8;
-    expect(restored.hands.hand[restored.playerOrder[0]]).toEqual([]);
-    expect(restored.zones.perPlayer.hand["10"]).toEqual([]);
+    expect(restored.zones.hand[restored.playerOrder[0]]).toEqual([]);
     expect(restored.resources[restored.playerOrder[0]].points).toBe(0);
   });
 
   test("rejects missing or foreign active players and old wrappers at the manifest boundary", () => {
     const compiled = compileManifest(manifest);
     const table = compiled.createInitialTable({ playerIds: ["zulu", "alpha"] });
-    for (const field of ["hands", "zones", "resources"] as const) {
+    for (const field of ["zones", "resources"] as const) {
       for (const record of [
         { zulu: field === "resources" ? { points: 0 } : [] },
         {
@@ -639,14 +639,14 @@ describe("active player records", () => {
         const candidate =
           field === "resources"
             ? { ...table, resources: record }
-            : field === "hands"
-              ? { ...table, hands: { hand: record } }
-              : {
-                  ...table,
-                  zones: { ...table.zones, perPlayer: { hand: record } },
-                };
+            : { ...table, zones: { ...table.zones, hand: record } };
         expect(compiled.tableSchema.safeParse(candidate).success).toBe(false);
       }
+    }
+    for (const mirror of ["hands", "decks"]) {
+      expect(
+        compiled.tableSchema.safeParse({ ...table, [mirror]: {} }).success,
+      ).toBe(false);
     }
     expect(
       compiled.tableSchema.safeParse({

@@ -34,17 +34,10 @@ function createTable(playerIds = ["player-1", "player-2"]) {
   const ids = playerIds.map((id) => asPlayerId(id));
   return {
     playerOrder: [...playerIds],
-    zones: {
-      shared: {},
-      perPlayer: {},
-      visibility: {},
-    },
-    decks: {},
-    hands: {},
-    handVisibility: {},
+    zones: {},
     cards: {},
     pieces: {},
-    componentLocations: {},
+    componentLocations: { "die-1": { type: "Detached" } },
     ownerOfCard: {},
     visibility: {},
     resources: Object.fromEntries(ids.map((id) => [id, {}])),
@@ -167,6 +160,16 @@ describe("phase 4 trusted-bundle characterization", () => {
       },
     });
 
+    if (accepted.kind === "accept") {
+      expect(accepted.state.domain.publicState).toEqual({
+        score: 1,
+        recordedRoll: null,
+      });
+      expect(accepted.state.domain).toMatchObject({ table: { zones: {} } });
+      expect(accepted.state.domain).toMatchObject({
+        table: { componentLocations: { "die-1": { type: "Detached" } } },
+      });
+    }
     expect({
       accepted:
         accepted.kind === "accept"
@@ -248,6 +251,18 @@ describe("phase 4 trusted-bundle characterization", () => {
       },
     });
 
+    if (result.kind === "accept") {
+      expect(result.state.domain.publicState).toEqual({
+        score: 0,
+        recordedRoll: null,
+      });
+      expect(result.state.domain).toMatchObject({
+        table: { dice: { "die-1": { value: 5 } } },
+      });
+      expect(result.state.domain).toMatchObject({
+        table: { componentLocations: { "die-1": { type: "Detached" } } },
+      });
+    }
     expect(
       result.kind === "accept"
         ? {

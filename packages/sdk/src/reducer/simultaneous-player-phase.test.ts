@@ -7,7 +7,7 @@ import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { formInput, rngInput } from "./inputs";
 import { gameEvent, many } from "../reducer";
-import { dealCardsFromDeckToHandInPlace } from "./table/card-mutations";
+import { dealComponentsInPlace } from "./table/card-mutations";
 import { asPlayerId } from "../reducer/per-player";
 
 function hydrateRefs<T>(
@@ -70,13 +70,13 @@ const createTable = () =>
 function createCardTable() {
   const table = createTable();
   for (const playerId of table.playerOrder) {
-    dealCardsFromDeckToHandInPlace(
+    dealComponentsInPlace({
       table,
-      "draw",
-      playerId,
-      "hand",
-      playerId === "player-3" ? 1 : 3,
-    );
+      definitions: manifest,
+      from: { zoneId: "draw" },
+      to: { zoneId: "hand", hostId: playerId },
+      count: playerId === "player-3" ? 1 : 3,
+    });
   }
   return table;
 }

@@ -3,6 +3,7 @@ import { proveCardDrag } from "./card-drag-proof.ts";
 import {
   proveDraw,
   proveDrawTouchActivation,
+  proveHostDraw,
   proveReducedCardMotion,
 } from "./draw-proof.ts";
 import { proveCardControl } from "./card-control-proof.ts";
@@ -66,6 +67,7 @@ try {
       if (story.id.startsWith("actual-scenarios--")) {
         await expect(page.getByTestId("scenario-view")).toBeAttached();
         const phases: Record<string, string> = {
+          "host-hands": "play",
           "hearts-passing": "passing",
           "hearts-opening": "passing",
           "hearts-sealed-pass": "passing",
@@ -91,7 +93,7 @@ try {
           "hex-trade": "pendingTrade",
         };
         const expected = phases[story.id.replace("actual-scenarios--", "")];
-        expect(expected).toBeDefined();
+        expect(expected, `Expected phase for ${story.id}`).toBeDefined();
         await expect(page.getByRole("heading", { level: 2 })).toHaveText(
           expected,
         );
@@ -242,6 +244,8 @@ try {
         );
       }
       // Gesture proofs run on a portrait phone and a desktop.
+      if (story.id.endsWith("host-hands") && name !== "landscape")
+        await proveHostDraw(page, touch);
       if (story.id.endsWith("card-drag-drop") && name !== "landscape")
         await proveCardDrag(page, touch);
       if (story.id.endsWith("fanned-hand") && name !== "landscape") {

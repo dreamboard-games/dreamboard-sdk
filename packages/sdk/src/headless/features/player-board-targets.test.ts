@@ -288,7 +288,7 @@ describe("per-player board target identity through local sources", () => {
 
   it("drops a real projected card on the opponent's complete tuple", async () => {
     const { source, game } = await setup();
-    game.drag.begin(game.zones.get("table").getCards()[0].id, {
+    game.drag.begin(game.zones.get("table", "table").getCards()[0].id, {
       interaction: "play.drop",
     });
     const targets = game.drag
@@ -307,7 +307,7 @@ describe("per-player board target identity through local sources", () => {
     });
     game.drag.drop();
     expect(game.state.drafts["play.drop"]).toEqual({
-      card: game.zones.get("table").getCards()[0].id,
+      card: game.zones.get("table", "table").getCards()[0].id,
       space: opponentTarget,
     });
     expect(await game.interactions.get("play.drop").submit()).toEqual({

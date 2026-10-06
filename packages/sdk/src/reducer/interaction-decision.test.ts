@@ -61,18 +61,42 @@ const buildTwoZoneManifest = () =>
 function createTable(options: { player1Gold?: number } = {}) {
   const table = buildManifest().createInitialTable();
   for (const playerId of table.playerOrder) {
-    table.zones.perPlayer.playZone[playerId] = ["card-a", "card-b"];
+    table.zones.playZone[playerId] =
+      playerId === "player-1" ? ["card-a", "card-b"] : [];
     table.resources[playerId].gold =
       playerId === "player-1" ? (options.player1Gold ?? 1) : 5;
+  }
+  for (const [zoneId, hosts] of Object.entries(table.zones)) {
+    for (const [hostId, ids] of Object.entries(hosts)) {
+      for (const id of ids)
+        table.componentLocations[id] = {
+          type: "InZone",
+          zoneId,
+          hostId,
+          playedBy: null,
+        };
+    }
   }
   return table;
 }
 function createTwoZoneTable() {
   const table = buildTwoZoneManifest().createInitialTable();
   for (const playerId of table.playerOrder) {
-    table.zones.perPlayer.playZone[playerId] = ["card-a"];
-    table.zones.perPlayer.discardZone[playerId] = ["card-b"];
+    table.zones.playZone[playerId] = playerId === "player-1" ? ["card-a"] : [];
+    table.zones.discardZone[playerId] =
+      playerId === "player-1" ? ["card-b"] : [];
     table.resources[playerId].gold = playerId === "player-1" ? 1 : 5;
+  }
+  for (const [zoneId, hosts] of Object.entries(table.zones)) {
+    for (const [hostId, ids] of Object.entries(hosts)) {
+      for (const id of ids)
+        table.componentLocations[id] = {
+          type: "InZone",
+          zoneId,
+          hostId,
+          playedBy: null,
+        };
+    }
   }
   return table;
 }
@@ -664,30 +688,38 @@ describe("trusted interaction decision pipeline", () => {
       })
     ).state;
     const table = createTable();
-    table.zones.visibility.playZone = "hidden";
+    for (const id of ["card-a", "card-b"])
+      table.visibility[id] = { faceUp: false };
     state.domain.table = RuntimeJsonSchema.parse(table);
     const hidden = bundle.project({
       state,
       playerIds: ["player-1", "player-2"],
     });
     for (const seat of ["player-1", "player-2"]) {
-      const zone = hidden.seats[seat].zones?.playZone;
+      const zone = hidden.seats[seat].zones?.playZone["player-1"];
       expect(zone).toMatchObject({
-        cardIds: ["hidden:playZone:0", "hidden:playZone:1"],
+        cardIds: [
+          'hidden:["playZone","player-1",0]',
+          'hidden:["playZone","player-1",1]',
+        ],
         cardViewsById: {},
         cardBacksById: {},
       });
       // Descriptors name hidden cards by position too.
       const [play] = hydrateCardRefs(
         hidden,
-        zone?.playableByCardId["hidden:playZone:0"],
+        zone?.playableByCardId['hidden:["playZone","player-1",0]'],
       );
-      expect(play?.inputs[0]?.domain).toMatchObject({
-        eligibleTargets: ["hidden:playZone:0"],
-      });
+      if (seat === "player-1") {
+        expect(play?.inputs[0]?.domain).toMatchObject({
+          eligibleTargets: ['hidden:["playZone","player-1",0]'],
+        });
+      } else {
+        expect(play).toBeUndefined();
+      }
       expect(JSON.stringify(hidden.interactionsByRef)).not.toContain("card-a");
     }
-    table.zones.visibility.playZone = "ownerOnly";
+    table.visibility["card-b"] = { faceUp: true };
     table.visibility["card-a"] = {
       faceUp: false,
       visibleTo: ["player-1"],
@@ -697,16 +729,14 @@ describe("trusted interaction decision pipeline", () => {
       state,
       playerIds: ["player-1", "player-2"],
     });
-    expect(visible.seats["player-1"].zones?.playZone.cardIds).toEqual([
-      "card-a",
-      "card-b",
-    ]);
-    expect(visible.seats["player-2"].zones?.playZone.cardIds).toEqual([
-      "hidden:playZone:0",
-      "card-b",
-    ]);
     expect(
-      visible.seats["player-2"].zones?.playZone.cardViewsById,
+      visible.seats["player-1"].zones?.playZone["player-1"].cardIds,
+    ).toEqual(["card-a", "card-b"]);
+    expect(
+      visible.seats["player-2"].zones?.playZone["player-1"].cardIds,
+    ).toEqual(['hidden:["playZone","player-1",0]', "card-b"]);
+    expect(
+      visible.seats["player-2"].zones?.playZone["player-1"].cardViewsById,
     ).not.toHaveProperty("card-a");
   });
 
@@ -970,7 +1000,7 @@ describe("trusted interaction decision pipeline", () => {
       state,
       playerIds: ["player-1"],
     });
-    const playZone = projection.seats["player-1"]?.zones?.playZone;
+    const playZone = projection.seats["player-1"]?.zones?.playZone["player-1"];
     expect(playZone?.cardIds).toEqual(["card-a", "card-b"]);
     expect(playZone?.cardViewsById["card-a"]).toEqual({
       id: "card-a",
@@ -1068,7 +1098,7 @@ describe("trusted interaction decision pipeline", () => {
       state,
       playerIds: ["player-1"],
     });
-    const playZone = projection.seats["player-1"]?.zones?.playZone;
+    const playZone = projection.seats["player-1"]?.zones?.playZone["player-1"];
     expect(
       hydrateCardRefs(projection, playZone?.playableByCardId["card-a"]).find(
         (descriptor) => descriptor.interactionId === "playSelected",
@@ -1469,17 +1499,15 @@ describe("trusted interaction decision pipeline", () => {
     expect(
       hydrateCardRefs(
         projection,
-        projection.seats["player-1"]?.zones?.playZone.playableByCardId[
-          "card-a"
-        ],
+        projection.seats["player-1"]?.zones?.playZone["player-1"]
+          .playableByCardId["card-a"],
       ),
     ).toMatchObject([{ interactionId: "inspectThenPlay" }]);
     expect(
       hydrateCardRefs(
         projection,
-        projection.seats["player-1"]?.zones?.discardZone.playableByCardId[
-          "card-b"
-        ],
+        projection.seats["player-1"]?.zones?.discardZone["player-1"]
+          .playableByCardId["card-b"],
       ),
     ).toMatchObject([{ interactionId: "inspectThenPlay" }]);
   });
@@ -1522,9 +1550,18 @@ describe("trusted interaction decision pipeline", () => {
       view: () => ({}),
     });
     const bundle = createReducerTestingRuntime(game);
+    const table = createTable();
+    table.zones.playZone[asPlayerId("player-1")] = ["card-a"];
+    table.zones.playZone[asPlayerId("player-2")] = ["card-b"];
+    table.componentLocations["card-b"] = {
+      type: "InZone",
+      zoneId: "playZone",
+      hostId: "player-2",
+      playedBy: null,
+    };
     const state = (
       await bundle.initialize({
-        table: RuntimeJsonSchema.parse(createTable()),
+        table: RuntimeJsonSchema.parse(table),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -1535,9 +1572,8 @@ describe("trusted interaction decision pipeline", () => {
     expect(
       hydrateCardRefs(
         projection,
-        projection.seats["player-1"]?.zones?.playZone.playableByCardId[
-          "card-a"
-        ],
+        projection.seats["player-1"]?.zones?.playZone["player-1"]
+          .playableByCardId["card-a"],
       ),
     ).toMatchObject([
       {
@@ -1562,14 +1598,14 @@ describe("trusted interaction decision pipeline", () => {
       playerIds: ["player-1", "player-2"],
     });
     expect(
-      afterSubmit.seats["player-1"]?.zones?.playZone.playableByCardId["card-a"],
+      afterSubmit.seats["player-1"]?.zones?.playZone["player-1"]
+        .playableByCardId["card-a"],
     ).toEqual([]);
     expect(
       hydrateCardRefs(
         afterSubmit,
-        afterSubmit.seats["player-2"]?.zones?.playZone.playableByCardId[
-          "card-a"
-        ],
+        afterSubmit.seats["player-2"]?.zones?.playZone["player-2"]
+          .playableByCardId["card-b"],
       ),
     ).toMatchObject([
       {
@@ -1597,7 +1633,8 @@ describe("trusted interaction decision pipeline", () => {
     ).find((descriptor) => descriptor.interactionId === "spendGold");
     const cardAction = hydrateCardRefs(
       projection,
-      projection.seats["player-1"]?.zones?.playZone.playableByCardId["card-a"],
+      projection.seats["player-1"]?.zones?.playZone["player-1"]
+        .playableByCardId["card-a"],
     ).find((descriptor) => descriptor.interactionId === "playCard");
     expect(interaction).toMatchObject({
       interactionId: "spendGold",
@@ -1673,15 +1710,15 @@ describe("trusted interaction decision pipeline", () => {
     expect(
       hydrateCardRefs(
         projection,
-        projection.seats["player-1"]?.zones?.playZone.playableByCardId[
-          "card-a"
-        ],
+        projection.seats["player-1"]?.zones?.playZone["player-1"]
+          .playableByCardId["card-a"],
       ),
     ).toMatchObject([
       { interactionId: "castSpell", availability: { status: "available" } },
     ]);
     expect(
-      projection.seats["player-1"]?.zones?.playZone.playableByCardId["card-b"],
+      projection.seats["player-1"]?.zones?.playZone["player-1"]
+        .playableByCardId["card-b"],
     ).toEqual([]);
     await expect(
       bundle.validateInput({

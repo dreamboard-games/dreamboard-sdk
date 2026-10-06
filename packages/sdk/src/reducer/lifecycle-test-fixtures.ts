@@ -10,15 +10,15 @@ export function buildMinimalManifest<
   const playerIds = ["player-1", "player-2"] as const;
   const handIds = ["hand"] as const;
   return {
+    zoneDefinitions: {
+      hand: { scope: "perPlayer", visibility: "public", allowedCardSetIds: [] },
+    },
     literals: {
       playerIds,
       phaseNames,
       cardSetIds: [] as const,
       cardTypes: [] as const,
-      deckIds: [] as const,
-      handIds,
-      sharedZoneIds: [] as const,
-      playerZoneIds: handIds,
+
       zoneIds: handIds,
       cardIds: [] as const,
       resourceIds: [] as const,
@@ -39,12 +39,8 @@ export function buildMinimalManifest<
       portTypeIds: [] as const,
       spaceIds: [] as const,
       spaceTypeIds: [] as const,
-      handVisibilityById: {},
-      zoneVisibilityById: {},
       cardSetIdByCardId: {},
       cardTypeByCardId: {},
-      cardSetIdsBySharedZoneId: {},
-      cardSetIdsByPlayerZoneId: {},
     },
     ids: {
       playerId: createManifestStringLiteralSchema(playerIds),
@@ -52,10 +48,6 @@ export function buildMinimalManifest<
       cardSetId: createManifestStringLiteralSchema([] as const),
       cardType: createManifestStringLiteralSchema([] as const),
       cardId: createManifestStringLiteralSchema([] as const),
-      deckId: createManifestStringLiteralSchema([] as const),
-      handId: createManifestStringLiteralSchema(handIds),
-      sharedZoneId: createManifestStringLiteralSchema([] as const),
-      playerZoneId: createManifestStringLiteralSchema(handIds),
       zoneId: createManifestStringLiteralSchema(handIds),
       resourceId: createManifestStringLiteralSchema([] as const),
       dieTypeId: createManifestStringLiteralSchema(["d6"] as const),
@@ -82,10 +74,9 @@ export function buildMinimalManifest<
       relationTypeId: createManifestStringLiteralSchema([] as const),
     },
     defaults: {
-      zones: () => ({ shared: {}, perPlayer: {}, visibility: {} }),
-      decks: () => ({}),
-      hands: () => ({}),
-      handVisibility: () => ({}),
+      zones: (players: readonly string[] = playerIds) => ({
+        hand: Object.fromEntries(players.map((id) => [id, []])),
+      }),
       ownerOfCard: () => ({}),
       visibility: () => ({}),
       resources: () => Object.fromEntries([].map((id) => [id, {}])),
@@ -102,17 +93,11 @@ export function createTable(
   const ids = playerIds.map((id) => asPlayerId(id));
   return {
     playerOrder: [...playerIds],
-    zones: {
-      shared: {},
-      perPlayer: {},
-      visibility: {},
-    },
-    decks: {},
-    hands: {},
-    handVisibility: {},
+    zones: { hand: Object.fromEntries(playerIds.map((id) => [id, []])) },
+
     cards: {},
     pieces: {},
-    componentLocations: {},
+    componentLocations: { "die-1": { type: "Detached" } },
     ownerOfCard: {},
     visibility: {},
     resources: Object.fromEntries(ids.map((id) => [id, {}])),

@@ -1,6 +1,16 @@
 import * as reducer from "../src/reducer.js";
-import type { ReducerTransaction } from "../src/reducer.js";
-import type { RuntimeTableRecord } from "../src/reducer/model.js";
+import {
+  asPlayerId,
+  type PlayerId,
+  type ReducerTransaction,
+} from "../src/reducer.js";
+import type { RuntimeTableRecord, TableQueries } from "../src/reducer/model.js";
+
+type Equal<A, B> =
+  (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2
+    ? true
+    : false;
+type Expect<T extends true> = T;
 
 type HexBoard = RuntimeTableRecord["boards"]["hex"][string];
 type Board<Id extends string> = Omit<
@@ -15,17 +25,26 @@ type Board<Id extends string> = Omit<
 
 type Table = Omit<
   RuntimeTableRecord,
-  "boards" | "decks" | "hands" | "cards" | "componentLocations" | "dice"
+  | "boards"
+  | "zones"
+  | "cards"
+  | "pieces"
+  | "playerOrder"
+  | "componentLocations"
+  | "dice"
 > & {
   boards: Omit<RuntimeTableRecord["boards"], "byId"> & {
     byId: { north: Board<"north">; south: Board<"south"> };
   };
   dice: { d6: RuntimeTableRecord["dice"][string] };
-  decks: { draw: "red"[]; special: "blue"[] };
-  hands: {
-    hand: Record<string, "red"[]>;
-    played: Record<string, "red"[]>;
-    specialHand: Record<string, "blue"[]>;
+  playerOrder: PlayerId[];
+  pieces: { piece: RuntimeTableRecord["pieces"][string] };
+  zones: {
+    draw: { table: "red"[] };
+    special: { table: "blue"[] };
+    hand: Record<PlayerId, ("red" | "piece" | "d6")[]>;
+    played: Record<PlayerId, ("red" | "piece" | "d6")[]>;
+    specialHand: Record<PlayerId, "blue"[]>;
   };
   cards: Record<"red" | "blue", RuntimeTableRecord["cards"][string]>;
   componentLocations: Record<
@@ -35,19 +54,40 @@ type Table = Omit<
 };
 type State = { table: Table };
 
+export function assertZoneQueryContract(
+  q: TableQueries<Table>,
+  player: PlayerId,
+): void {
+  const cards = q.zone.cards("draw");
+  type _AllowedCards = Expect<Equal<(typeof cards.cardIds)[number], "red">>;
+  const mixed = q.zone("hand", player);
+  type _MixedComponents = Expect<
+    Equal<(typeof mixed)[number], "red" | "piece" | "d6">
+  >;
+  const handCards = q.zone.cards("hand", player);
+  type _CardsExcludeNonCards = Expect<
+    Equal<(typeof handCards.cardIds)[number], "red">
+  >;
+  // @ts-expect-error A card-only collection excludes the destination's pieces.
+  cards.cardsById.piece;
+  // @ts-expect-error A zone's allowed card identities exclude another card set.
+  cards.cardsById.blue;
+}
+
 export function assertTransactionContract(
   tx: ReducerTransaction<State>,
 ): State {
+  const player = asPlayerId("player");
   const result: number = tx.roll("d6");
   void result;
-  tx.shuffle({ zoneId: "draw" });
-  tx.shuffle({ zoneId: "hand", playerId: "player" });
+  tx.shuffle({ zone: { zoneId: "draw" } });
+  tx.shuffle({ zone: { zoneId: "hand", hostId: player } });
   // @ts-expect-error A declared die ID is required.
   tx.roll("missing");
   // @ts-expect-error A player zone needs its seat.
-  tx.shuffle({ zoneId: "hand" });
+  tx.shuffle({ zone: { zoneId: "hand" } });
   // @ts-expect-error Shared zones cannot be shuffled as player zones.
-  tx.shuffle({ zoneId: "draw", playerId: "player" });
+  tx.shuffle({ zone: { zoneId: "draw", hostId: player } });
   // @ts-expect-error Effects have been removed.
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Effects have been removed.
   tx.effect({});
@@ -110,56 +150,60 @@ export function assertTransactionContract(
   // @ts-expect-error Component IDs come from the table.
   tx.moveComponentToDetached({ componentId: "missing" });
 
-  tx.moveCardBetweenPlayerZones({
-    playerId: "player",
-    fromZoneId: "hand",
-    toZoneId: "played",
-    cardId: "red",
+  tx.moveComponentToZone({
+    componentId: "red",
+    to: { zoneId: "played", hostId: player },
   });
-  tx.moveCardFromPlayerZoneToSharedZone({
-    playerId: "player",
-    fromZoneId: "hand",
-    toZoneId: "draw",
-    cardId: "red",
+  tx.moveComponentToZone({ componentId: "red", to: { zoneId: "draw" } });
+  tx.moveComponentToZone({
+    componentId: "red",
+    to: { zoneId: "hand", hostId: player },
   });
-  tx.moveCardFromSharedZoneToPlayerZone({
-    playerId: "player",
-    fromZoneId: "draw",
-    toZoneId: "hand",
-    cardId: "red",
+  tx.moveComponentToZone({
+    componentId: "piece",
+    to: { zoneId: "hand", hostId: player },
+  });
+  tx.moveComponentToZone({
+    componentId: "d6",
+    to: { zoneId: "hand", hostId: player },
+  });
+  tx.rotateZone({
+    zoneId: "hand",
+    direction: "left",
+    componentIdsByPlayer: { [player]: ["red", "piece", "d6"] },
+  });
+  tx.rotateZone({
+    zoneId: "hand",
+    direction: "left",
+    // @ts-expect-error Rotation selections retain the chosen zone's accepted identities.
+    componentIdsByPlayer: {
+      [player]: ["blue"],
+    },
   });
   tx.deal({
-    playerId: "player",
-    fromZoneId: "draw",
-    toZoneId: "hand",
+    from: { zoneId: "draw" },
+    to: { zoneId: "hand", hostId: player },
     count: 1,
   });
-  tx.moveCardBetweenPlayerZones({
-    playerId: "player",
-    fromZoneId: "hand",
-    toZoneId: "specialHand",
-    // @ts-expect-error The card must be accepted by both player zones.
-    cardId: "red",
+  tx.moveComponentToZone({
+    to: { zoneId: "specialHand", hostId: player },
+    // @ts-expect-error The component must be accepted by the destination zone.
+    componentId: "red",
   });
-  tx.moveCardFromPlayerZoneToSharedZone({
-    playerId: "player",
-    fromZoneId: "hand",
-    toZoneId: "special",
-    // @ts-expect-error The card must be accepted by both source hand and deck.
-    cardId: "red",
+  tx.moveComponentToZone({
+    to: { zoneId: "special" },
+    // @ts-expect-error Shared destinations retain their accepted component identities.
+    componentId: "red",
   });
-  tx.moveCardFromSharedZoneToPlayerZone({
-    playerId: "player",
-    fromZoneId: "special",
-    toZoneId: "hand",
-    // @ts-expect-error The card must be accepted by both source deck and hand.
-    cardId: "blue",
+  tx.moveComponentToZone({
+    to: { zoneId: "hand", hostId: player },
+    // @ts-expect-error Player destinations retain their accepted component identities.
+    componentId: "blue",
   });
   tx.deal({
-    playerId: "player",
-    fromZoneId: "draw",
-    // @ts-expect-error Dealing requires compatible deck and hand card sets.
-    toZoneId: "specialHand",
+    from: { zoneId: "draw" },
+    // @ts-expect-error Dealing requires overlapping source and destination component identities.
+    to: { zoneId: "specialHand", hostId: player },
     count: 1,
   });
   // @ts-expect-error Immutable operation composition is removed.

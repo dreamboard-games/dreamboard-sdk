@@ -4,8 +4,7 @@ import { createTable } from "./lifecycle-test-fixtures";
 /** A complete table for collector-domain tests, consumed by real table queries. */
 export function createInputTestState() {
   const table = createTable();
-  table.hands.hand = { "player-1": ["card-a", "card-b"], "player-2": [] };
-  table.zones.perPlayer.hand = table.hands.hand;
+  table.zones.hand = { "player-1": ["card-a", "card-b"], "player-2": [] };
   for (const id of ["card-a", "card-b"]) {
     table.cards[id] = {
       id,
@@ -16,9 +15,10 @@ export function createInputTestState() {
     table.ownerOfCard[id] = "player-1";
     table.visibility[id] = { faceUp: true };
     table.componentLocations[id] = {
-      type: "InHand",
-      handId: "hand",
-      playerId: "player-1",
+      type: "InZone",
+      zoneId: "hand",
+      hostId: "player-1",
+      playedBy: null,
     };
   }
   for (const id of [
@@ -59,3 +59,9 @@ export function createInputTestState() {
   }
   return { table, flow: { currentPhase: "play" } };
 }
+
+export const inputDefinitions = {
+  zoneDefinitions: {
+    hand: { scope: "perPlayer", visibility: "public", allowedCardSetIds: [] },
+  },
+} as const;

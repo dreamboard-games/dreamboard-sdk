@@ -39,7 +39,7 @@ const manifest = compileManifest({
 const table = manifest.createInitialTable();
 const round: number = table.boards.byId.map.fields.round;
 const terrain: string = table.boards.byId.map.spaces.home.fields.terrain;
-const q = createTableQueries(table);
+const q = createTableQueries(table, manifest);
 q.board("map");
 q.board("track");
 // @ts-expect-error Inline space identity is retained.

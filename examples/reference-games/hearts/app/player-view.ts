@@ -34,10 +34,7 @@ function projectPublic(state: GameState, q: typeof hearts.types.Queries) {
     playerIds,
     activePlayerId: (state.flow.activePlayers[0] ?? null) as PlayerId | null,
     handCountByPlayer: Object.fromEntries(
-      playerIds.map((playerId) => [
-        playerId,
-        q.zone.playerCards(playerId, "hand").length,
-      ]),
+      playerIds.map((playerId) => [playerId, q.zone("hand", playerId).length]),
     ) as Record<PlayerId, number>,
     currentTrick: playing?.plays.map(({ cardId }) => cardView(q, cardId)) ?? [],
     currentTrickPlays:
@@ -60,8 +57,6 @@ export const view = hearts.view(({ state, playerId, q }) => {
   return {
     ...projectPublic(state, q),
     playerId,
-    hand: q.zone
-      .playerCards(playerId, "hand")
-      .map((cardId) => cardView(q, cardId)),
+    hand: q.zone("hand", playerId).map((cardId) => cardView(q, cardId)),
   };
 });

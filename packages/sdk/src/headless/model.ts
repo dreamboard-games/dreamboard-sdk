@@ -421,6 +421,7 @@ export type CardDataOf<G, K extends string> = [TableOfGame<G>] extends [never]
 
 interface CardEntity<G> {
   readonly zone: IdOf<G, "zoneId">;
+  readonly hostId: IdOf<G, "playerId"> | "table";
   readonly index: number;
 
   readonly game: CoreInstance<G>;
@@ -466,6 +467,7 @@ export type Card<
   };
 export interface ZoneBase<G, K extends IdOf<G, "zoneId"> = IdOf<G, "zoneId">> {
   readonly id: K;
+  readonly hostId: IdOf<G, "playerId"> | "table";
   readonly count: number;
   readonly game: CoreInstance<G>;
   getIsEmpty(): boolean;
@@ -522,8 +524,14 @@ export interface ReadModel<G, F extends Features = Record<never, never>> {
     ): Input<G, F, K, N> | undefined;
   };
   readonly zones: {
-    get<K extends IdOf<G, "zoneId">>(id: K): Zone<G, F, K>;
-    find<K extends IdOf<G, "zoneId">>(id: K): Zone<G, F, K> | undefined;
+    get<K extends IdOf<G, "zoneId">>(
+      id: K,
+      hostId: IdOf<G, "playerId"> | "table",
+    ): Zone<G, F, K>;
+    find<K extends IdOf<G, "zoneId">>(
+      id: K,
+      hostId: IdOf<G, "playerId"> | "table",
+    ): Zone<G, F, K> | undefined;
     getAll(): readonly Zone<G, F>[];
   };
   readonly cards: {

@@ -158,32 +158,38 @@ describe("source request lifecycle", () => {
       ...frame(),
       zones: {
         hand: {
-          cardIds: ["card-1", "card-2", "hidden:hand:2"],
-          cardViewsById: {
-            "card-1": card,
-            "card-2": {
-              id: "card-2",
-              cardType: "ranked",
-              properties: { rank: "A" },
+          alice: {
+            cardIds: ["card-1", "card-2", "hidden:hand:2"],
+            cardViewsById: {
+              "card-1": card,
+              "card-2": {
+                id: "card-2",
+                cardType: "ranked",
+                properties: { rank: "A" },
+              },
             },
+            cardBacksById: { "hidden:hand:2": "assets/cards/spell.webp" },
+            playableByCardId: {},
           },
-          cardBacksById: { "hidden:hand:2": "assets/cards/spell.webp" },
-          playableByCardId: {},
         },
       },
     });
     const view =
-      x.source.store.get().snapshot!.frame.zones.hand.cardViewsById["card-1"];
+      x.source.store.get().snapshot!.frame.zones.hand.alice.cardViewsById[
+        "card-1"
+      ];
     expect(view.frontImage).toMatch(/^blob:/);
     expect(view.backImage).toBe("assets/cards/missing.webp");
     expect(
-      x.source.store.get().snapshot!.frame.zones.hand.cardBacksById[
+      x.source.store.get().snapshot!.frame.zones.hand.alice.cardBacksById[
         "hidden:hand:2"
       ],
     ).toBe(view.frontImage);
     expect(view.properties).toEqual({ power: 7 });
     expect(
-      x.source.store.get().snapshot!.frame.zones.hand.cardViewsById["card-2"],
+      x.source.store.get().snapshot!.frame.zones.hand.alice.cardViewsById[
+        "card-2"
+      ],
     ).toEqual({ id: "card-2", cardType: "ranked", properties: { rank: "A" } });
     expect(card.frontImage).toBe("assets/cards/spell.webp");
     expect(Object.isFrozen(view)).toBe(true);
@@ -215,10 +221,12 @@ describe("source request lifecycle", () => {
             ...frame(),
             zones: {
               hand: {
-                cardIds: ["card-1"],
-                cardViewsById: { "card-1": card },
-                cardBacksById: {},
-                playableByCardId: {},
+                alice: {
+                  cardIds: ["card-1"],
+                  cardViewsById: { "card-1": card },
+                  cardBacksById: {},
+                  playableByCardId: {},
+                },
               },
             },
           }),

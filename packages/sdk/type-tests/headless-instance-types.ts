@@ -1,3 +1,4 @@
+import { asPlayerId } from "../src/reducer/per-player.js";
 import type { definition } from "./authoring-model-types.js";
 import { createGameInstance } from "../src/headless/instance.js";
 import type {
@@ -116,7 +117,7 @@ mood.getTargetProps({ value: "ready" });
 const visibleId: "card-1" = game.cards.get("card-1").view.id;
 void visibleId;
 // Zones also list hidden cards, known only by position.
-for (const card of game.zones.get("hand").getCards()) {
+for (const card of game.zones.get("hand", asPlayerId("player-1")).getCards()) {
   if (card.hidden) {
     const hiddenId: HiddenCardId = card.id;
     const back: string | null = card.backImage;
@@ -127,7 +128,7 @@ for (const card of game.zones.get("hand").getCards()) {
     void cardId;
   }
 }
-const handId: "hand" = game.zones.get("hand").id;
+const handId: "hand" = game.zones.get("hand", asPlayerId("player-1")).id;
 for (const interaction of game.interactions.list()) {
   if (interaction.key === "playerTurn.pick") {
     for (const input of interaction.getInputs()) {

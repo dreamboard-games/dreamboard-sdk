@@ -1,3 +1,4 @@
+import { inputDefinitions } from "./input-test-fixtures";
 import { createInputTestState } from "./input-test-fixtures";
 import type { InputCollector } from "./model";
 import { InteractionSteps } from "./authoring/steps";
@@ -28,7 +29,12 @@ describe("interaction input projection", () => {
     };
 
     expect(() =>
-      collectInteractionInputs(interaction, createInputTestState(), "player-1"),
+      collectInteractionInputs(
+        interaction,
+        createInputTestState(),
+        "player-1",
+        { definitions: inputDefinitions },
+      ),
     ).toThrow("has no renderable domain");
   });
 
@@ -44,7 +50,12 @@ describe("interaction input projection", () => {
     };
 
     expect(
-      collectInteractionInputs(interaction, createInputTestState(), "player-1"),
+      collectInteractionInputs(
+        interaction,
+        createInputTestState(),
+        "player-1",
+        { definitions: inputDefinitions },
+      ),
     ).toMatchObject([
       {
         key: "mode",
@@ -68,6 +79,7 @@ describe("interaction input projection", () => {
         { inputs: { bonus: nullableChoice }, reduce() {} },
         createInputTestState(),
         "player-1",
+        { definitions: inputDefinitions },
       ),
     ).toMatchObject([
       {
@@ -97,7 +109,12 @@ describe("interaction input projection", () => {
     };
 
     expect(
-      collectInteractionInputs(interaction, createInputTestState(), "player-1"),
+      collectInteractionInputs(
+        interaction,
+        createInputTestState(),
+        "player-1",
+        { definitions: inputDefinitions },
+      ),
     ).toMatchObject([
       {
         key: "selectedCardIds",
@@ -134,6 +151,7 @@ describe("interaction input projection", () => {
         { inputs, reduce() {} },
         createInputTestState(),
         "player-1",
+        { definitions: inputDefinitions },
       ),
     ).toMatchObject([
       {
@@ -174,7 +192,13 @@ function projectCurrent(
   >,
   values: unknown[],
 ) {
-  const evaluated = evaluateStepPrefix(steps, stepState, "player-1", values);
+  const evaluated = evaluateStepPrefix(
+    steps,
+    stepState,
+    "player-1",
+    values,
+    inputDefinitions,
+  );
   const inputs = evaluated.current
     ? { [evaluated.current.key]: evaluated.current.collector }
     : {};
@@ -182,6 +206,7 @@ function projectCurrent(
     { inputs, reduce() {} },
     stepState,
     "player-1",
+    { definitions: inputDefinitions },
   );
 }
 describe("committed current input projection", () => {
@@ -206,9 +231,10 @@ describe("committed current input projection", () => {
     expect(projectCurrent(steps, [])).toMatchObject([
       { key: "mode", defaultValue: "a" },
     ]);
-    expect(evaluateStepPrefix(steps, stepState, "player-1", []).values).toEqual(
-      [],
-    );
+    expect(
+      evaluateStepPrefix(steps, stepState, "player-1", [], inputDefinitions)
+        .values,
+    ).toEqual([]);
   });
   test("undefined defaults keep the current value unfinished", () => {
     const steps = new InteractionSteps<typeof stepState>().input(
@@ -273,7 +299,8 @@ describe("committed current input projection", () => {
       { key: "answer", domain: { choices: [] } },
     ]);
     expect(
-      evaluateStepPrefix(steps, stepState, "player-1", ["a"]).values,
+      evaluateStepPrefix(steps, stepState, "player-1", ["a"], inputDefinitions)
+        .values,
     ).toEqual(["a"]);
   });
   test("large preceding domains never enumerate future branch combinations", () => {

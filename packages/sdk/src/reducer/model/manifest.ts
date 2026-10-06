@@ -4,22 +4,16 @@ import * as ContractZod from "../../shared/runtime-schema";
 import * as z from "zod";
 import type {
   AnySchema,
-  RuntimeHandVisibilityMode,
+  ZoneDefinitions,
   RuntimeTableRecord,
   SchemaLike,
 } from "./table";
-import type {
-  CardIdOfTable,
-  DeckIdOfTable,
-  HandIdOfTable,
-  PlayerIdOfTable,
-} from "./extract";
+import type { CardIdOfTable, ZoneIdOfTable, PlayerIdOfTable } from "./extract";
 import type { TableQueriesOfState } from "./queries";
 
 declare const manifestIdSchemaBrand: unique symbol;
 
 export type ManifestIdFamily = keyof ManifestIds<
-  string,
   string,
   string,
   string,
@@ -35,8 +29,7 @@ export type ManifestIdSchema<
 
 export type ManifestLiterals<
   PlayerId extends string,
-  DeckId extends string,
-  HandId extends string,
+  ZoneId extends string,
   CardId extends string,
   PhaseName extends string = string,
 > = {
@@ -45,11 +38,7 @@ export type ManifestLiterals<
   boardLayouts: readonly ("generic" | "hex" | "square")[];
   cardSetIds: readonly string[];
   cardTypes: readonly string[];
-  deckIds: readonly DeckId[];
-  handIds: readonly HandId[];
-  sharedZoneIds: readonly DeckId[];
-  playerZoneIds: readonly HandId[];
-  zoneIds: readonly (DeckId | HandId)[];
+  zoneIds: readonly ZoneId[];
   cardIds: readonly CardId[];
   resourceIds: readonly string[];
   resourcePresentationById?: Record<
@@ -73,18 +62,13 @@ export type ManifestLiterals<
   vertexTypeIds: readonly string[];
   spaceIds: readonly string[];
   spaceTypeIds: readonly string[];
-  handVisibilityById: Record<HandId, RuntimeHandVisibilityMode>;
-  zoneVisibilityById: Record<DeckId | HandId, RuntimeHandVisibilityMode>;
   cardSetIdByCardId: Record<CardId, string>;
   cardTypeByCardId: Record<CardId, string>;
-  cardSetIdsBySharedZoneId: Record<DeckId, readonly string[]>;
-  cardSetIdsByPlayerZoneId: Record<HandId, readonly string[]>;
 };
 
 export type ManifestIds<
   PlayerId extends string,
-  DeckId extends string,
-  HandId extends string,
+  ZoneId extends string,
   CardId extends string,
   PhaseName extends string = string,
 > = {
@@ -94,11 +78,7 @@ export type ManifestIds<
   cardSetId: AnySchema;
   cardType: AnySchema;
   cardId: z.ZodType<CardId>;
-  deckId: z.ZodType<DeckId>;
-  handId: z.ZodType<HandId>;
-  sharedZoneId: AnySchema;
-  playerZoneId: AnySchema;
-  zoneId: AnySchema;
+  zoneId: z.ZodType<ZoneId>;
   resourceId: AnySchema;
   pieceTypeId: AnySchema;
   pieceId: AnySchema;
@@ -119,9 +99,6 @@ export type ManifestIds<
 
 export type ManifestDefaults<Table extends RuntimeTableRecord> = {
   zones: (playerIds?: readonly string[]) => Table["zones"];
-  decks: (playerIds?: readonly string[]) => Table["decks"];
-  hands: (playerIds?: readonly string[]) => Table["hands"];
-  handVisibility: (playerIds?: readonly string[]) => Table["handVisibility"];
   ownerOfCard: (playerIds?: readonly string[]) => Table["ownerOfCard"];
   visibility: (playerIds?: readonly string[]) => Table["visibility"];
   resources: (playerIds?: readonly string[]) => Table["resources"];
@@ -144,12 +121,12 @@ export type ReducerManifestContract<
   Table extends RuntimeTableRecord,
   PhaseName extends string,
   PlayerId extends string,
-  DeckId extends string,
-  HandId extends string,
+  ZoneId extends string,
   CardId extends string,
 > = {
-  literals: ManifestLiterals<PlayerId, DeckId, HandId, CardId, PhaseName>;
-  ids: ManifestIds<PlayerId, DeckId, HandId, CardId, PhaseName>;
+  zoneDefinitions: ZoneDefinitions["zoneDefinitions"];
+  literals: ManifestLiterals<PlayerId, ZoneId, CardId, PhaseName>;
+  ids: ManifestIds<PlayerId, ZoneId, CardId, PhaseName>;
   defaults: ManifestDefaults<Table>;
   /**
    * Normal-session setup capability supplied by the manifest compiler.
@@ -175,18 +152,16 @@ export type ReducerManifestContractLike<
   Table extends RuntimeTableRecord = RuntimeTableRecord,
   PhaseName extends string = string,
   PlayerId extends string = string,
-  DeckId extends string = string,
-  HandId extends string = string,
+  ZoneId extends string = string,
   CardId extends string = string,
-> = ReducerManifestContract<Table, PhaseName, PlayerId, DeckId, HandId, CardId>;
+> = ReducerManifestContract<Table, PhaseName, PlayerId, ZoneId, CardId>;
 
 export type ManifestContract<Table extends RuntimeTableRecord> =
   ReducerManifestContract<
     Table,
     string,
     PlayerIdOfTable<Table>,
-    DeckIdOfTable<Table>,
-    HandIdOfTable<Table>,
+    ZoneIdOfTable<Table>,
     CardIdOfTable<Table>
   >;
 
@@ -414,7 +389,6 @@ export type InitContext<
   Table extends RuntimeTableRecord,
   Manifest extends ReducerManifestContract<
     Table,
-    string,
     string,
     string,
     string,

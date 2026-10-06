@@ -7,20 +7,45 @@ import type { SourceSnapshot } from "../sources/types.js";
  * `hidden` says whether the seat saw only the card's back there.
  */
 export type CardOrigin<G> =
-  | { readonly zone: IdOf<G, "zoneId">; readonly hidden: boolean }
+  | {
+      readonly zone: IdOf<G, "zoneId">;
+      readonly hostId: IdOf<G, "playerId"> | "table";
+      readonly hidden: boolean;
+    }
   | { readonly player: IdOf<G, "playerId">; readonly hidden: true };
 
 type RuntimeOrigin =
-  | { readonly zone: string; readonly hidden: boolean }
+  | {
+      readonly zone: string;
+      readonly hostId?: string;
+      readonly hidden: boolean;
+    }
   | { readonly player: string; readonly hidden: true };
-type Zones = SourceSnapshot["frame"]["zones"];
+type NestedZones = SourceSnapshot["frame"]["zones"];
+type Zones = Record<
+  string,
+  import("../../shared/protocol/frame").ZoneHandlesSnapshot
+>;
+const flatten = (zones: NestedZones): Zones =>
+  Object.fromEntries(
+    Object.entries(zones).flatMap(([zoneId, hosts]) =>
+      Object.entries(hosts).map(([hostId, zone]) => [
+        JSON.stringify([zoneId, hostId]),
+        zone,
+      ]),
+    ),
+  );
 
 const isHidden = (cardId: string) => cardId.startsWith("hidden:");
 const hiddenCount = (zones: Zones, zone: string) =>
   zones[zone]?.cardIds.filter(isHidden).length ?? 0;
 
 function singleOrigin(
-  departures: readonly { readonly zone: string; readonly hidden: boolean }[],
+  departures: readonly {
+    readonly zone: string;
+    readonly hostId?: string;
+    readonly hidden: boolean;
+  }[],
   count: number,
 ) {
   const origin = departures[0];
@@ -42,10 +67,12 @@ function singleOrigin(
  * frame does not list. Ambiguous origins are omitted.
  */
 export function findCardOrigins(
-  previous: Zones,
-  next: Zones,
+  previousNested: NestedZones,
+  nextNested: NestedZones,
   mover: string | null,
 ): ReadonlyMap<string, RuntimeOrigin> {
+  const previous = flatten(previousNested);
+  const next = flatten(nextNested);
   const shownBefore = new Map<string, string>();
   for (const [zone, { cardIds }] of Object.entries(previous))
     for (const cardId of cardIds)
@@ -100,7 +127,7 @@ export function findCardOrigins(
         hiddenCount(next, card.zone) > 0,
     )
   )
-    return origins;
+    return decodedOrigins(origins);
   const hiddenLeft = left.filter((card) => card.hidden);
   if (shownArrivals.length) {
     const origin = singleOrigin(hiddenLeft, shownArrivals.length);
@@ -112,7 +139,7 @@ export function findCardOrigins(
       ];
     } else if (hiddenLeft.length) {
       // Which departures the shown cards consumed is also ambiguous.
-      return origins;
+      return decodedOrigins(origins);
     } else if (mover !== null) {
       const origin = Object.freeze({ player: mover, hidden: true as const });
       for (const cardId of shownArrivals) origins.set(cardId, origin);
@@ -127,7 +154,7 @@ export function findCardOrigins(
     for (const cardId of hiddenArrivals)
       if (cardId !== null) origins.set(cardId, hiddenOrigin);
   }
-  return origins;
+  return decodedOrigins(origins);
 }
 
 /** The sole active player, when it is another seat. */
@@ -179,4 +206,16 @@ export function originsFeature<G>(game: CoreInstance<G>) {
     },
     dispose: unsubscribe,
   };
+}
+
+function decodedOrigins(
+  origins: ReadonlyMap<string, RuntimeOrigin>,
+): ReadonlyMap<string, RuntimeOrigin> {
+  return new Map<string, RuntimeOrigin>(
+    [...origins].map(([id, origin]) => {
+      if (!("zone" in origin)) return [id, origin];
+      const [zone, hostId] = JSON.parse(origin.zone) as [string, string];
+      return [id, Object.freeze({ ...origin, zone, hostId })];
+    }),
+  );
 }

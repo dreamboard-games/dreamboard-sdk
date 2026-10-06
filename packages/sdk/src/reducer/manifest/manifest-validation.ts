@@ -809,7 +809,50 @@ export function validateManifestAuthoring(
   // Never expand invalid counts (including Infinity) into runtime ids.
   if (errors.length) return { errors, warnings: [] };
 
+  for (const [index, zone] of (manifest.zones ?? []).entries()) {
+    if (zone.scope === "shared" && zone.visibility === "ownerOnly") {
+      errors.push(
+        `manifest.zones[${index}].visibility: ownerOnly requires perPlayer scope; use hidden for concealed shared contents`,
+      );
+    }
+  }
+
+  const componentIds = [
+    ...manifest.cardSets.flatMap((set) =>
+      set.cards.flatMap(renderCardInstanceIds),
+    ),
+    ...expandSeedIds(manifest.pieceSeeds ?? []),
+    ...expandSeedIds(manifest.dieSeeds ?? []),
+  ];
+  for (const id of componentIds)
+    if (id.startsWith("hidden:"))
+      errors.push(
+        `Component id '${id}' uses the reserved concealed-id namespace 'hidden:'.`,
+      );
   errors.push(...collectManifestRecordKeyIssues(manifest));
+  errors.push(
+    ...collectDuplicateIdIssues({
+      label: "component runtime id",
+      entries: [
+        ...manifest.cardSets.flatMap((set, setIndex) =>
+          set.cards.flatMap((card, index) =>
+            renderCardInstanceIds(card).map((id) => ({
+              id,
+              path: `manifest.cardSets[${setIndex}].cards[${index}]`,
+            })),
+          ),
+        ),
+        ...expandSeedIds(manifest.pieceSeeds ?? []).map((id, index) => ({
+          id,
+          path: `manifest.pieceSeeds.runtimeIds[${index}]`,
+        })),
+        ...expandSeedIds(manifest.dieSeeds ?? []).map((id, index) => ({
+          id,
+          path: `manifest.dieSeeds.runtimeIds[${index}]`,
+        })),
+      ],
+    }),
+  );
   errors.push(
     ...collectDuplicateIdIssues({
       entries: manifest.cardSets.map((cardSet, index) => ({

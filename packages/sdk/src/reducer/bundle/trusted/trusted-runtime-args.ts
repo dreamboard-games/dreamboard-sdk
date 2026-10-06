@@ -91,7 +91,7 @@ export function buildRuntimeArgs<
 ) {
   type DomainState = BaseGameStateOfContract<Contract>;
   const domainState = toDomainState(state);
-  const q = options.q ?? createStateQueries(domainState);
+  const q = options.q ?? createStateQueries(domainState, manifest);
   const args = {
     ...buildContext(state, manifest),
     q,

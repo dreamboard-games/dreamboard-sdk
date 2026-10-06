@@ -113,10 +113,6 @@ async function fixture() {
   const table = model.contract.manifest.createInitialTable({
     playerIds: [playerOne, playerTwo],
   });
-  table.hands = {
-    hand: { [playerOne]: [], [playerTwo]: [] },
-  };
-  table.handVisibility = { hand: "ownerOnly" };
   const initial = await bundle.initialize({
     table: RuntimeJsonSchema.parse(table),
     playerIds: [playerOne, playerTwo],

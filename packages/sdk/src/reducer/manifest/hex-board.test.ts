@@ -182,7 +182,10 @@ it("bound board queries validate generated space membership", async () => {
       },
     ],
   } as const);
-  const board = createTableQueries(contract.createInitialTable()).board("map");
+  const board = createTableQueries(
+    contract.createInitialTable(),
+    contract,
+  ).board("map");
   expect(board.space("0,0").q).toBe(0);
   expect(() => board.space("5,5")).toThrow('Space on board map "5,5"');
   expect(() => board.neighbors("5,5")).toThrow("Unknown space");

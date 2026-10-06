@@ -67,17 +67,15 @@ export function createHandGame(handSize: number) {
         initialState: () => ({}),
         enter({ tx, q }) {
           const [first, second] = q.player.order();
-          tx.shuffle({ zoneId: "deck" });
+          tx.shuffle({ zone: { zoneId: "deck" } });
           tx.deal({
-            fromZoneId: "deck",
-            playerId: first,
-            toZoneId: "hand",
+            from: { zoneId: "deck" },
+            to: { zoneId: "hand", hostId: first },
             count: handSize,
           });
           tx.deal({
-            fromZoneId: "deck",
-            playerId: second,
-            toZoneId: "hand",
+            from: { zoneId: "deck" },
+            to: { zoneId: "hand", hostId: second },
             count: 3,
           });
           tx.setActivePlayers([first]);
@@ -87,11 +85,9 @@ export function createHandGame(handSize: number) {
             presentation: { label: "Play" },
             inputs: { card: handCard(["hearts", "spades"]) },
             reduce({ tx, input }) {
-              tx.moveCardFromPlayerZoneToSharedZone({
-                playerId: input.playerId,
-                fromZoneId: "hand",
-                toZoneId: "table",
-                cardId: input.params.card,
+              tx.moveComponentToZone({
+                componentId: input.params.card,
+                to: { zoneId: "table" },
               });
             },
           }),
@@ -99,11 +95,9 @@ export function createHandGame(handSize: number) {
             presentation: { label: "Discard" },
             inputs: { card: handCard(["spades", "clubs"]) },
             reduce({ tx, input }) {
-              tx.moveCardFromPlayerZoneToSharedZone({
-                playerId: input.playerId,
-                fromZoneId: "hand",
-                toZoneId: "discard",
-                cardId: input.params.card,
+              tx.moveComponentToZone({
+                componentId: input.params.card,
+                to: { zoneId: "discard" },
               });
             },
           }),
@@ -125,14 +119,13 @@ export function createHandGame(handSize: number) {
                 id: "deck-has-cards",
                 errorCode: "DECK_EMPTY",
                 message: "The draw pile is empty.",
-                available: ({ q }) => q.zone.sharedCards("deck").length > 0,
+                available: ({ q }) => q.zone("deck").length > 0,
               },
             ],
             reduce({ tx, input }) {
               tx.deal({
-                fromZoneId: "deck",
-                playerId: input.playerId,
-                toZoneId: "hand",
+                from: { zoneId: "deck" },
+                to: { zoneId: "hand", hostId: input.playerId },
                 count: 1,
               });
             },
@@ -155,10 +148,7 @@ export function createHandGame(handSize: number) {
       handCounts: Object.fromEntries(
         q.player
           .order()
-          .map((playerId) => [
-            playerId,
-            q.zone.playerCards(playerId, "hand").length,
-          ]),
+          .map((playerId) => [playerId, q.zone("hand", playerId).length]),
       ),
     })),
   });

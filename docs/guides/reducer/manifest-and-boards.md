@@ -19,14 +19,48 @@ Card `frontImage` and `backImage` are repository paths under `assets/`, such as
 deliver them with the session; card views then carry loadable URLs in the same
 fields, so UI code renders `card.frontImage` directly.
 
-Zone `visibility` decides who sees cards: `"hidden"` zones, such as a deck, show
-no faces to anyone. `tx.flipCard({ cardId, faceUp: false })` turns a card in a
-shared zone face down; moving it to another zone turns it face up. Each seat's
-frame lists the cards hidden from it only by position, `hidden:<zone>:<index>`,
-with their back image, and a seat may target them by that id in a card input;
-other inputs, such as a form choice, never name cards. Their table ids are
-rejected from seats but accepted from tests, which know the table. Target
-rules that test a hidden card's properties reveal them through eligibility.
+Zones have one ordered membership array per host: `table.zones[zoneId][hostId]`.
+Shared zones use the `"table"` host; per-player zones use an active player ID.
+Compiled manifest definitions own scope, visibility and allowed card sets. Those
+rules are not duplicated in mutable table state. Cards, pieces and dice use the
+same `InZone { zoneId, hostId, playedBy }` location; their IDs are unique across
+component families. Array order is authoritative, with no location position copy.
+
+```ts
+const hand = q.zone("hand", playerId);
+const cards = q.zone.cards("hand", playerId);
+const first = hand[0];
+if (first !== undefined) {
+  tx.moveComponentToZone({
+    componentId: first,
+    to: { zoneId: "discard" },
+    playedBy: playerId,
+  });
+}
+tx.deal({
+  from: { zoneId: "draw" },
+  to: { zoneId: "hand", hostId: playerId },
+  count: 3,
+});
+tx.shuffle({ zone: { zoneId: "draw" } });
+```
+
+Moves, deals and rotations preserve component ownership. Use
+`tx.setComponentOwner({ componentId, ownerId })` to change it explicitly.
+`scope: "perPlayer"` determines zone instances, not privacy. Zone visibility
+defaults to `"public"`; declare hands `"ownerOnly"` explicitly. A player host owns
+access to its owner-only zone even when a contained component has another owner.
+
+A `"hidden"` zone shows card backs instead of faces. A face-down card also has
+no face unless the seat has explicit access. Moving a card applies the destination
+zone's visibility; `tx.flipCard({ cardId, faceUp })` changes its face state within
+that boundary. Public per-player zones are visible across seats; another player's
+owner-only zone is omitted from the seat's zone collection and target domain.
+Concealed cards in an accessible zone use opaque positional seat IDs with a
+separate back image. Pass those IDs through card inputs without parsing them.
+The authority rejects raw hidden card IDs from seats; testing helpers translate
+trusted table IDs. Target rules based on hidden properties can disclose them
+through eligibility, so authors must choose those rules deliberately.
 
 Resources default to `visibility: "public"`. Declare `visibility: "owner"` for a
 balance only its holder may see: each seat projection's `resources` lists every

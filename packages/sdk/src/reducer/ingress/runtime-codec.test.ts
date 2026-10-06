@@ -97,20 +97,7 @@ function rawCanonicalTable() {
   return {
     playerOrder: ["player-1", "player-2"],
     zones: {
-      shared: { draw: [] },
-      perPlayer: {
-        hand: Object.fromEntries(
-          players.map((playerId) => [
-            playerId,
-            playerId === "player-1" ? ["card-2"] : [],
-          ]),
-        ),
-      },
-      visibility: { draw: "public", hand: "ownerOnly" },
-      cardSetIdsByZoneId: { draw: ["cards"], hand: ["cards"] },
-    },
-    decks: { draw: ["card-1"] },
-    hands: {
+      draw: { table: ["card-1"] },
       hand: Object.fromEntries(
         players.map((playerId) => [
           playerId,
@@ -118,7 +105,7 @@ function rawCanonicalTable() {
         ]),
       ),
     },
-    handVisibility: { hand: "ownerOnly" },
+
     cards: {
       "card-1": {
         id: "card-1",
@@ -134,11 +121,17 @@ function rawCanonicalTable() {
       },
     },
     componentLocations: {
-      "card-1": { type: "InDeck", deckId: "draw", playedBy: null },
+      "card-1": {
+        type: "InZone",
+        zoneId: "draw",
+        hostId: "table",
+        playedBy: null,
+      },
       "card-2": {
-        type: "InHand",
-        handId: "hand",
-        playerId: "player-1",
+        type: "InZone",
+        zoneId: "hand",
+        hostId: "player-1",
+        playedBy: null,
       },
     },
     ownerOfCard: { "card-1": null, "card-2": "player-1" },
@@ -186,7 +179,7 @@ describe("ingress runtime codec", () => {
     for (const invalid of [
       { ...table, resources: wrapper },
       { ...table, hands: { hand: wrapper } },
-      { ...table, zones: { ...table.zones, perPlayer: { hand: wrapper } } },
+      { ...table, zones: { hand: wrapper } },
     ]) {
       expect(() =>
         codec.parseInitialTable(invalid, table.playerOrder),

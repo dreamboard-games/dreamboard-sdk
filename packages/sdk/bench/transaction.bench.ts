@@ -64,10 +64,10 @@ function createBenchState() {
         [
           `card-${index}`,
           {
-            type: "InDeck" as const,
-            deckId: "main-deck",
+            type: "InZone" as const,
+            zoneId: "main-deck",
+            hostId: "table",
             playedBy: null,
-            position: index,
           },
         ] as const,
     ),
@@ -132,20 +132,10 @@ function createBenchState() {
     table: {
       playerOrder: playerIds,
       zones: {
-        shared: {
-          "main-deck": Array.from(
-            { length: 60 },
-            (_, index) => `card-${index}`,
-          ),
+        "main-deck": {
+          table: Array.from({ length: 60 }, (_, index) => `card-${index}`),
         },
-        perPlayer: {},
-        visibility: { "main-deck": "public" },
       },
-      decks: {
-        "main-deck": Array.from({ length: 60 }, (_, index) => `card-${index}`),
-      },
-      hands: {},
-      handVisibility: {},
       cards,
       pieces,
       dice: {},
@@ -189,7 +179,15 @@ function createBenchState() {
 }
 
 const baseState = createBenchState();
-const edit = createReducerEdit<typeof baseState>();
+const edit = createReducerEdit<typeof baseState>({
+  zoneDefinitions: {
+    "main-deck": {
+      scope: "shared",
+      visibility: "public",
+      allowedCardSetIds: ["main"],
+    },
+  },
+});
 
 function runFiveOpTransaction(): BenchState {
   const tx = edit(

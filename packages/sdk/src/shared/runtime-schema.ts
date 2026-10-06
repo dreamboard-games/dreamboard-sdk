@@ -283,7 +283,9 @@ export const AuthoredViewSchema = z
 export const SeatProjectionSchema = z.strictObject({
   view: AuthoredViewSchema.nullable().optional(),
   availableInteractionRefs: z.array(z.string()).optional(),
-  zones: z.record(z.string(), ZoneInteractionRefsSchema).optional(),
+  zones: z
+    .record(z.string(), z.record(z.string(), ZoneInteractionRefsSchema))
+    .optional(),
   /** Resource balances by player that this seat may see. */
   resources: z
     .record(z.string(), z.record(z.string(), z.number().int()))

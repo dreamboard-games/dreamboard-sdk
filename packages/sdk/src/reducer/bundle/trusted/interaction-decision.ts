@@ -368,6 +368,7 @@ export function createInteractionDecisionResolver<
           mode === "submit"
             ? [...previousValues, paramsRecord[submittedKey ?? ""]]
             : previousValues,
+          scope.definition.contract.manifest,
         )
       : undefined;
     const submittedPrefix = mode === "submit" ? prefix : undefined;
@@ -464,6 +465,7 @@ export function createInteractionDecisionResolver<
         projection?.domainState ?? scope.toDomainState(state),
         playerId,
         parsed.params,
+        scope.definition.contract.manifest,
       );
     }
 
@@ -510,6 +512,7 @@ export function createInteractionDecisionResolver<
             domainState: projection?.domainState ?? scope.toDomainState(state),
             playerId,
             queries: projection?.q,
+            definitions: scope.definition.contract.manifest,
             initialValues: params,
             acceptsAssignment: () => true,
           })
@@ -668,6 +671,7 @@ export function createInteractionDecisionResolver<
               input.projection?.domainState ?? scope.toDomainState(input.state),
             playerId: input.playerId,
             queries: input.projection?.q,
+            definitions: scope.definition.contract.manifest,
             acceptsAssignment: (assignment) =>
               acceptsSubmitAssignment({
                 state: input.state,

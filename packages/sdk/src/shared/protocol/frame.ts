@@ -92,7 +92,9 @@ export interface PluginGameplayFrame<
   readonly availableInteractions: ReadonlyArray<
     InteractionDescriptor<Interaction>
   >;
-  readonly zones: Readonly<Record<string, ZoneHandlesSnapshot<Interaction>>>;
+  readonly zones: Readonly<
+    Record<string, Readonly<Record<string, ZoneHandlesSnapshot<Interaction>>>>
+  >;
 }
 
 export type ReducerSeatProjectionBundle =

@@ -24,17 +24,20 @@ export default setup.define({
     });
 
     // Shuffle once, then deal one card at a time in seat order.
-    tx.shuffle({ zoneId: "draw-pile" });
+    tx.shuffle({ zone: { zoneId: "draw-pile" } });
     for (let cardNumber = 0; cardNumber < 13; cardNumber += 1) {
       for (const playerId of playerIds) {
         tx.deal({
-          fromZoneId: "draw-pile",
-          playerId,
-          toZoneId: "hand",
+          from: { zoneId: "draw-pile" },
+          to: { zoneId: "hand", hostId: playerId },
           count: 1,
         });
       }
     }
+
+    for (const playerId of playerIds)
+      for (const componentId of tx.q.zone("hand", playerId))
+        tx.setComponentOwner({ componentId, ownerId: playerId });
 
     return tx.transition("passing");
   },

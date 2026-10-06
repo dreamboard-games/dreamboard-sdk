@@ -1,5 +1,3 @@
-import { getPlayerZoneCards, getSharedZoneCards } from "../table";
-import type { RuntimeTableRecord } from "../model";
 import type { CollectorState } from "../model/spec";
 import type { CardIdOfState } from "../model/extract";
 import {
@@ -31,20 +29,6 @@ export type CardTargetBuilder<
   ZoneIds extends readonly string[] = readonly string[],
 > = TargetRuleBuilder<State, Id, CardTargetRule<State, Id, ZoneIds>>;
 
-function cardIdsForZone(
-  table: RuntimeTableRecord,
-  playerId: string,
-  zoneId: string,
-): readonly string[] {
-  if (zoneId in table.hands || zoneId in table.zones.perPlayer) {
-    return getPlayerZoneCards(table, playerId, zoneId);
-  }
-  if (zoneId in table.decks || zoneId in table.zones.shared) {
-    return getSharedZoneCards(table, zoneId);
-  }
-  return [];
-}
-
 function createCardTargetBuilder<
   State extends CollectorState,
   Id extends string,
@@ -53,11 +37,19 @@ function createCardTargetBuilder<
   return createTargetRuleBuilder<State, Id, CardTargetRule<State, Id, ZoneIds>>(
     (predicates) => ({
       ...createTargetRule(
-        ({ state, playerId }) =>
-          zoneIds.flatMap(
-            (zoneId) =>
-              cardIdsForZone(state.table, playerId, zoneId) as readonly Id[],
-          ),
+        ({ state, playerId, q }) => {
+          // Authored zone selection is admitted through the compiled query owner;
+          // the target builder's generic IDs refine that owner's runtime strings.
+          const zones = q.zones as (
+            zoneId: string,
+          ) => Readonly<Record<string, readonly string[]>>;
+          return zoneIds.flatMap((zoneId) => {
+            const hosts = zones(zoneId);
+            return (hosts[playerId] ?? hosts.table ?? []).filter((id) =>
+              Object.hasOwn(state.table.cards, id),
+            );
+          }) as Id[];
+        },
         predicates,
         {
           missingCandidateIssue: {

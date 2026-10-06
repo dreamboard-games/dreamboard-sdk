@@ -304,33 +304,38 @@ function withCardImageUrls(
   return {
     ...frame,
     zones: Object.fromEntries(
-      Object.entries(frame.zones).map(([zoneId, zone]) => [
+      Object.entries(frame.zones).map(([zoneId, hosts]) => [
         zoneId,
-        {
-          ...zone,
-          cardViewsById: Object.fromEntries(
-            Object.entries(zone.cardViewsById).map(([cardId, card]) => [
-              cardId,
-              {
-                ...card,
-                frontImage:
-                  card.frontImage === undefined
-                    ? undefined
-                    : (urls[card.frontImage] ?? card.frontImage),
-                backImage:
-                  card.backImage === undefined
-                    ? undefined
-                    : (urls[card.backImage] ?? card.backImage),
-              },
-            ]),
-          ),
-          cardBacksById: Object.fromEntries(
-            Object.entries(zone.cardBacksById).map(([cardId, path]) => [
-              cardId,
-              urls[path] ?? path,
-            ]),
-          ),
-        },
+        Object.fromEntries(
+          Object.entries(hosts).map(([hostId, zone]) => [
+            hostId,
+            {
+              ...zone,
+              cardViewsById: Object.fromEntries(
+                Object.entries(zone.cardViewsById).map(([cardId, card]) => [
+                  cardId,
+                  {
+                    ...card,
+                    frontImage:
+                      card.frontImage === undefined
+                        ? undefined
+                        : (urls[card.frontImage] ?? card.frontImage),
+                    backImage:
+                      card.backImage === undefined
+                        ? undefined
+                        : (urls[card.backImage] ?? card.backImage),
+                  },
+                ]),
+              ),
+              cardBacksById: Object.fromEntries(
+                Object.entries(zone.cardBacksById).map(([cardId, path]) => [
+                  cardId,
+                  urls[path] ?? path,
+                ]),
+              ),
+            },
+          ]),
+        ),
       ]),
     ),
   };

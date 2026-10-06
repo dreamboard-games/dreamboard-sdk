@@ -42,8 +42,6 @@ export function compileManifest<
     playerIds: analysis.playerIds,
     shuffleItems: (values) => [...values],
   });
-  const sharedZoneIds = analysis.sharedZones.map((zone) => zone.id).sort();
-  const playerZoneIds = analysis.playerZones.map((zone) => zone.id).sort();
   const literals = {
     cardSetIds: analysis.cardSetIds,
     cardTypes: analysis.cardTypes,
@@ -68,29 +66,15 @@ export function compileManifest<
     playerIds: analysis.playerIds.map(asPlayerId),
     phaseNames: [],
     boardLayouts: ["generic", "hex", "square"],
-    deckIds: sharedZoneIds,
-    handIds: playerZoneIds,
-    sharedZoneIds,
-    playerZoneIds,
     resourcePresentationById: analysis.resourcePresentationById,
     ownerResourceIds: (source.resources ?? [])
       .filter((resource) => resource.visibility === "owner")
       .map((resource) => resource.id)
       .sort(),
-    handVisibilityById: Object.fromEntries(
-      playerZoneIds.map((id) => [
-        id,
-        analysis.zoneVisibilityById.get(id) ?? "ownerOnly",
-      ]),
-    ),
-    zoneVisibilityById: Object.fromEntries(analysis.zoneVisibilityById),
     cardSetIdByCardId: Object.fromEntries(analysis.cardSetIdByCardId),
     cardTypeByCardId: Object.fromEntries(analysis.cardTypeByCardId),
-    cardSetIdsBySharedZoneId: Object.fromEntries(analysis.sharedZoneCardSetIds),
-    cardSetIdsByPlayerZoneId: Object.fromEntries(analysis.playerZoneCardSetIds),
   } satisfies ReducerManifestContract<
     RuntimeTableRecord,
-    string,
     string,
     string,
     string,
@@ -102,10 +86,6 @@ export function compileManifest<
     "cardSetId",
     "cardType",
     "cardId",
-    "deckId",
-    "handId",
-    "sharedZoneId",
-    "playerZoneId",
     "zoneId",
     "resourceId",
     "pieceTypeId",
@@ -153,30 +133,38 @@ export function compileManifest<
     boardIdSchemas.length ? z.union(boardIdSchemas) : z.never(),
     "boardId",
   );
+  const zoneDefinitions = Object.freeze(
+    Object.fromEntries(
+      (source.zones ?? []).map((zone) => [
+        zone.id,
+        Object.freeze({
+          scope: zone.scope,
+          visibility: zone.visibility ?? "public",
+          allowedCardSetIds: Object.freeze([
+            ...(analysis.zoneCardSetIdsById.get(zone.id) ?? []),
+          ]),
+        }),
+      ]),
+    ),
+  );
   const tableSchema = assumeManifestSchema<RuntimeTableRecord>(
-    createTableSchema(analysis, ids),
+    createTableSchema(analysis, ids, { zoneDefinitions }),
   );
   const resolvePlayers = (players: readonly string[] = analysis.playerIds) =>
     players.map(asPlayerId);
-  const emptyDecks = () =>
-    Object.fromEntries(sharedZoneIds.map((id) => [id, []]));
-  const hands = (players?: readonly string[]) =>
-    Object.fromEntries(
-      playerZoneIds.map((id) => [
-        id,
-        Object.fromEntries(resolvePlayers(players).map((id) => [id, []])),
-      ]),
-    );
   const defaults = {
-    zones: (players?: readonly string[]) => ({
-      shared: emptyDecks(),
-      perPlayer: hands(players),
-      visibility: structuredClone(literals.zoneVisibilityById),
-      cardSetIdsByZoneId: Object.fromEntries(analysis.zoneCardSetIdsById),
-    }),
-    decks: emptyDecks,
-    hands,
-    handVisibility: () => structuredClone(literals.handVisibilityById),
+    zones: (players?: readonly string[]) =>
+      Object.fromEntries(
+        Object.entries(zoneDefinitions).map(([zoneId, definition]) => [
+          zoneId,
+          Object.fromEntries(
+            (definition.scope === "shared"
+              ? ["table"]
+              : resolvePlayers(players)
+            ).map((hostId) => [hostId, []]),
+          ),
+        ]),
+      ),
     ownerOfCard: () =>
       Object.fromEntries(analysis.cardIds.map((id) => [id, null])),
     visibility: () =>
@@ -208,6 +196,7 @@ export function compileManifest<
     );
   // eslint-disable-next-line no-restricted-syntax -- Analysis of M supplies every literal, schema, record, and setup factory; this compiler binds those runtime results to the M-derived facade.
   return {
+    zoneDefinitions,
     literals,
     ids,
     defaults,

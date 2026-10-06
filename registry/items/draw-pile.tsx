@@ -31,10 +31,12 @@ import { Pile } from "./pile";
 import { useCardMotion, type CardBox, type CardPlacement } from "./card-motion";
 import "./tokens.css";
 
-import type { GameModel as Model, ZoneId } from "@game";
+import type { GameModel as Model, GameCard as Card, ZoneId } from "@game";
 import type { InteractionKey } from "@game";
 export interface DrawPileProps {
   zoneId: ZoneId;
+  hostId: Card["hostId"];
+  destinationHostId: Card["hostId"];
   interaction: InteractionKey;
   destinationZoneId: ZoneId;
   label?: string;
@@ -44,15 +46,17 @@ export interface DrawPileProps {
 /** A face-down draw action: tap for its menu or drop its visual copy into a hand. */
 export function DrawPile({
   zoneId,
+  hostId,
+  destinationHostId,
   interaction: key,
   destinationZoneId,
   label = "Draw pile",
   className,
 }: DrawPileProps) {
   const draw = useGame((game) => game.interactions.find(key));
-  const count = useGame((game) => game.zones.find(zoneId)?.count ?? 0);
+  const count = useGame((game) => game.zones.find(zoneId, hostId)?.count ?? 0);
   const back = useGame((game) => {
-    const top = game.zones.find(zoneId)?.getCards()[0];
+    const top = game.zones.find(zoneId, hostId)?.getCards()[0];
     return top ? backImageOf(top) : null;
   });
   const snapshot = useGame((game) => game.snapshot);
@@ -80,6 +84,11 @@ export function DrawPile({
   const latest = useRef({ draw, available, snapshot, table });
   latest.current = { draw, available, snapshot, table };
   const highlighted = useRef<HTMLElement | null>(null);
+  const sourceZone = { zoneId, hostId };
+  const destinationZone = {
+    zoneId: destinationZoneId,
+    hostId: destinationHostId,
+  };
 
   function clearTarget() {
     highlighted.current = null;
@@ -90,7 +99,7 @@ export function DrawPile({
       control.current
         ?.closest("[data-game-ui]")
         ?.querySelector<HTMLElement>(
-          `.db-hand[data-zone="${CSS.escape(destinationZoneId)}"]`,
+          `.db-hand[data-zone="${CSS.escape(destinationZoneId)}"][data-zone-host="${CSS.escape(destinationHostId)}"]`,
         ) ?? null
     );
   }
@@ -101,7 +110,7 @@ export function DrawPile({
       document
         .elementsFromPoint(clientX, clientY)
         .some((element) => hand.contains(element));
-    latest.current.table.setDrop(destinationZoneId, over);
+    latest.current.table.setDrop(destinationZone, over);
     return over;
   }
   function returnToPile() {
@@ -147,14 +156,14 @@ export function DrawPile({
     }
     setOpen(false);
     setError(null);
-    const target = current.table.getDrawTarget(destinationZoneId);
+    const target = current.table.getDrawTarget(destinationZone);
     current.table.stageDraw(
-      zoneId,
-      destinationZoneId,
+      sourceZone,
+      destinationZone,
       () => placement(box),
       target,
     );
-    current.table.setDrop(destinationZoneId, true);
+    current.table.setDrop(destinationZone, true);
     setGhost({ box, phase: "pending", snapshot: current.snapshot });
     void moveTo(target, box);
     try {
@@ -186,7 +195,7 @@ export function DrawPile({
   }, [snapshot, request, ghost?.phase, ghost?.snapshot, x, y, scale, rotate]);
   useEffect(() => {
     press.current?.recognizer.cancel();
-  }, [snapshot, request]);
+  }, [snapshot, request, zoneId, hostId, destinationZoneId, destinationHostId]);
   useEffect(
     () => () => {
       press.current?.detach();
@@ -229,7 +238,7 @@ export function DrawPile({
           );
           setGhost({ box, phase: "drag", snapshot });
           highlighted.current = destination();
-          latest.current.table.setDrop(destinationZoneId);
+          latest.current.table.setDrop(destinationZone);
           return true;
         },
         dragMove(at) {
@@ -300,6 +309,7 @@ export function DrawPile({
         count={count}
         label={label}
         data-zone={zoneId}
+        data-zone-host={hostId}
         className={className}
       >
         <button

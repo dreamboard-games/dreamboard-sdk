@@ -1,3 +1,4 @@
+import type { ZoneDefinitions } from "../../model";
 import { createStateQueries } from "../../table-queries";
 import type {
   AnyInteractionSpec,
@@ -17,9 +18,13 @@ export function collectInteractionInputs<
   interaction: AnyInteractionSpec<DomainState, Manifest>,
   domainState: DomainState,
   playerId: PlayerId,
-  options: { readonly queries?: TableQueriesOfState<DomainState> } = {},
+  options: {
+    readonly queries?: TableQueriesOfState<DomainState>;
+    readonly definitions: ZoneDefinitions;
+  },
 ): InteractionInputDescriptorShape[] {
-  const q = options.queries ?? createStateQueries(domainState);
+  const q =
+    options.queries ?? createStateQueries(domainState, options.definitions);
   return Object.entries(interactionInputsOf(interaction)).flatMap(
     ([key, collector]) => {
       if (collector.kind === "rng") return [];

@@ -54,17 +54,19 @@ function setup() {
       availableInteractions: [discard, pass],
       zones: {
         hand: {
-          cardIds: ["red", "blue", "green"],
-          cardViewsById: {
-            red: { id: "red", cardType: "ranked", properties: {} },
-            blue: { id: "blue", cardType: "ranked", properties: {} },
-            green: { id: "green", cardType: "ranked", properties: {} },
-          },
-          cardBacksById: {},
-          playableByCardId: {
-            red: [discard, pass],
-            blue: [discard, pass],
-            green: [discard, pass],
+          alice: {
+            cardIds: ["red", "blue", "green"],
+            cardViewsById: {
+              red: { id: "red", cardType: "ranked", properties: {} },
+              blue: { id: "blue", cardType: "ranked", properties: {} },
+              green: { id: "green", cardType: "ranked", properties: {} },
+            },
+            cardBacksById: {},
+            playableByCardId: {
+              red: [discard, pass],
+              blue: [discard, pass],
+              green: [discard, pass],
+            },
           },
         },
       },

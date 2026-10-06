@@ -136,17 +136,23 @@ export function createProjectionBuilder<
     concealment: CardConcealment,
   ) {
     const phaseName = combinedState.flow.currentPhase as PhaseName;
-    const q = createTableQueries<RuntimeTableRecord>(combinedState.table);
+    const q = createTableQueries<RuntimeTableRecord>(
+      combinedState.table,
+      scope.definition.contract.manifest,
+    );
     const result: Record<
       string,
-      {
-        cardIds: string[];
-        cardViewsById: Record<string, ViewCard>;
-        cardBacksById: Record<string, string>;
-        playableByCardId: Record<string, string[]>;
-      }
+      Record<
+        string,
+        {
+          cardIds: string[];
+          cardViewsById: Record<string, ViewCard>;
+          cardBacksById: Record<string, string>;
+          playableByCardId: Record<string, string[]>;
+        }
+      >
     > = {};
-    for (const [zoneId, zoneCardIds] of concealment.zones) {
+    for (const [zoneId, hostId, zoneCardIds] of concealment.zones) {
       const cardInteractionIds = scope
         .interactionEntriesForPhase(phaseName)
         .filter(([, interaction]) =>
@@ -211,7 +217,7 @@ export function createProjectionBuilder<
         }
         playableByCardId[seatCardId] = perCard;
       }
-      result[zoneId] = {
+      (result[zoneId] ??= {})[hostId] = {
         cardIds,
         cardViewsById,
         cardBacksById,
@@ -431,6 +437,7 @@ export function createProjectionBuilder<
     const combinedState = scope.toCombinedState(state);
     const projection = createProjectionContext({
       domainState: scope.toDomainState(combinedState),
+      definitions: scope.definition.contract.manifest,
     });
     const timing = createProjectionTimingMetadata();
     const registry = createDescriptorRegistry(timing);
@@ -445,7 +452,7 @@ export function createProjectionBuilder<
       const concealment = concealCards(
         combinedState.table,
         playerId,
-        scope.definition.contract.manifest.literals.playerZoneIds.map(String),
+        scope.definition.contract.manifest,
       );
       const availableInteractions = measureProjectionTiming(
         timing,

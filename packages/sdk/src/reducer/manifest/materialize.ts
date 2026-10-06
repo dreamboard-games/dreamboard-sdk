@@ -1359,14 +1359,10 @@ export function materializeManifestTable(options: {
         );
       }
       return {
-        type: "InDeck",
-        deckId: home.zoneId,
+        type: "InZone",
+        zoneId: home.zoneId,
+        hostId: "table",
         playedBy: null,
-        position: nextLocationPosition({
-          type: "InDeck",
-          deckId: home.zoneId,
-          playedBy: null,
-        }),
       };
     }
 
@@ -1554,14 +1550,10 @@ export function materializeManifestTable(options: {
           );
         }
         componentLocations[componentId] = {
-          type: "InHand",
-          handId: home.zoneId,
-          playerId: ownerId,
-          position: nextLocationPosition({
-            type: "InHand",
-            handId: home.zoneId,
-            playerId: ownerId,
-          }),
+          type: "InZone",
+          zoneId: home.zoneId,
+          hostId: ownerId,
+          playedBy: null,
         };
         return;
       }
@@ -1569,11 +1561,8 @@ export function materializeManifestTable(options: {
       componentLocations[componentId] = {
         type: "InZone",
         zoneId: home.zoneId,
+        hostId: "table",
         playedBy: null,
-        position: nextLocationPosition({
-          type: "InZone",
-          zoneId: home.zoneId,
-        }),
       };
       return;
     }
@@ -1878,83 +1867,22 @@ export function materializeManifestTable(options: {
     }
   }
 
-  const sharedZones = Object.fromEntries(
-    analysis.sharedZones.map((zone) => [zone.id, [] as string[]]),
-  );
-  const perPlayerZones = Object.fromEntries(
-    analysis.playerZones.map((zone) => [
+  const zones = Object.fromEntries(
+    (manifest.zones ?? []).map((zone) => [
       zone.id,
       Object.fromEntries(
-        playerIds.map((playerId) => [playerId, [] as string[]]),
+        (zone.scope === "shared" ? ["table"] : playerIds).map((hostId) => [
+          hostId,
+          [] as string[],
+        ]),
       ),
     ]),
   );
-  const zoneVisibility = Object.fromEntries(
-    (manifest.zones ?? []).map((zone) => [
-      zone.id,
-      zone.visibility ?? "public",
-    ]),
-  );
-  const zoneCardSetIdsByZoneId = Object.fromEntries(
-    Array.from(analysis.zoneCardSetIdsById.entries()).sort(([left], [right]) =>
-      left.localeCompare(right),
-    ),
-  );
-  const handVisibility = Object.fromEntries(
-    analysis.playerZones.map((zone) => [
-      zone.id,
-      zone.visibility ?? "ownerOnly",
-    ]),
-  );
-  const componentSortPosition = (position: unknown) =>
-    typeof position === "number" ? position : Number.MAX_SAFE_INTEGER;
-  const pushSharedComponent = (zoneId: string, componentId: string) => {
-    const zone = sharedZones[zoneId];
-    if (!zone) {
-      return;
-    }
-    zone.push(componentId);
-    zone.sort(
-      (left, right) =>
-        componentSortPosition(componentLocations[left]?.position) -
-        componentSortPosition(componentLocations[right]?.position),
-    );
-  };
-  const pushPlayerComponent = (
-    zoneId: string,
-    playerId: string,
-    componentId: string,
-  ) => {
-    const zone = perPlayerZones[zoneId]?.[playerId];
-    if (!zone) {
-      return;
-    }
-    zone.push(componentId);
-    zone.sort(
-      (left, right) =>
-        componentSortPosition(componentLocations[left]?.position) -
-        componentSortPosition(componentLocations[right]?.position),
-    );
-  };
-
   for (const [componentId, location] of Object.entries(componentLocations)) {
-    switch (location.type) {
-      case "InDeck":
-        pushSharedComponent(location.deckId as string, componentId);
-        break;
-      case "InHand":
-        pushPlayerComponent(
-          location.handId as string,
-          location.playerId as string,
-          componentId,
-        );
-        break;
-      case "InZone":
-        pushSharedComponent(location.zoneId as string, componentId);
-        break;
-      default:
-        break;
-    }
+    if (location.type !== "InZone") continue;
+    const ids = zones[String(location.zoneId)]?.[String(location.hostId)];
+    if (!ids) throw new Error(`Missing zone host for '${componentId}'.`);
+    ids.push(componentId);
   }
   const ownerOfCard = Object.fromEntries(
     Object.keys(cards).map((cardId) => [cardId, null]),
@@ -1972,15 +1900,7 @@ export function materializeManifestTable(options: {
   );
   return cloneJson({
     playerOrder: playerIds,
-    zones: {
-      shared: sharedZones,
-      perPlayer: perPlayerZones,
-      visibility: zoneVisibility,
-      cardSetIdsByZoneId: zoneCardSetIdsByZoneId,
-    },
-    decks: cloneJson(sharedZones),
-    hands: cloneJson(perPlayerZones),
-    handVisibility,
+    zones,
     cards,
     pieces,
     componentLocations,

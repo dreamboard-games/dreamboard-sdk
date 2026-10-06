@@ -127,7 +127,7 @@ async function fixture(
   const table = game.contract.manifest.createInitialTable({
     playerIds: [playerOne, playerTwo],
   });
-  table.hands.hand = { [playerOne]: [], [playerTwo]: [] };
+  table.zones.hand = { [playerOne]: [], [playerTwo]: [] };
   const initialized = await bundle.initialize({
     table: RuntimeJsonSchema.parse(table),
     playerIds: [playerOne, playerTwo],
@@ -645,7 +645,7 @@ for (const change of [
     const table = model.contract.manifest.createInitialTable({
       playerIds: [playerOne, playerTwo],
     });
-    table.hands.hand = { [playerOne]: [], [playerTwo]: [] };
+    table.zones.hand = { [playerOne]: [], [playerTwo]: [] };
     let state = (
       await bundle.initialize({
         table: RuntimeJsonSchema.parse(table),

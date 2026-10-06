@@ -116,7 +116,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
                   from: [1, 2, 3] as const,
                   count: 2,
                 });
-                tx.shuffle({ zoneId: "draw" });
+                tx.shuffle({ zone: { zoneId: "draw" } });
                 tx.patchPublicState({
                   values: [first, second, ...selected],
                   finished: true,
@@ -328,7 +328,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
       "project",
       "reducerContractVersion",
     ]);
-    expect(warm.reducerContractVersion).toBe("0.9.0");
+    expect(warm.reducerContractVersion).toBe("0.10.0");
     const playerIds = ["player-1", "player-2"];
     const { state: initial } = await warm.initialize({
       table: createTable(),

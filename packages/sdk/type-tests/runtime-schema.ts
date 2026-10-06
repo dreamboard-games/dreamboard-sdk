@@ -26,7 +26,7 @@ void invalidInput;
 
 import type { SourceSnapshot } from "../src/headless/sources/types.js";
 declare const snapshot: SourceSnapshot;
-const displayCard = snapshot.frame.zones.hand.cardViewsById.card;
+const displayCard = snapshot.frame.zones.hand["player-1"].cardViewsById.card;
 // @ts-expect-error Source snapshots own deeply immutable card properties.
 displayCard.properties.value = 3;
 // @ts-expect-error Source snapshots own immutable card identity.

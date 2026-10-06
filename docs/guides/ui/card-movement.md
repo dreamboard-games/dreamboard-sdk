@@ -5,7 +5,9 @@ import { fanLayout, liftFanCard } from "@dreamboard-games/sdk";
 import { useGame } from "./game";
 
 function Hand({ width }: { width: number }) {
-  const cards = useGame((game) => game.zones.get("hand").getCards());
+  const cards = useGame((game) =>
+    game.me ? game.zones.get("hand", game.me.id).getCards() : [],
+  );
   const fan = fanLayout({
     count: cards.length,
     width,

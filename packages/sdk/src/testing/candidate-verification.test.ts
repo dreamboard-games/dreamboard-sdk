@@ -3,8 +3,6 @@ import { replayScenario, advanceScenarioReplay } from "./scenario-replay";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 
-import type { RuntimeTableRecord } from "../reducer/model";
-import { asPlayerId } from "../reducer/per-player";
 import {
   type CandidateVerificationInput,
   materializeScenarioRuntimeCheckpoint,
@@ -12,119 +10,13 @@ import {
 } from "./candidate-verification.js";
 import { createScenarioAuthoring } from "./definitions";
 
-function createTable(playerIds: readonly string[]): RuntimeTableRecord {
-  const ids = playerIds.map(asPlayerId);
-  return {
-    playerOrder: [...playerIds],
-    zones: { shared: {}, perPlayer: {}, visibility: {} },
-    decks: {},
-    hands: {},
-    handVisibility: {},
-    cards: {},
-    pieces: {},
-    componentLocations: {},
-    ownerOfCard: {},
-    visibility: {},
-    resources: Object.fromEntries(ids.map((id) => [id, {}])),
-    boards: { byId: {}, hex: {}, network: {}, square: {}, track: {} },
-    dice: {},
-  };
-}
-
-function createManifestContract() {
-  const phaseNames = ["play"] as const;
-  const playerIds = ["player-1", "player-2"] as const;
-  return {
-    literals: {
-      playerIds,
-      phaseNames,
-      boardLayouts: [] as const,
-      cardSetIds: [] as const,
-      cardTypes: [] as const,
-      deckIds: [] as const,
-      handIds: [] as const,
-      sharedZoneIds: [] as const,
-      playerZoneIds: [] as const,
-      zoneIds: [] as const,
-      cardIds: [] as const,
-      resourceIds: [] as const,
-      pieceTypeIds: [] as const,
-      pieceIds: [] as const,
-      dieTypeIds: [] as const,
-      dieIds: [] as const,
-      boardTypeIds: [] as const,
-      boardBaseIds: [] as const,
-      boardIds: [] as const,
-      boardContainerIds: [] as const,
-      relationTypeIds: [] as const,
-      edgeIds: [] as const,
-      edgeTypeIds: [] as const,
-      vertexIds: [] as const,
-      vertexTypeIds: [] as const,
-      spaceIds: [] as const,
-      spaceTypeIds: [] as const,
-      handVisibilityById: {} as const,
-      zoneVisibilityById: {} as const,
-      cardSetIdByCardId: {},
-      cardTypeByCardId: {},
-      cardSetIdsBySharedZoneId: {},
-      cardSetIdsByPlayerZoneId: {},
-    },
-    ids: {
-      playerId: z.enum(playerIds),
-      phaseName: z.enum(phaseNames),
-      boardLayout: z.string(),
-      cardSetId: z.string(),
-      cardType: z.string(),
-      cardId: z.string(),
-      deckId: z.string(),
-      handId: z.string(),
-      sharedZoneId: z.string(),
-      playerZoneId: z.string(),
-      zoneId: z.string(),
-      resourceId: z.string(),
-      dieId: z.string(),
-      dieTypeId: z.string(),
-      boardId: z.string(),
-      boardTypeId: z.string(),
-      boardBaseId: z.string(),
-      boardContainerId: z.string(),
-      relationTypeId: z.string(),
-      edgeId: z.string(),
-      edgeTypeId: z.string(),
-      vertexId: z.string(),
-      vertexTypeId: z.string(),
-      portId: z.string(),
-      portTypeId: z.string(),
-      spaceId: z.string(),
-      spaceTypeId: z.string(),
-      pieceId: z.string(),
-      pieceTypeId: z.string(),
-    },
-    defaults: {
-      zones: () => ({ shared: {}, perPlayer: {}, visibility: {} }),
-      decks: () => ({}),
-      hands: () => ({}),
-      handVisibility: () => ({}),
-      ownerOfCard: () => ({}),
-      visibility: () => ({}),
-      resources: () => Object.fromEntries([].map((id) => [id, {}])),
-    },
-    normalSetup: {
-      minPlayers: 2,
-      maxPlayers: 2,
-      createInitialTable: ({ playerIds }: { playerIds: readonly string[] }) =>
-        createTable(playerIds),
-    },
-    tableSchema: z.custom<RuntimeTableRecord>(),
-    runtimeSchema: z.any(),
-    createGameStateSchema: () => z.any(),
-  };
-}
-
 function createCandidateGame() {
   const contract = createModel({
-    manifest: createManifestContract(),
+    manifest: {
+      players: { minPlayers: 2, maxPlayers: 2 },
+      cardSets: [],
+      zones: [],
+    },
     phases: { play: z.object({}) },
     state: {
       public: z.object({ score: z.number().int() }),

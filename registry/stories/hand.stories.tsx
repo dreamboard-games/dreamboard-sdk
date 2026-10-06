@@ -77,12 +77,14 @@ function Area({
   interaction: string;
   top?: boolean;
 }) {
-  const cards = useGame((game) => game.zones.find(zoneId)?.getCards() ?? []);
+  const cards = useGame(
+    (game) => game.zones.find(zoneId, "table")?.getCards() ?? [],
+  );
   const shown = top ? cards.slice(-1) : cards;
   const canDrag = useGame(
     (game) =>
       game.zones
-        .find(zoneId)
+        .find(zoneId, "table")
         ?.getCards()
         .some((card) => game.drag.getCanDrag(card.id)) ?? false,
   );
@@ -115,6 +117,7 @@ function Area({
 }
 
 function Table({ onSwitchSeat }: { onSwitchSeat(): void }) {
+  const hostId = useGame((game) => game.me?.id);
   const endTurn = useGame((game) => game.interactions.find("play.endTurn"));
   const zones = useGame((game) =>
     JSON.stringify(
@@ -123,6 +126,7 @@ function Table({ onSwitchSeat }: { onSwitchSeat(): void }) {
         .map((zone) => [zone.id, zone.getCards().map((card) => card.id)]),
     ),
   );
+  if (hostId === undefined) return null;
   return (
     <main className="db-table flex min-h-dvh flex-col justify-between gap-3 p-3">
       <output data-testid="table-cards" hidden>
@@ -148,6 +152,8 @@ function Table({ onSwitchSeat }: { onSwitchSeat(): void }) {
         <div className="grid justify-items-center gap-2" style={tableCards}>
           <DrawPile
             zoneId="deck"
+            hostId="table"
+            destinationHostId={hostId}
             interaction="play.draw"
             destinationZoneId="hand"
             label="Deck"
@@ -160,6 +166,7 @@ function Table({ onSwitchSeat }: { onSwitchSeat(): void }) {
         <Seats mine />
         <Hand
           zoneId="hand"
+          hostId={hostId}
           label="Your hand"
           renderCard={renderCard}
           getCardLabel={cardLabel}

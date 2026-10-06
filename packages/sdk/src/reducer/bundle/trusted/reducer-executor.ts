@@ -408,6 +408,7 @@ export function createReducerExecutor<
         scope.toDomainState(state),
         playerId,
         saved.values,
+        scope.definition.contract.manifest,
       );
       if (prefix.values.length === 0) delete pending[playerId];
       else
@@ -492,7 +493,7 @@ export function createReducerExecutor<
       concealCards(
         state.table,
         input.playerId,
-        scope.definition.contract.manifest.literals.playerZoneIds.map(String),
+        scope.definition.contract.manifest,
       ),
     );
     if (params === null)

@@ -541,7 +541,7 @@ test("distinct literal ids remain distinct when their old handles matched", () =
   const compiled = compileManifest(manifest);
   const table = compiled.createInitialTable();
   expect(Object.keys(table.cards)).toEqual(["foo-bar", "foo_bar"]);
-  expect(Object.keys(table.decks)).toEqual(["draw-zone", "draw_zone"]);
+  expect(Object.keys(table.zones)).toEqual(["draw-zone", "draw_zone"]);
   expect(compiled.ids.cardId.safeParse("foo-bar").success).toBe(true);
   expect(compiled.ids.cardId.safeParse("foo_bar").success).toBe(true);
 });
@@ -623,4 +623,30 @@ test("validateManifestAuthoring requires card images under assets/", () => {
     "manifest.cardSets[0].cards[1].frontImage: 'https://example.com/king.png' must be an image path under assets/, such as assets/cards/front.webp.",
     "manifest.cardSets[0].cards[2].frontImage: 'assets/../secrets.png' must be an image path under assets/, such as assets/cards/front.webp.",
   ]);
+});
+
+test("owner-only visibility requires a per-player zone host", () => {
+  const zone = {
+    id: "private",
+    name: "Private",
+    scope: "shared",
+    visibility: "ownerOnly",
+  } as const;
+  expect(
+    validateManifestAuthoring({ ...BASE_MANIFEST, zones: [zone] }).errors,
+  ).toContain(
+    "manifest.zones[0].visibility: ownerOnly requires perPlayer scope; use hidden for concealed shared contents",
+  );
+  expect(
+    validateManifestAuthoring({
+      ...BASE_MANIFEST,
+      zones: [{ ...zone, visibility: "hidden" }],
+    }).errors,
+  ).toEqual([]);
+  expect(
+    validateManifestAuthoring({
+      ...BASE_MANIFEST,
+      zones: [{ ...zone, scope: "perPlayer" }],
+    }).errors,
+  ).toEqual([]);
 });

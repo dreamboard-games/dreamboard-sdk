@@ -32,10 +32,6 @@ function createModel() {
         phaseNames,
         cardSetIds: [] as const,
         cardTypes,
-        deckIds: [] as const,
-        handIds,
-        sharedZoneIds: [] as const,
-        playerZoneIds: handIds,
         zoneIds: handIds,
         cardIds,
         resourceIds: [] as const,
@@ -56,12 +52,8 @@ function createModel() {
         portTypeIds: [] as const,
         spaceIds: [] as const,
         spaceTypeIds: [] as const,
-        handVisibilityById: {},
-        zoneVisibilityById: {},
         cardSetIdByCardId: {},
         cardTypeByCardId: { "card-1": "standard" },
-        cardSetIdsBySharedZoneId: {},
-        cardSetIdsByPlayerZoneId: {},
       },
       ids: {
         boardLayout: z.enum(["hex", "square", "network", "track"]),
@@ -70,10 +62,6 @@ function createModel() {
         cardSetId: createManifestStringLiteralSchema([] as const),
         cardType: createManifestStringLiteralSchema(cardTypes),
         cardId: createManifestStringLiteralSchema(cardIds),
-        deckId: createManifestStringLiteralSchema([] as const),
-        handId: createManifestStringLiteralSchema(handIds),
-        sharedZoneId: createManifestStringLiteralSchema([] as const),
-        playerZoneId: createManifestStringLiteralSchema(handIds),
         zoneId: createManifestStringLiteralSchema(handIds),
         resourceId: createManifestStringLiteralSchema([] as const),
         dieTypeId: createManifestStringLiteralSchema([] as const),
@@ -96,11 +84,15 @@ function createModel() {
         pieceTypeId: createManifestStringLiteralSchema([] as const),
         relationTypeId: createManifestStringLiteralSchema([] as const),
       },
+      zoneDefinitions: {
+        hand: {
+          scope: "perPlayer",
+          visibility: "ownerOnly",
+          allowedCardSetIds: [],
+        },
+      } as const,
       defaults: {
-        zones: () => ({ shared: {}, perPlayer: {}, visibility: {} }),
-        decks: () => ({}),
-        hands: () => ({}),
-        handVisibility: () => ({}),
+        zones: () => ({}),
         ownerOfCard: () => ({}),
         visibility: () => ({}),
         resources: () => Object.fromEntries([].map((id) => [id, {}])),
@@ -173,7 +165,6 @@ describe("createGame", () => {
       },
       view: () => ({}),
     });
-
     type PhaseNames = PhaseNamesOfDefinition<typeof game>;
     type Params = ClientParamsOfInteractionOfDefinition<
       typeof game,
@@ -184,7 +175,6 @@ describe("createGame", () => {
       Expect<Equal<PhaseNames, "setup" | "playerTurn">>,
       Expect<Equal<Params, { mood: "ready" | "wait" }>>,
     ];
-
     expect(game.contract.phaseNames).toEqual(["setup", "playerTurn"]);
     expect(typeAssertions).toEqual([true, true]);
   });
@@ -206,15 +196,12 @@ describe("bound game authoring", () => {
       },
       reduce: () => {},
     };
-
     expect(playerTurn.interaction(spec)).toBe(spec);
   });
-
   test("infers game phases and client params without authored annotations", () => {
     const authoring = createAuthoring();
     const setup = authoring.phase("setup");
     const playerTurn = authoring.phase("playerTurn");
-
     const setupPhase = setup.define({
       kind: "player",
       initialState: () => ({}),
@@ -240,7 +227,6 @@ describe("bound game authoring", () => {
         }),
       },
     });
-
     const game = authoring.assemble({
       initial: {
         public: ({ playerIds }) => ({
@@ -258,7 +244,6 @@ describe("bound game authoring", () => {
       },
       view: () => ({}),
     });
-
     type PhaseNames = PhaseNamesOfDefinition<typeof game>;
     type Params = ClientParamsOfInteractionOfDefinition<
       typeof game,
@@ -269,7 +254,6 @@ describe("bound game authoring", () => {
       Expect<Equal<PhaseNames, "setup" | "playerTurn">>,
       Expect<Equal<Params, { mood: "ready" | "wait" }>>,
     ];
-
     expect(game.contract).toBe(authoring.contract);
     expect(game.phases.playerTurn).toBe(playerTurnPhase);
     expect(typeAssertions).toEqual([true, true]);

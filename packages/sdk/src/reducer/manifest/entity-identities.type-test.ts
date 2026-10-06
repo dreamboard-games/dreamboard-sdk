@@ -62,7 +62,7 @@ const wrongProperty = table.pieces["pawn-1"].properties.color;
 // @ts-expect-error Literal seed counts retain their bounds.
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Negative compiler proof: Literal seed counts retain their bounds.
 const missingPiece = table.pieces["pawn-3"];
-const q = createTableQueries(table);
+const q = createTableQueries(table, manifest);
 // @ts-expect-error Queries retain canonical component identity.
 q.component.data("missing");
 const queriedStrength: number = q.component.data("pawn-1").properties.strength;
