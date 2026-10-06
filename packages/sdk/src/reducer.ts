@@ -55,22 +55,7 @@ export type {
   ReducerTransactionOutcome,
   RotateZoneArgs,
 } from "./reducer/transaction";
-export {
-  asPlayerId,
-  boardRef,
-  boardRefKey,
-  boardRefSchema,
-  isPerPlayerBoardRef,
-  isPlayerId,
-  isSharedBoardRef,
-  parseBoardRefKey,
-  perPlayerBoardRef,
-  sharedBoardRef,
-  type BoardRef,
-  type PerPlayerBoardRef,
-  type PlayerId,
-  type SharedBoardRef,
-} from "./reducer/per-player";
+export { asPlayerId, isPlayerId, type PlayerId } from "./reducer/per-player";
 export { memoize } from "./reducer/memoize";
 // Flat `getX` table helpers were removed from the public surface in favour
 // of the opinionated `q.*` namespace returned by `createTableQueries` /

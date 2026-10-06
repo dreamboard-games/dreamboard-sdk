@@ -78,7 +78,7 @@ function authoredGame(
     where: {
       id: "owner",
       errorCode: "NOT_OWNED",
-      test: ({ playerId, target, q }) =>
+      test: ({ playerId, targetId: target, q }) =>
         q.board(target.boardId).state.playerId === playerId,
     },
   });

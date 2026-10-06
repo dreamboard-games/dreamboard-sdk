@@ -67,7 +67,7 @@ describe("target rules", () => {
       .where({
         id: "own-cell",
         errorCode: "not-owned",
-        test: ({ playerId, target, q }) =>
+        test: ({ playerId, targetId: target, q }) =>
           q.board(target.boardId).state.playerId === playerId,
       })
       .build();
@@ -262,7 +262,7 @@ describe("runtime target admission", () => {
       .where({
         id: "record-candidate",
         errorCode: "REJECTED",
-        test: ({ target }) => {
+        test: ({ targetId: target }) => {
           seen.push(target);
           return true;
         },

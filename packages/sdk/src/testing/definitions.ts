@@ -268,14 +268,7 @@ type ScenarioParamsOfInteraction<Interaction> = Interaction extends {
   ? ScenarioStepParams<
       ScenarioParamsOfCollectors<InputCollectorsOfInteraction<Interaction>>
     >
-  : Interaction extends {
-        readonly cardType: unknown;
-        readonly playFrom: unknown;
-      }
-    ? { readonly cardId: string } & ScenarioParamsOfCollectors<
-        InputCollectorsOfInteraction<Interaction>
-      >
-    : ScenarioParamsOfCollectors<InputCollectorsOfInteraction<Interaction>>;
+  : ScenarioParamsOfCollectors<InputCollectorsOfInteraction<Interaction>>;
 
 export type ScenarioCommand<
   InteractionId extends string = string,
