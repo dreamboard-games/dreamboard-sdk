@@ -1,3 +1,4 @@
+import { compileManifest } from "../../reducer/manifest/compiler.js";
 import { expect, test } from "vitest";
 import { z } from "zod";
 import { createGame } from "../../reducer.js";
@@ -5,7 +6,7 @@ import { localSource } from "./local-source.js";
 
 function game() {
   const model = createGame({
-    manifest: {
+    manifest: compileManifest({
       players: { minPlayers: 2, maxPlayers: 2 },
       cardSets: [
         {
@@ -46,7 +47,7 @@ function game() {
           },
         },
       ],
-    },
+    }),
     phases: { play: z.object({}) },
     state: {
       public: z.object({ count: z.number() }),

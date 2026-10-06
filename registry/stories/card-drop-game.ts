@@ -1,3 +1,4 @@
+import { compileManifest } from "@dreamboard-games/sdk/reducer";
 import { createGame } from "@dreamboard-games/sdk/reducer";
 import { z } from "zod";
 const target = z.object({
@@ -5,7 +6,7 @@ const target = z.object({
   spaceId: z.string(),
 });
 const model = createGame({
-  manifest: {
+  manifest: compileManifest({
     players: { minPlayers: 2, maxPlayers: 2 },
     cardSets: [
       {
@@ -65,7 +66,7 @@ const model = createGame({
         layout: "hex",
       },
     ],
-  },
+  }),
   phases: { play: z.object({}) },
   state: {
     public: z.object({

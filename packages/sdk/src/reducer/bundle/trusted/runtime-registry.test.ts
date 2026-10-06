@@ -1,3 +1,4 @@
+import { compileManifest } from "../../manifest/compiler.js";
 import { createGame as createModel } from "../../../reducer";
 
 import { describe, expect, test } from "vitest";
@@ -14,11 +15,11 @@ describe("collectTrustedRuntimeRegistry", () => {
       actionCount: z.number().int(),
     });
     const contract = createModel({
-      manifest: {
+      manifest: compileManifest({
         players: { minPlayers: 2, maxPlayers: 2 },
         cardSets: [],
         zones: [],
-      },
+      }),
       state: {
         public: z.object({}),
         private: z.object({}),

@@ -1,6 +1,4 @@
 import { expect, test } from "vitest";
-import { z } from "zod";
-import { createGame } from "../authoring/game";
 import type { GameTopologyManifest } from "../../shared/domain/manifest";
 import { defineTopologyManifest } from "./authoring";
 import { compileManifest } from "./compiler";
@@ -56,16 +54,6 @@ test.each([
       const boundaries = [
         () => void Reflect.apply(defineTopologyManifest, undefined, [manifest]),
         () => compileManifest(manifest),
-        () =>
-          createGame({
-            manifest,
-            state: {
-              public: z.object({}),
-              private: z.object({}),
-              hidden: z.object({}),
-            },
-            phases: { play: z.object({}) },
-          }),
         () =>
           materializeManifestTable({
             manifest,

@@ -372,7 +372,7 @@ describe("in-memory manifests", () => {
     expect(() =>
       createGame({
         // @ts-expect-error Deliberately invalid correlated authoring data exercises runtime rejection.
-        manifest: invalidManifest,
+        manifest: compileManifest(invalidManifest),
         state: {
           public: z.object({}),
           private: z.object({}),
@@ -407,7 +407,7 @@ describe("in-memory manifests", () => {
     expect(() => compileManifest(invalidManifest)).toThrow(error);
     expect(() =>
       createGame({
-        manifest: invalidManifest,
+        manifest: compileManifest(invalidManifest),
         state: {
           public: z.object({}),
           private: z.object({}),
@@ -456,7 +456,7 @@ describe("in-memory manifests", () => {
   });
   test("createGame accepts an ordinary authored manifest value", () => {
     const game = createGame({
-      manifest,
+      manifest: compileManifest(manifest),
       state: {
         public: z.object({}),
         private: z.object({}),
@@ -560,7 +560,7 @@ test("declared geometry IDs are separate from live topology membership", () => {
 describe("active player records", () => {
   test("initializes defaults for two of four seats and restores the serialized session", async () => {
     const game = createGame({
-      manifest,
+      manifest: compileManifest(manifest),
       state: {
         public: z.object({}),
         private: z.object({}),
@@ -621,7 +621,7 @@ describe("active player records", () => {
 
   test("projects owner-only resources to their holder and card images with cards", async () => {
     const game = createGame({
-      manifest: {
+      manifest: compileManifest({
         ...manifest,
         cardSets: [
           {
@@ -640,7 +640,7 @@ describe("active player records", () => {
           { id: "points", name: "Points" },
           { id: "secret", name: "Secret", visibility: "owner" },
         ],
-      },
+      }),
       state: {
         public: z.object({}),
         private: z.object({}),

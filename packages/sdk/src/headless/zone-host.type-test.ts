@@ -1,3 +1,4 @@
+import { compileManifest } from "../reducer/manifest/compiler.js";
 import { z } from "zod";
 import { createGame, perPlayerInstanceId } from "../reducer.js";
 import { boardSpaceHostId } from "../shared/domain/board-space-host.js";
@@ -19,7 +20,7 @@ const host: string = card.hostId;
 void host;
 
 const model = createGame({
-  manifest: {
+  manifest: compileManifest({
     players: { minPlayers: 2, maxPlayers: 2 },
     cardSets: [],
     boards: [
@@ -62,7 +63,7 @@ const model = createGame({
         visibility: "public",
       },
     ],
-  },
+  }),
   phases: { play: z.object({}) },
   state: { public: z.object({}), private: z.object({}), hidden: z.object({}) },
 });

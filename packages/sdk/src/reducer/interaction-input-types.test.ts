@@ -1,3 +1,4 @@
+import { compileManifest } from "./manifest/compiler";
 import { createGame as createModel } from "../reducer";
 import { InteractionSteps } from "./authoring/steps";
 
@@ -7,134 +8,66 @@ import { formInput } from "./inputs";
 import { many, PlayerId } from "../reducer";
 import { GameStateOf } from "./model";
 import {
-  createManifestStringLiteralSchema,
   ClientParamsOfInteractionOfDefinition,
   InputKeysWithCollectorKindOfDefinition,
-  ReducerManifestContract,
-  RuntimeCardData,
-  RuntimeRecord,
-  RuntimeTableRecord,
 } from "../reducer/model";
-import { asPlayerId } from "./per-player";
+
+type TestTable = z.infer<
+  ReturnType<typeof buildContract>["contract"]["manifest"]["tableSchema"]
+>;
 type TestPlayerId = PlayerId;
 type TestCardId = "card-1" | "card-2";
-type TestPlayerZoneId = "hand" | "in-play" | "discard";
-type TestPlayerRecord<Value> = Record<TestPlayerId, Value>;
-type TestTable = Omit<
-  RuntimeTableRecord,
-  "playerOrder" | "cards" | "zones" | "resources"
-> & {
-  playerOrder: TestPlayerId[];
-  cards: Record<TestCardId, RuntimeCardData>;
-  zones: Record<TestPlayerZoneId, TestPlayerRecord<TestCardId[]>>;
-  resources: TestPlayerRecord<RuntimeRecord>;
-};
-function testPlayerRecord<Value>(): TestPlayerRecord<Value> {
-  return Object.fromEntries([]);
-}
 function buildContract() {
-  const playerIds = [asPlayerId("player-1"), asPlayerId("player-2")];
-  const cardIds = ["card-1", "card-2"] as const;
-  const playerZoneIds = ["hand", "in-play", "discard"] as const;
-  const phaseNames = ["play"] as const;
-  const manifest = {
-    boardDefinitions: {},
-    tileDefinitions: {},
-    literals: {
-      tileTypeIds: [] as const,
-      tileIds: [] as const,
-      playerIds,
-      phaseNames,
-      boardLayouts: [] as const,
-      cardSetIds: ["cards"] as const,
-      cardTypes: ["action"] as const,
-      zoneIds: playerZoneIds,
-      cardIds,
-      resourceIds: [] as const,
-      pieceTypeIds: [] as const,
-      pieceIds: [] as const,
-      dieTypeIds: [] as const,
-      dieIds: [] as const,
-      boardTypeIds: [] as const,
-      boardBaseIds: [] as const,
-      boardIds: [] as const,
-      relationTypeIds: [] as const,
-      edgeIds: [] as const,
-      edgeTypeIds: [] as const,
-      vertexIds: [] as const,
-      vertexTypeIds: [] as const,
-      spaceIds: [] as const,
-      spaceTypeIds: [] as const,
-      cardSetIdByCardId: {
-        "card-1": "cards",
-        "card-2": "cards",
+  const manifest = compileManifest({
+    players: { minPlayers: 1, maxPlayers: 2 },
+    cardSets: [
+      {
+        id: "cards",
+        name: "Cards",
+        cardSchema: z.object({}),
+        defaultHome: { type: "detached" },
+        cards: [
+          {
+            id: "card-1",
+            name: "card-1",
+            cardType: "action",
+            count: 1,
+            properties: {},
+          },
+          {
+            id: "card-2",
+            name: "card-2",
+            cardType: "action",
+            count: 1,
+            properties: {},
+          },
+        ],
       },
-      cardTypeByCardId: {
-        "card-1": "action",
-        "card-2": "action",
-      },
-    },
-    ids: {
-      tileTypeId: z.never(),
-      tileId: z.never(),
-      playerId: createManifestStringLiteralSchema(playerIds),
-      phaseName: createManifestStringLiteralSchema(phaseNames),
-      boardLayout: z.never(),
-      cardSetId: createManifestStringLiteralSchema(["cards"] as const),
-      cardType: createManifestStringLiteralSchema(["action"] as const),
-      cardId: createManifestStringLiteralSchema(cardIds),
-      zoneId: createManifestStringLiteralSchema(playerZoneIds),
-      resourceId: z.never(),
-      pieceTypeId: z.never(),
-      pieceId: z.never(),
-      dieId: z.never(),
-      dieTypeId: z.never(),
-      boardTypeId: z.never(),
-      boardId: z.never(),
-      boardBaseId: z.never(),
-      relationTypeId: z.never(),
-      edgeId: z.never(),
-      edgeTypeId: z.never(),
-      vertexId: z.never(),
-      vertexTypeId: z.never(),
-      spaceId: z.never(),
-      spaceTypeId: z.never(),
-    },
-    zoneDefinitions: {
-      hand: {
+    ],
+    zones: [
+      {
+        id: "hand",
+        name: "hand",
         scope: "perPlayer",
         visibility: "ownerOnly",
         allowedCardSetIds: ["cards"],
       },
-      "in-play": {
+      {
+        id: "in-play",
+        name: "in-play",
         scope: "perPlayer",
         visibility: "public",
         allowedCardSetIds: ["cards"],
       },
-      discard: {
+      {
+        id: "discard",
+        name: "discard",
         scope: "perPlayer",
         visibility: "public",
         allowedCardSetIds: ["cards"],
       },
-    } as const,
-    defaults: {
-      zones: () => ({
-        hand: testPlayerRecord<TestCardId[]>(),
-        "in-play": testPlayerRecord<TestCardId[]>(),
-        discard: testPlayerRecord<TestCardId[]>(),
-      }),
-      ownerOfCard: () => ({}),
-      visibility: () => ({}),
-      resources: () => testPlayerRecord<RuntimeRecord>(),
-    },
-    tableSchema: z.custom<TestTable>(),
-  } satisfies ReducerManifestContract<
-    TestTable,
-    (typeof phaseNames)[number],
-    TestPlayerId,
-    TestPlayerZoneId,
-    TestCardId
-  >;
+    ],
+  });
   return createModel({
     manifest,
     state: {

@@ -1,4 +1,5 @@
-import type { ZoneHostMap } from "../src/reducer/model/table";
+import { compileManifest } from "../src/reducer/manifest/compiler";
+
 import type { ScenarioCommandOf } from "../src/testing/definitions.js";
 import { many } from "../src/reducer.js";
 import { boardInput, boardTarget } from "../src/reducer/inputs.js";
@@ -23,14 +24,8 @@ import {
 import type { GameStateOf } from "../src/reducer/model.js";
 import type { HiddenCardId } from "../src/shared/domain/cards.js";
 import {
-  createManifestStringLiteralSchema,
   type ClientParamsOfInteractionOfDefinition,
   type PhaseNamesOfDefinition,
-  type PhaseNameOfContract,
-  type ReducerManifestContract,
-  type RuntimeCardData,
-  type RuntimeRecord,
-  type RuntimeTableRecord,
 } from "../src/reducer/model.js";
 
 type Equal<Left, Right> =
@@ -41,120 +36,55 @@ type Equal<Left, Right> =
     : false;
 type Expect<Value extends true> = Value;
 
-// --- A schema-only model file: no SDK factory is called here. --------------
+// --- A compiled manifest and state schemas. --------------------------------
 
-type TestPlayerId = PlayerId;
 type TestCardId = "card-1" | "card-2";
-type TestPlayerZoneId = "hand";
-type TestPlayerRecord<Value> = Record<TestPlayerId, Value>;
-type TestTable = Omit<
-  RuntimeTableRecord,
-  "playerOrder" | "cards" | "zones" | "resources"
-> & {
-  playerOrder: TestPlayerId[];
-  cards: Record<TestCardId, RuntimeCardData>;
-  zones: Record<
-    TestPlayerZoneId,
-    ZoneHostMap<PlayerId, TestCardId, "perPlayer">
-  >;
-  resources: TestPlayerRecord<RuntimeRecord>;
-};
-function testPlayerRecord<Value>(): TestPlayerRecord<Value> {
-  return Object.fromEntries([]);
-}
-
 const playerIds: readonly PlayerId[] = [
   asPlayerId("player-1"),
   asPlayerId("player-2"),
 ];
-const phaseNames = ["setup", "playerTurn"] as const;
-const cardIds = ["card-1", "card-2"] as const;
-const playerZoneIds = ["hand"] as const;
-
-const manifest = {
-  boardDefinitions: {},
-  tileDefinitions: {},
-  zoneDefinitions: {
-    hand: {
+const manifest = compileManifest({
+  players: { minPlayers: 1, maxPlayers: 2 },
+  cardSets: [
+    {
+      id: "cards",
+      name: "Cards",
+      cardSchema: z.object({}),
+      defaultHome: { type: "detached" },
+      cards: [
+        {
+          id: "card-1",
+          name: "card-1",
+          cardType: "action",
+          count: 1,
+          properties: {},
+        },
+        {
+          id: "card-2",
+          name: "card-2",
+          cardType: "action",
+          count: 1,
+          properties: {},
+        },
+      ],
+    },
+  ],
+  zones: [
+    {
+      id: "hand",
+      name: "hand",
       scope: "perPlayer",
       visibility: "ownerOnly",
       allowedCardSetIds: ["cards"],
     },
-  } as const,
-  literals: {
-    tileTypeIds: [] as const,
-    tileIds: [] as const,
-    playerIds,
-    phaseNames,
-    boardLayouts: [] as const,
-    cardSetIds: ["cards"] as const,
-    cardTypes: ["action"] as const,
-    zoneIds: playerZoneIds,
-    cardIds,
-    resourceIds: [] as const,
-    pieceTypeIds: [] as const,
-    pieceIds: [] as const,
-    dieTypeIds: [] as const,
-    dieIds: [] as const,
-    boardTypeIds: [] as const,
-    boardBaseIds: [] as const,
-    boardIds: [] as const,
-    relationTypeIds: [] as const,
-    edgeIds: [] as const,
-    edgeTypeIds: [] as const,
-    vertexIds: [] as const,
-    vertexTypeIds: [] as const,
-    spaceIds: [] as const,
-    spaceTypeIds: [] as const,
-    cardSetIdByCardId: { "card-1": "cards", "card-2": "cards" },
-    cardTypeByCardId: { "card-1": "action", "card-2": "action" },
-  },
-  ids: {
-    tileTypeId: z.never(),
-    tileId: z.never(),
-    playerId: createManifestStringLiteralSchema(playerIds),
-    phaseName: createManifestStringLiteralSchema(phaseNames),
-    boardLayout: z.never(),
-    cardSetId: createManifestStringLiteralSchema(["cards"] as const),
-    cardType: createManifestStringLiteralSchema(["action"] as const),
-    cardId: createManifestStringLiteralSchema(cardIds),
-    zoneId: createManifestStringLiteralSchema(playerZoneIds),
-    resourceId: z.never(),
-    pieceTypeId: z.never(),
-    pieceId: z.never(),
-    dieId: z.never(),
-    dieTypeId: z.never(),
-    boardTypeId: z.never(),
-    boardId: z.never(),
-    boardBaseId: z.never(),
-    relationTypeId: z.never(),
-    edgeId: z.never(),
-    edgeTypeId: z.never(),
-    vertexId: z.never(),
-    vertexTypeId: z.never(),
-    spaceId: z.never(),
-    spaceTypeId: z.never(),
-  },
-  defaults: {
-    zones: () => ({ hand: testPlayerRecord<TestCardId[]>() }),
-    ownerOfCard: () => ({}),
-    visibility: () => ({}),
-    resources: () => testPlayerRecord<RuntimeRecord>(),
-  },
-  tableSchema: z.custom<TestTable>(),
-} satisfies ReducerManifestContract<
-  TestTable,
-  (typeof phaseNames)[number],
-  TestPlayerId,
-  TestPlayerZoneId,
-  TestCardId
->;
+  ],
+});
 
 const gameModel = {
   manifest,
   state: {
     public: z.object({
-      currentPlayerId: createManifestStringLiteralSchema(playerIds).nullable(),
+      currentPlayerId: manifest.ids.playerId.nullable(),
     }),
     private: z.object({}),
     hidden: z.object({}),

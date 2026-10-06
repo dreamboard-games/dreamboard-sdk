@@ -1,3 +1,4 @@
+import { compileManifest } from "../reducer/manifest/compiler.js";
 import { createStore } from "@tanstack/store";
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
@@ -80,11 +81,11 @@ function setup(descriptors: readonly InteractionDescriptor[] = [action()]) {
 
 function multiChoiceGame() {
   const model = createGame({
-    manifest: {
+    manifest: compileManifest({
       players: { minPlayers: 2, maxPlayers: 2 },
       cardSets: [],
       zones: [],
-    },
+    }),
     options: z.object({}),
     phases: { play: z.object({}) },
     state: {

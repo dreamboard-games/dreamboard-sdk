@@ -15,11 +15,11 @@ import { createGameHook } from "@dreamboard-games/sdk/react";
 import { createScenarioAuthoring } from "@dreamboard-games/sdk/testing";
 
 const author = createGame({
-  manifest: {
+  manifest: compileManifest({
     players: { minPlayers: 2, maxPlayers: 2 },
     cardSets: [],
     zones: [],
-  },
+  }),
   state: { public: z.object({}), private: z.object({}), hidden: z.object({}) },
   phases: { play: z.object({}) },
 });

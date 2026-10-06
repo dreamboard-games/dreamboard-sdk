@@ -1,3 +1,4 @@
+import { compileManifest } from "../manifest/compiler.js";
 import {
   testReferenceBasis,
   testGameplayBasis,
@@ -15,7 +16,7 @@ import { createReducerTestingRuntime } from "../../testing/reducer-runtime";
 import { createIngressRuntimeCodec } from "./session-codec";
 
 const model = createGame({
-  manifest: {
+  manifest: compileManifest({
     players: { minPlayers: 2, maxPlayers: 2 },
     boards: [
       {
@@ -72,7 +73,7 @@ const model = createGame({
         home: { type: "zone", zoneId: "supply" },
       },
     ],
-  },
+  }),
   phases: { play: z.object({}) },
   state: { public: z.object({}), private: z.object({}), hidden: z.object({}) },
 });

@@ -197,10 +197,7 @@ export function createIngressRuntimeCodec<
     if (roster.length === 0)
       throw new Error(`${label}: session roster must not be empty.`);
     const setup = definition.contract.manifest.normalSetup;
-    if (
-      setup &&
-      (roster.length < setup.minPlayers || roster.length > setup.maxPlayers)
-    ) {
+    if (roster.length < setup.minPlayers || roster.length > setup.maxPlayers) {
       throw new Error(
         `${label}: session roster must contain ${setup.minPlayers} through ${setup.maxPlayers} players.`,
       );

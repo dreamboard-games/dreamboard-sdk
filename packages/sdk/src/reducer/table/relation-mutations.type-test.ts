@@ -53,7 +53,7 @@ const badFrom: Input = {
 void [valid, missingFields, missingRequired, badEndpoint, badFrom];
 
 const model = createGame({
-  manifest,
+  manifest: compileManifest(manifest),
   phases: { play: z.object({}) },
   state: { public: z.object({}), private: z.object({}), hidden: z.object({}) },
 });

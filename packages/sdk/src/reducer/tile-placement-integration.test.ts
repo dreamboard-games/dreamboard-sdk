@@ -1,3 +1,4 @@
+import { compileManifest } from "./manifest/compiler.js";
 import { describe, expect, it } from "vitest";
 import * as z from "zod";
 import { createGame, createReducerBundle } from "../reducer.js";
@@ -12,7 +13,7 @@ const first = tileSpaceId("a", "cell"),
   second = tileSpaceId("b", "cell");
 async function fixture() {
   const model = createGame({
-    manifest: {
+    manifest: compileManifest({
       players: { minPlayers: 2, maxPlayers: 2 },
       cardSets: [],
       boards: [
@@ -43,7 +44,7 @@ async function fixture() {
         },
         { id: "b", typeId: "face" },
       ],
-    },
+    }),
     phases: { play: z.object({}) },
     state: {
       public: z.object({}),

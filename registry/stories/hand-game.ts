@@ -1,9 +1,10 @@
+import { compileManifest } from "@dreamboard-games/sdk/reducer";
 import { createGame } from "@dreamboard-games/sdk/reducer";
 import { z } from "zod";
 const suits = ["hearts", "spades", "clubs", "diamonds"] as const;
 const ranks = ["2", "3", "4", "5"] as const;
 const model = createGame({
-  manifest: {
+  manifest: compileManifest({
     players: { minPlayers: 2, maxPlayers: 2 },
     cardSets: [
       {
@@ -31,7 +32,7 @@ const model = createGame({
       { id: "table", name: "Table", scope: "shared", visibility: "public" },
       { id: "discard", name: "Discard", scope: "shared", visibility: "public" },
     ],
-  },
+  }),
   phases: { play: z.object({}) },
   state: {
     public: z.object({}),

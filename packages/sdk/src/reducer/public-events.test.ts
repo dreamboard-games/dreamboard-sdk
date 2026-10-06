@@ -1,3 +1,4 @@
+import { compileManifest } from "./manifest/compiler";
 import {
   testReferenceBasis,
   testGameplayBasis,
@@ -26,7 +27,7 @@ const event = (title: string) => ({
 });
 async function fixture() {
   const model = createGame({
-    manifest: minimalManifest,
+    manifest: compileManifest(minimalManifest),
     phases: { start: z.object({}), play: z.object({}) },
     state: {
       public: z.object({}),

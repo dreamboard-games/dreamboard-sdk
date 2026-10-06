@@ -1,3 +1,4 @@
+import { compileManifest } from "../manifest/compiler.js";
 import { perPlayerInstanceId } from "../../shared/domain/per-player-instance.js";
 import { z } from "zod";
 import { createGame } from "./game";
@@ -6,7 +7,7 @@ import type { CollectorState, CollectorValueOf } from "../model/spec";
 import { createTableQueries } from "../table-queries";
 
 const game = createGame({
-  manifest: {
+  manifest: compileManifest({
     players: { minPlayers: 1, maxPlayers: 2 },
     cardSets: [],
     zones: [
@@ -43,7 +44,7 @@ const game = createGame({
     pieceSeeds: [{ id: "pawn", typeId: "worker" }],
     dieTypes: [{ id: "combat", name: "Combat", sides: 6 }],
     dieSeeds: [{ id: "battle", typeId: "combat" }],
-  },
+  }),
   state: { public: z.object({}), private: z.object({}), hidden: z.object({}) },
   phases: { play: z.object({}) },
 });

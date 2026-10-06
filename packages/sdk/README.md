@@ -181,7 +181,7 @@ imports the assembled game, so there is no import cycle.
 New workspaces keep authored starter code in `app/game.ts` and `ui/App.tsx`.
 Import the manifest directly. `compileManifest(manifest)` provides inferred ID schemas,
 table schemas, fresh initial tables, and board metadata in memory. `createGame`
-also accepts the authored manifest directly. Bind a typed React hook with
+requires that compiled manifest when binding state schemas. Bind a typed React hook with
 `createGameHook<Game>()({ features, coverage })` from `@dreamboard-games/sdk/react`,
 and pass a source to its `GameProvider`. The hosted UI imports `Game` only as a type;
 `iframeSource()` supplies authoritative frames and handles commands.
@@ -255,7 +255,7 @@ These definitions create runtime IDs `ace-1`, `ace-2`, and `king`, all in the
 `ranked` category. Component IDs cannot start with `card-ref:`; that prefix is reserved
 for opaque concealed-card references. These references belong to one seat and
 authority version and expire after commits or restores. When the card schema has `byCardType`, every `cardType` must
-name one of its schemas; `compileManifest` and `createGame` reject unknown categories.
+name one of its schemas; `compileManifest` rejects unknown categories before `createGame` binds the result.
 The inferred table narrows a card lookup by its runtime ID to that definition's
 card set, category, and properties. Author field schemas with `z.object`. For card categories, use
 `cardSchema: { byCardType: { ranked: base.extend({ points: z.number().int() }) } }`

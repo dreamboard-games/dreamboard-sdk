@@ -6,7 +6,6 @@ export function resolvePlayerRoster(
   count: number,
 ): string[] {
   const setup = game.contract.manifest.normalSetup;
-  if (!setup) throw new Error("Game manifest does not expose normal setup.");
   if (
     !Number.isSafeInteger(count) ||
     count < setup.minPlayers ||

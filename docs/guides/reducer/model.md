@@ -1,14 +1,14 @@
 # Model
 
 ```ts
-import { createGame } from "@dreamboard-games/sdk/reducer";
+import { compileManifest, createGame } from "@dreamboard-games/sdk/reducer";
 import { z } from "zod";
 export const model = createGame({
-  manifest: {
+  manifest: compileManifest({
     players: { minPlayers: 2, maxPlayers: 2 },
     cardSets: [],
     zones: [],
-  },
+  }),
   state: {
     public: z.object({ score: z.number() }),
     private: z.object({}),

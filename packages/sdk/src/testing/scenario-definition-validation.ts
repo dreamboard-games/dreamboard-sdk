@@ -21,8 +21,7 @@ export type ScenarioDefinitionValidationCode =
   | "OUT_OF_RANGE"
   | "UNKNOWN_INTERACTION"
   | "INVALID_COMMAND_PARAMS"
-  | "NON_SERIALIZABLE"
-  | "NORMAL_SETUP_UNAVAILABLE";
+  | "NON_SERIALIZABLE";
 
 export class ScenarioDefinitionValidationError extends Error {
   readonly code: ScenarioDefinitionValidationCode;
@@ -463,19 +462,6 @@ export function validateScenarioDefinition<
   assertOwn(setup, "seed", "scenario.setup");
   const players = assertSafeInteger(setup.players, "scenario.setup.players");
   const normalSetup = game.contract.manifest.normalSetup;
-  if (
-    normalSetup === undefined ||
-    !Number.isSafeInteger(normalSetup.minPlayers) ||
-    !Number.isSafeInteger(normalSetup.maxPlayers) ||
-    normalSetup.minPlayers <= 0 ||
-    normalSetup.maxPlayers < normalSetup.minPlayers
-  ) {
-    fail({
-      code: "NORMAL_SETUP_UNAVAILABLE",
-      path: "scenario.setup.players",
-      reason: "the game manifest does not provide valid normal setup bounds",
-    });
-  }
   if (players < normalSetup.minPlayers || players > normalSetup.maxPlayers) {
     fail({
       code: "OUT_OF_RANGE",

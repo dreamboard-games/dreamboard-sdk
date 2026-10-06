@@ -1,3 +1,4 @@
+import { compileManifest } from "../reducer/manifest/compiler.js";
 import {
   perPlayerInstanceId,
   type PerPlayerInstanceId,
@@ -9,7 +10,7 @@ import type { DropTarget } from "./features/drag.js";
 import type { IdOf } from "./model.js";
 
 const model = createGame({
-  manifest: {
+  manifest: compileManifest({
     players: { minPlayers: 2, maxPlayers: 2 },
     cardSets: [],
     zones: [],
@@ -28,7 +29,7 @@ const model = createGame({
         relations: [],
       },
     ],
-  },
+  }),
   phases: { play: z.object({}) },
   state: { public: z.object({}), private: z.object({}), hidden: z.object({}) },
 });

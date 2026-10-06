@@ -1,3 +1,4 @@
+import { compileManifest } from "../reducer/manifest/compiler.js";
 import type { CoreInstance, Tile } from "./model.js";
 import type { SeatTileRef } from "../shared/domain/seat-reference.js";
 declare const game: CoreInstance<unknown>;
@@ -25,7 +26,7 @@ import { z } from "zod";
 import { createGame } from "../reducer.js";
 import type { TileDataOf, PlacedTileDataOf } from "./model.js";
 const model = createGame({
-  manifest: {
+  manifest: compileManifest({
     players: { minPlayers: 1, maxPlayers: 1 },
     cardSets: [],
     tileTypes: [
@@ -52,7 +53,7 @@ const model = createGame({
       { id: "tree", typeId: "forest" },
       { id: "lake", typeId: "water" },
     ],
-  },
+  }),
   phases: { play: z.object({}) },
   state: { public: z.object({}), private: z.object({}), hidden: z.object({}) },
 });

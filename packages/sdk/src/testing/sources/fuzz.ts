@@ -29,8 +29,7 @@ export async function fuzz<
   if (!Number.isSafeInteger(options.steps) || options.steps < 0)
     throw new Error("Fuzz steps must be a nonnegative integer.");
   const players =
-    options.players ?? game.contract.manifest.normalSetup?.minPlayers;
-  if (!players) throw new Error("Game manifest does not expose normal setup.");
+    options.players ?? game.contract.manifest.normalSetup.minPlayers;
   const source = await localSource(game, { players, seed: options.seed });
   let rng: RuntimeRngState = {
     seed: options.seed,

@@ -1,3 +1,4 @@
+import { compileManifest } from "@dreamboard-games/sdk/reducer";
 import { createGame } from "@dreamboard-games/sdk/reducer";
 import { z } from "zod";
 
@@ -40,7 +41,7 @@ const slots = [
   })),
 ];
 const model = createGame({
-  manifest: {
+  manifest: compileManifest({
     players: { minPlayers: 1, maxPlayers: 1 },
     cardSets: [],
     zones: [],
@@ -88,7 +89,7 @@ const model = createGame({
       },
       ...triangleIds.map((id) => ({ id, typeId: "triangle" as const })),
     ],
-  },
+  }),
   state: {
     public: z.object({ selectedCount: z.number() }),
     private: z.object({}),

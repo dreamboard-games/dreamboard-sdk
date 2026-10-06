@@ -1,4 +1,5 @@
-import { perPlayerInstanceId } from "../src/shared/domain/per-player-instance.js";
+import { compileManifest } from "../src/reducer/manifest/compiler.js";
+
 import { createGame } from "../src/reducer.js";
 import { resolveScenarioCommandParams } from "../src/testing/scenario-player-refs.js";
 import { z } from "zod";
@@ -67,11 +68,11 @@ const nested = z.object({
 });
 
 const model = createGame({
-  manifest: {
+  manifest: compileManifest({
     players: { minPlayers: 2, maxPlayers: 3 },
     cardSets: [],
     zones: [],
-  },
+  }),
   options: z.object({}),
   phases: { play: z.object({}) },
   state: { public: z.object({}), private: z.object({}), hidden: z.object({}) },

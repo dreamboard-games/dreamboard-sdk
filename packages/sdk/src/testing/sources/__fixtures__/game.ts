@@ -1,13 +1,14 @@
+import { compileManifest } from "../../../reducer/manifest/compiler.js";
 import { z } from "zod";
 import { createGame } from "../../../reducer.js";
 
 export function providerGame(onInitialize: () => void = () => {}) {
   const model = createGame({
-    manifest: {
+    manifest: compileManifest({
       players: { minPlayers: 2, maxPlayers: 2 },
       cardSets: [],
       zones: [],
-    },
+    }),
     options: z.object({ finishImmediately: z.boolean().default(false) }),
     phases: { play: z.object({ finish: z.boolean() }), end: z.object({}) },
     state: {
