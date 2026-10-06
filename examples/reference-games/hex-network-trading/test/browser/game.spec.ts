@@ -128,8 +128,9 @@ test("saved Bandits prefix restores and seat switches preserve privacy", async (
 }) => {
   await page.goto("/?scenario=bandits&at=ready-to-move&as=player-1");
   await choose(await boardValue(page, "northForest"), isMobile);
-  await expect(page.getByLabel("Saved choices")).toContainText(
-    await districtRef(page, "northForest"),
+  await expect(page.getByLabel("Saved choices")).toContainText("North forest");
+  await expect(page.getByLabel("Saved choices")).not.toContainText(
+    "space-ref:",
   );
   await choose(
     page.getByRole("button", { name: "Save checkpoint", exact: true }),
@@ -153,8 +154,9 @@ test("saved Bandits prefix restores and seat switches preserve privacy", async (
     page.getByRole("button", { name: "Restore checkpoint", exact: true }),
     isMobile,
   );
-  await expect(page.getByLabel("Saved choices")).toContainText(
-    await districtRef(page, "northForest"),
+  await expect(page.getByLabel("Saved choices")).toContainText("North forest");
+  await expect(page.getByLabel("Saved choices")).not.toContainText(
+    "space-ref:",
   );
   await choose(
     page.locator('[data-input="targetPlayerId"][data-value="player-2"]'),

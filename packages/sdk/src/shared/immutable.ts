@@ -1,4 +1,4 @@
-/** Source-owned snapshots and commands cannot be changed by their caller. */
+/** Runtime snapshots and derived data cannot be changed by their caller. */
 export function immutableCopy<T>(value: T): T {
   return freeze(structuredClone(value));
 }

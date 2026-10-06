@@ -14,6 +14,7 @@ const model = createGame({
         name: "Cell",
         layout: "square",
         cells: [{ id: "cell", at: { col: 0, row: 0 } }],
+        propertiesSchema: z.object({ charges: z.number() }),
         edgeFieldsSchema: z.object({ cost: z.number() }),
         vertexFieldsSchema: z.object({ blocked: z.boolean() }),
         edges: [{ cellId: "cell", side: 0, fields: { cost: 2 } }],
@@ -24,6 +25,7 @@ const model = createGame({
       {
         id: "tile",
         typeId: "cell",
+        properties: { charges: 2 },
         home: {
           type: "board",
           boardId: "map",
@@ -106,3 +108,25 @@ const invalidClientTarget: BoardTarget<typeof game> = {
   value: rawCellId,
 };
 void [clientTarget, invalidClientTarget];
+
+declare const layoutTile: ReturnType<Layout["getTiles"]>[number];
+const tileReference: SeatTileRef = layoutTile.ref;
+const tileIsAny: 0 extends 1 & typeof layoutTile ? true : false = false;
+if (layoutTile.data.disclosure === "visible") {
+  const charges: number = layoutTile.data.properties.charges;
+  // @ts-expect-error Visible tile properties retain exact authored names.
+  layoutTile.data.properties.unknown;
+  // @ts-expect-error Visible tile properties are immutable.
+  layoutTile.data.properties.charges = 3;
+  void charges;
+} else {
+  const footprint = layoutTile.data.appearance.cells;
+  // @ts-expect-error Concealed presentation does not expose authoritative properties.
+  layoutTile.data.properties;
+  void footprint;
+}
+// @ts-expect-error Layout tiles do not disclose authoritative inventory IDs.
+layoutTile.id;
+// @ts-expect-error Tile rendering geometry is separate from spatial target handles.
+layoutTile.getTargetProps;
+void [tileReference, tileIsAny];

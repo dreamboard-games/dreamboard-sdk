@@ -16,3 +16,8 @@ are authoritative; there is no separate SDK component import.
 ## Props and behavior
 
 `BoardTargets` requires boardId and supports hexSize, label and className. renderSpace/renderEdge/renderVertex render game artwork; spaceProps/edgeProps/vertexProps compose presentation. Enabled invisible hit areas preserve visible geometry, keyboard buttons support Enter/Space, and non-passive wheel handling uses SVG-space coordinates. The board and panZoom features must be enabled in @game.
+
+`renderTile(tile)` and `tileProps(tile)` draw placed tile artwork and boundary
+paths beneath spaces. Tile paths use plural outlines and even-odd fill for holes.
+The tile layer is decorative; concealed footprints do not become spatial
+controls. `targetLabel(target)` supplies accessible game-specific element labels.

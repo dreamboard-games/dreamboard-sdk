@@ -240,7 +240,7 @@ Declare a seed `disclosure` with a face audience and an independently public
 appearance when its face may be concealed. Private tiles remain authoritative;
 client tile references never contain inventory IDs. Generic component moves
 cannot move tiles onto a component space, edge or vertex. The headless zone
-facade continues to present cards; projected zone payloads also carry tiles.
+facade presents projected cards and tiles through their separate controls.
 
 ## Field schemas
 

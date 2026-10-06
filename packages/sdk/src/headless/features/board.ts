@@ -1,3 +1,7 @@
+import {
+  createTileBoardLayout,
+  type TileLayoutGeometry,
+} from "../../shared/tile-board-layout.js";
 import type { SeatBoardTopology } from "../../shared/seat-topology-schema.js";
 type ProjectedBoardSpace = SeatBoardTopology["spaces"][string];
 import { createSquareBoardLayout } from "../../shared/square-board-layout.js";
@@ -70,6 +74,7 @@ interface RuntimeLayout {
     readonly data: BoardVertex | undefined;
     readonly center: Point;
   })[];
+  getTiles(): readonly TileLayoutGeometry[];
   pointToSpace(x: number, y: number): string | undefined;
 }
 type TargetKind = "space" | "edge" | "vertex";
@@ -106,6 +111,7 @@ function createRuntimeBoardFeature(context: RuntimeFeatureContext) {
   let cached:
     | {
         view: unknown;
+        boards: ReturnType<RuntimeFeatureContext["getBoards"]>;
         interactions: RuntimeFeatureSnapshot["interactions"];
         source: ReturnType<typeof game.getOptions>["source"];
         collection: RuntimeCollection<RuntimeBoard>;
@@ -114,14 +120,16 @@ function createRuntimeBoardFeature(context: RuntimeFeatureContext) {
   function collection(): RuntimeCollection<RuntimeBoard> {
     const model = game.getSnapshot();
     const source = game.getOptions().source;
+    const projectedBoards = context.getBoards();
     if (
       cached &&
       cached.view === model.view &&
+      cached.boards === projectedBoards &&
       cached.interactions === model.interactions &&
       cached.source === source
     )
       return cached.collection;
-    const boards = Object.values(context.getBoards()).map((data) => {
+    const boards = Object.values(projectedBoards).map((data) => {
       const board = context.createBoard(data);
       const geometry =
         data.layout === "hex"
@@ -142,6 +150,7 @@ function createRuntimeBoardFeature(context: RuntimeFeatureContext) {
     });
     cached = {
       view: model.view,
+      boards: projectedBoards,
       interactions: model.interactions,
       source,
       collection: result,
@@ -337,11 +346,28 @@ function createRuntimeBoardFeature(context: RuntimeFeatureContext) {
           board.layout === "hex"
             ? captured.geometry!.getLayout({ hexSize, origin })
             : createSquareBoardLayout(board, hexSize, origin);
-        const point = (value: Point): Point =>
-          Object.freeze({
+        const point = (value: Point): Point => {
+          const transformed = {
             x: value.x * viewport.scale + viewport.x,
             y: value.y * viewport.scale + viewport.y,
-          });
+          };
+          if (![transformed.x, transformed.y].every(Number.isFinite))
+            throw new Error("Derived layout transform must be finite.");
+          return Object.freeze(transformed);
+        };
+        const tileGeometry = createTileBoardLayout(board, hexSize, origin);
+        const tiles = Object.freeze(
+          tileGeometry.tiles.map((tile) =>
+            Object.freeze({
+              ...tile,
+              center: point(tile.center),
+              anchor: point(tile.anchor),
+              outlines: Object.freeze(
+                tile.outlines.map((loop) => Object.freeze(loop.map(point))),
+              ),
+            }),
+          ),
+        );
         const target = targetsFor(this);
         const semanticSpaces = spacesFor(this);
         const spaces = Object.freeze(
@@ -379,7 +405,8 @@ function createRuntimeBoardFeature(context: RuntimeFeatureContext) {
           ),
         );
         return Object.freeze({
-          viewBox: Object.freeze({ ...geometry.viewBox }),
+          viewBox: tileGeometry.viewBox,
+          getTiles: () => tiles,
           getSpaces: () => spaces,
           getEdges: () => edges,
           getVertices: () => vertices,
@@ -417,10 +444,19 @@ type LayoutElement<G, Kind extends "edges" | "vertices", Value> = LayoutTarget<
     : never;
   readonly data: LayoutElementData<G, Kind> | undefined;
 };
+/** Seat tile presentation retains its visible/concealed data union without another discriminator. */
+export type BoardLayoutTile<G> =
+  BoardDataOf<G, IdOf<G, "boardId">> extends infer Board
+    ? Board extends { readonly tiles: readonly (infer Tile)[] }
+      ? Omit<TileLayoutGeometry, "data"> & { readonly data: Tile }
+      : never
+    : never;
+
 type BoardLayout<G> = Omit<
   RuntimeLayout,
-  "getSpaces" | "getEdges" | "getVertices"
+  "getSpaces" | "getEdges" | "getVertices" | "getTiles"
 > & {
+  getTiles(): readonly BoardLayoutTile<G>[];
   getSpaces(): readonly (BoardSpace<G> & {
     readonly center: Point;
     points(): readonly Point[];

@@ -1,4 +1,6 @@
 import { BoardProjectionSchema } from "../shared/seat-topology-schema.js";
+import type { ProjectedTile } from "../shared/seat-topology-schema.js";
+import type { SeatTileRef } from "../shared/domain/seat-reference.js";
 import type { SeatBoardTopology } from "../shared/seat-topology-schema.js";
 import type { ViewCard } from "../shared/domain/cards.js";
 import {
@@ -15,7 +17,7 @@ import type {
   RuntimeTargetOptions,
   RuntimeDropTarget,
 } from "./targets.js";
-import { immutableCopy } from "./sources/immutable.js";
+import { immutableCopy } from "../shared/immutable.js";
 import { createStore } from "@tanstack/store";
 import {
   inputTargetInDomain,
@@ -260,7 +262,77 @@ class InteractionObject {
     };
   }
 }
+function createInputTargetLabels(
+  domain: InteractionInputDescriptor["domain"],
+  snapshot: SourceSnapshot | null,
+  boards: Readonly<Record<string, SeatBoardTopology>>,
+): ReadonlyMap<string, string> {
+  const targetLabels = new Map<string, string>();
+  const hosts = Object.values(snapshot?.frame.zones ?? {}).flatMap((zones) =>
+    Object.values(zones),
+  );
+  if (domain.type === "cardTarget") {
+    domain.eligibleTargets.forEach((id, index) => {
+      const card = hosts
+        .map((zone) => zone.cardViewsById[id])
+        .find((card) => card !== undefined);
+      targetLabels.set(
+        inputValueKey(id),
+        card ? card.name || `Card ${index + 1}` : `Card back ${index + 1}`,
+      );
+    });
+  }
+  if (domain.type === "tileTarget" || domain.type === "boardTarget") {
+    if (domain.type === "tileTarget") {
+      const presentations = [
+        ...hosts.flatMap((zone) => zone.tiles),
+        ...Object.values(boards).flatMap((board) =>
+          board.layout === "generic" ? [] : board.tiles,
+        ),
+      ];
+      domain.eligibleTargets.forEach((ref, index) => {
+        const tile = presentations.find((tile) => tile.ref === ref);
+        targetLabels.set(
+          inputValueKey(ref),
+          tile?.disclosure === "visible"
+            ? tile.name || `Tile ${index + 1}`
+            : `Tile back ${index + 1}`,
+        );
+      });
+    } else {
+      domain.eligibleTargets.forEach((value, index) => {
+        const boardId =
+          typeof value === "string"
+            ? domain.valueKind === "board-id"
+              ? domain.boardId
+              : undefined
+            : value.boardId;
+        const id = typeof value === "string" ? value : value.spaceId;
+        const board = boardId === undefined ? undefined : boards[boardId];
+        const name =
+          domain.targetKind === "space"
+            ? board?.spaces[id]?.name
+            : board && board.layout !== "generic"
+              ? (domain.targetKind === "edge"
+                  ? board.edges
+                  : board.vertices
+                ).find((target) => target.id === id)?.label
+              : undefined;
+        const kind =
+          domain.targetKind === "space"
+            ? "Space"
+            : domain.targetKind === "edge"
+              ? "Edge"
+              : "Vertex";
+        targetLabels.set(inputValueKey(value), name || `${kind} ${index + 1}`);
+      });
+    }
+  }
+  return targetLabels;
+}
 class InputObject {
+  readonly targetLabels: ReadonlyMap<string, string>;
+  readonly snapshot: SourceSnapshot | null;
   readonly key: string;
   readonly kind: InteractionInputDescriptor["kind"];
   constructor(
@@ -269,6 +341,23 @@ class InputObject {
   ) {
     this.key = descriptor.key;
     this.kind = descriptor.kind;
+    const snapshot = interaction.owner.sourceState.snapshot;
+    this.snapshot = snapshot;
+    this.targetLabels = createInputTargetLabels(
+      descriptor.domain,
+      snapshot,
+      descriptor.domain.type === "tileTarget" ||
+        descriptor.domain.type === "boardTarget"
+        ? interaction.owner.getBoardProjections(snapshot?.frame.view)
+        : {},
+    );
+  }
+  currentLifetime() {
+    return (
+      this.interaction.currentLifetime() &&
+      (this.descriptor.domain.type !== "tileTarget" ||
+        this.snapshot === this.interaction.owner.sourceState.snapshot)
+    );
   }
   get game() {
     return this.interaction.game;
@@ -284,6 +373,7 @@ class InputObject {
     return this.getEligibleTargets().map((value) => ({
       value,
       label:
+        this.targetLabels.get(inputValueKey(value)) ??
         (domain.type === "choice" || domain.type === "choiceList"
           ? domain.choices.find((choice) => Object.is(choice.value, value))
               ?.label
@@ -309,11 +399,11 @@ class InputObject {
     );
   }
   setValue(value: RuntimeJson) {
-    if (!this.interaction.currentLifetime()) return;
+    if (!this.currentLifetime()) return;
     this.interaction.owner.setInput(this.interaction.key, this.key, value);
   }
   clear() {
-    if (!this.interaction.currentLifetime()) return;
+    if (!this.currentLifetime()) return;
     this.interaction.owner.clearInput(this.interaction.key, this.key);
   }
   getIsReady() {
@@ -327,7 +417,11 @@ class InputObject {
   }
   getEligibleTargets(): readonly RuntimeJson[] {
     const domain = this.descriptor.domain;
-    if (domain.type === "cardTarget" || domain.type === "boardTarget")
+    if (
+      domain.type === "cardTarget" ||
+      domain.type === "boardTarget" ||
+      domain.type === "tileTarget"
+    )
       return domain.eligibleTargets;
     if (domain.type === "choice" || domain.type === "choiceList")
       return domain.choices
@@ -350,7 +444,7 @@ class InputObject {
   }
   getSelectHandler(value: RuntimeJson) {
     return () => {
-      if (this.interaction.currentLifetime())
+      if (this.currentLifetime())
         this.interaction.owner.select(this.interaction.key, this.key, value);
     };
   }
@@ -471,21 +565,120 @@ class CardObject {
     };
   }
 }
+class TileObject {
+  readonly epoch: number;
+  readonly snapshot: SourceSnapshot | null;
+  constructor(
+    readonly owner: Controller,
+    readonly data: ProjectedTile,
+    readonly zone: string,
+    readonly hostId: string,
+    readonly index: number,
+    readonly routes: readonly InteractionObject[],
+  ) {
+    this.epoch = owner.epoch;
+    this.snapshot = owner.sourceState.snapshot;
+  }
+  get ref() {
+    return this.data.ref;
+  }
+  get game() {
+    return this.owner.instance;
+  }
+  getInteractions() {
+    return this.routes;
+  }
+  getIsEligible() {
+    return this.routes.some((route) =>
+      route
+        .getInputs()
+        .some(
+          (input) =>
+            input.descriptor.domain.type === "tileTarget" &&
+            input.getIsEligible(this.ref),
+        ),
+    );
+  }
+  getIsSelected() {
+    return this.routes.some((route) =>
+      route
+        .getInputs()
+        .some(
+          (input) =>
+            input.descriptor.domain.type === "tileTarget" &&
+            input.getIsSelected(this.ref),
+        ),
+    );
+  }
+  getCanSelect(options?: RuntimeTargetOptions) {
+    return this.routes.some(
+      (route) =>
+        route.getIsAvailable() &&
+        (!options?.interaction || route.key === options.interaction) &&
+        route
+          .getInputs()
+          .some(
+            (input) =>
+              input.descriptor.domain.type === "tileTarget" &&
+              (!options?.input || input.key === options.input) &&
+              !input.getTargetProps(this.ref).disabled,
+          ),
+    );
+  }
+  select(options?: RuntimeTargetOptions) {
+    if (
+      this.owner.disposed ||
+      this.epoch !== this.owner.epoch ||
+      this.snapshot !== this.owner.sourceState.snapshot
+    )
+      return;
+    this.owner.routeTarget({ kind: "tile", value: this.ref }, options);
+  }
+  getSelectHandler(options?: RuntimeTargetOptions) {
+    return () => this.select(options);
+  }
+  getTargetProps(options?: RuntimeTargetOptions) {
+    const disabled = !this.getCanSelect(options);
+    return {
+      type: "button" as const,
+      disabled,
+      "data-action": "select",
+      "data-value": this.ref,
+      "data-interaction": options?.interaction,
+      "data-input": options?.input,
+      "data-eligible": this.getIsEligible(),
+      "data-selected": this.getIsSelected(),
+      "data-disabled": disabled,
+      "data-hidden": this.data.disclosure === "concealed",
+      onClick: this.getSelectHandler(options),
+    };
+  }
+}
 class ZoneObject {
   constructor(
     readonly owner: Controller,
     readonly id: string,
     readonly hostId: string,
     readonly cards: readonly CardObject[],
+    readonly tiles: readonly TileObject[],
   ) {}
   get game() {
     return this.owner.instance;
   }
   get count() {
-    return this.cards.length;
+    return this.cards.length + this.tiles.length;
   }
   getIsEmpty() {
     return this.count === 0;
+  }
+  getTiles() {
+    return this.tiles;
+  }
+  getTile(ref: SeatTileRef) {
+    return requireLookup(this.findTile(ref), `Tile in zone ${this.id}`, ref);
+  }
+  findTile(ref: SeatTileRef) {
+    return this.tiles.find((tile) => tile.ref === ref);
   }
   getCard(id: string) {
     return requireLookup(this.findCard(id), `Card in zone ${this.id}`, id);
@@ -592,6 +785,25 @@ interface RuntimeContext extends Omit<
 }
 
 class Controller {
+  readonly boardProjections = new WeakMap<
+    object,
+    Readonly<Record<string, SeatBoardTopology>>
+  >();
+  getBoardProjections(
+    view: unknown,
+  ): Readonly<Record<string, SeatBoardTopology>> {
+    if (view === null || typeof view !== "object" || Array.isArray(view))
+      return {};
+    const cached = this.boardProjections.get(view);
+    if (cached) return cached;
+    const payload: unknown = Reflect.get(view, "boards");
+    const boards =
+      payload === undefined
+        ? {}
+        : immutableCopy(BoardProjectionSchema.parse(payload));
+    this.boardProjections.set(view, boards);
+    return boards;
+  }
   epoch = 0;
   options: RuntimeOptions;
   localDrafts: DraftMap;
@@ -748,26 +960,9 @@ class Controller {
             }
           ).explore(...args),
       });
-    const boardProjections = new WeakMap<
-      object,
-      Readonly<Record<string, SeatBoardTopology>>
-    >();
     const runtime: RuntimeFeatureContext = {
       game: this.instance,
-      getBoards: () => {
-        const view = this.instance.view;
-        if (view === null || typeof view !== "object" || Array.isArray(view))
-          return {};
-        const cached = boardProjections.get(view);
-        if (cached) return cached;
-        const payload: unknown = Reflect.get(view, "boards");
-        const boards =
-          payload === undefined
-            ? {}
-            : immutableCopy(BoardProjectionSchema.parse(payload));
-        boardProjections.set(view, boards);
-        return boards;
-      },
+      getBoards: () => this.getBoardProjections(this.instance.view),
       createBoard: (data: SeatBoardTopology) =>
         this.object("board", {
           id: data.id,
@@ -954,7 +1149,8 @@ class Controller {
       isManyInput(input.descriptor) ||
       (typeof value === "string" &&
         (input.descriptor.domain.type === "cardTarget" ||
-          input.descriptor.domain.type === "boardTarget"))
+          input.descriptor.domain.type === "boardTarget" ||
+          input.descriptor.domain.type === "tileTarget"))
     ) {
       let next: Record<string, unknown> = { ...this.drafts()[key] };
       routeInteractionTarget(
@@ -1269,7 +1465,9 @@ class Controller {
         .getInputs()
         .filter(
           (input) =>
-            matchesBoardTarget(input.descriptor, target) &&
+            (target.kind === "tile"
+              ? input.descriptor.domain.type === "tileTarget"
+              : matchesBoardTarget(input.descriptor, target)) &&
             input.getIsEligible(target.value) &&
             interaction.getIsAvailable() &&
             (!options?.interaction ||
@@ -1568,6 +1766,30 @@ class Controller {
                             ),
                           ),
                         ),
+                      ),
+                    ),
+                    Object.freeze(
+                      zone.tiles.map(
+                        (tile, index) =>
+                          new TileObject(
+                            this,
+                            tile,
+                            id,
+                            hostId,
+                            index,
+                            Object.freeze(
+                              interactionObjects.filter((interaction) =>
+                                interaction
+                                  .getInputs()
+                                  .some(
+                                    (input) =>
+                                      input.descriptor.domain.type ===
+                                        "tileTarget" &&
+                                      input.getIsEligible(tile.ref),
+                                  ),
+                              ),
+                            ),
+                          ),
                       ),
                     ),
                   ),

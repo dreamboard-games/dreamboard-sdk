@@ -905,3 +905,99 @@ it("rejects malformed frames atomically while retaining usable board state", () 
   expect(game.boards.get("island").data.id).toBe("island");
   expect(() => game.dispose()).not.toThrow();
 });
+
+it("renders concealed footprints in board bounds without introducing spatial targets and preserves captured layouts", () => {
+  const { game, input } = setup();
+  const oldBoard = game.boards.get("island");
+  const oldLayout = oldBoard.getLayout({ hexSize: 12 });
+  expect(oldLayout.getTiles()).toHaveLength(1);
+  expect(oldLayout.getTiles()[0].spaceIds).toEqual([CENTER]);
+  const concealedRef = SeatTileRefSchema.parse(
+    `tile-ref:sha256:${"b".repeat(64)}`,
+  );
+  if (oldBoard.data.layout !== "hex") throw new Error("Expected hex board");
+  const board = SeatBoardTopologySchema.parse({
+    ...oldBoard.data,
+    tiles: [
+      ...oldBoard.data.tiles,
+      {
+        ref: concealedRef,
+        disclosure: "concealed",
+        appearance: { layout: "hex", cells: [{ q: 0, r: 0 }] },
+        placement: { layout: "hex", q: 10, r: 0, rotation: 2 },
+      },
+    ],
+  });
+  const frame = input.store.get().snapshot!.frame;
+  emitFrame(input, {
+    ...frame,
+    view: {
+      boards: {
+        island: RuntimeJsonSchema.parse(JSON.parse(JSON.stringify(board))),
+      },
+    },
+  });
+  const nextBoard = game.boards.get("island");
+  const layout = nextBoard.getLayout({ hexSize: 12 });
+  expect(nextBoard).not.toBe(oldBoard);
+  expect(layout.getTiles()).toHaveLength(2);
+  expect(layout.viewBox.width).toBeGreaterThan(oldLayout.viewBox.width);
+  expect(layout.getSpaces()).toHaveLength(1);
+  expect(layout.getEdges()).toHaveLength(6);
+  const concealed = layout
+    .getTiles()
+    .find((tile) => tile.ref === concealedRef)!;
+  expect(concealed.spaceIds).toEqual([]);
+  expect(
+    layout.pointToSpace(concealed.center.x, concealed.center.y),
+  ).toBeUndefined();
+  expect(concealed.rotationDegrees).toBe(120);
+  expect(Object.isFrozen(concealed.data)).toBe(true);
+  expect(oldLayout.getTiles()).toHaveLength(1);
+  expect(oldBoard.getLayout({ hexSize: 12 }).viewBox).toEqual(
+    oldLayout.viewBox,
+  );
+  game.dispose();
+});
+
+it("rejects overflowing finite viewport transforms while preserving valid tile transforms", () => {
+  const { game } = setup();
+  const board = game.boards.get("island");
+  expect(() =>
+    board.getLayout({
+      hexSize: 12,
+      viewport: { x: 0, y: 0, scale: Number.MAX_VALUE },
+    }),
+  ).toThrow("transform must be finite");
+  expect(() =>
+    board.getLayout({
+      hexSize: 12,
+      viewport: { x: Number.MAX_VALUE, y: 0, scale: Number.MAX_VALUE / 2 },
+    }),
+  ).toThrow("transform must be finite");
+  const original = board.getLayout({ hexSize: 12 });
+  const transformed = board.getLayout({
+    hexSize: 12,
+    viewport: { x: 5, y: 3, scale: 2 },
+  });
+  const expected = (point: { x: number; y: number }) => ({
+    x: point.x * 2 + 5,
+    y: point.y * 2 + 3,
+  });
+  expect(transformed.getTiles()[0].center).toEqual(
+    expected(original.getTiles()[0].center),
+  );
+  expect(transformed.getTiles()[0].anchor).toEqual(
+    expected(original.getTiles()[0].anchor),
+  );
+  expect(transformed.getTiles()[0].outlines).toEqual(
+    original.getTiles()[0].outlines.map((loop) => loop.map(expected)),
+  );
+  expect(
+    transformed.pointToSpace(
+      transformed.getSpaces()[0].center.x,
+      transformed.getSpaces()[0].center.y,
+    ),
+  ).toBe(CENTER);
+  game.dispose();
+});

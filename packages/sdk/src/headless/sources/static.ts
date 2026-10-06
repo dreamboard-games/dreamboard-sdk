@@ -4,7 +4,7 @@ import {
   SeatFrameSchema,
   PluginPlayerSummarySchema,
 } from "../../shared/protocol/schema.js";
-import { immutableCopy } from "./immutable.js";
+import { immutableCopy } from "../../shared/immutable.js";
 import type { GameSource, SourceSnapshot, SourceState } from "./types.js";
 
 export const SourceSnapshotSchema = z

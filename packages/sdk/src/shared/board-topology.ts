@@ -1,3 +1,4 @@
+import { immutableCopy } from "./immutable.js";
 import type { TilePlacement } from "./domain/tile-placement.js";
 import { boardEdgeId, boardVertexId } from "./domain/board-element.js";
 import type {
@@ -87,17 +88,6 @@ export function rotateSquare(col: number, row: number, rotation: number) {
   for (let step = 0; step < rotation; step++) [col, row] = [-row, col];
   return { col: coordinate(col), row: coordinate(row) };
 }
-function immutable<T>(value: T): T {
-  const copy = structuredClone(value);
-  const freeze = (item: unknown): void => {
-    if (item && typeof item === "object") {
-      for (const child of Object.values(item)) freeze(child);
-      Object.freeze(item);
-    }
-  };
-  freeze(copy);
-  return copy;
-}
 type Annotation = {
   readonly typeId?: string;
   readonly label?: string;
@@ -182,7 +172,7 @@ export function deriveBoardTopology(
       spaces: definition.spaces,
     };
     validateRelations(result);
-    return immutable(result);
+    return immutableCopy(result);
   }
   const hexSpaces: Record<string, HexSpace> = {};
   const squareSpaces: Record<string, SquareSpace> = {};
@@ -318,7 +308,7 @@ export function deriveBoardTopology(
       ),
     };
     validateRelations(result);
-    return immutable(result);
+    return immutableCopy(result);
   }
   const lattice = squareLattice(boardId, Object.values(squareSpaces));
   for (const tile of placed) {
@@ -354,7 +344,7 @@ export function deriveBoardTopology(
     ),
   };
   validateRelations(result);
-  return immutable(result);
+  return immutableCopy(result);
 }
 function hexSide(value: number): 0 | 1 | 2 | 3 | 4 | 5 {
   const side = value % 6;

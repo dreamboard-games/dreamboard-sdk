@@ -1,5 +1,5 @@
 import { createSourceLifecycle } from "../../headless/sources/lifecycle.js";
-import { immutableCopy } from "../../headless/sources/immutable.js";
+import { immutableCopy } from "../../shared/immutable.js";
 import { SourceSnapshotSchema } from "../../headless/sources/static.js";
 import type {
   CommandSource,

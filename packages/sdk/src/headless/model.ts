@@ -221,7 +221,48 @@ type SeatElement<Element> = Element extends {
       readonly spaceIds: readonly import("../shared/domain/seat-reference.js").SeatSpaceRef[];
     }
   : Element;
-type SeatTopology<Topology> = Topology extends {
+type TileDefinitionsOf<G> = G extends {
+  contract: { manifest: { tileDefinitions: infer Definitions } };
+}
+  ? Definitions
+  : never;
+type VisibleTileData<G, Runtime> = Runtime extends {
+  readonly tileTypeId: infer Type extends string;
+  readonly properties: infer Properties;
+}
+  ? Type extends keyof TileDefinitionsOf<G>
+    ? TileDefinitionsOf<G>[Type] extends { readonly fields: infer Fields }
+      ? Omit<
+          Extract<
+            import("../shared/seat-topology-schema.js").ProjectedTile,
+            { disclosure: "visible" }
+          >,
+          "tileTypeId" | "properties" | "fields"
+        > & {
+          readonly tileTypeId: Type;
+          readonly properties: ReadonlyData<Properties>;
+          readonly fields: ReadonlyData<Fields>;
+        }
+      : never
+    : never
+  : never;
+/** The seat DTO is canonical; known games refine only disclosed authored face data. */
+export type TileDataOf<G> = [TableOfGame<G>] extends [never]
+  ? import("../shared/seat-topology-schema.js").ProjectedTile
+  : | Extract<
+        import("../shared/seat-topology-schema.js").ProjectedTile,
+        { disclosure: "concealed" }
+      >
+    | (TableOfGame<G> extends { readonly tiles: infer Tiles }
+        ? VisibleTileData<G, Tiles[keyof Tiles]>
+        : never);
+export type PlacedTileDataOf<G> = TileDataOf<G> & {
+  readonly placement: Extract<
+    import("../shared/seat-topology-schema.js").SeatBoardTopology,
+    { layout: "hex" | "square" }
+  >["tiles"][number]["placement"];
+};
+type SeatTopology<Topology, G> = Topology extends {
   readonly layout: "hex" | "square";
   readonly spaces: infer Spaces;
   readonly relations: readonly (infer Relation)[];
@@ -235,10 +276,7 @@ type SeatTopology<Topology> = Topology extends {
           SeatCell<Spaces[keyof Spaces]>
         >
       >;
-      readonly tiles: Extract<
-        import("../shared/seat-topology-schema.js").SeatBoardTopology,
-        { readonly layout: "hex" | "square" }
-      >["tiles"];
+      readonly tiles: readonly PlacedTileDataOf<G>[];
       readonly relations: readonly SeatRelation<Relation>[];
       readonly edges: readonly SeatElement<Edge>[];
       readonly vertices: readonly SeatElement<Vertex>[];
@@ -260,7 +298,8 @@ export type BoardDataOf<G, K extends string> = [TableOfGame<G>] extends [never]
               TableOfGame<G>,
               Definitions,
               K
-            >
+            >,
+            G
           >
         : never
       : never
@@ -537,9 +576,26 @@ export type Card<
     readonly game: GameInstance<G, F>;
     getInteractions(): readonly AnyInteraction<G, F>[];
   };
+/** One tile presentation admitted for this seat; its reference expires with its frame. */
+export interface Tile<G, F extends Features = Record<never, never>> {
+  readonly ref: import("../shared/domain/seat-reference.js").SeatTileRef;
+  readonly data: TileDataOf<G>;
+  readonly zone: IdOf<G, "zoneId">;
+  readonly hostId: ZoneHostId<G>;
+  readonly index: number;
+  readonly game: GameInstance<G, F>;
+  getInteractions(): readonly AnyInteraction<G, F>[];
+  getIsEligible(): boolean;
+  getIsSelected(): boolean;
+  getCanSelect(options?: TargetOptions<G>): boolean;
+  select(options?: TargetOptions<G>): void;
+  getSelectHandler(options?: TargetOptions<G>): () => void;
+  getTargetProps(options?: TargetOptions<G>): ActionProps;
+}
 export interface ZoneBase<G, K extends IdOf<G, "zoneId"> = IdOf<G, "zoneId">> {
   readonly id: K;
   readonly hostId: ZoneHostId<G, K>;
+  /** Number of projected cards and tiles; omitted inventory contributes nothing. */
   readonly count: number;
   readonly game: CoreInstance<G>;
   getIsEmpty(): boolean;
@@ -554,6 +610,13 @@ export type Zone<
     getCards(options?: {
       sort?: (a: Card<G, F>, b: Card<G, F>) => number;
     }): readonly Card<G, F>[];
+    getTiles(): readonly Tile<G, F>[];
+    getTile(
+      ref: import("../shared/domain/seat-reference.js").SeatTileRef,
+    ): Tile<G, F>;
+    findTile(
+      ref: import("../shared/domain/seat-reference.js").SeatTileRef,
+    ): Tile<G, F> | undefined;
     getCard<K extends SeatCardId<G>>(id: K): Card<G, F, K>;
     findCard<K extends SeatCardId<G>>(id: K): Card<G, F, K> | undefined;
   };

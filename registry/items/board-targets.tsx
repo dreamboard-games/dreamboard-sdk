@@ -2,6 +2,7 @@ import type { RuntimeBoardTarget } from "@dreamboard-games/sdk";
 import { useGame, useDropArea } from "@game";
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -12,6 +13,7 @@ import type { GameModel as Model } from "@game";
 type Board = ReturnType<Model["boards"]["getAll"]>[number];
 type Layout = ReturnType<Board["getLayout"]>;
 type Space = ReturnType<Layout["getSpaces"]>[number];
+type Tile = ReturnType<Layout["getTiles"]>[number];
 type Edge = ReturnType<Layout["getEdges"]>[number];
 type DropTarget = Exclude<
   ReturnType<Model["drag"]["getDropTargets"]>[number],
@@ -28,6 +30,9 @@ export interface BoardTargetsProps {
   dropRoute?: DropRoute;
   label?: string;
   className?: string;
+  renderTile?(tile: Tile): ReactNode;
+  tileProps?(tile: Tile): ComponentProps<"path">;
+  targetLabel?(target: Space | Edge | Vertex): string;
   renderSpace?(space: Space): ReactNode;
   renderEdge?(edge: Edge): ReactNode;
   renderVertex?(vertex: Vertex): ReactNode;
@@ -42,6 +47,9 @@ export function BoardTargets({
   dropRoute,
   label = "Board",
   className = "",
+  renderTile,
+  tileProps,
+  targetLabel,
   renderSpace,
   renderEdge,
   renderVertex,
@@ -114,27 +122,36 @@ export function BoardTargets({
     node.addEventListener("wheel", wheel, { passive: false });
     return () => node.removeEventListener("wheel", wheel);
   }, [onWheel, board]);
-  if (!board) return null;
-  const layout = board.getLayout({ hexSize });
-  const box = layout.viewBox;
+  const layout = useMemo(() => board?.getLayout({ hexSize }), [board, hexSize]);
   const transform = viewport.getTransform();
-  const selectable = [...layout.getEdges(), ...layout.getVertices()].filter(
-    (target) => target.getIsSelectable(),
-  );
-  function hitSize(target: Edge | Vertex) {
+  const hitSizes = useMemo(() => {
+    const selectable = layout
+      ? [...layout.getEdges(), ...layout.getVertices()].filter((target) =>
+          target.getIsSelectable(),
+        )
+      : [];
     const pixels = screenScale * transform.scale;
-    const nearest = Math.min(
-      ...selectable
-        .filter((other) => other !== target)
-        .map(
-          (other) =>
-            Math.hypot(
-              other.center.x - target.center.x,
-              other.center.y - target.center.y,
-            ) * pixels,
-        ),
+    return new Map(
+      selectable.map((target) => {
+        const nearest = Math.min(
+          ...selectable
+            .filter((other) => other !== target)
+            .map(
+              (other) =>
+                Math.hypot(
+                  other.center.x - target.center.x,
+                  other.center.y - target.center.y,
+                ) * pixels,
+            ),
+        );
+        return [target, Math.max(24, Math.min(44, nearest - 4)) / pixels];
+      }),
     );
-    return Math.max(24, Math.min(44, nearest - 4)) / pixels;
+  }, [layout, screenScale, transform.scale]);
+  if (!board || !layout) return null;
+  const box = layout.viewBox;
+  function hitSize(target: Edge | Vertex) {
+    return hitSizes.get(target) ?? 24 / (screenScale * transform.scale);
   }
   function dropTarget(kind: "space" | "edge" | "vertex", id: string) {
     const matches = dropTargets.filter(
@@ -148,7 +165,7 @@ export function BoardTargets({
     // An ambiguous visual destination must be bound to an explicit route.
     return matches.length === 1 ? matches[0] : null;
   }
-  function control(target: Space | Edge | Vertex) {
+  function control(target: Space | Edge | Vertex, label: string) {
     // SVG groups do not accept the native button type.
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Strip the native button type before spreading props on an SVG group.
     const { disabled, type: _type, onClick, ...data } = target.getTargetProps();
@@ -161,7 +178,7 @@ export function BoardTargets({
       tabIndex: disabled ? -1 : 0,
       "aria-disabled": disabled,
       "aria-pressed": target.getIsSelected(),
-      "aria-label": target.id,
+      "aria-label": targetLabel?.(target) ?? label,
       onClick: () => {
         if (!disabled) onClick();
       },
@@ -193,11 +210,39 @@ export function BoardTargets({
       <g
         transform={`translate(${transform.x} ${transform.y}) scale(${transform.scale})`}
       >
-        {layout.getSpaces().map((space) => (
+        {(renderTile || tileProps) &&
+          layout.getTiles().map((tile) => (
+            <g key={tile.ref} data-tile-ref={tile.ref} pointerEvents="none">
+              {tileProps && (
+                <path
+                  d={tile.outlines
+                    .map(
+                      (loop) =>
+                        loop
+                          .map(
+                            (point, index) =>
+                              `${index === 0 ? "M" : "L"}${point.x},${point.y}`,
+                          )
+                          .join(" ") + " Z",
+                    )
+                    .join(" ")}
+                  fillRule="evenodd"
+                  {...tileProps(tile)}
+                />
+              )}
+              {renderTile?.(tile)}
+            </g>
+          ))}
+        {layout.getSpaces().map((space, index) => (
           <DropControl
             key={space.id}
             dropTarget={dropTarget("space", space.id)}
-            {...control(space)}
+            {...control(
+              space,
+              "name" in space.data && typeof space.data.name === "string"
+                ? space.data.name
+                : `Space ${index + 1}`,
+            )}
           >
             <polygon
               className="db-grid-cell"
@@ -210,11 +255,11 @@ export function BoardTargets({
             {renderSpace?.(space)}
           </DropControl>
         ))}
-        {layout.getEdges().map((edge) => (
+        {layout.getEdges().map((edge, index) => (
           <DropControl
             key={edge.id}
             dropTarget={dropTarget("edge", edge.id)}
-            {...control(edge)}
+            {...control(edge, `Edge ${index + 1}`)}
             data-target-kind="edge"
           >
             {edge.getIsSelectable() && (
@@ -232,11 +277,11 @@ export function BoardTargets({
             {renderEdge?.(edge)}
           </DropControl>
         ))}
-        {layout.getVertices().map((vertex) => (
+        {layout.getVertices().map((vertex, index) => (
           <DropControl
             key={vertex.id}
             dropTarget={dropTarget("vertex", vertex.id)}
-            {...control(vertex)}
+            {...control(vertex, `Vertex ${index + 1}`)}
             data-target-kind="vertex"
           >
             {vertex.getIsSelectable() && (

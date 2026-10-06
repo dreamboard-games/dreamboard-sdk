@@ -164,7 +164,7 @@ const privateDestinations = [
 ] as const;
 
 describe("tile inventory projection boundary", () => {
-  test("mixed public inventory remains ordered while the UI facade presents only cards", async () => {
+  test("mixed public inventory remains ordered while the UI facade presents cards and tiles", async () => {
     const definition = game();
     const source = await localSource(definition, { players: 2, seed: 1 });
     const instance = createGameInstance<typeof definition>()({ source });
@@ -176,7 +176,14 @@ describe("tile inventory projection boundary", () => {
       expect(admitted.zones.stock.table).toEqual(
         expect.arrayContaining(["ace", "pawn", "die", "forest-instance"]),
       );
-      expect(instance.zones.get("stock", "table").count).toBe(1);
+      expect(instance.zones.get("stock", "table").count).toBe(2);
+      expect(instance.zones.get("stock", "table").getTiles()).toHaveLength(1);
+      expect(
+        instance.zones.get("stock", "table").getTiles()[0].data,
+      ).toMatchObject({
+        disclosure: "visible",
+        tileTypeId: "forest-face",
+      });
       expect(
         instance.zones
           .get("stock", "table")

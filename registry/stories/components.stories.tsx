@@ -5,7 +5,6 @@ import { Card, CardBack } from "../items/card";
 import { PlayingCard } from "../items/playing-card";
 import { ImageCard } from "../items/image-card";
 import { Pile } from "../items/pile";
-import { HexGrid } from "../items/hex-grid";
 import { SquareGrid } from "../items/square-grid";
 import { Seat } from "../items/seat";
 import { Resources } from "../items/resources";
@@ -104,34 +103,6 @@ export const Piles: Story = {
         <PlayingCard rank="7" suit="clubs" />
       </Pile>
       <Pile label="Tricks" count={0} />
-    </div>
-  ),
-};
-export const HexBoard: Story = {
-  render: () => (
-    <div className="story-panel">
-      <HexGrid
-        label="Two hex terrain tiles"
-        viewBox="0 0 210 110"
-        tiles={[
-          {
-            id: "forest",
-            points: "5,30 45,7 85,30 85,76 45,99 5,76",
-            center: { x: 45, y: 53 },
-            fill: "#accdb8",
-            label: "Forest",
-          },
-          {
-            id: "hills",
-            points: "85,30 125,7 165,30 165,76 125,99 85,76",
-            center: { x: 125, y: 53 },
-            fill: "#e1c5a9",
-            label: "Hills",
-          },
-        ]}
-      >
-        <circle cx="85" cy="30" r="6" fill="var(--seat-1)" />
-      </HexGrid>
     </div>
   ),
 };
@@ -271,37 +242,6 @@ export const ConsumerComposition: Story = {
           Owned styles
         </Card>
       </div>
-      <HexGrid
-        label="Custom hex overlays"
-        viewBox="0 0 180 100"
-        tiles={[
-          {
-            id: "hex",
-            points: "5,30 45,7 85,30 85,76 45,99 5,76",
-            center: { x: 45, y: 53 },
-            label: "Hex",
-          },
-        ]}
-      >
-        <polygon
-          data-testid="hex-overlay"
-          points="100,10 170,10 170,80"
-          fill="orange"
-          stroke="purple"
-          strokeWidth={7}
-        />
-        <text
-          data-testid="hex-label"
-          x={100}
-          y={95}
-          fill="red"
-          fontFamily="monospace"
-          fontSize={18}
-          pointerEvents="all"
-        >
-          Overlay
-        </text>
-      </HexGrid>
       <SquareGrid
         label="Custom square overlays"
         viewBox="0 0 180 100"
