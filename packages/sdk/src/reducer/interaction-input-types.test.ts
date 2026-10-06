@@ -128,8 +128,6 @@ function buildContract() {
       resources: () => testPlayerRecord<RuntimeRecord>(),
     },
     tableSchema: z.custom<TestTable>(),
-    runtimeSchema: z.any(),
-    createGameStateSchema: () => z.any(),
   } satisfies ReducerManifestContract<
     TestTable,
     (typeof phaseNames)[number],
@@ -226,7 +224,7 @@ describe("interaction input id types", () => {
     const contract = buildContract();
     const interaction = contract.phase("play").interaction({
       inputs: {
-        cardId: formInput(contract.contract.schemas.cardId),
+        cardId: formInput(contract.contract.manifest.ids.cardId),
         cardType: formInput(contract.contract.manifest.ids.cardType),
       },
       rules: [
@@ -288,7 +286,7 @@ describe("interaction input id types", () => {
   test("types interaction playerId and explicit cardId from manifest schemas", () => {
     const contract = buildContract();
     const action = contract.phase("play").interaction({
-      inputs: { cardId: formInput(contract.contract.schemas.cardId) },
+      inputs: { cardId: formInput(contract.contract.manifest.ids.cardId) },
       reduce({ input, tx }) {
         const playerId: TestPlayerId = input.playerId;
         const cardId: TestCardId = input.params.cardId;
@@ -306,7 +304,7 @@ describe("interaction input id types", () => {
     const contract = buildContract();
     const interaction = contract.phase("play").interaction({
       inputs: {
-        cardIds: many(formInput(contract.contract.schemas.cardId), {
+        cardIds: many(formInput(contract.contract.manifest.ids.cardId), {
           count: 2,
           distinct: true,
         }),
@@ -336,7 +334,7 @@ describe("interaction input id types", () => {
       contract.phase("play").interaction({
         commit: { mode: "autoWhenReady" },
         inputs: {
-          cardIds: many(formInput(contract.contract.schemas.cardId), {
+          cardIds: many(formInput(contract.contract.manifest.ids.cardId), {
             count: 2,
             distinct: true,
           }),
@@ -346,8 +344,8 @@ describe("interaction input id types", () => {
       // @ts-expect-error many(...) card action inputs cannot auto-submit.
       contract.phase("play").interaction({
         inputs: {
-          cardId: formInput(contract.contract.schemas.cardId),
-          cardIds: many(formInput(contract.contract.schemas.cardId), {
+          cardId: formInput(contract.contract.manifest.ids.cardId),
+          cardIds: many(formInput(contract.contract.manifest.ids.cardId), {
             count: 2,
             distinct: true,
           }),
@@ -366,7 +364,7 @@ describe("interaction input id types", () => {
       actors: () => ["player-1", "player-2"] as TestPlayerId[],
       submit: {
         inputs: {
-          cardIds: many(formInput(contract.contract.schemas.cardId), {
+          cardIds: many(formInput(contract.contract.manifest.ids.cardId), {
             count: 2,
             distinct: true,
           }),
@@ -404,7 +402,7 @@ describe("interaction input id types", () => {
           // @ts-expect-error many(...) simultaneous submit inputs are explicit draft selections and cannot auto-submit.
           commit: { mode: "autoWhenReady" },
           inputs: {
-            cardIds: many(formInput(contract.contract.schemas.cardId), {
+            cardIds: many(formInput(contract.contract.manifest.ids.cardId), {
               count: 2,
               distinct: true,
             }),
@@ -428,7 +426,7 @@ describe("interaction input id types", () => {
       interactions: {
         chooseCard: contract.phase("play").interaction({
           inputs: {
-            cardId: formInput(contract.contract.schemas.cardId),
+            cardId: formInput(contract.contract.manifest.ids.cardId),
           },
           reduce: () => {},
         }),

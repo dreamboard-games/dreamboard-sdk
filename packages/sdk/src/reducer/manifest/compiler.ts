@@ -33,8 +33,6 @@ import {
   assumeManifestSchema,
   createManifestStringLiteralSchema,
   markManifestScopedSchema,
-  createManifestRuntimeSchema,
-  createManifestGameStateSchema,
 } from "../model/manifest";
 import type { ReducerManifestContract, RuntimeTableRecord } from "../model";
 import type {
@@ -323,10 +321,6 @@ export function compileManifestRuntime(
         ]),
       ),
   };
-  const runtimeSchema = createManifestRuntimeSchema({
-    phaseNameSchema: z.string(),
-    playerIdSchema: ids.playerId,
-  });
   const createInitialTable = (options: {
     playerIds: readonly string[];
     shuffleItems?: <V>(values: readonly V[]) => V[];
@@ -375,8 +369,6 @@ export function compileManifestRuntime(
       ]),
     ),
     tableSchema,
-    runtimeSchema,
-    schemas: { table: tableSchema, runtime: runtimeSchema },
     ...topologyDefinitions,
     createInitialTable,
     normalSetup: {
@@ -384,15 +376,5 @@ export function compileManifestRuntime(
       maxPlayers: source.players.maxPlayers,
       createInitialTable,
     },
-    createGameStateSchema: (
-      config: Parameters<
-        CompiledManifest<AuthoredManifest>["createGameStateSchema"]
-      >[0],
-    ) =>
-      createManifestGameStateSchema({
-        ...config,
-        tableSchema,
-        playerIdSchema: ids.playerId,
-      }),
   } as unknown as CompiledManifest<AuthoredManifest>;
 }
