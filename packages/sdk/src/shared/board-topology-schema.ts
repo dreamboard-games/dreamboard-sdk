@@ -13,7 +13,7 @@ const coordinate = z
   .max(MAXIMUM_BOARD_COORDINATE);
 const fields = z.record(z.string(), RuntimeJsonSchema);
 export const BoardRelationSchema = z.strictObject({
-  id: z.string().min(1).nullable().optional(),
+  id: z.string().min(1),
   typeId: z.string().min(1),
   fromSpaceId: z.string().min(1),
   toSpaceId: z.string().min(1),

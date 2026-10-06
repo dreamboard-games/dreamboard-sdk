@@ -79,6 +79,7 @@ describe("in-memory manifests", () => {
     expect(compiled.ids.relationTypeId.safeParse("").success).toBe(false);
     const table = compiled.createInitialTable({ playerIds: [] });
     table.boards.map.relations.push({
+      id: "bridge",
       typeId: "bridge",
       fromSpaceId: "a",
       toSpaceId: "b",

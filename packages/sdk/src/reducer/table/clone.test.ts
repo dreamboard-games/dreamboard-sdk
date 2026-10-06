@@ -14,6 +14,7 @@ test("board clones preserve identity and isolate nested relation fields", () => 
     baseId: "board",
     relations: [
       {
+        id: "route",
         typeId: "route",
         fromSpaceId: "origin",
         toSpaceId: "destination",

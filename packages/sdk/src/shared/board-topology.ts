@@ -186,7 +186,7 @@ export function deriveBoardTopology(
   }
   const hexSpaces: Record<string, HexSpace> = {};
   const squareSpaces: Record<string, SquareSpace> = {};
-  const occupied = new Set<string>();
+  const occupied = new Map<string, string>();
   const placed: {
     tileId: string;
     definition: TopologyDefinitions["tileDefinitions"][string];
@@ -226,9 +226,9 @@ export function deriveBoardTopology(
         const key = `${q},${r}`;
         if (occupied.has(key))
           throw new BoardTopologyError(
-            `Overlapping tile cells on board '${boardId}' at ${key}.`,
+            `Overlapping tile cells from tiles '${occupied.get(key)}' and '${tileId}' on board '${boardId}' at ${key}.`,
           );
-        occupied.add(key);
+        occupied.set(key, tileId);
         const id = tileSpaceId(tileId, cell.id);
         hexSpaces[id] = {
           id,
@@ -258,9 +258,9 @@ export function deriveBoardTopology(
         const key = `${col},${row}`;
         if (occupied.has(key))
           throw new BoardTopologyError(
-            `Overlapping tile cells on board '${boardId}' at ${key}.`,
+            `Overlapping tile cells from tiles '${occupied.get(key)}' and '${tileId}' on board '${boardId}' at ${key}.`,
           );
-        occupied.add(key);
+        occupied.set(key, tileId);
         const id = tileSpaceId(tileId, cell.id);
         squareSpaces[id] = {
           id,
@@ -373,13 +373,15 @@ function hexSide(value: number): 0 | 1 | 2 | 3 | 4 | 5 {
 function validateRelations(board: BoardTopology): void {
   const identities = new Set<string>();
   for (const relation of board.relations) {
-    if (relation.id != null) {
-      if (identities.has(relation.id))
-        throw new BoardTopologyError(
-          `Duplicate relation identity '${relation.id}' on board '${board.id}'.`,
-        );
-      identities.add(relation.id);
-    }
+    if (typeof relation.id !== "string" || relation.id.length === 0)
+      throw new BoardTopologyError(
+        `Relation identity must be nonempty on board '${board.id}'.`,
+      );
+    if (identities.has(relation.id))
+      throw new BoardTopologyError(
+        `Duplicate relation identity '${relation.id}' on board '${board.id}'.`,
+      );
+    identities.add(relation.id);
     if (
       !Object.hasOwn(board.spaces, relation.fromSpaceId) ||
       !Object.hasOwn(board.spaces, relation.toSpaceId)

@@ -64,7 +64,7 @@ export type RuntimeBoardInstance = {
   baseId: string;
   visibility: "public" | "ownerOnly" | "hidden";
   relations: {
-    id?: string | null;
+    id: string;
     typeId: string;
     fromSpaceId: string;
     toSpaceId: string;

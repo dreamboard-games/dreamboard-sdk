@@ -10,7 +10,12 @@ import type {
   BoardVertexId,
 } from "../../shared/domain/board-identities.js";
 import type { GameTopologyManifest } from "../../shared/domain/manifest.js";
-import type { FieldsOutput, FieldSchema, CardSchema } from "./field-schemas.js";
+import type {
+  FieldsOutput,
+  FieldsInput,
+  FieldSchema,
+  CardSchema,
+} from "./field-schemas.js";
 import type { z } from "zod";
 import type {
   ManifestIdSchema,
@@ -62,6 +67,43 @@ export type AuthoredOf<M> = M extends { readonly [validatedManifest]: infer A }
   ? A
   : M;
 declare const compiledManifest: unique symbol;
+/** Preserve only the existing compile-time source witness across narrowed runtime facades. */
+export type CompiledManifestWitness<Definitions> = Pick<
+  Definitions,
+  Extract<keyof Definitions, typeof compiledManifest>
+>;
+/** Compile-time source witness; no runtime manifest or schema is exposed. */
+export type AuthoredManifestOf<Definitions> = [Definitions] extends [
+  {
+    readonly [compiledManifest]: { readonly source: infer M };
+  },
+]
+  ? M
+  : never;
+type AuthoredBoardOf<Definitions, Base extends string> = Extract<
+  Entries<AuthoredManifestOf<Definitions>, "boards">,
+  { readonly id: Base }
+>;
+type RelationFieldsInput<Definitions, Base extends string> = FieldsInput<
+  Get<AuthoredBoardOf<Definitions, Base>, "relationFieldsSchema">,
+  AuthoredManifestOf<Definitions>,
+  AuthoredBoardOf<Definitions, Base>
+>;
+type RelationSpaceInput<Definitions, Base extends string> =
+  AuthoredBoardOf<Definitions, Base> extends infer B
+    ? B extends { readonly layout: infer L extends "hex" | "square" }
+      ? TileSpaceIds<AuthoredManifestOf<Definitions>, L>
+      : BoardSpaceId<B>
+    : never;
+export type RelationInputForBoard<Definitions, Base extends string> = {
+  readonly id: string;
+  readonly typeId: string;
+  readonly fromSpaceId: RelationSpaceInput<Definitions, Base>;
+  readonly toSpaceId: RelationSpaceInput<Definitions, Base>;
+  readonly directed?: boolean;
+} & (Record<never, never> extends RelationFieldsInput<Definitions, Base>
+  ? { readonly fields?: RelationFieldsInput<Definitions, Base> }
+  : { readonly fields: RelationFieldsInput<Definitions, Base> });
 export type AuthoredManifest = SchemaAuthoring<GameTopologyManifest>;
 type Entry<T> = T extends readonly (infer V)[] ? V : never;
 type Get<T, K extends PropertyKey> = T extends unknown
@@ -472,7 +514,7 @@ export type CompiledManifest<M> = Omit<
   | "boardDefinitions"
   | "tileDefinitions"
 > & {
-  readonly [compiledManifest]: true;
+  readonly [compiledManifest]: { readonly source: M };
   readonly zoneDefinitions: {
     readonly [Z in Entries<M, "zones"> as Id<Z>]: ZoneDefinition &
       (Z extends { scope: infer S extends "shared" | "perPlayer" }

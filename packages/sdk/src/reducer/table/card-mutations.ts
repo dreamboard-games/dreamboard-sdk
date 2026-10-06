@@ -1,5 +1,6 @@
 import type { RuntimeTableRecord, ZoneDefinitions } from "../model";
 import { removeComponentFromCurrentLocation } from "./component-mutations";
+import { assertTileCanLeaveBoard } from "./tile-mutations";
 import {
   assertContainmentAcyclic,
   assertComponent,
@@ -32,9 +33,7 @@ function validateSource(
   assertComponent(table, id);
   const source = table.componentLocations[id];
   if (source.type === "OnBoard")
-    throw new Error(
-      "Placed tiles require dependency-aware removal before moving.",
-    );
+    assertTileCanLeaveBoard(table, definitions, id);
   if (source.type === "InZone") {
     const { ids } = resolveZone(table, definitions, source);
     if (ids.filter((candidate) => candidate === id).length !== 1)

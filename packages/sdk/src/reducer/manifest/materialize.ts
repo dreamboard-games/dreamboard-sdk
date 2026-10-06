@@ -1493,7 +1493,7 @@ function materializeManifest(
         baseId: board.board.id,
         visibility: board.board.visibility ?? "public",
         relations: board.relations.map((relation) => ({
-          ...(relation.id === undefined ? {} : { id: relation.id }),
+          id: relation.id,
           typeId: relation.typeId,
           fromSpaceId: relation.fromSpaceId,
           toSpaceId: relation.toSpaceId,

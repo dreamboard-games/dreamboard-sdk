@@ -808,10 +808,12 @@ type DefinitionMapsOf<Manifest> = Manifest extends {
 }
   ? { boardDefinitions: Boards; tileDefinitions: Tiles; zoneDefinitions: Zones }
   : import("./table.js").ZoneDefinitions;
-export type ManifestContractOf<Contract> = ManifestContract<
-  TableOfManifest<ManifestOf<Contract>>,
-  DefinitionMapsOf<ManifestOf<Contract>>
->;
+export type ManifestContractOf<Contract> =
+  import("../manifest/types.js").CompiledManifestWitness<ManifestOf<Contract>> &
+    ManifestContract<
+      TableOfManifest<ManifestOf<Contract>>,
+      DefinitionMapsOf<ManifestOf<Contract>>
+    >;
 export type ExactManifestContractOf<Contract> = ManifestOf<Contract> &
   Omit<
     ReducerManifestContractLike<TableOfManifest<ManifestOf<Contract>>>,
