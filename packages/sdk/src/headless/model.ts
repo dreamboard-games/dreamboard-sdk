@@ -682,7 +682,6 @@ export interface InstanceOptions<G, S extends GameSource = GameSource> {
   readonly onDraftsChange?: (drafts: Drafts<G>) => void;
   readonly onActiveInteractionChange?: (key: InteractionKey<G> | null) => void;
   readonly onError?: (error: unknown) => void;
-  readonly coverage?: Readonly<Record<InteractionKey<G>, unknown>>;
   readonly debug?: boolean;
 }
 export type CoreInstance<G> = ReadModel<G> & {
@@ -693,7 +692,6 @@ export type CoreInstance<G> = ReadModel<G> & {
   subscribe(listener: () => void): () => void;
   dispose(): void;
   assertCoverage(): void;
-  inspect(): ReadModel<G>;
 };
 export type GameSnapshot<
   G,
@@ -705,18 +703,12 @@ export type GameInstance<
   S extends GameSource = GameSource,
 > = Omit<
   CoreInstance<G>,
-  | keyof ReadModel<G>
-  | "store"
-  | "getSnapshot"
-  | "getOptions"
-  | "setOptions"
-  | "inspect"
+  keyof ReadModel<G> | "store" | "getSnapshot" | "getOptions" | "setOptions"
 > &
   ReadModel<G, F> &
   RootHooks<G, F> & {
     readonly store: Pick<Store<GameSnapshot<G, F>>, "get" | "subscribe">;
     getSnapshot(): GameSnapshot<G, F>;
-    inspect(): GameSnapshot<G, F>;
     getOptions(): InstanceOptions<G, S>;
     setOptions(options: InstanceOptions<G, S>): void;
   } & (S extends { apply(action: infer A): infer R }

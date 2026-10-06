@@ -12,9 +12,9 @@ import type definition from "../../../templates/game/app/game";
 export const coverage = {
   "play.increment": Counter,
 } satisfies Record<InteractionKey<typeof definition>, ComponentType>;
-export const { GameProvider, useGame } = createGameHook<typeof definition>()({
-  coverage,
-});
+export const { GameProvider, useGame } = createGameHook<typeof definition>()(
+  {},
+);
 
 export function Counter(): ReactElement | null {
   const increment = useGame((game) => game.interactions.get("play.increment"));
@@ -25,8 +25,8 @@ export function Counter(): ReactElement | null {
 ```
 
 Mount Counter inside GameProvider with a source. The renderer's actual
-`interactions.get` call records observation. The coverage map checks supported
-keys at compile time; component references alone do not mark interactions read.
+`interactions.get` call records observation. The caller-owned coverage map checks supported
+keys at compile time and is not passed to the runtime; component references alone do not mark interactions read.
 
 In a test, render the provider and supported panels, wait for the frame to render,
 then call `instance.assertCoverage()` on that provider's captured instance. An

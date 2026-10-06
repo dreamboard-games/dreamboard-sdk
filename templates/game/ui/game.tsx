@@ -1,11 +1,14 @@
+import type { InteractionKey } from "@dreamboard-games/sdk";
 import { createGameHook } from "@dreamboard-games/sdk/react";
 import type game from "../app/game";
 
+export const coverage = { "play.increment": Counter } satisfies Record<
+  InteractionKey<typeof game>,
+  typeof Counter
+>;
 export const { GameProvider, useGame, Subscribe } = createGameHook<
   typeof game
->()({
-  coverage: { "play.increment": Counter },
-});
+>()({});
 
 export function Counter() {
   const view = useGame((game) => game.view);

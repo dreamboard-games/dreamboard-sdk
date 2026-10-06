@@ -40,6 +40,10 @@ export type GamePlayer = Player<Definition>;
 export type GameView = ViewOf<Definition>;
 export type InteractionKey = SDKInteractionKey<Definition>;
 export type CardDrag = CardGestureOptions<Definition>["drag"];
+export const coverage = {
+  "passing.submit": HandRow,
+  "playing.playCard": HandRow,
+} satisfies Record<InteractionKey, typeof HandRow>;
 export const {
   GameProvider: SDKGameProvider,
   useGame,
@@ -48,7 +52,6 @@ export const {
   useDropArea,
   useDragOverlay,
 } = createGameHook<Game>()({
-  coverage: { "passing.submit": HandRow, "playing.playCard": HandRow },
   features,
 });
 export { GameProvider } from "./components/dreamboard/game-provider";

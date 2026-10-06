@@ -182,7 +182,7 @@ New workspaces keep authored starter code in `app/game.ts` and `ui/App.tsx`.
 Import the manifest directly. `compileManifest(manifest)` provides inferred ID schemas,
 table schemas, fresh initial tables, and board metadata in memory. `createGame`
 requires that compiled manifest when binding state schemas. Bind a typed React hook with
-`createGameHook<Game>()({ features, coverage })` from `@dreamboard-games/sdk/react`,
+`createGameHook<Game>()({ features })` from `@dreamboard-games/sdk/react`,
 and pass a source to its `GameProvider`. The hosted UI imports `Game` only as a type;
 `iframeSource()` supplies authoritative frames and handles commands.
 No authoring generation step or shared workspace files are needed.

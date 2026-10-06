@@ -25,7 +25,7 @@ Assertions are not interchangeable with validation. Retained assertions must nam
 | Replay facade                              | The runtime and view callback were bound to the same assembled game. Readonly public projections are reconstructed at this boundary.                                                                                                                               |
 | Type computations                          | `unknown` may represent an unconstrained output, a distributive conditional or a heterogeneous value that must be narrowed before use. Type-only `any` used to infer callback parameters is distinct from runtime `any`.                                           |
 
-Errors, raw JSON, schema input, opaque feature coverage values and heterogeneous parameter enumeration legitimately use `unknown`. Do not replace it with `any`, `never`, a fake guard, an unchecked generic helper or a wider public facade to silence a diagnostic.
+Errors, raw JSON, schema input, opaque feature values and heterogeneous parameter enumeration legitimately use `unknown`. Do not replace it with `any`, `never`, a fake guard, an unchecked generic helper or a wider public facade to silence a diagnostic.
 
 The reserved board projection has one strict, layout-discriminated wire schema.
 It admits record identities, tile-cell identities and bounded coordinates;

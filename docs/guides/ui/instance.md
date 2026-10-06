@@ -8,7 +8,7 @@ export const game = createGameInstance<typeof definition>()({
 });
 ```
 
-The curried constructor retains the game type while inferring enabled features and source capabilities. Root identity is stable; getSnapshot/inspect return immutable selected-seat models. subscribe returns cleanup. dispose ends owned source and feature lifetimes. No executable game value is needed for hosted construction.
+The curried constructor retains the game type while inferring enabled features and source capabilities. Root identity is stable; getSnapshot returns immutable selected-seat models. subscribe returns cleanup. dispose ends owned source and feature lifetimes. No executable game value is needed for hosted construction.
 
 ### Required and optional lookups
 

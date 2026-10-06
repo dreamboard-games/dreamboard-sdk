@@ -72,6 +72,5 @@ export const {
   useDropArea,
   useDragOverlay,
 } = createGameHook<Game>()({
-  coverage,
   features,
 });

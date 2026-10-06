@@ -94,7 +94,11 @@ mood.setValue(undefined);
 game.cards.get("card-1").getInteractions()[0].getInputs();
 game.cards.get("card-1").getInteractions()[0].customLabel();
 mood.interaction.customLabel();
-game.inspect().getRolled();
+game.getSnapshot().getRolled();
+// @ts-expect-error Instances expose one snapshot reader.
+void game.inspect;
+// @ts-expect-error Coverage declarations are compile-time UI maps, not runtime options.
+createGameInstance<Game>()({ source, coverage: {} });
 // @ts-expect-error Disabled interaction feature is absent through card navigation.
 // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Disabled interaction feature is absent through card navigation.
 bare.cards.get("card-1").getInteractions()[0].customLabel();
