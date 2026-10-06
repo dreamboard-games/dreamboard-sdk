@@ -17,10 +17,7 @@ import type {
   DieTypeSpec,
   GameTopologyManifest,
 } from "../../shared/domain/manifest.js";
-import {
-  createHexBoardGeometry,
-  resolveHexSpaces,
-} from "../../shared/hex-board.js";
+import { createHexTopology, resolveHexSpaces } from "../../shared/hex-board.js";
 
 export type ManifestAuthoringValidationResult = {
   errors: string[];
@@ -444,7 +441,7 @@ function validateHexBoardVertexRefs(manifest: GameTopologyManifest): string[] {
   for (const board of manifest.boards ?? []) {
     if (board.layout !== "hex") continue;
     try {
-      const geometry = createHexBoardGeometry({
+      const geometry = createHexTopology({
         ...board,
         spaces: resolveHexSpaces(board),
       });

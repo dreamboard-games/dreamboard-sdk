@@ -48,15 +48,17 @@ queries validate actual space membership. Edge and vertex IDs are branded by
 board identity; obtain them through queries instead of constructing strings.
 Per-player instances reuse their base board's topology identities.
 
-`spaceEdges(space)` and `spaceVertices(space)` follow honeycomb's clockwise corner
-order. `edgeAt(space, side)` and `vertexAt(space, corner)` address a boundary
-location using indices 0 through 5. Side N connects corner N to corner (N+1)%6.
-Pointy corner 0 is upper-right; flat corner 0 is upper-right. Shared elements have
-one ID regardless of which incident space is queried. Authored metadata can use
+`spaceEdges(space)` and `spaceVertices(space)` use axial direction order on both
+orientations: `(1,0)`, `(0,1)`, `(-1,1)`, `(-1,0)`, `(0,-1)`, `(1,-1)`.
+Side N faces direction N; corner N lies between directions N and (N+1)%6.
+Side N connects corners (N+5)%6 and N. Relative to the former honeycomb order,
+pointy corner indices move back one; flat corner indices move back two and flat
+side indices move forward one.
+Shared elements have one ID regardless of which incident space is queried. Authored metadata can use
 `ref: { spaces: [a, b] }` / `ref: { spaces: [a, b, c] }`, or boundary refs
 `{ space, side }` / `{ space, corner }`.
 
-`neighbors`, `distance`, `ring`, and `line` use geometry. Distance ignores holes;
+`neighbors`, `ring`, and `line` use geometry. Ring and line ignore holes;
 ring and line return only present cells. `spacesAt(vertex)`, `spacesAlong(edge)`,
 `edgesOf(vertex)`, and `verticesOf(edge)` return exact incidence,
 including boundary cells and holes.
@@ -66,3 +68,18 @@ edge endpoint lines, vertex centers, and `pointToSpace({ x, y })`. Points use
 layout coordinates before any SVG/DOM transform. Hit testing outside the board
 or inside an excluded cell returns `undefined`. These values contain no React or
 interaction eligibility; renderers compose their own visuals and target props.
+
+Hex `distance(a, b)` returns the shortest route through present adjacent spaces,
+or `Infinity` when disconnected. `gridDistance(a, b)` measures the axial lattice
+ignoring missing cells. Edges and vertices use board-prefixed lattice coordinate
+identities, so adding or removing neighbours does not rename existing elements.
+
+Topology caching stores geometry only and compares current board coordinates on
+each lookup. Component state, authored metadata and interaction decoration remain
+owned by the current frame or table. Layout caching retains only the latest size
+and origin; board mutation therefore cannot reuse stale geometry.
+
+Axial coordinates must be safe integers within
+`±Math.floor(Number.MAX_SAFE_INTEGER / 4)`. This conservative bound keeps
+neighbour offsets, cube-coordinate sums and pairwise differences exact;
+unsupported extreme coordinates are rejected before building topology.

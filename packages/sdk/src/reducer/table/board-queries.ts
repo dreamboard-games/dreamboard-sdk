@@ -1,5 +1,8 @@
 import { requireLookup } from "../../shared/lookup.js";
-import { createHexBoardGeometry } from "../../shared/hex-board";
+import {
+  createHexTopology,
+  createHexTopologyCache,
+} from "../../shared/hex-board";
 import type {
   BoardContainerIdOfTable,
   BoardIdOfTable,
@@ -25,21 +28,13 @@ import type {
 } from "../model";
 import { orderedComponentIdsForLocation } from "./internal";
 
-const hexGeometries = new WeakMap<
-  RuntimeHexBoardState,
-  ReturnType<typeof createHexBoardGeometry>
->();
+const cachedHexTopology = createHexTopologyCache();
 function geometryOf(board: RuntimeHexBoardState) {
-  let geometry = hexGeometries.get(board);
-  if (!geometry) {
-    geometry = createHexBoardGeometry({
-      id: board.baseId ?? board.id,
-      orientation: board.orientation,
-      spaces: Object.values(board.spaces),
-    });
-    hexGeometries.set(board, geometry);
-  }
-  return geometry;
+  return cachedHexTopology({
+    id: board.baseId ?? board.id,
+    orientation: board.orientation,
+    spaces: Object.values(board.spaces),
+  });
 }
 
 export function getBoard<
@@ -746,10 +741,7 @@ type CommonBoardQueries<
   containerOccupants(id: keyof Board["containers"] & string): ComponentId[];
 };
 type HexQueries<Board extends RuntimeBoardState> = ReturnType<
-  typeof createHexBoardGeometry<
-    Extract<Board["baseId"], string>,
-    SpaceId<Board>
-  >
+  typeof createHexTopology<Extract<Board["baseId"], string>, SpaceId<Board>>
 >;
 export type BoundBoardQueries<
   Board extends RuntimeBoardState,
