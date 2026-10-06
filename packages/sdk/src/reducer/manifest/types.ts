@@ -559,7 +559,6 @@ export type CompiledManifest<M> = Omit<
   ids: {
     [K in keyof ManifestIdsOf<M>]: ManifestIdSchema<ManifestIdsOf<M>[K], K>;
   };
-  schemas: { table: z.ZodType<ManifestTable<M>>; runtime: z.ZodTypeAny };
   createInitialTable(options: {
     playerIds: readonly string[];
     shuffleItems?: <V>(values: readonly V[]) => V[];

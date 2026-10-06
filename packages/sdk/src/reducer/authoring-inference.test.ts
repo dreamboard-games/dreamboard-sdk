@@ -98,8 +98,6 @@ function createModel() {
         resources: () => Object.fromEntries([].map((id) => [id, {}])),
       },
       tableSchema: z.custom<RuntimeTableRecord>(),
-      runtimeSchema: z.any(),
-      createGameStateSchema: () => z.any(),
     },
     state: {
       public: z.object({

@@ -14,7 +14,7 @@ import {
  * Canonical set of manifest-scoped id field names. `defineGameContract`
  * uses this list to reject state schemas that describe one of these fields
  * with a raw `z.string()` instead of the corresponding branded enum from
- * `manifest.ids.*` (or `gameContract.schemas.*`).
+ * `manifest.ids.*`.
  *
  * The rule of thumb is "one way to do things": if a field *is* a player id,
  * card id, zone id, etc. in the manifest, the authored state schema must
@@ -181,7 +181,7 @@ export function validateStateSchemaIdBranding(
         throw new Error(
           `defineGameContract: state.${scope}.${key} uses a raw z.string() ` +
             `but its name identifies it as a manifest-scoped '${match.name}'. ` +
-            `Use gameContract.schemas.${match.name} (or manifest.ids.${match.name}) ` +
+            `Use manifest.ids.${match.name} ` +
             `so the branded literal union flows through state types.`,
         );
       }
@@ -194,8 +194,7 @@ export function validateStateSchemaIdBranding(
         throw new Error(
           `defineGameContract: state.${scope}.${key} uses z.array(z.string()) ` +
             `but its name identifies it as manifest-scoped '${match.name}' values. ` +
-            `Use z.array(gameContract.schemas.${match.name}) ` +
-            `(or manifest.ids.${match.name}) so the branded literal union flows through state types.`,
+            `Use z.array(manifest.ids.${match.name}) so the branded literal union flows through state types.`,
         );
       }
     }

@@ -142,8 +142,6 @@ const manifest = {
     resources: () => testPlayerRecord<RuntimeRecord>(),
   },
   tableSchema: z.custom<TestTable>(),
-  runtimeSchema: z.any(),
-  createGameStateSchema: () => z.any(),
 } satisfies ReducerManifestContract<
   TestTable,
   (typeof phaseNames)[number],

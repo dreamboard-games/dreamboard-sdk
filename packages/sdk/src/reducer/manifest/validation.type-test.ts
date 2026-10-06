@@ -59,10 +59,7 @@ const {
   boardDefinitions,
   tileDefinitions,
   tableSchema,
-  runtimeSchema,
-  createGameStateSchema,
   records,
-  schemas,
   createInitialTable,
 } = compiled;
 // @ts-expect-error A structural reconstruction does not carry compilation proof.
@@ -74,10 +71,7 @@ const forged: CompiledManifest<typeof base> = {
   boardDefinitions,
   tileDefinitions,
   tableSchema,
-  runtimeSchema,
-  createGameStateSchema,
   records,
-  schemas,
   createInitialTable,
 };
 void forged;

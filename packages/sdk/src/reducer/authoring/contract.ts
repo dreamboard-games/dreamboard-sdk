@@ -8,10 +8,7 @@ import type {
   SchemaLike,
   StateDefinition,
 } from "../model";
-import {
-  type ManifestIdSchemasOf,
-  validateStateSchemaIdBranding,
-} from "./validation";
+import { validateStateSchemaIdBranding } from "./validation";
 
 /**
  * Narrows a manifest's `literals.phaseNames` and `ids.phaseName` to the
@@ -88,12 +85,6 @@ export type DefinedGameContract<
   readonly phases: Phases;
   readonly errors: Errors;
   readonly phaseNames: readonly (keyof Phases & string)[];
-  readonly schemas: ManifestIdSchemasOf<
-    NarrowManifestPhaseNames<
-      Manifest,
-      readonly (keyof Phases & string)[]
-    >["ids"]
-  >;
 };
 
 function validateErrorMap(errors: Record<string, string> | undefined): void {
@@ -212,7 +203,6 @@ export function defineGameContract<
     errors: definition.errors,
     options: optionsSchema,
     phaseNames,
-    schemas: narrowedManifest.ids,
   } as DefinedGameContract<
     Table,
     Manifest,

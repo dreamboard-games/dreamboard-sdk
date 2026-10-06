@@ -1,6 +1,4 @@
-import { RuntimeJsonSchema } from "../../shared/runtime-json";
 import type { RuntimeRecord } from "./table";
-import * as ContractZod from "../../shared/runtime-schema";
 import * as z from "zod";
 import type {
   AnySchema,
@@ -134,14 +132,6 @@ export type ReducerManifestContract<
    */
   normalSetup?: ManifestNormalSetup<Table>;
   tableSchema: z.ZodType<Table>;
-  runtimeSchema: AnySchema;
-  createGameStateSchema: (config: {
-    phaseNameSchema: AnySchema;
-    publicSchema: AnySchema;
-    privateSchema: AnySchema;
-    hiddenSchema: AnySchema;
-    phasesSchema: AnySchema;
-  }) => AnySchema;
 };
 
 export type ReducerManifestContractLike<
@@ -251,125 +241,6 @@ export function assumeManifestSchema<Output>(
   schema: z.ZodTypeAny,
 ): z.ZodType<Output> {
   return schema as z.ZodType<Output>;
-}
-
-export function cloneManifestDefault<Value>(value: Value): Value {
-  if (typeof globalThis.structuredClone === "function") {
-    return globalThis.structuredClone(value);
-  }
-  return JSON.parse(JSON.stringify(value)) as Value;
-}
-
-export function resolveManifestPlayerIds<PlayerId extends string>(
-  manifestPlayerIds: readonly PlayerId[],
-  playerIds: readonly string[] | undefined,
-): readonly PlayerId[] {
-  if (!playerIds || playerIds.length === 0) {
-    return manifestPlayerIds;
-  }
-
-  const knownPlayerIds = new Set<string>(manifestPlayerIds);
-  return playerIds.filter((playerId): playerId is PlayerId =>
-    knownPlayerIds.has(playerId),
-  );
-}
-
-export function createManifestRuntimeSchema<
-  PhaseNameSchema extends z.ZodTypeAny,
-  PlayerId extends string,
->({
-  phaseNameSchema,
-  playerIdSchema,
-}: {
-  phaseNameSchema: PhaseNameSchema;
-  playerIdSchema: z.ZodType<PlayerId>;
-}) {
-  return z.object({
-    events: z.array(ContractZod.GameEventSchema).max(32),
-    rng: z
-      .object({
-        seed: z.number().nullable().optional(),
-        cursor: z.number().int().default(0),
-        trace: z.array(z.string()).default([]),
-        draws: z.array(ContractZod.RngDrawSchema).default([]),
-      })
-      .default({
-        seed: null,
-        cursor: 0,
-        trace: [],
-        draws: [],
-      }),
-    options: z.record(z.string(), RuntimeJsonSchema).default({}),
-    simultaneous: z
-      .object({
-        current: z
-          .object({
-            phaseName: phaseNameSchema,
-            actors: z.array(playerIdSchema),
-            submissions: z.record(
-              z.string(),
-              z.object({
-                interactionId: z.string(),
-                params: z.unknown(),
-              }),
-            ),
-          })
-          .nullable(),
-      })
-      .default({ current: null }),
-    lastTransition: z
-      .object({
-        from: phaseNameSchema,
-        to: phaseNameSchema,
-      })
-      .nullable()
-      .default(null),
-    nextInstanceId: z.number().int().default(1),
-  });
-}
-
-export function createManifestGameStateSchema<
-  Table extends RuntimeTableRecord,
-  PhaseNameSchema extends z.ZodTypeAny,
-  PublicSchema extends z.ZodTypeAny,
-  PrivateSchema extends z.ZodTypeAny,
-  HiddenSchema extends z.ZodTypeAny,
-  PhasesSchema extends z.ZodTypeAny,
-  PlayerId extends string,
->({
-  tableSchema,
-  playerIdSchema,
-  phaseNameSchema,
-  publicSchema,
-  privateSchema,
-  hiddenSchema,
-  phasesSchema,
-}: {
-  tableSchema: z.ZodType<Table>;
-  playerIdSchema: z.ZodType<PlayerId>;
-  phaseNameSchema: PhaseNameSchema;
-  publicSchema: PublicSchema;
-  privateSchema: PrivateSchema;
-  hiddenSchema: HiddenSchema;
-  phasesSchema: PhasesSchema;
-}) {
-  return z.object({
-    table: tableSchema,
-    public: publicSchema,
-    private: z.record(z.string(), privateSchema),
-    hidden: hiddenSchema,
-    flow: z.object({
-      currentPhase: phaseNameSchema,
-      turn: z.number().int(),
-      round: z.number().int(),
-      activePlayers: z.array(playerIdSchema),
-    }),
-    phase: phasesSchema,
-    runtime: createManifestRuntimeSchema({
-      phaseNameSchema,
-      playerIdSchema,
-    }),
-  });
 }
 
 // --- State Definition ---
