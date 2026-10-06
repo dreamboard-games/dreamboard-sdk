@@ -18,7 +18,7 @@ import { collectInteractionInputs } from "./bundle/trusted/collector-domains";
 describe("interaction input projection", () => {
   test("rejects domainless form collectors instead of emitting opaque inputs", () => {
     const interaction = {
-      reduce() {},
+      reduce: () => undefined,
       inputs: {
         // This shape is no longer constructible through public formInput
         // helpers, but projection still owns the runtime invariant.
@@ -41,7 +41,7 @@ describe("interaction input projection", () => {
 
   test("projected default form inputs are explicit renderable domains", () => {
     const interaction = {
-      reduce() {},
+      reduce: () => undefined,
       inputs: {
         mode: formInput.choice({
           choices: [{ value: "fast", label: "Fast" }],
@@ -77,7 +77,7 @@ describe("interaction input projection", () => {
 
     expect(
       collectInteractionInputs(
-        { inputs: { bonus: nullableChoice }, reduce() {} },
+        { inputs: { bonus: nullableChoice }, reduce: () => undefined },
         createInputTestState(),
         "player-1",
         { definitions: inputDefinitions },
@@ -100,7 +100,7 @@ describe("interaction input projection", () => {
 
   test("projected choice list inputs preserve an empty list default", () => {
     const interaction = {
-      reduce() {},
+      reduce: () => undefined,
       inputs: {
         selectedCardIds: formInput.choiceList({
           choices: [{ value: "card-a", label: "Card A" }],
@@ -149,7 +149,7 @@ describe("interaction input projection", () => {
 
     expect(
       collectInteractionInputs(
-        { inputs, reduce() {} },
+        { inputs, reduce: () => undefined },
         createInputTestState(),
         "player-1",
         { definitions: inputDefinitions },
@@ -205,7 +205,7 @@ function projectCurrent(
     ? { [evaluated.current.key]: evaluated.current.collector }
     : {};
   return collectInteractionInputs(
-    { inputs, reduce() {} },
+    { inputs, reduce: () => undefined },
     stepState,
     "player-1",
     { definitions: inputDefinitions },

@@ -2,7 +2,6 @@ import type { StepDefinition } from "../../authoring/steps";
 import type { RuntimeTableRecord, SchemaLike } from "../table";
 import type { ManifestContract } from "../manifest";
 import type { PlayerIdOfState, TableOfState } from "../extract";
-import type { ReducerResult } from "../runtime";
 import type {
   ActionContext,
   ActorSelector,
@@ -175,7 +174,7 @@ export type InteractionSpec<
   >[];
   reduce: BivariantCallback<
     InteractionReduceArgs<Collectors, State, Manifest, ErrorCode>,
-    ReducerResult<State> | void
+    undefined
   >;
 };
 

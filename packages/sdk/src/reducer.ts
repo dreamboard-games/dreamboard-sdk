@@ -65,9 +65,6 @@ export {
   createStateQueries,
 } from "./reducer/table-queries";
 export type {
-  ReducerAccept,
-  ReducerReject,
-  ReducerResult,
   TableQueries,
   TableQueriesOfState,
   GameOutcome,

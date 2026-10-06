@@ -22,7 +22,7 @@ const domainState = createInputTestState();
 
 function finiteFormInteraction(options: { allBlocked?: boolean } = {}) {
   return {
-    reduce() {},
+    reduce: () => undefined,
     inputs: {
       mode: formInput.choice({
         choices: [{ value: "beta", label: "Beta" }],
@@ -161,7 +161,7 @@ describe("trusted collector input solver", () => {
 
   test("distinguishes opaque and unbounded domains from proven emptiness", () => {
     const opaqueInteraction = {
-      reduce() {},
+      reduce: () => undefined,
       inputs: {},
       paramsSchema: z.object({ answer: z.string() }),
     };
@@ -175,7 +175,7 @@ describe("trusted collector input solver", () => {
     ).toEqual({ status: "notEnumerable" });
 
     const unboundedInteraction = {
-      reduce() {},
+      reduce: () => undefined,
       inputs: {
         tags: many(
           formInput.choice({
@@ -244,7 +244,10 @@ describe("trusted collector input solver", () => {
         })
         .build(),
     });
-    const interaction = { inputs: { playerSpace, card }, reduce() {} };
+    const interaction = {
+      inputs: { playerSpace, card },
+      reduce: () => undefined,
+    };
     const enumeration = enumerateCollectorInputAssignments({
       interaction: interaction,
       domainState,

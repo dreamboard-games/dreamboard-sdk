@@ -1,3 +1,4 @@
+import { finishReducerTransaction } from "../../transaction";
 import type { ReducerTransaction, ReducerEdit } from "../../transaction";
 import { createStateQueries } from "../../table-queries";
 import type {
@@ -7,7 +8,7 @@ import type {
   ReducerGameContractLike,
   RuntimeTableRecord,
   ZoneDefinitions,
-  ReducerAccept,
+  ReducerResult,
   TableQueriesOfState,
 } from "../../model";
 import type {
@@ -55,26 +56,26 @@ const DISABLED_RANDOM_HELPERS: RandomHelpers = {
   },
 };
 
-const implicitResultSymbol = Symbol("dreamboard.implicitResult");
+const transactionResultSymbol = Symbol("dreamboard.transactionResult");
 
 export type RuntimeArgsWithTransaction<
   DomainState extends { table: RuntimeTableRecord },
   Definitions extends ZoneDefinitions,
 > = {
   tx: ReducerTransaction<DomainState, string, Definitions>;
-  [implicitResultSymbol]: () => ReducerAccept<DomainState>;
+  [transactionResultSymbol]: () => ReducerResult<DomainState>;
 };
 
 /**
- * Preserve the complete transaction on a bare return, without opening a
+ * Capture the complete transaction after the callback returns, without opening a
  * transaction when the callback never used one.
  */
-export function implicitResultOf<
+export function transactionResultOf<
   DomainState extends { table: RuntimeTableRecord },
 >(args: {
-  [implicitResultSymbol]: () => ReducerAccept<DomainState>;
-}): ReducerAccept<DomainState> {
-  return args[implicitResultSymbol]();
+  [transactionResultSymbol]: () => ReducerResult<DomainState>;
+}): ReducerResult<DomainState> {
+  return args[transactionResultSymbol]();
 }
 
 export function buildRuntimeArgs<
@@ -124,11 +125,11 @@ export function buildRuntimeArgs<
       return (transaction ??= createTransaction(domainState, options.random));
     },
   });
-  Object.defineProperty(args, implicitResultSymbol, {
+  Object.defineProperty(args, transactionResultSymbol, {
     enumerable: false,
     value: () =>
       transaction
-        ? transaction.accept()
+        ? finishReducerTransaction(transaction)
         : { type: "accept", state: domainState, events: [] },
   });
   return args as typeof args &

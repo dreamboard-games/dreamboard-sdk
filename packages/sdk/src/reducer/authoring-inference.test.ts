@@ -103,7 +103,7 @@ describe("createGame", () => {
                 }),
                 dice: playerTurn.inputs.rng.d6(),
               },
-              reduce: () => {},
+              reduce: () => undefined,
             }),
           },
         }),
@@ -139,7 +139,7 @@ describe("bound game authoring", () => {
           defaultValue: "ready",
         }),
       },
-      reduce: () => {},
+      reduce: () => undefined,
     };
     expect(playerTurn.interaction(spec)).toBe(spec);
   });
@@ -168,7 +168,7 @@ describe("bound game authoring", () => {
             }),
             dice: playerTurn.inputs.rng.d6(),
           },
-          reduce: () => {},
+          reduce: () => undefined,
         }),
       },
     });
