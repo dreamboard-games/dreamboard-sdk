@@ -6,13 +6,34 @@ import manifest from "../../../examples/reference-games/hex-network-trading/mani
 export const contract = compileManifest(manifest);
 ```
 
-The manifest owns identities, card metadata, zones and static board geometry. Hex topology uses canonical space/edge/vertex identities and shared layout math; generic and square boards use inline data, with no template identity or merging. Static boards enter frame.view.boards through the canonical materializer. See the real Hex manifest and geometry guide for authored shapes.
+The manifest owns identities, card metadata, zones and static board geometry. Hex topology uses canonical space/edge/vertex identities and shared layout math; generic and square boards use inline data, with no template identity or merging. The SDK projects current board instances into each seat's `boards` collection. The frame materializer exposes that collection as `frame.view.boards`; authored views cannot overwrite it. See the real Hex manifest and geometry guide for authored shapes.
 
 Inferred tables preserve each card, piece, and die's runtime ID, authored type,
 and property schema. Component IDs are the union of those inventories, so
 component queries and movement commands reject unknown IDs at compile time.
-Board scope and space IDs stay literal; per-player runtime board IDs remain
-patterns whose actual player membership is checked at runtime.
+Board scope and space IDs stay literal. Per-player board, card, piece and die IDs
+carry exact family and expanded seed-base types. The shared identity codec owns
+encoding and parsing; active roster and inventory membership are checked separately.
+
+A card or piece/die seed with `scope: "perPlayer"` creates one copy per actual
+session seat. It starts with that seat as owner; shared components start unowned.
+Manifests do not contain `ownerId` or `visibility.visibleTo`. Replication is not a
+privacy policy, and changing ownership later never changes an instance's ID.
+A per-player seed's home resolves on its replication-origin seat, including a
+per-player zone or board. A shared seed cannot choose a player's home implicitly;
+place it during reducer setup.
+
+`contract.createInitialTable({ playerIds })` requires an explicit roster. Pass
+`[]` explicitly for static geometry tooling; session initialization supplies the
+real roster. `maxPlayers` constrains session size and never invents runtime IDs.
+Static board data contains shared boards only. Use the actual table inventories
+for runtime enumeration.
+
+Instance record factories also require the roster, for example
+`contract.records.pieceIds(0, { playerIds })`. Declaration record factories,
+such as `records.pieceTypeIds(0)`, do not. Player IDs must be nonempty and unique;
+`__proto__` is reserved because record parsers do not preserve that key.
+Names such as `constructor`, `toString` and `table` remain valid player IDs.
 
 Card `frontImage` and `backImage` are repository paths under `assets/`, such as
 `assets/cards/queen-of-fire.webp`. Hosts publish those files with the game and
@@ -93,8 +114,8 @@ compositions are outside the portable subset.
 `ref` exposes `cardId`, `zoneId`, `playerId`, `boardId`, `spaceId`, `edgeId`,
 `vertexId`, `pieceId`, `dieId` and `resourceId`. The markers preserve ID families
 inside nested fields, arrays and records. Board-owned schemas resolve spaces,
-edges and vertices within that board. Manifest validation checks static inventory
-and topology; player IDs and instantiated board IDs require the session roster.
-Table validation resolves those against the active session. Future roster-derived
-inventory and changing topology must supply a fresh session reference context,
-rather than caching manifest-time ID enums as permanent membership.
+edges and vertices within that board. Manifest validation checks declared bases and static topology. Player IDs and
+replicated inventory references require the actual session roster. Table validation
+resolves these against current inventory membership; successful identity decoding
+alone is not admission. Changing topology must supply a fresh session reference
+context rather than cache manifest-time ID enums as permanent membership.

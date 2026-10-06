@@ -227,13 +227,13 @@ function Control({ control, label }: { control: InputControl; label: string }) {
     );
   }
   return (
-    <fieldset className="grid gap-2" disabled={control.disabled}>
+    <fieldset className="grid min-w-0 gap-2" disabled={control.disabled}>
       <legend>{label}</legend>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex min-w-0 flex-wrap gap-2">
         {control.options.map((option, index) => (
           <Button
             variant="outline"
-            className="min-h-11 rounded-full px-4 aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-foreground"
+            className="h-auto min-h-11 max-w-full rounded-full px-4 py-2 break-all whitespace-normal aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-foreground"
             key={index}
             {...option.props}
             aria-pressed={option.selected}

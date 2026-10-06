@@ -1,4 +1,5 @@
 import { compileManifest } from "./compiler";
+import { perPlayerInstanceId } from "../../shared/domain/per-player-instance";
 import * as z from "zod";
 import { expect, test } from "vitest";
 import type { GameTopologyManifest } from "../../shared/domain/manifest.js";
@@ -111,18 +112,16 @@ test("materializeManifestTable keeps runtime board topology board-local", () => 
   expect(Object.keys(table.boards.byId["board-b"].spaces)).toEqual(["b-1"]);
   expect(table.boards.byId["board-a"].spaces).not.toHaveProperty("b-1");
   expect(table.boards.byId["board-b"].containers).not.toHaveProperty("a-row");
-  expect(
-    Object.keys(table.boards.byId["player-board:player-1"].spaces),
-  ).toEqual(["player-space"]);
-  expect(
-    Object.keys(table.boards.byId["player-board:player-2"].containers),
-  ).toEqual(["player-row"]);
-  expect(table.boards.byId["player-board:player-1"].spaces).not.toBe(
-    table.boards.byId["player-board:player-2"].spaces,
+  const firstBoard =
+    table.boards.byId[perPlayerInstanceId("board", "player-board", "player-1")];
+  const secondBoard =
+    table.boards.byId[perPlayerInstanceId("board", "player-board", "player-2")];
+  expect(Object.keys(firstBoard.spaces)).toEqual(["player-space"]);
+  expect(Object.keys(secondBoard.containers)).toEqual(["player-row"]);
+  expect(firstBoard.spaces).not.toBe(secondBoard.spaces);
+  expect(firstBoard.spaces["player-space"]).not.toBe(
+    secondBoard.spaces["player-space"],
   );
-  expect(
-    table.boards.byId["player-board:player-1"].spaces["player-space"],
-  ).not.toBe(table.boards.byId["player-board:player-2"].spaces["player-space"]);
 });
 
 test("materializeManifestTable assigns every accepted shared card home explicitly", () => {

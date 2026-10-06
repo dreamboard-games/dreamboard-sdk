@@ -28,7 +28,7 @@ export {
   type ChoiceTargetOption,
   type ChoiceTargetPredicate,
   type ManyOptions,
-  type PlayerBoardSpaceTarget,
+  type BoardSpaceTarget,
   type TargetContext,
   type TargetPredicate,
   type TargetPredicateArgs,
@@ -138,3 +138,10 @@ export type {
   FieldsInput,
   FieldsOutput,
 } from "./reducer/manifest/field-schemas";
+
+export {
+  perPlayerInstanceId,
+  parsePerPlayerInstanceId,
+  type PerPlayerInstanceId,
+  type PerPlayerInstanceFamily,
+} from "./shared/domain/per-player-instance.js";

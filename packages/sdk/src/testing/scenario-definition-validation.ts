@@ -1,3 +1,4 @@
+import { resolvePlayerRoster } from "./player-roster.js";
 import type {
   AnyReducerGameDefinition,
   ReducerGameContractLike,
@@ -297,17 +298,6 @@ function assertJsonSerializable(
   ancestors.delete(value);
 }
 
-function playerIdsForDefinition(
-  game: Pick<AnyReducerGameDefinition, "contract">,
-  players: number,
-): readonly string[] {
-  const declared = game.contract.manifest.literals.playerIds;
-  return Array.from(
-    { length: players },
-    (_, index) => declared[index] ?? `player-${index + 1}`,
-  );
-}
-
 function commandSchemas<Contract extends ReducerGameContractLike>(
   game: AnyReducerGameDefinition<Contract>,
   interactionId: string,
@@ -524,7 +514,7 @@ export function validateScenarioDefinition<
 
   validateCheckpoints(definition);
 
-  const playerIds = playerIdsForDefinition(game, players);
+  const playerIds = resolvePlayerRoster(game, players);
   definition.given.forEach((command, index) =>
     validateCommand({
       game,

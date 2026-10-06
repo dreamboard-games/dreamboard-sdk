@@ -116,60 +116,50 @@ type TypedDieSlotHostSeed<Manifest extends GameTopologyManifest> =
       : never
     : never;
 
-type TypedPieceSlotHomeSpec<Manifest extends GameTopologyManifest> =
-  TypedPieceSlotHostSeed<Manifest> extends infer Seed
-    ? Seed extends {
-        id: infer HostId extends string;
-        typeId: infer CurrentTypeId extends PieceTypeId<Manifest>;
+type TypedPieceSlotHomeSpec<
+  Manifest extends GameTopologyManifest,
+  Shared extends boolean = false,
+> = (
+  Shared extends true
+    ? Exclude<TypedPieceSlotHostSeed<Manifest>, { scope: "perPlayer" }>
+    : TypedPieceSlotHostSeed<Manifest>
+) extends infer Seed
+  ? Seed extends {
+      id: infer HostId extends string;
+      typeId: infer CurrentTypeId extends PieceTypeId<Manifest>;
+    }
+    ? {
+        type: "slot";
+        host: {
+          kind: "piece";
+          id: HostId;
+        };
+        slotId: SlotIdForPieceType<Manifest, CurrentTypeId>;
       }
-      ? {
-          type: "slot";
-          host: {
-            kind: "piece";
-            id: HostId;
-          };
-          slotId: SlotIdForPieceType<Manifest, CurrentTypeId>;
-        }
-      : never
-    : never;
-type TypedDieSlotHomeSpec<Manifest extends GameTopologyManifest> =
-  TypedDieSlotHostSeed<Manifest> extends infer Seed
-    ? Seed extends {
-        id: infer HostId extends string;
-        typeId: infer CurrentTypeId extends DieTypeId<Manifest>;
+    : never
+  : never;
+type TypedDieSlotHomeSpec<
+  Manifest extends GameTopologyManifest,
+  Shared extends boolean = false,
+> = (
+  Shared extends true
+    ? Exclude<TypedDieSlotHostSeed<Manifest>, { scope: "perPlayer" }>
+    : TypedDieSlotHostSeed<Manifest>
+) extends infer Seed
+  ? Seed extends {
+      id: infer HostId extends string;
+      typeId: infer CurrentTypeId extends DieTypeId<Manifest>;
+    }
+    ? {
+        type: "slot";
+        host: {
+          kind: "die";
+          id: HostId;
+        };
+        slotId: SlotIdForDieType<Manifest, CurrentTypeId>;
       }
-      ? {
-          type: "slot";
-          host: {
-            kind: "die";
-            id: HostId;
-          };
-          slotId: SlotIdForDieType<Manifest, CurrentTypeId>;
-        }
-      : never
-    : never;
-
-type BuildTuple<
-  Length extends number,
-  Accumulator extends unknown[] = [],
-> = Accumulator["length"] extends Length
-  ? Accumulator
-  : BuildTuple<Length, [...Accumulator, unknown]>;
-
-type EnumerateInternal<
-  Length extends number,
-  Accumulator extends number[] = [],
-> = Accumulator["length"] extends Length
-  ? Accumulator[number]
-  : EnumerateInternal<Length, [...Accumulator, Accumulator["length"]]>;
-
-type AddOne<Count extends number> = [...BuildTuple<Count>, unknown]["length"] &
-  number;
-type OneTo<Count extends number> = Exclude<EnumerateInternal<AddOne<Count>>, 0>;
-type PlayerId<Manifest extends GameTopologyManifest> =
-  Manifest["players"]["maxPlayers"] extends infer MaxPlayers extends number
-    ? `player-${OneTo<MaxPlayers>}`
-    : `player-${number}`;
+    : never
+  : never;
 
 type TypedSharedSpaceHomeSpec<Manifest extends GameTopologyManifest> = {
   [CurrentBoardId in SharedBoardId<Manifest>]: {
@@ -250,7 +240,9 @@ type TypedPlayerScopedComponentHomeSpec<Manifest extends GameTopologyManifest> =
   | TypedPerPlayerSpaceHomeSpec<Manifest>
   | TypedPerPlayerContainerHomeSpec<Manifest>
   | TypedPerPlayerEdgeHomeSpec<Manifest>
-  | TypedPerPlayerVertexHomeSpec<Manifest>;
+  | TypedPerPlayerVertexHomeSpec<Manifest>
+  | TypedPieceSlotHomeSpec<Manifest>
+  | TypedDieSlotHomeSpec<Manifest>;
 
 type TypedSharedComponentHomeSpec<Manifest extends GameTopologyManifest> =
   | { type: "detached" }
@@ -259,42 +251,25 @@ type TypedSharedComponentHomeSpec<Manifest extends GameTopologyManifest> =
   | TypedSharedContainerHomeSpec<Manifest>
   | TypedSharedEdgeHomeSpec<Manifest>
   | TypedSharedVertexHomeSpec<Manifest>
-  | TypedPieceSlotHomeSpec<Manifest>
-  | TypedDieSlotHomeSpec<Manifest>;
+  | TypedPieceSlotHomeSpec<Manifest, true>
+  | TypedDieSlotHomeSpec<Manifest, true>;
 
 type TypedComponentHomeSpec<Manifest extends GameTopologyManifest> =
   | TypedSharedComponentHomeSpec<Manifest>
   | TypedPlayerScopedComponentHomeSpec<Manifest>;
 
-type TypedSeedLocationSpec<
+type TypedSeedLocationSpec<Seed, Manifest extends GameTopologyManifest> = Omit<
   Seed,
-  Manifest extends GameTopologyManifest,
-> = Seed extends { home: infer Home }
-  ? Home extends TypedPlayerScopedComponentHomeSpec<Manifest>
-    ? Omit<Seed, "ownerId" | "home"> & {
-        ownerId: PlayerId<Manifest>;
-        home: TypedPlayerScopedComponentHomeSpec<Manifest>;
-      }
-    : Omit<Seed, "ownerId" | "home"> & {
-        ownerId?: PlayerId<Manifest>;
-        home?: TypedComponentHomeSpec<Manifest>;
-      }
-  : Omit<Seed, "ownerId" | "home"> & {
-      ownerId?: PlayerId<Manifest>;
-      home?: TypedComponentHomeSpec<Manifest>;
-    };
-
-type TypedVisibilitySpec<Manifest extends GameTopologyManifest> = {
-  faceUp?: boolean;
-  visibleTo?: readonly PlayerId<Manifest>[];
+  "home"
+> & {
+  home?: Seed extends { scope: "perPlayer" }
+    ? TypedComponentHomeSpec<Manifest>
+    : TypedSharedComponentHomeSpec<Manifest>;
 };
-type TypedVisibility<T, Manifest extends GameTopologyManifest> = T extends {
-  visibility?: unknown;
-}
-  ? Omit<T, "visibility"> & {
-      visibility?: TypedVisibilitySpec<Manifest>;
-    }
-  : T;
+type AuthoredComponent<T> = Omit<T, "ownerId" | "visibility"> & {
+  ownerId?: never;
+  visibility?: { faceUp?: boolean; visibleTo?: never };
+};
 type TypedFields<
   T,
   Schema,
@@ -563,8 +538,10 @@ type TypedCard<
   Manifest extends GameTopologyManifest,
   CardSchema,
 > = Card extends { id: string; cardType: string }
-  ? Omit<TypedVisibility<Card, Manifest>, "home" | "properties"> & {
-      home?: TypedComponentHomeSpec<Manifest>;
+  ? Omit<AuthoredComponent<Card>, "home" | "properties"> & {
+      home?: Card extends { scope: "perPlayer" }
+        ? TypedComponentHomeSpec<Manifest>
+        : TypedSharedComponentHomeSpec<Manifest>;
       properties: CardSchema extends {
         byCardType: infer Variants extends Record<string, unknown>;
       }
@@ -608,8 +585,8 @@ type TypedPieceSeed<
 > = Seed extends { typeId: infer CurrentTypeId }
   ? CurrentTypeId extends PieceTypeId<Manifest>
     ? Omit<
-        TypedSeedLocationSpec<TypedVisibility<Seed, Manifest>, Manifest>,
-        "typeId" | "ownerId" | "home" | "fields"
+        TypedSeedLocationSpec<AuthoredComponent<Seed>, Manifest>,
+        "typeId" | "home" | "fields"
       > & {
         typeId: CurrentTypeId;
         fields?: FieldsInput<
@@ -620,10 +597,7 @@ type TypedPieceSeed<
             : undefined,
           Manifest
         >;
-      } & Pick<
-          TypedSeedLocationSpec<TypedVisibility<Seed, Manifest>, Manifest>,
-          "ownerId" | "home"
-        >
+      } & Pick<TypedSeedLocationSpec<AuthoredComponent<Seed>, Manifest>, "home">
     : Omit<Seed, "typeId"> & {
         typeId: PieceTypeId<Manifest>;
       }
@@ -634,8 +608,8 @@ type TypedDieSeed<Seed, Manifest extends GameTopologyManifest> = Seed extends {
 }
   ? CurrentTypeId extends DieTypeId<Manifest>
     ? Omit<
-        TypedSeedLocationSpec<TypedVisibility<Seed, Manifest>, Manifest>,
-        "typeId" | "ownerId" | "home" | "fields"
+        TypedSeedLocationSpec<AuthoredComponent<Seed>, Manifest>,
+        "typeId" | "home" | "fields"
       > & {
         typeId: CurrentTypeId;
         fields?: FieldsInput<
@@ -646,10 +620,7 @@ type TypedDieSeed<Seed, Manifest extends GameTopologyManifest> = Seed extends {
             : undefined,
           Manifest
         >;
-      } & Pick<
-          TypedSeedLocationSpec<TypedVisibility<Seed, Manifest>, Manifest>,
-          "ownerId" | "home"
-        >
+      } & Pick<TypedSeedLocationSpec<AuthoredComponent<Seed>, Manifest>, "home">
     : Omit<Seed, "typeId"> & {
         typeId: DieTypeId<Manifest>;
       }

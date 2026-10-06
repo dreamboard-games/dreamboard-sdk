@@ -1,3 +1,4 @@
+import type { PerPlayerInstanceId } from "../../shared/domain/per-player-instance.js";
 import { validatedReducerDefinition } from "../model/definition";
 import type { ViewData } from "../model/spec/views";
 import { InteractionSteps } from "./steps";
@@ -28,7 +29,7 @@ import type {
   ViewOfContract,
 } from "../model";
 import type { ScopedPhaseState } from "../model/spec/runtime-args";
-import type { PlayerBoardSpaceTarget, PlayerSpaceInputSchema } from "../inputs";
+import type { BoardSpaceTarget, BoardSpaceInputSchema } from "../inputs";
 import type {
   TargetPredicate,
   TargetRule,
@@ -98,7 +99,7 @@ type PlayerBoardBaseId<Table> = {
 }[BoardIdOfTable<Table>];
 type PlayerBoardRuntimeId<Table, Base extends string> = Extract<
   BoardIdOfTable<Table>,
-  `${Base}:${string}`
+  PerPlayerInstanceId<"board", Base>
 >;
 type BoundBoardInputs<Contract extends ContractWithPhases> = {
   vertex<B extends TiledBoardIdOfTable<BoundTable<Contract>>>(
@@ -153,26 +154,24 @@ type BoundBoardInputs<Contract extends ContractWithPhases> = {
     boardId: B;
     where?: BoundWhere<
       Contract,
-      PlayerBoardSpaceTarget<
-        NoInfer<B>,
+      BoardSpaceTarget<
+        PerPlayerInstanceId<"board", NoInfer<B>>,
         SpaceIdOfTable<
           BoundTable<Contract>,
           PlayerBoardRuntimeId<BoundTable<Contract>, NoInfer<B>>
-        >,
-        PlayerIdOfState<BoundState<Contract>>
+        >
       >
     >;
   }): InputCollector<
-    PlayerSpaceInputSchema<B>,
+    BoardSpaceInputSchema,
     BoundState<Contract>,
     "board-space",
-    PlayerBoardSpaceTarget<
-      B,
+    BoardSpaceTarget<
+      PerPlayerInstanceId<"board", B>,
       SpaceIdOfTable<
         BoundTable<Contract>,
         PlayerBoardRuntimeId<BoundTable<Contract>, B>
-      >,
-      PlayerIdOfState<BoundState<Contract>>
+      >
     >
   >;
 };

@@ -1,15 +1,15 @@
 import {
-  isPlayerBoardSpaceTarget,
-  samePlayerBoardSpaceTarget,
-  type PlayerBoardSpaceTarget,
+  perPlayerInstanceId,
+  type PerPlayerInstanceId,
+} from "../../shared/domain/per-player-instance.js";
+import {
+  isBoardSpaceTarget,
+  sameBoardSpaceTarget,
+  type BoardSpaceTarget,
 } from "../../shared/board-target";
-export type { PlayerBoardSpaceTarget } from "../../shared/board-target";
+export type { BoardSpaceTarget } from "../../shared/board-target";
 import type { CollectorState, TargetKind } from "../model/spec";
-import type {
-  PlayerIdOfState,
-  BoardIdOfTable,
-  TableOfState,
-} from "../model/extract";
+import type { BoardIdOfTable, TableOfState } from "../model/extract";
 import type { TableQueriesOfState } from "../model/queries";
 import {
   createTargetRule,
@@ -26,27 +26,67 @@ export type BoardTargetPredicate<
 
 type BoardTargetKind = Exclude<TargetKind, "card">;
 
+export type BoardIdTargetRule<
+  State extends CollectorState,
+  Id extends string,
+  Kind extends BoardTargetKind = BoardTargetKind,
+> = TargetRule<State, Id> & {
+  readonly targetKind: Kind;
+  readonly boardId: string;
+  readonly valueKind: "board-id";
+};
+export type BoardSpaceTargetRule<
+  State extends CollectorState,
+  BoardId extends string,
+  SpaceId extends string,
+> = TargetRule<
+  State,
+  BoardSpaceTarget<PerPlayerInstanceId<"board", BoardId>, SpaceId>
+> & {
+  readonly targetKind: "space";
+  readonly boardBaseId: BoardId;
+  readonly valueKind: "board-space";
+};
 export type BoardTargetRule<
   State extends CollectorState,
   Target,
   Kind extends BoardTargetKind = BoardTargetKind,
-> = TargetRule<State, Target> & {
-  readonly boardId: Target extends PlayerBoardSpaceTarget<
-    infer BoardId,
-    string,
-    string
-  >
-    ? BoardId
-    : string;
-  readonly targetKind: Kind;
-  readonly valueKind: Target extends string ? "board-id" : "player-board-space";
-};
-
+> = TargetRule<State, Target> &
+  (Target extends string
+    ? {
+        readonly targetKind: Kind;
+        readonly boardId: string;
+        readonly valueKind: "board-id";
+      }
+    : Target extends BoardSpaceTarget<
+          PerPlayerInstanceId<"board", infer BoardId>,
+          string
+        >
+      ? {
+          readonly targetKind: "space";
+          readonly boardBaseId: BoardId;
+          readonly valueKind: "board-space";
+        }
+      : never);
 export type BoardTargetBuilder<
   State extends CollectorState,
   Target,
   Kind extends BoardTargetKind = BoardTargetKind,
 > = TargetRuleBuilder<State, Target, BoardTargetRule<State, Target, Kind>>;
+type BoardIdTargetBuilder<
+  State extends CollectorState,
+  Id extends string,
+  Kind extends BoardTargetKind,
+> = TargetRuleBuilder<State, Id, BoardIdTargetRule<State, Id, Kind>>;
+type BoardSpaceTargetBuilder<
+  State extends CollectorState,
+  BoardId extends string,
+  SpaceId extends string,
+> = TargetRuleBuilder<
+  State,
+  BoardSpaceTarget<PerPlayerInstanceId<"board", BoardId>, SpaceId>,
+  BoardSpaceTargetRule<State, BoardId, SpaceId>
+>;
 
 function candidateIdsForKind<State extends CollectorState, Id extends string>(
   q: TableQueriesOfState<State>,
@@ -73,8 +113,8 @@ function createBoardTargetBuilder<
   State extends CollectorState,
   Id extends string,
   Kind extends BoardTargetKind,
->(targetKind: Kind, boardId: string): BoardTargetBuilder<State, Id, Kind> {
-  return createTargetRuleBuilder<State, Id, BoardTargetRule<State, Id, Kind>>(
+>(targetKind: Kind, boardId: string): BoardIdTargetBuilder<State, Id, Kind> {
+  return createTargetRuleBuilder<State, Id, BoardIdTargetRule<State, Id, Kind>>(
     (predicates) => ({
       ...createTargetRule(
         ({ q }) => candidateIdsForKind<State, Id>(q, boardId, targetKind),
@@ -86,46 +126,38 @@ function createBoardTargetBuilder<
           },
         },
       ),
-      boardId: boardId as BoardTargetRule<State, Id>["boardId"],
+      boardId,
       targetKind,
-      valueKind: "board-id" as BoardTargetRule<State, Id>["valueKind"],
+      valueKind: "board-id",
     }),
   );
 }
 
-function createPlayerSpaceTargetBuilder<
+function createPerPlayerBoardSpaceTargetBuilder<
   State extends CollectorState,
   BoardId extends string,
   SpaceId extends string,
->(
-  boardId: BoardId,
-): BoardTargetBuilder<
-  State,
-  PlayerBoardSpaceTarget<BoardId, SpaceId, PlayerIdOfState<State>>,
-  "space"
-> {
-  type Target = PlayerBoardSpaceTarget<
-    BoardId,
-    SpaceId,
-    PlayerIdOfState<State>
+>(boardId: BoardId): BoardSpaceTargetBuilder<State, BoardId, SpaceId> {
+  type Target = BoardSpaceTarget<
+    PerPlayerInstanceId<"board", BoardId>,
+    SpaceId
   >;
   return createTargetRuleBuilder<
     State,
     Target,
-    BoardTargetRule<State, Target, "space">
+    BoardSpaceTargetRule<State, BoardId, SpaceId>
   >((predicates) => ({
     ...createTargetRule(
       ({ state, q }) => {
         const spacesForPlayer = (playerId: string): readonly SpaceId[] =>
           candidateIdsForKind<State, SpaceId>(
             q,
-            `${boardId}:${playerId}`,
+            perPlayerInstanceId("board", boardId, playerId),
             "space",
           );
         return state.table.playerOrder.flatMap((playerId) =>
           spacesForPlayer(playerId).map((spaceId) => ({
-            boardId,
-            playerId: playerId as PlayerIdOfState<State>,
+            boardId: perPlayerInstanceId("board", boardId, playerId),
             spaceId,
           })),
         );
@@ -137,14 +169,14 @@ function createPlayerSpaceTargetBuilder<
           message: "Board target is not eligible.",
         },
         equals: (left, right) =>
-          isPlayerBoardSpaceTarget(left) &&
-          isPlayerBoardSpaceTarget(right) &&
-          samePlayerBoardSpaceTarget(left, right),
+          isBoardSpaceTarget(left) &&
+          isBoardSpaceTarget(right) &&
+          sameBoardSpaceTarget(left, right),
       },
     ),
-    boardId: boardId as BoardTargetRule<State, Target>["boardId"],
+    boardBaseId: boardId,
     targetKind: "space",
-    valueKind: "player-board-space",
+    valueKind: "board-space",
   }));
 }
 
@@ -153,7 +185,7 @@ function makeBoardTargetFactory<Kind extends BoardTargetKind>(
 ) {
   return function target<State extends CollectorState, Id extends string>(
     boardId: string,
-  ): BoardTargetBuilder<State, Id, Kind> {
+  ): BoardIdTargetBuilder<State, Id, Kind> {
     return createBoardTargetBuilder<State, Id, Kind>(targetKind, boardId);
   };
 }
@@ -167,13 +199,9 @@ export const boardTarget = {
     State extends CollectorState,
     BoardId extends string,
     SpaceId extends string,
-  >(
-    boardId: BoardId,
-  ): BoardTargetBuilder<
-    State,
-    PlayerBoardSpaceTarget<BoardId, SpaceId, PlayerIdOfState<State>>,
-    "space"
-  > {
-    return createPlayerSpaceTargetBuilder<State, BoardId, SpaceId>(boardId);
+  >(boardId: BoardId): BoardSpaceTargetBuilder<State, BoardId, SpaceId> {
+    return createPerPlayerBoardSpaceTargetBuilder<State, BoardId, SpaceId>(
+      boardId,
+    );
   },
 };

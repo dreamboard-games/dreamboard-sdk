@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
+import { perPlayerInstanceId } from "../shared/domain/per-player-instance";
 import {
   asPlayerId,
   boardRef,
@@ -20,8 +21,10 @@ describe("PlayerId brand", () => {
     expect(branded).toBe("player-1");
   });
 
-  test("isPlayerId narrows non-empty strings", () => {
+  test("isPlayerId admits record-safe nonempty player keys", () => {
     expect(isPlayerId("player-1")).toBe(true);
+    expect(isPlayerId("constructor")).toBe(true);
+    expect(isPlayerId("__proto__")).toBe(false);
     expect(isPlayerId("")).toBe(false);
     expect(isPlayerId(42)).toBe(false);
     expect(isPlayerId(null)).toBe(false);
@@ -56,18 +59,23 @@ describe("BoardRef", () => {
     const shared = sharedBoardRef("market");
     const seated = perPlayerBoardRef("ring", asPlayerId("player-2"));
     expect(boardRefKey(shared)).toBe("market");
-    expect(boardRefKey(seated)).toBe("ring:player-2");
+    const seatedKey = perPlayerInstanceId("board", "ring", "player-2");
+    expect(boardRefKey(seated)).toBe(seatedKey);
     expect(parseBoardRefKey("market")).toEqual({ baseId: "market" });
-    expect(parseBoardRefKey("ring:player-2")).toEqual({
+    expect(parseBoardRefKey(seatedKey)).toEqual({
       baseId: "ring",
       seat: "player-2",
     });
   });
 
-  test("parseBoardRefKey rejects malformed keys", () => {
+  test("parseBoardRefKey rejects malformed generated keys and preserves literal shared keys", () => {
     expect(parseBoardRefKey("")).toBeNull();
-    expect(parseBoardRefKey(":seat")).toBeNull();
-    expect(parseBoardRefKey("base:")).toBeNull();
+    expect(parseBoardRefKey("@db/not-json")).toBeNull();
+    expect(
+      parseBoardRefKey(perPlayerInstanceId("piece", "ring", "seat")),
+    ).toBeNull();
+    for (const key of [":seat", "base:", "ring:player-2"])
+      expect(parseBoardRefKey(key)).toEqual({ baseId: key });
   });
 
   test("boardRefSchema parses both shared and per-player shapes", () => {

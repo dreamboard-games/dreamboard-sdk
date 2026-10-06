@@ -1,6 +1,6 @@
 import { ViewCardSchema } from "./domain/cards.js";
 import * as z from "zod";
-import { PlayerBoardSpaceTargetSchema } from "./board-target.js";
+import { BoardSpaceTargetSchema } from "./board-target.js";
 import { RuntimeJsonSchema } from "./runtime-json.js";
 
 export const InteractionCommitPolicySchema = z.discriminatedUnion("mode", [
@@ -56,9 +56,9 @@ export const InputDomainSchema = z.discriminatedUnion("type", [
       type: z.literal("boardTarget"),
       projection: z.literal("resolved"),
       targetKind: z.literal("space"),
-      boardId: z.string(),
-      valueKind: z.literal("player-board-space"),
-      eligibleTargets: z.array(PlayerBoardSpaceTargetSchema),
+      boardBaseId: z.string(),
+      valueKind: z.literal("board-space"),
+      eligibleTargets: z.array(BoardSpaceTargetSchema),
       ...selection,
     }),
   ]),

@@ -537,3 +537,39 @@ describe("manifest-owned boards in the single seat view", () => {
     );
   });
 });
+
+test("seat board projection replaces the complete static collection without merging stale instances", () => {
+  const current = {
+    byId: { current: { id: "current", fields: { score: 2 } } },
+    hex: {},
+    square: {},
+  };
+  const frame = materializePluginGameplayFrame({
+    currentPhase: "play",
+    activePlayers: ["player-1"],
+    perspectivePlayerId: "player-1",
+    version: 2,
+    actionSetVersion: "actions-2",
+    staticProjection: {
+      view: {
+        boards: { byId: { stale: { id: "stale" } }, hex: {}, square: {} },
+      },
+      hash: "static",
+      manifestVersion: "1",
+    },
+    dynamicProjection: {
+      events: [],
+      seats: {
+        "player-1": {
+          view: { score: 3 },
+          boards: current,
+          availableInteractionRefs: [],
+        },
+        "player-2": {
+          boards: { byId: { other: { id: "other" } }, hex: {}, square: {} },
+        },
+      },
+    },
+  });
+  expect(frame.view).toEqual({ score: 3, boards: current });
+});

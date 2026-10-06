@@ -1,45 +1,34 @@
 import * as z from "zod";
 
-/** A space on one player's board; boardId is the base manifest board ID. */
-export type PlayerBoardSpaceTarget<
+/** A space addressed by its canonical runtime board instance. */
+export type BoardSpaceTarget<
   BoardId extends string = string,
   SpaceId extends string = string,
-  PlayerId extends string = string,
 > = {
   readonly boardId: BoardId;
-  readonly playerId: PlayerId;
   readonly spaceId: SpaceId;
 };
 
-export const PlayerBoardSpaceTargetSchema = z.strictObject({
+export const BoardSpaceTargetSchema = z.strictObject({
   boardId: z.string(),
-  playerId: z.string(),
   spaceId: z.string(),
 });
 
-export function isPlayerBoardSpaceTarget(
-  value: unknown,
-): value is PlayerBoardSpaceTarget {
+export function isBoardSpaceTarget(value: unknown): value is BoardSpaceTarget {
   return (
     typeof value === "object" &&
     value !== null &&
-    Object.keys(value).length === 3 &&
+    Object.keys(value).length === 2 &&
     "boardId" in value &&
     typeof value.boardId === "string" &&
-    "playerId" in value &&
-    typeof value.playerId === "string" &&
     "spaceId" in value &&
     typeof value.spaceId === "string"
   );
 }
 
-export function samePlayerBoardSpaceTarget(
-  left: PlayerBoardSpaceTarget,
-  right: PlayerBoardSpaceTarget,
+export function sameBoardSpaceTarget(
+  left: BoardSpaceTarget,
+  right: BoardSpaceTarget,
 ): boolean {
-  return (
-    left.boardId === right.boardId &&
-    left.playerId === right.playerId &&
-    left.spaceId === right.spaceId
-  );
+  return left.boardId === right.boardId && left.spaceId === right.spaceId;
 }

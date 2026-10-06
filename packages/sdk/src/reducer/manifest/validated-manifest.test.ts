@@ -101,7 +101,12 @@ test("compiled initialization keeps the validated source snapshot", () => {
   };
   const compiled = compileManifest(source);
   source.pieceSeeds[0].count = -1;
-  expect(Object.keys(compiled.createInitialTable().pieces)).toEqual(["token"]);
+  expect(
+    Object.keys(
+      compiled.createInitialTable({ playerIds: ["player-1", "player-2"] })
+        .pieces,
+    ),
+  ).toEqual(["token"]);
 });
 
 test("defined topology validates duplicate identities and snapshots its input", () => {

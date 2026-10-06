@@ -1,3 +1,4 @@
+import { PlayerRosterSchema } from "../../shared/domain/player-identity";
 import { assertZoneConsistency } from "../table/zones";
 import { collectReducerDefinitionIndex } from "../definition-index";
 import * as z from "zod";
@@ -190,6 +191,40 @@ export function createIngressRuntimeCodec<
   const playerIdSchema = definition.contract.manifest.ids
     .playerId as z.ZodType<PlayerId>;
 
+  function parseSessionRoster(rawRoster: unknown, label: string): PlayerId[] {
+    const roster = safeParseOrThrow(PlayerRosterSchema, rawRoster, label).map(
+      (id) => safeParseOrThrow(playerIdSchema, id, label),
+    );
+    if (roster.length === 0)
+      throw new Error(`${label}: session roster must not be empty.`);
+    const setup = definition.contract.manifest.normalSetup;
+    if (
+      setup &&
+      (roster.length < setup.minPlayers || roster.length > setup.maxPlayers)
+    ) {
+      throw new Error(
+        `${label}: session roster must contain ${setup.minPlayers} through ${setup.maxPlayers} players.`,
+      );
+    }
+    return roster;
+  }
+
+  // This header only reads the roster; parseState admits the full state later.
+  const stateRosterHeader = z.object({
+    domain: z.object({ table: z.object({ playerOrder: z.unknown() }) }),
+  });
+  function parseStatePlayerIds(rawState: unknown) {
+    const header = safeParseOrThrow(
+      stateRosterHeader,
+      rawState,
+      "state roster",
+    );
+    return parseSessionRoster(
+      header.domain.table.playerOrder,
+      "domain.table.playerOrder",
+    );
+  }
+
   const flowSchema = z.object({
     currentPhase: phaseNameSchema,
     turn: z.number().int(),
@@ -289,14 +324,35 @@ export function createIngressRuntimeCodec<
         rawTable,
         "table",
       ) as unknown as TableOfManifest<ManifestOf<Contract>>;
-      return {
-        table,
-        playerIds: safeParseOrThrow(
-          z.array(playerIdSchema),
-          playerIds && playerIds.length > 0 ? playerIds : table.playerOrder,
-          "table.playerOrder",
-        ),
-      };
+      const roster = parseSessionRoster(
+        playerIds === undefined ? table.playerOrder : playerIds,
+        "table.playerOrder",
+      );
+      if (
+        table.playerOrder.length > 0 &&
+        (table.playerOrder.length !== roster.length ||
+          table.playerOrder.some((id, index) => id !== roster[index]))
+      ) {
+        throw new Error(
+          "table.playerOrder: provided roster disagrees with the table roster.",
+        );
+      }
+      return { table, playerIds: roster };
+    },
+    isStatePlayer(rawState: unknown, playerId: string) {
+      return new Set<string>(parseStatePlayerIds(rawState)).has(playerId);
+    },
+    parseStatePerspectives(rawState: unknown, rawPlayerIds: readonly string[]) {
+      const roster = parseStatePlayerIds(rawState);
+      const perspectives = PlayerRosterSchema.parse(rawPlayerIds).map((id) =>
+        safeParseOrThrow(playerIdSchema, id, "perspectivePlayerId"),
+      );
+      for (const id of perspectives)
+        if (!roster.includes(id))
+          throw new Error(
+            `Projection player '${id}' is not seated in this session.`,
+          );
+      return perspectives;
     },
     parseState(rawState: unknown) {
       const envelope = safeParseOrThrow(
@@ -309,9 +365,35 @@ export function createIngressRuntimeCodec<
         envelope.domain.table,
         "domain.table",
       );
+      const playerIds = parseSessionRoster(
+        rawTable.playerOrder,
+        "domain.table.playerOrder",
+      );
+      const activeRoster = new Set<string>(playerIds);
+      const assertSeated = (id: string, path: string) => {
+        if (!activeRoster.has(id))
+          throw new Error(`${path}: unknown session player '${id}'.`);
+      };
+      for (const id of envelope.domain.flow.activePlayers)
+        assertSeated(id, "domain.flow.activePlayers");
+      for (const id of Object.keys(envelope.domain.privateState))
+        assertSeated(id, "domain.privateState");
+      for (const id of playerIds)
+        if (!Object.hasOwn(envelope.domain.privateState, id))
+          throw new Error(
+            `domain.privateState: missing private state player '${id}'.`,
+          );
+      for (const id of Object.keys(envelope.runtime.pending))
+        assertSeated(id, "runtime.pending");
+      const simultaneous = envelope.runtime.simultaneous.current;
+      if (simultaneous) {
+        for (const id of simultaneous.actors)
+          assertSeated(id, "runtime.simultaneous.actors");
+        for (const id of Object.keys(simultaneous.submissions))
+          assertSeated(id, "runtime.simultaneous.submissions");
+      }
       assertZoneConsistency(rawTable, definition.contract.manifest);
       const table = safeParseOrThrow(tableSchema, rawTable, "domain.table");
-      const playerIds = [...table.playerOrder] as PlayerId[];
       const privateState = Object.fromEntries(
         playerIds.map((playerId) => [
           playerId,

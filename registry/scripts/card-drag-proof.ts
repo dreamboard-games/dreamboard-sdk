@@ -1,14 +1,19 @@
+import { perPlayerInstanceId } from "@dreamboard-games/sdk/reducer";
 import { expect, type Locator, type Page } from "@playwright/test";
 
 type Point = { x: number; y: number };
 
 /** Physical browser proof against a real localSource and authored reducer. */
 export async function proveCardDrag(page: Page, touch: boolean) {
-  const card = page.locator(
+  const cards = page.locator(
     'section[aria-label="Hand"] button[data-action="select"][data-value]',
   );
+  const card = cards.first();
+  await expect(cards).toHaveCount(2);
+  const boardId = perPlayerInstanceId("board", "mat", "player-2");
+  const escapedBoardId = await page.evaluate((id) => CSS.escape(id), boardId);
   const destination = page.locator(
-    'svg [data-board="mat:player-2"][data-action="select"][aria-label="0,0"]',
+    `svg [data-board="${escapedBoardId}"][data-action="select"][aria-label="0,0"]`,
   );
   const discard = page.locator('[aria-label="Drop for play.discard"]');
   const drafts = page.getByTestId("scenario-drafts");
@@ -62,6 +67,8 @@ export async function proveCardDrag(page: Page, touch: boolean) {
 
   await expect(card).toBeVisible();
   const cardId = (await card.getAttribute("data-value"))!;
+  expect(cardId).toBe(perPlayerInstanceId("card", "card", "player-1"));
+  const escapedCardId = await page.evaluate((id) => CSS.escape(id), cardId);
 
   // Drop on a board space, through transformed SVG geometry.
   const svg = page.locator("svg").last();
@@ -92,14 +99,14 @@ export async function proveCardDrag(page: Page, touch: boolean) {
     .toEqual({
       "play.place": {
         card: cardId,
-        space: { boardId: "mat", playerId: "player-2", spaceId: "0,0" },
+        space: { boardId, spaceId: "0,0" },
       },
     });
   await page
     .locator('[data-action="submit"][data-interaction="play.place"]')
     .click();
   await expect(view).toContainText(
-    '"placed":{"boardId":"mat","playerId":"player-2","spaceId":"0,0"}',
+    `"placed":${JSON.stringify({ boardId, spaceId: "0,0" })}`,
   );
 
   // Drop on an area that runs a card-only interaction.
@@ -108,7 +115,7 @@ export async function proveCardDrag(page: Page, touch: boolean) {
   await pointer.move(await center(discard));
   await expect(discard).toHaveAttribute("data-drop-over", "true");
   await pointer.up();
-  await expect(view).toContainText(`"discarded":"${cardId}"`);
+  await expect(view).toContainText(`"discarded":${JSON.stringify(cardId)}`);
   await expect(page.locator("[data-drag-overlay]")).toHaveCount(0);
 
   // Releasing over empty space changes nothing.
@@ -154,11 +161,11 @@ export async function proveCardDrag(page: Page, touch: boolean) {
   await reset();
   await page
     .locator(
-      `button[data-interaction="play.place"][data-input="card"][data-value="${cardId}"]`,
+      `button[data-interaction="play.place"][data-input="card"][data-value="${escapedCardId}"]`,
     )
     .press("Enter");
   await destination.press("Enter");
-  await expect(drafts).toContainText('"playerId":"player-2"');
+  await expect(drafts).toContainText(JSON.stringify(boardId));
 
   // A new authoritative frame cancels the drag in progress.
   await reset();

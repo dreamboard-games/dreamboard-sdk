@@ -1,3 +1,4 @@
+import { perPlayerInstanceId } from "../../shared/domain/per-player-instance.js";
 import { RuntimeJsonSchema } from "../../shared/runtime-json";
 import { ReducerSessionStateSchema } from "../../shared/runtime-schema.js";
 import { describe, expect, test } from "vitest";
@@ -91,7 +92,9 @@ describe("in-memory manifests", () => {
         },
       ],
     });
-    const table = compiled.createInitialTable();
+    const table = compiled.createInitialTable({
+      playerIds: ["player-1", "player-2"],
+    });
     expect(Object.keys(table.cards).sort()).toEqual(["HEARTS_Q", "SPADES_A"]);
     expect(table.cards.SPADES_A).toMatchObject({
       id: "SPADES_A",
@@ -137,22 +140,28 @@ describe("in-memory manifests", () => {
         },
       ],
     } as const);
-    expect(compiled.createInitialTable().cards["ace-1"].cardType).toBe(
-      "ranked-card",
-    );
-    expect(compiled.createInitialTable().cards["ace-1"].properties).toEqual({
+    expect(
+      compiled.createInitialTable({ playerIds: ["player-1", "player-2"] })
+        .cards["ace-1"].cardType,
+    ).toBe("ranked-card");
+    expect(
+      compiled.createInitialTable({ playerIds: ["player-1", "player-2"] })
+        .cards["ace-1"].properties,
+    ).toEqual({
       color: "red",
       points: 0,
       cost: 2,
     });
-    expect(Object.keys(compiled.createInitialTable().cards)).toEqual([
-      "ace-1",
-      "ace-2",
-      "king",
-    ]);
-    expect(compiled.createInitialTable().cards.king.cardType).toBe(
-      "ranked-card",
-    );
+    expect(
+      Object.keys(
+        compiled.createInitialTable({ playerIds: ["player-1", "player-2"] })
+          .cards,
+      ),
+    ).toEqual(["ace-1", "ace-2", "king"]);
+    expect(
+      compiled.createInitialTable({ playerIds: ["player-1", "player-2"] }).cards
+        .king.cardType,
+    ).toBe("ranked-card");
     expect(compiled.literals.cardTypes).toEqual(["ranked-card"]);
     expect(compiled.literals.cardTypeByCardId["ace-1"]).toBe("ranked-card");
     expect(compiled.literals.cardTypeByCardId.king).toBe("ranked-card");
@@ -226,7 +235,9 @@ describe("in-memory manifests", () => {
       zones: [],
       boards: [],
     } as const);
-    const table = compiled.createInitialTable();
+    const table = compiled.createInitialTable({
+      playerIds: ["player-1", "player-2"],
+    });
     expect(table.cards["strike-1"]).toMatchObject({
       id: "strike-1",
       cardSetId: "actions",
@@ -386,7 +397,10 @@ describe("in-memory manifests", () => {
       }).success,
     ).toBe(false);
     table.zones.draw.table.pop();
-    expect(compiled.createInitialTable().zones.draw.table).toHaveLength(2);
+    expect(
+      compiled.createInitialTable({ playerIds: ["player-1", "player-2"] }).zones
+        .draw.table,
+    ).toHaveLength(2);
   });
   test("runs authoring validation during compilation", () => {
     // @ts-expect-error The declared default home is deliberately missing its zone.
@@ -426,9 +440,18 @@ test("player-scoped boards follow the active roster rather than max-player place
     ],
   } as const);
   const table = board.createInitialTable({ playerIds: ["north", "south"] });
-  expect(Object.keys(table.boards.byId)).toEqual(["mat:north", "mat:south"]);
-  expect(board.ids.boardId.safeParse("mat:north").success).toBe(true);
-  expect(board.ids.boardId.safeParse("other:north").success).toBe(false);
+  expect(Object.keys(table.boards.byId)).toEqual([
+    perPlayerInstanceId("board", "mat", "north"),
+    perPlayerInstanceId("board", "mat", "south"),
+  ]);
+  expect(
+    board.ids.boardId.safeParse(perPlayerInstanceId("board", "mat", "north"))
+      .success,
+  ).toBe(true);
+  expect(
+    board.ids.boardId.safeParse(perPlayerInstanceId("board", "other", "north"))
+      .success,
+  ).toBe(false);
   expect(board.ids.cardId.safeParse("unavailable").success).toBe(false);
 });
 

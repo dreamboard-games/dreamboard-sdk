@@ -1,3 +1,4 @@
+import { BoardProjectionSchema } from "../../../shared/runtime-schema.js";
 import type { ViewCard } from "../../../shared/domain/cards.js";
 import { createTableQueries } from "../../table-queries";
 import type { RuntimeTableRecord } from "../../model";
@@ -443,6 +444,7 @@ export function createProjectionBuilder<
     const registry = createDescriptorRegistry(timing);
     type SeatProjection = {
       view?: ReturnType<typeof resolvePlayerViewFor>;
+      boards?: Wire.SeatProjection["boards"];
       availableInteractionRefs: string[];
       zones?: ReturnType<typeof resolveZoneHandlesFor>;
       resources?: ReturnType<typeof resolveResourcesFor>;
@@ -475,6 +477,11 @@ export function createProjectionBuilder<
       const fullProjection =
         projectionMode === "full"
           ? {
+              // All board state is public until the private-board projection layer.
+              // Use the admitted current table; compilation has no runtime roster.
+              boards: BoardProjectionSchema.parse(
+                toCanonicalJson(combinedState.table.boards),
+              ),
               view: measureProjectionTiming(timing, "resolveViewMs", () =>
                 resolvePlayerViewFor(combinedState, playerId, projection),
               ),

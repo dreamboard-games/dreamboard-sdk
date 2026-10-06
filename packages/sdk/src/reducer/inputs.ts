@@ -1,11 +1,11 @@
 export { formInput } from "./inputs/formInput";
-export { boardInput, type PlayerSpaceInputSchema } from "./inputs/boardInput";
+export { boardInput, type BoardSpaceInputSchema } from "./inputs/boardInput";
 export { boardTarget } from "./inputs/boardTarget";
 export type {
   BoardTargetBuilder,
   BoardTargetPredicate,
   BoardTargetRule,
-  PlayerBoardSpaceTarget,
+  BoardSpaceTarget,
 } from "./inputs/boardTarget";
 export { cardTarget } from "./inputs/cardTarget";
 export type {

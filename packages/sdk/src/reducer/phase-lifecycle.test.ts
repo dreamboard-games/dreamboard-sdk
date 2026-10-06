@@ -113,7 +113,9 @@ async function lifecycleGame(
   });
   const bundle = createReducerBundle(game);
   const initialized = await bundle.initialize({
-    table: RuntimeJsonSchema.parse(manifest.createInitialTable()),
+    table: RuntimeJsonSchema.parse(
+      manifest.createInitialTable({ playerIds: ["player-1", "player-2"] }),
+    ),
     playerIds: ["player-1", "player-2"],
     rngSeed: 42,
   });

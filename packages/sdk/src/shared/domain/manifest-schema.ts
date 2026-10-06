@@ -22,8 +22,6 @@ export const TopologyScopeSchema = z.enum(["shared", "perPlayer"]);
 export const ZoneVisibilitySchema = z.enum(["ownerOnly", "public", "hidden"]);
 export const ComponentVisibilitySpecSchema = z.strictObject({
   faceUp: z.boolean().optional(),
-  /** Omitted audiences allow every player to see the component. */
-  visibleTo: z.array(id).optional(),
 });
 export const BoardEdgeRefSchema = z.strictObject({ spaces: z.array(id) });
 export const BoardVertexRefSchema = z.strictObject({ spaces: z.array(id) });
@@ -86,6 +84,7 @@ export const BoardCardSchema = z.strictObject({
   name: z.string(),
   count: positiveInteger,
   cardType: id,
+  scope: TopologyScopeSchema.optional(),
   /** Values are checked against this card type's authored card schema. */
   properties: fields,
   /** Repository path under assets/, presented to game UIs as a loadable URL. */
@@ -291,7 +290,7 @@ export const PieceSeedSpecSchema = z.strictObject({
   name: z.string().optional(),
   typeId: id,
   count: positiveInteger.optional(),
-  ownerId: id.optional(),
+  scope: TopologyScopeSchema.optional(),
   home: ComponentHomeSpecSchema.optional(),
   visibility: ComponentVisibilitySpecSchema.optional(),
   fields: fields.optional(),

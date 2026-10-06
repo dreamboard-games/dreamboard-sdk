@@ -95,9 +95,13 @@ const defined = defineTopologyManifest({
   ],
 });
 const compiled = compileManifest(defined);
-const n: number = compiled.createInitialTable().pieces.piece.properties.n;
+const n: number = compiled.createInitialTable({
+  playerIds: ["player-1", "player-2"],
+}).pieces.piece.properties.n;
 // @ts-expect-error Defined JSON preserves authored output type through compilation.
-const invalid: string = compiled.createInitialTable().pieces.piece.properties.n;
+const invalid: string = compiled.createInitialTable({
+  playerIds: ["player-1", "player-2"],
+}).pieces.piece.properties.n;
 void [n, invalid];
 
 const cardSchema = z.object({ value: ref.cardId() });
@@ -192,8 +196,9 @@ type MissingOutputProof = Assert<
     Record<string, import("../../shared/domain/contracts").JsonValue>
   >
 >;
-const noSchema =
-  compileManifest(manifest).createInitialTable().pieces.piece.properties;
+const noSchema = compileManifest(manifest).createInitialTable({
+  playerIds: ["player-1", "player-2"],
+}).pieces.piece.properties;
 const arbitraryJson: import("../../shared/domain/contracts").JsonValue =
   noSchema.anyAuthoredField;
 void arbitraryJson;

@@ -38,7 +38,7 @@ function projectPublic(state: GameState, q: typeof stormtrail.types.Queries) {
         .order()
         .map((playerId) => [
           playerId,
-          remainingPieceCount(state, playerId, "camp"),
+          remainingPieceCount(q, playerId, "camp"),
         ]),
     ) as Record<PlayerId, number>,
     remainingTrailsByPlayerId: Object.fromEntries(
@@ -46,7 +46,7 @@ function projectPublic(state: GameState, q: typeof stormtrail.types.Queries) {
         .order()
         .map((playerId) => [
           playerId,
-          remainingPieceCount(state, playerId, "trail"),
+          remainingPieceCount(q, playerId, "trail"),
         ]),
     ) as Record<PlayerId, number>,
     outcome: state.publicState.outcome,

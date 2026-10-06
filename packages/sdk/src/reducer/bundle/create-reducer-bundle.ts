@@ -153,6 +153,12 @@ export function createReducerBundle<
     },
     async dispatch({ state, input: rawInput }) {
       const input = parseInput(rawInput);
+      if (!codec.isStatePlayer(state, input.playerId))
+        return {
+          kind: "reject",
+          errorCode: "NOT_YOUR_TURN",
+          message: "Player is not seated in this session.",
+        };
       const combinedState = scope.toCombinedState(parseState(state));
       const submissionId = `sub-${++submissionCounter}`;
       scope.diagnostics.event({
@@ -193,10 +199,11 @@ export function createReducerBundle<
     boardStatic: () =>
       staticProjection.boardStatic() as Wire.BoardStaticProjection | null,
     project({ state, playerIds }) {
+      const perspectives = codec.parseStatePerspectives(state, playerIds);
       // eslint-disable-next-line no-restricted-syntax -- This game-bound projector assembles the seat bundle from parsed session and player IDs; the wire facade erases its generic view type.
       return projection.project({
         state: parseState(state),
-        playerIds: playerIds.map((id) => codec.parsePlayerId(id)),
+        playerIds: perspectives,
       }) as unknown as Wire.SeatProjectionBundle;
     },
   };

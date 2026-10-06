@@ -12,7 +12,7 @@ import {
   appendHistory,
   campCount,
   CAMP_COST,
-  detachedPiece,
+  supplyPiece,
   fourthCampOutcome,
   remainingPieceCount,
   systemEvent,
@@ -34,10 +34,10 @@ const buildTrail = main.interaction({
     {
       id: "trail-piece-available",
       errorCode: "TRAIL_PIECES_EXHAUSTED",
-      available: ({ state, input }) =>
-        remainingPieceCount(state, input.playerId, "trail") > 0,
-      validate: ({ state, input }) =>
-        remainingPieceCount(state, input.playerId, "trail") > 0,
+      available: ({ input, q }) =>
+        remainingPieceCount(q, input.playerId, "trail") > 0,
+      validate: ({ input, q }) =>
+        remainingPieceCount(q, input.playerId, "trail") > 0,
     },
     {
       id: "trail-cost",
@@ -48,8 +48,8 @@ const buildTrail = main.interaction({
         q.player.canAfford(input.playerId, TRAIL_COST),
     },
   ],
-  reduce({ state, tx, input }) {
-    const trailId = detachedPiece(state, input.playerId, "trail");
+  reduce({ tx, input, q }) {
+    const trailId = supplyPiece(q, input.playerId, "trail");
     if (!trailId) throw new Error("Trail piece is unavailable.");
     tx.spendResources({ playerId: input.playerId, amounts: TRAIL_COST });
     tx.moveComponentToEdge({
@@ -76,10 +76,10 @@ const buildCamp = main.interaction({
     {
       id: "camp-piece-available",
       errorCode: "CAMP_PIECES_EXHAUSTED",
-      available: ({ state, input }) =>
-        remainingPieceCount(state, input.playerId, "camp") > 0,
-      validate: ({ state, input }) =>
-        remainingPieceCount(state, input.playerId, "camp") > 0,
+      available: ({ input, q }) =>
+        remainingPieceCount(q, input.playerId, "camp") > 0,
+      validate: ({ input, q }) =>
+        remainingPieceCount(q, input.playerId, "camp") > 0,
     },
     {
       id: "camp-cost",
@@ -89,8 +89,8 @@ const buildCamp = main.interaction({
       validate: ({ input, q }) => q.player.canAfford(input.playerId, CAMP_COST),
     },
   ],
-  reduce({ state, tx, input, q }) {
-    const campId = detachedPiece(state, input.playerId, "camp");
+  reduce({ tx, input, q }) {
+    const campId = supplyPiece(q, input.playerId, "camp");
     if (!campId) throw new Error("Camp piece is unavailable.");
     tx.spendResources({ playerId: input.playerId, amounts: CAMP_COST });
     tx.moveComponentToVertex({

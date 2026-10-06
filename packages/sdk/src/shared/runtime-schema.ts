@@ -1,4 +1,8 @@
 import {
+  PlayerIdSchema,
+  PlayerRosterSchema,
+} from "./domain/player-identity.js";
+import {
   InteractionDescriptorSchema,
   ZoneInteractionRefsSchema,
 } from "./interaction-schema";
@@ -43,7 +47,7 @@ export const ReducerFlowStateSchema = z.strictObject({
   currentPhase: z.string().min(1),
   turn: z.number().int(),
   round: z.number().int(),
-  activePlayers: z.array(z.string().min(1)),
+  activePlayers: z.array(PlayerIdSchema),
 });
 
 export const RuntimeSimultaneousSubmissionSchema = z.strictObject({
@@ -53,8 +57,8 @@ export const RuntimeSimultaneousSubmissionSchema = z.strictObject({
 
 export const RuntimeSimultaneousCurrentSchema = z.strictObject({
   phaseName: z.string().min(1),
-  actors: z.array(z.string().min(1)),
-  submissions: z.record(z.string(), RuntimeSimultaneousSubmissionSchema),
+  actors: z.array(PlayerIdSchema),
+  submissions: z.record(PlayerIdSchema, RuntimeSimultaneousSubmissionSchema),
 });
 
 export const RuntimeSimultaneousStateSchema = z.strictObject({
@@ -101,7 +105,7 @@ export const ReducerRuntimeStateSchema = z.strictObject({
 export const ReducerDomainStateSchema = z.strictObject({
   table: RuntimeJsonSchema,
   publicState: RuntimeJsonSchema,
-  privateState: z.record(z.string(), RuntimeJsonSchema),
+  privateState: z.record(PlayerIdSchema, RuntimeJsonSchema),
   hiddenState: RuntimeJsonSchema,
   flow: ReducerFlowStateSchema,
   phase: RuntimeJsonSchema,
@@ -114,14 +118,14 @@ export const ReducerSessionStateSchema = z.strictObject({
 
 export const GameInputInteractionSchema = z.strictObject({
   kind: z.literal("interaction"),
-  playerId: z.string().min(1),
+  playerId: PlayerIdSchema,
   interactionId: z.string().min(1),
   params: RuntimeJsonSchema,
 });
 
 export const GameInputCancelSchema = z.strictObject({
   kind: z.literal("interaction.cancel"),
-  playerId: z.string().min(1),
+  playerId: PlayerIdSchema,
   interactionId: z.string().min(1),
 });
 
@@ -155,7 +159,7 @@ export const OutcomeTieBreakSchema = z.strictObject({
 });
 
 export const OutcomeStandingSchema = z.strictObject({
-  playerId: z.string().min(1),
+  playerId: PlayerIdSchema,
   rank: z.number().int().gte(1),
   result: OutcomeResultSchema,
   score: z.number().finite().optional(),
@@ -176,7 +180,7 @@ export const InitializeResultSchema = z.strictObject({
 
 export const InitializeRequestSchema = z.strictObject({
   table: RuntimeJsonSchema,
-  playerIds: z.array(z.string().min(1)),
+  playerIds: PlayerRosterSchema,
   rngSeed: z
     .union([
       z.number().refine(Number.isInteger, { message: "Expected integer" }),
@@ -280,8 +284,22 @@ export const AuthoredViewSchema = z
   })
   .catchall(RuntimeJsonSchema);
 
+/** SDK-owned board presentation, admitted independently of authored seat views. */
+export const BoardProjectionSchema = z.strictObject({
+  byId: z.record(z.string(), z.record(z.string(), RuntimeJsonSchema)),
+  hex: z.record(z.string(), z.record(z.string(), RuntimeJsonSchema)),
+  square: z.record(z.string(), z.record(z.string(), RuntimeJsonSchema)),
+  network: z
+    .record(z.string(), z.record(z.string(), RuntimeJsonSchema))
+    .optional(),
+  track: z
+    .record(z.string(), z.record(z.string(), RuntimeJsonSchema))
+    .optional(),
+});
+
 export const SeatProjectionSchema = z.strictObject({
   view: AuthoredViewSchema.nullable().optional(),
+  boards: BoardProjectionSchema.optional(),
   availableInteractionRefs: z.array(z.string()).optional(),
   zones: z
     .record(z.string(), z.record(z.string(), ZoneInteractionRefsSchema))
@@ -328,13 +346,13 @@ export const SeatProjectionBundleSchema = z.strictObject({
   interactionsByRef: z
     .record(z.string(), InteractionDescriptorSchema)
     .optional(),
-  seats: z.record(z.string(), SeatProjectionSchema),
+  seats: z.record(PlayerIdSchema, SeatProjectionSchema),
   timing: ProjectionTimingMetadataSchema.optional(),
 });
 
 export const ProjectRequestSchema = z.strictObject({
   state: ReducerSessionStateSchema,
-  playerIds: z.array(z.string().min(1)),
+  playerIds: PlayerRosterSchema,
 });
 
 export const BoardStaticProjectionSchema = z.strictObject({

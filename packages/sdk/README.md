@@ -187,6 +187,17 @@ and pass a source to its `GameProvider`. The hosted UI imports `Game` only as a 
 `iframeSource()` supplies authoritative frames and handles commands.
 No authoring generation step or shared workspace files are needed.
 
+`createInitialTable({ playerIds })` takes the actual roster explicitly. Cards,
+piece seeds and die seeds can use `scope: "perPlayer"` to replicate for those
+seats, with initial ownership derived from the replication origin. Ownership
+changes do not change instance IDs. Use `perPlayerInstanceId` when constructing
+a reference from a known family, expanded base and seat; decoding validates
+syntax only, while table admission checks live membership. UI consumers should
+use the canonical IDs supplied by projected boards and eligible targets.
+Instance record factories likewise require `{ playerIds }`, for example
+`manifest.records.pieceIds(0, { playerIds })`. Player IDs are nonempty and unique;
+`__proto__` is reserved to preserve roster keys through record parsing.
+
 Manifest card counts and explicit piece/die seed counts must be positive safe
 integers. Omitted seed counts mean one copy. Zero, negative, fractional, non-finite,
 and unsafe counts fail before ID expansion; negative, zero, and fractional literals
@@ -244,7 +255,7 @@ To migrate an older manifest, replace each card's `type` with `id` and set
 
 `createReducerBundle(game)` returns exactly the contract version and four
 operations: `boardStatic()`, `initialize(input)`, `dispatch({ state, input })`,
-and `project({ state, playerIds })`. The runner contract is `0.9.0`; hosts must
+and `project({ state, playerIds })`. The runner contract is `0.10.0`; hosts must
 require that exact version. Dispatch includes validation, direct transaction mutations, and phase entry.
 Initialization returns
 `{ state, terminal?, events? }`, preserving outcomes and events from initial
@@ -287,7 +298,8 @@ implicit costs, guidance metadata, and phase zone declarations are removed.
 
 A game authors one `view` for each requested seat. Public and private fields
 compose in that function; the transport never uses a seat view as a spectator
-payload. Static boards come directly from the compiled manifest.
+payload. Shared static boards come from compiled definitions; per-player boards
+are instantiated for the actual roster.
 
 Use `memoize((input: SomeImmutableObject) => result)` for shared pure calculations.
 It caches by object identity with a WeakMap, including `undefined` results. Pass

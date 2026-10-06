@@ -59,7 +59,9 @@ const buildTwoZoneManifest = () =>
     ],
   });
 function createTable(options: { player1Gold?: number } = {}) {
-  const table = buildManifest().createInitialTable();
+  const table = buildManifest().createInitialTable({
+    playerIds: ["player-1", "player-2"],
+  });
   for (const playerId of table.playerOrder) {
     table.zones.playZone[playerId] =
       playerId === "player-1" ? ["card-a", "card-b"] : [];
@@ -80,7 +82,9 @@ function createTable(options: { player1Gold?: number } = {}) {
   return table;
 }
 function createTwoZoneTable() {
-  const table = buildTwoZoneManifest().createInitialTable();
+  const table = buildTwoZoneManifest().createInitialTable({
+    playerIds: ["player-1", "player-2"],
+  });
   for (const playerId of table.playerOrder) {
     table.zones.playZone[playerId] = playerId === "player-1" ? ["card-a"] : [];
     table.zones.discardZone[playerId] =

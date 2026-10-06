@@ -28,7 +28,8 @@ const contract = compileManifest({
     },
   ],
 } as const);
-const board = createTableQueries(contract.createInitialTable()).board("island");
+const table = contract.createInitialTable({ playerIds: [] });
+const board = createTableQueries(table, contract).board("island");
 const neighbors = board.neighbors("capital");
 const edge = board.edge("capital", neighbors[0]!);
 const layout = board.getLayout({ hexSize: 40 });

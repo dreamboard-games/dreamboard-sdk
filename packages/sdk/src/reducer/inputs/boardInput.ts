@@ -1,3 +1,4 @@
+import type { PerPlayerInstanceId } from "../../shared/domain/per-player-instance.js";
 import type { PlayerIdOfState, TableQueriesOfState } from "../model";
 import * as z from "zod";
 import type {
@@ -10,11 +11,14 @@ import {
   markManifestScopedSchema,
   type ManifestIdSchema,
 } from "../model/manifest";
-import type { BoardTargetRule, PlayerBoardSpaceTarget } from "./boardTarget";
+import type {
+  BoardIdTargetRule,
+  BoardSpaceTargetRule,
+  BoardSpaceTarget,
+} from "./boardTarget";
 
-export type PlayerSpaceInputSchema<BoardId extends string> = z.ZodObject<{
-  boardId: z.ZodLiteral<BoardId>;
-  playerId: ManifestIdSchema<string, "playerId">;
+export type BoardSpaceInputSchema = z.ZodObject<{
+  boardId: ManifestIdSchema<string, "boardId">;
   spaceId: z.ZodString;
 }>;
 
@@ -44,7 +48,7 @@ function makeBoardCollector<
     State extends CollectorState = CollectorState,
     Id extends string = string,
   >(options: {
-    target: BoardTargetRule<
+    target: BoardIdTargetRule<
       State,
       Id,
       Kind extends `board-${infer Target extends Exclude<TargetKind, "card">}`
@@ -104,21 +108,16 @@ export function playerSpaceInput<
   State extends CollectorState = CollectorState,
   BoardId extends string = string,
   SpaceId extends string = string,
-  PlayerId extends string = string,
 >(options: {
-  target: BoardTargetRule<
-    State,
-    PlayerBoardSpaceTarget<BoardId, SpaceId, PlayerId>,
-    "space"
-  >;
+  target: BoardSpaceTargetRule<State, BoardId, SpaceId>;
 }): InputCollector<
-  PlayerSpaceInputSchema<BoardId>,
+  BoardSpaceInputSchema,
   State,
   "board-space",
-  PlayerBoardSpaceTarget<BoardId, SpaceId, PlayerId>
+  BoardSpaceTarget<PerPlayerInstanceId<"board", BoardId>, SpaceId>
 > {
   const target = options.target;
-  const playerIdSchema = markManifestScopedSchema(z.string(), "playerId");
+  const boardIdSchema = markManifestScopedSchema(z.string(), "boardId");
   const eligible = (
     state: State,
     playerId: PlayerIdOfState<State>,
@@ -132,8 +131,7 @@ export function playerSpaceInput<
   return {
     kind: "board-space",
     schema: z.strictObject({
-      boardId: z.literal(target.boardId),
-      playerId: playerIdSchema,
+      boardId: boardIdSchema,
       spaceId: z.string(),
     }),
     eligibleTargets: eligible,
@@ -152,20 +150,20 @@ export function playerSpaceInput<
         type: "boardTarget",
         projection: "resolved",
         targetKind: "space",
-        boardId: target.boardId,
-        valueKind: "player-board-space",
+        boardBaseId: target.boardBaseId,
+        valueKind: "board-space",
         eligibleTargets: eligible(state, playerId, q),
       }) satisfies BoardTargetDomainDescriptor,
     meta: {
       targetKind: target.targetKind,
-      boardId: target.boardId,
-      valueKind: "player-board-space",
+      boardBaseId: target.boardBaseId,
+      valueKind: "board-space",
     },
   } as unknown as InputCollector<
-    PlayerSpaceInputSchema<BoardId>,
+    BoardSpaceInputSchema,
     State,
     "board-space",
-    PlayerBoardSpaceTarget<BoardId, SpaceId, PlayerId>
+    BoardSpaceTarget<PerPlayerInstanceId<"board", BoardId>, SpaceId>
   >;
 }
 

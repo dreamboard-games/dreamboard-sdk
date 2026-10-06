@@ -1,6 +1,12 @@
+import { RuntimeJsonSchema } from "@dreamboard-games/sdk";
 import { materializeScenarioRuntimeCheckpoint } from "@dreamboard-games/sdk/testing";
 import { FRONTIER_GEOMETRY } from "../app/model";
-import { asPlayerId } from "@dreamboard-games/sdk/reducer";
+import {
+  asPlayerId,
+  createReducerBundle,
+  createTableQueries,
+  parsePerPlayerInstanceId,
+} from "@dreamboard-games/sdk/reducer";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -68,6 +74,57 @@ const discardIdentity = {
   path: "test/scenarios/discard-barrier.scenario.ts",
   sourceDigest: "sha256:stormtrail-discard-barrier",
 } as const;
+
+test("piece supplies use the actual seated crews instead of authored player numbers", async () => {
+  const playerIds = ["crew:雪", "crew/second", "table"];
+  const table = game.contract.manifest.createInitialTable({ playerIds });
+  const runtime = createReducerBundle(game);
+  const initialized = await runtime.initialize({
+    table: RuntimeJsonSchema.parse(table),
+    playerIds,
+    rngSeed: 1,
+  });
+  const admitted = game.contract.manifest.tableSchema.parse(
+    initialized.state.domain.table,
+  );
+  const q = createTableQueries(admitted, game.contract.manifest);
+  const allSupplyIds = new Set<string>();
+  for (const rawPlayerId of playerIds) {
+    const playerId = asPlayerId(rawPlayerId);
+    const supply = admitted.zones.supply[playerId];
+    assert.equal(supply.length, 14);
+    const pieces = supply
+      .map((id) => q.component.data(id))
+      .filter((component) => "pieceTypeId" in component);
+    const types = pieces.map((piece) => piece.pieceTypeId);
+    assert.equal(types.filter((type) => type === "trail").length, 10);
+    assert.equal(types.filter((type) => type === "camp").length, 4);
+    for (const piece of pieces) {
+      const pieceId = piece.id;
+      assert.equal(admitted.pieces[pieceId].ownerId, playerId);
+      assert.deepEqual(admitted.componentLocations[pieceId], {
+        type: "InZone",
+        zoneId: "supply",
+        hostId: playerId,
+        playedBy: null,
+      });
+      assert.equal(parsePerPlayerInstanceId(pieceId)?.playerId, playerId);
+      assert.equal(allSupplyIds.has(pieceId), false);
+      allSupplyIds.add(pieceId);
+    }
+  }
+  assert.equal(allSupplyIds.size, 42);
+  assert.equal(Object.keys(admitted.pieces).length, 43);
+  assert.deepEqual(admitted.componentLocations.bandits, {
+    type: "OnSpace",
+    boardId: "frontier",
+    spaceId: "centralBarrens",
+    position: 0,
+  });
+  assert.partialDeepStrictEqual(initialized.state.domain, {
+    flow: { activePlayers: [playerIds[0]] },
+  });
+});
 
 test("discard barrier actors and blockers are scheduler-derived", async () => {
   const before = await Promise.all(

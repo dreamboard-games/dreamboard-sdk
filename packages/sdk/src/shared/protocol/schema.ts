@@ -1,3 +1,4 @@
+import { PlayerIdSchema } from "../domain/player-identity.js";
 import { ViewCardSchema } from "../domain/cards.js";
 import * as ReducerWireZod from "../runtime-schema";
 import * as z from "zod";
@@ -28,7 +29,7 @@ export const GameEventSchema = ReducerWireZod.GameEventSchema;
 export const SeatProjectionBundleSchema =
   ReducerWireZod.SeatProjectionBundleSchema;
 
-export const PlayerIdSchema = z.string().min(1);
+export { PlayerIdSchema } from "../domain/player-identity.js";
 
 export const PluginPlayerSummarySchema = z
   .object({

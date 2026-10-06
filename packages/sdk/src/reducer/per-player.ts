@@ -1,3 +1,9 @@
+import { isPlayerIdValue } from "../shared/domain/player-identity.js";
+import {
+  perPlayerInstanceId,
+  parsePerPlayerInstanceId,
+  PER_PLAYER_INSTANCE_PREFIX,
+} from "../shared/domain/per-player-instance.js";
 import * as z from "zod";
 import type { Brand } from "./model/table";
 
@@ -30,30 +36,14 @@ export function asPlayerId(raw: string): PlayerId {
 
 /**
  * Type guard that narrows `unknown` to `PlayerId` when the value is a
- * non-empty string. Does not validate against a specific player roster;
+ * valid live player key. Does not validate against a specific player roster;
  * use manifest/ingress parsing for that.
  */
 export function isPlayerId(value: unknown): value is PlayerId {
-  return typeof value === "string" && value.length > 0;
+  return isPlayerIdValue(value);
 }
 
-// ---------------------------------------------------------------------------
-// BoardRef: replacement for flat `"board:player-N"` literal unions.
-// ---------------------------------------------------------------------------
-
-/**
- * Reference to a board by its authored `baseId`, plus an optional seat
- * for per-player boards.
- *
- * Replaces the old generated `"ring:player-1" | "ring:player-2" | ...`
- * flat unions whose keys pretended to be static but were actually
- * derived from `maxPlayers` and therefore misaligned with the runtime
- * seat list.
- *
- * The discriminant is the *presence* of `seat`, not a `scope` field, so
- * authors can destructure and pass the ref directly without needing a
- * discriminator check for shared boards.
- */
+/** An authored board base with an optional replication-origin seat. */
 export type BoardRef<
   BaseId extends string = string,
   Id extends PlayerId = PlayerId,
@@ -103,28 +93,24 @@ export function boardRef<BaseId extends string, Id extends PlayerId>(
 
 /** Stable string key for Maps/Records keyed by a `BoardRef`. */
 export function boardRefKey(ref: BoardRef): string {
-  return ref.seat === undefined ? ref.baseId : `${ref.baseId}:${ref.seat}`;
+  return ref.seat === undefined
+    ? ref.baseId
+    : perPlayerInstanceId("board", ref.baseId, ref.seat);
 }
 
 /**
- * Inverse of `boardRefKey`. Parses `"base"` as a shared ref and
- * `"base:player-N"` as a per-player ref. Returns `null` for malformed
- * input.
+ * Inverse of `boardRefKey`: literal shared IDs or canonical generated board IDs.
+ * Syntax admission does not establish active roster or board membership.
  */
 export function parseBoardRefKey(key: string): BoardRef | null {
   if (!key.length) {
     return null;
   }
-  const colon = key.indexOf(":");
-  if (colon < 0) {
-    return { baseId: key };
-  }
-  const baseId = key.slice(0, colon);
-  const seat = key.slice(colon + 1);
-  if (!baseId.length || !seat.length) {
-    return null;
-  }
-  return { baseId, seat: seat as PlayerId };
+  if (!key.startsWith(PER_PLAYER_INSTANCE_PREFIX)) return { baseId: key };
+  const instance = parsePerPlayerInstanceId(key);
+  return instance?.family === "board"
+    ? { baseId: instance.baseId, seat: asPlayerId(instance.playerId) }
+    : null;
 }
 
 /**

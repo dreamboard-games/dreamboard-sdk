@@ -2,7 +2,6 @@ import { createGame, many } from "@dreamboard-games/sdk/reducer";
 import { z } from "zod";
 const target = z.object({
   boardId: z.string(),
-  playerId: z.string(),
   spaceId: z.string(),
 });
 function createPlayerBoardGame(layout: "square" | "generic") {

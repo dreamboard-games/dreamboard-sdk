@@ -116,3 +116,10 @@ export { RuntimeJsonSchema } from "./shared/runtime-json.js";
 export * from "./shared/protocol/gameplay-wire.js";
 export { ViewCardSchema } from "./shared/domain/cards.js";
 export type { ViewCard } from "./shared/domain/cards.js";
+
+export {
+  perPlayerInstanceId,
+  parsePerPlayerInstanceId,
+  type PerPlayerInstanceId,
+  type PerPlayerInstanceFamily,
+} from "./shared/domain/per-player-instance.js";

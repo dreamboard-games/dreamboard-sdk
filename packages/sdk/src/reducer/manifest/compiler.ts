@@ -1,3 +1,13 @@
+import {
+  PlayerIdSchema,
+  PlayerRosterSchema,
+} from "../../shared/domain/player-identity.js";
+import {
+  expandSeedIds,
+  renderCardInstanceIds,
+  initialCardMetadata,
+  createInstanceDeclaration,
+} from "./identity-runtime.js";
 import { parseTopologyManifestJson } from "./parse-json";
 import type { TypedTopologyManifest } from "./authoring";
 import { toManifestJson } from "./field-schemas";
@@ -5,7 +15,12 @@ import type { ManifestCountValidation } from "./identity-types";
 import * as z from "zod";
 import { buildTypedRecord } from "./generated-helpers.js";
 import { type GameTopologyManifest } from "../../shared/domain/manifest.js";
-import { analyzeManifest, materializeManifestTable } from "./materialize";
+import {
+  analyzeManifest,
+  analyzeManifestStructure,
+  materializeManifestTable,
+  materializeManifestStaticBoards,
+} from "./materialize";
 import { createTableSchema, type RuntimeManifestIds } from "./schema";
 import { asPlayerId } from "../per-player";
 import {
@@ -37,11 +52,7 @@ export function compileManifest<
 >(manifest: ManifestInput<M>): CompiledManifest<AuthoredOf<M>> {
   const source = parseTopologyManifestJson(toManifestJson(manifest));
   const analysis = analyzeManifest(source);
-  const initial = materializeManifestTable({
-    manifest: source,
-    playerIds: analysis.playerIds,
-    shuffleItems: (values) => [...values],
-  });
+  const staticBoards = materializeManifestStaticBoards(source);
   const literals = {
     cardSetIds: analysis.cardSetIds,
     cardTypes: analysis.cardTypes,
@@ -120,18 +131,51 @@ export function compileManifest<
       }),
     ),
     playerId: markManifestScopedSchema(
-      z.string().min(1).transform(asPlayerId),
+      PlayerIdSchema.transform(asPlayerId),
       "playerId",
     ),
   } as unknown as RuntimeManifestIds;
-  const boardIdSchemas = analysis.analyzedBoards.map((board) =>
-    board.board.scope === "perPlayer"
-      ? z.templateLiteral([board.board.id, ":", z.string().min(1)])
-      : z.literal(board.board.id),
-  );
   ids.boardId = markManifestScopedSchema(
-    boardIdSchemas.length ? z.union(boardIdSchemas) : z.never(),
+    createInstanceDeclaration(
+      "board",
+      (source.boards ?? []).map((board) => ({
+        baseIds: [board.id],
+        scope: board.scope,
+      })),
+    ).schema,
     "boardId",
+  );
+  ids.cardId = markManifestScopedSchema(
+    createInstanceDeclaration(
+      "card",
+      source.cardSets.flatMap((set) =>
+        set.cards.map((card) => ({
+          baseIds: renderCardInstanceIds(card),
+          scope: card.scope,
+        })),
+      ),
+    ).schema,
+    "cardId",
+  );
+  ids.pieceId = markManifestScopedSchema(
+    createInstanceDeclaration(
+      "piece",
+      (source.pieceSeeds ?? []).map((seed) => ({
+        baseIds: expandSeedIds([seed]),
+        scope: seed.scope,
+      })),
+    ).schema,
+    "pieceId",
+  );
+  ids.dieId = markManifestScopedSchema(
+    createInstanceDeclaration(
+      "die",
+      (source.dieSeeds ?? []).map((seed) => ({
+        baseIds: expandSeedIds([seed]),
+        scope: seed.scope,
+      })),
+    ).schema,
+    "dieId",
   );
   const zoneDefinitions = Object.freeze(
     Object.fromEntries(
@@ -147,11 +191,50 @@ export function compileManifest<
       ]),
     ),
   );
+  let rosterKey = "";
+  let rosterSchema: z.ZodType | undefined;
   const tableSchema = assumeManifestSchema<RuntimeTableRecord>(
-    createTableSchema(analysis, ids, { zoneDefinitions }),
+    z.unknown().transform((table, context) => {
+      const header = z
+        .object({
+          playerOrder: PlayerRosterSchema,
+        })
+        .safeParse(table);
+      if (!header.success) {
+        for (const issue of header.error.issues)
+          context.addIssue({
+            code: "custom",
+            path: issue.path,
+            message: issue.message,
+          });
+        return z.NEVER;
+      }
+      const key = JSON.stringify(header.data.playerOrder);
+      if (!rosterSchema || key !== rosterKey) {
+        // Source was admitted once; runtime roster analysis is structural only.
+        const nextSchema = createTableSchema(
+          analyzeManifestStructure(source, header.data.playerOrder),
+          ids,
+          { zoneDefinitions },
+        );
+        rosterSchema = nextSchema;
+        rosterKey = key;
+      }
+      const parsed = rosterSchema.safeParse(table);
+      if (!parsed.success) {
+        for (const issue of parsed.error.issues)
+          context.addIssue({
+            code: "custom",
+            path: issue.path,
+            message: issue.message,
+          });
+        return z.NEVER;
+      }
+      return parsed.data;
+    }),
   );
   const resolvePlayers = (players: readonly string[] = analysis.playerIds) =>
-    players.map(asPlayerId);
+    PlayerRosterSchema.parse(players).map(asPlayerId);
   const defaults = {
     zones: (players?: readonly string[]) =>
       Object.fromEntries(
@@ -165,10 +248,16 @@ export function compileManifest<
           ),
         ]),
       ),
-    ownerOfCard: () =>
-      Object.fromEntries(analysis.cardIds.map((id) => [id, null])),
-    visibility: () =>
-      Object.fromEntries(analysis.cardIds.map((id) => [id, { faceUp: true }])),
+    ownerOfCard: (players?: readonly string[]) =>
+      initialCardMetadata(
+        source.cardSets,
+        PlayerRosterSchema.parse(players ?? []),
+      ).ownerOfCard,
+    visibility: (players?: readonly string[]) =>
+      initialCardMetadata(
+        source.cardSets,
+        PlayerRosterSchema.parse(players ?? []),
+      ).visibility,
     resources: (players?: readonly string[]) =>
       Object.fromEntries(
         resolvePlayers(players).map((id) => [
@@ -181,19 +270,19 @@ export function compileManifest<
     phaseNameSchema: z.string(),
     playerIdSchema: ids.playerId,
   });
-  const createInitialTable = (
-    options: {
-      playerIds?: readonly string[];
-      shuffleItems?: <V>(values: readonly V[]) => V[];
-    } = {},
-  ) =>
-    tableSchema.parse(
+  const createInitialTable = (options: {
+    playerIds: readonly string[];
+    shuffleItems?: <V>(values: readonly V[]) => V[];
+  }) => {
+    const playerIds = PlayerRosterSchema.parse(options.playerIds);
+    return tableSchema.parse(
       materializeManifestTable({
         manifest: source,
-        playerIds: options.playerIds ?? analysis.playerIds,
+        playerIds,
         shuffleItems: options.shuffleItems ?? ((values) => [...values]),
       }),
     );
+  };
   // eslint-disable-next-line no-restricted-syntax -- Analysis of M supplies every literal, schema, record, and setup factory; this compiler binds those runtime results to the M-derived facade.
   return {
     zoneDefinitions,
@@ -203,14 +292,34 @@ export function compileManifest<
     records: Object.fromEntries(
       families.map((family) => [
         `${family}s`,
-        <V>(initial: V | ((id: string) => V)) =>
-          buildTypedRecord(literals[`${family}s`], initial),
+        <V>(
+          initial: V | ((id: string) => V),
+          options?: { playerIds: readonly string[] },
+        ) => {
+          const dynamic =
+            family === "cardId" ||
+            family === "pieceId" ||
+            family === "dieId" ||
+            family === "boardId";
+          if (dynamic && !options)
+            throw new Error(
+              "Instance record factories require explicit playerIds.",
+            );
+          const keys =
+            dynamic && options
+              ? analyzeManifestStructure(
+                  source,
+                  PlayerRosterSchema.parse(options.playerIds),
+                )[`${family}s`]
+              : literals[`${family}s`];
+          return buildTypedRecord(keys, initial);
+        },
       ]),
     ),
     tableSchema,
     runtimeSchema,
     schemas: { table: tableSchema, runtime: runtimeSchema },
-    staticBoards: initial.boards,
+    staticBoards,
     createInitialTable,
     normalSetup: {
       minPlayers: source.players.minPlayers,

@@ -69,7 +69,7 @@ const compiled = compileManifest({
   boards: [],
 });
 
-const table = compiled.createInitialTable();
+const table = compiled.createInitialTable({ playerIds: [] });
 const strike = table.cards["strike-1"];
 const secondStrike = table.cards["strike-2"];
 const block = table.cards.block;
@@ -202,10 +202,11 @@ const playingCards = compileManifest({
   zones: [],
   boards: [],
 });
-const aceCategory: "SPADES_A" =
-  playingCards.createInitialTable().cards.SPADES_A.cardType;
+const aceCategory: "SPADES_A" = playingCards.createInitialTable({
+  playerIds: [],
+}).cards.SPADES_A.cardType;
 // @ts-expect-error Playing-card IDs come only from the authored inventory.
-playingCards.createInitialTable().cards.CLUBS_2;
+playingCards.createInitialTable({ playerIds: [] }).cards.CLUBS_2;
 void aceCategory;
 
 // Headless views preserve card inference while exposing only display fields.

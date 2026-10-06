@@ -1,6 +1,6 @@
 import type { AnyReducerGameDefinition } from "../reducer/model.js";
 
-/** Authored manifest roster is the authority for both replay and local sources. */
+/** Local testing convenience creates the explicit roster used by the session. */
 export function resolvePlayerRoster(
   game: Pick<AnyReducerGameDefinition, "contract">,
   count: number,
@@ -13,8 +13,5 @@ export function resolvePlayerRoster(
     count > setup.maxPlayers
   )
     throw new Error("Player count is outside manifest limits.");
-  const declared = game.contract.manifest.literals.playerIds;
-  if (declared.length < count)
-    throw new Error("Manifest roster does not contain enough players.");
-  return declared.slice(0, count);
+  return Array.from({ length: count }, (_, seat) => `player-${seat + 1}`);
 }

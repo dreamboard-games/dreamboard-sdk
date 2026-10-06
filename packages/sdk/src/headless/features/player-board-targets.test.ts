@@ -1,3 +1,5 @@
+import { createReducerTestingRuntime } from "../../testing/reducer-runtime.js";
+import { perPlayerInstanceId } from "../../shared/domain/per-player-instance.js";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { RuntimeJsonSchema } from "../../shared/runtime-json.js";
@@ -9,10 +11,11 @@ import { dragFeature } from "./drag.js";
 
 const targetSchema = z.object({
   boardId: z.string(),
-  playerId: z.string(),
   spaceId: z.string(),
 });
-function authoredGame() {
+function authoredGame(
+  scalarBoard = perPlayerInstanceId("board", "mat", "player-2"),
+) {
   const model = createGame({
     manifest: {
       players: { minPlayers: 2, maxPlayers: 2 },
@@ -77,7 +80,8 @@ function authoredGame() {
     where: {
       id: "owner",
       errorCode: "NOT_OWNED",
-      test: ({ playerId, target }) => playerId === target.playerId,
+      test: ({ playerId, target, q }) =>
+        q.board(target.boardId).state.playerId === playerId,
     },
   });
   return model.assemble({
@@ -122,7 +126,7 @@ function authoredGame() {
           scalar: play.interaction({
             commit: { mode: "manual" },
             inputs: {
-              space: play.inputs.board.space({ boardId: "mat:player-2" }),
+              space: play.inputs.board.space({ boardId: scalarBoard }),
             },
             reduce() {},
           }),
@@ -139,10 +143,12 @@ function authoredGame() {
     view: model.view(({ state }) => ({ selected: state.publicState.selected })),
   });
 }
-const ownTarget = { boardId: "mat", playerId: "player-1", spaceId: "slot" };
+const ownTarget = {
+  boardId: perPlayerInstanceId("board", "mat", "player-1"),
+  spaceId: "slot",
+};
 const opponentTarget = {
-  boardId: "mat",
-  playerId: "player-2",
+  boardId: perPlayerInstanceId("board", "mat", "player-2"),
   spaceId: "slot",
 };
 async function setup() {
@@ -174,18 +180,24 @@ describe("per-player board target identity through local sources", () => {
     expect(
       input.getIsEligible({ ...opponentTarget, playerId: "missing" }),
     ).toBe(false);
-    const old = space("mat:player-2");
+    const old = space(perPlayerInstanceId("board", "mat", "player-2"));
     old.getTargetProps({ interaction: "play.single" }).onClick();
     expect(game.state.drafts["play.single"]?.space).toEqual(opponentTarget);
     expect(old.getIsSelected()).toBe(false);
-    expect(space("mat:player-1").getIsSelected()).toBe(false);
-    expect(space("mat:player-2").getIsSelected()).toBe(true);
     expect(
-      game.interactions.get("play.single").getInputs()[0].getIsSelected({
-        spaceId: "slot",
-        playerId: "player-2",
-        boardId: "mat",
-      }),
+      space(perPlayerInstanceId("board", "mat", "player-1")).getIsSelected(),
+    ).toBe(false);
+    expect(
+      space(perPlayerInstanceId("board", "mat", "player-2")).getIsSelected(),
+    ).toBe(true);
+    expect(
+      game.interactions
+        .get("play.single")
+        .getInputs()[0]
+        .getIsSelected({
+          spaceId: "slot",
+          boardId: perPlayerInstanceId("board", "mat", "player-2"),
+        }),
     ).toBe(true);
     expect(await game.interactions.get("play.single").submit()).toEqual({
       accepted: true,
@@ -198,17 +210,26 @@ describe("per-player board target identity through local sources", () => {
 
   it("submits two same-named spaces independently and uses semantic tuple equality for toggles", async () => {
     const { source, game, space } = await setup();
-    space("mat:player-1").getSelectHandler({ interaction: "play.several" })();
-    space("mat:player-2").getSelectHandler({ interaction: "play.several" })();
+    space(perPlayerInstanceId("board", "mat", "player-1")).getSelectHandler({
+      interaction: "play.several",
+    })();
+    space(perPlayerInstanceId("board", "mat", "player-2")).getSelectHandler({
+      interaction: "play.several",
+    })();
     const input = game.interactions.get("play.several").getInputs()[0];
     expect(input.getValue()).toEqual([ownTarget, opponentTarget]);
     input
-      .getTargetProps({ spaceId: "slot", playerId: "player-2", boardId: "mat" })
+      .getTargetProps({
+        spaceId: "slot",
+        boardId: perPlayerInstanceId("board", "mat", "player-2"),
+      })
       .onClick();
     expect(
       game.interactions.get("play.several").getInputs()[0].getValue(),
     ).toEqual([ownTarget]);
-    space("mat:player-2").getSelectHandler({ interaction: "play.several" })();
+    space(perPlayerInstanceId("board", "mat", "player-2")).getSelectHandler({
+      interaction: "play.several",
+    })();
     expect(await game.interactions.get("play.several").submit()).toEqual({
       accepted: true,
     });
@@ -221,12 +242,13 @@ describe("per-player board target identity through local sources", () => {
   it("rejects scalars, forged identity, excluded opponents and reordered duplicate tuples without mutation", async () => {
     const { source, game, space } = await setup();
     expect(
-      space("mat:player-2").getTargetProps({ interaction: "play.own" })
-        .disabled,
+      space(perPlayerInstanceId("board", "mat", "player-2")).getTargetProps({
+        interaction: "play.own",
+      }).disabled,
     ).toBe(true);
     for (const [interaction, params] of [
       ["single", { space: "slot" }],
-      ["single", { space: { ...ownTarget, boardId: "mat:player-1" } }],
+      ["single", { space: { ...ownTarget, boardId: "mat" } }],
       ["single", { space: { ...ownTarget, playerId: "unknown" } }],
       ["own", { space: opponentTarget }],
       ["several", { spaces: ["slot", "slot"] }],
@@ -235,7 +257,10 @@ describe("per-player board target identity through local sources", () => {
         {
           spaces: [
             ownTarget,
-            { spaceId: "slot", playerId: "player-1", boardId: "mat" },
+            {
+              spaceId: "slot",
+              boardId: perPlayerInstanceId("board", "mat", "player-1"),
+            },
           ],
         },
       ],
@@ -255,7 +280,7 @@ describe("per-player board target identity through local sources", () => {
 
   it("rechecks stale click eligibility while retaining old snapshot values", async () => {
     const { source, game, space } = await setup();
-    const old = space("mat:player-2");
+    const old = space(perPlayerInstanceId("board", "mat", "player-2"));
     const oldInput = game.interactions.get("play.single").getInputs()[0];
     old.getSelectHandler({ interaction: "play.single" })();
     expect(await source.submit("close", {})).toEqual({ accepted: true });
@@ -273,7 +298,7 @@ describe("per-player board target identity through local sources", () => {
 
   it("preserves complete scalar IDs for a specifically addressed runtime board", async () => {
     const { source, game, space } = await setup();
-    const target = space("mat:player-2");
+    const target = space(perPlayerInstanceId("board", "mat", "player-2"));
     expect(target.getTargetProps({ interaction: "play.scalar" }).disabled).toBe(
       false,
     );
@@ -299,11 +324,14 @@ describe("per-player board target identity through local sources", () => {
       opponentTarget,
     ]);
     const target = targets[1];
-    if (target.valueKind !== "player-board-space")
+    if (target.valueKind !== "board-space")
       throw new Error("Expected a player-space drop target");
     game.drag.setDropTarget({
       ...target,
-      value: { spaceId: "slot", playerId: "player-2", boardId: "mat" },
+      value: {
+        spaceId: "slot",
+        boardId: perPlayerInstanceId("board", "mat", "player-2"),
+      },
     });
     game.drag.drop();
     expect(game.state.drafts["play.drop"]).toEqual({
@@ -317,5 +345,43 @@ describe("per-player board target identity through local sources", () => {
       selected: [opponentTarget],
     });
     game.dispose();
+  });
+});
+
+describe("current roster board projection", () => {
+  it("projects admitted custom identities and current board fields independently of static compilation", async () => {
+    const playerIds = ['seat:one/"', "table"];
+    const game = authoredGame(
+      perPlayerInstanceId("board", "mat", playerIds[1]),
+    );
+    const table = game.contract.manifest.createInitialTable({ playerIds });
+    const boardId = perPlayerInstanceId("board", "mat", playerIds[0]);
+    const runtime = createReducerTestingRuntime(game);
+    const initial = await runtime.initialize({
+      table: RuntimeJsonSchema.parse(table),
+      playerIds,
+      rngSeed: 1,
+    });
+    const first = runtime.project({ state: initial.state, playerIds });
+    expect(first.seats[playerIds[0]].boards).toEqual(table.boards);
+    expect(Object.keys(first.seats[playerIds[0]].boards!.byId)).toEqual(
+      playerIds.map((id) => perPlayerInstanceId("board", "mat", id)),
+    );
+    table.boards.byId[boardId].fields = { score: 7 };
+    const updated = runtime.project({
+      state: {
+        ...initial.state,
+        domain: {
+          ...initial.state.domain,
+          table: RuntimeJsonSchema.parse(table),
+        },
+      },
+      playerIds,
+    });
+    expect(updated.seats[playerIds[0]].boards!.byId[boardId].fields).toEqual({
+      score: 7,
+    });
+    expect(first.seats[playerIds[0]].boards!.byId[boardId].fields).toEqual({});
+    expect(game.contract.manifest.staticBoards.byId).toEqual({});
   });
 });

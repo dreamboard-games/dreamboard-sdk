@@ -101,9 +101,9 @@ adds the card and never toggles a many-card choice back out.
 
 A `BoardDropTarget` carries `interactionKey`, `cardInputKey`, `inputKey`, and a
 board identity discriminated by `valueKind`. A `"board-id"` target has scalar
-`value` and runtime `boardId`. A `"player-board-space"` target has a complete
-`{ boardId, playerId, spaceId }` tuple in `value`. Its board ID is the base manifest
-ID; no duplicate outer board ID is needed. Pass a resolved target through unchanged.
+`value` and runtime `boardId`. A `"board-space"` target has a complete
+`{ boardId, spaceId }` value using the canonical runtime board ID. It has no
+redundant player or outer board ID. Pass a resolved target through unchanged.
 
 The React binding returns `useCardGesture(cardId, { drag: false | { interaction?, input? } })`,
 `useDropArea(binding)` and `useDragOverlay()`. `createGestureRecognizer`

@@ -1,3 +1,4 @@
+import { perPlayerInstanceId } from "../../shared/domain/per-player-instance.js";
 import { z } from "zod";
 import { createGame } from "./game";
 import { boardInput, boardTarget } from "../inputs";
@@ -42,8 +43,7 @@ const supply: CollectorValueOf<typeof space> = "supply";
 const wrongSpace: CollectorValueOf<typeof space> = "slot";
 const playerSpace = phase.inputs.board.playerSpace({ boardId: "mat" });
 const target: CollectorValueOf<typeof playerSpace> = {
-  boardId: "mat",
-  playerId: game.contract.manifest.ids.playerId.parse("player-2"),
+  boardId: perPlayerInstanceId("board", "mat", "player-2"),
   spaceId: "slot",
 };
 // @ts-expect-error Shared boards cannot be selected by player-space input.
@@ -63,7 +63,9 @@ const tuple = boardTarget
 // @ts-expect-error Scalar space collectors cannot consume player-space tuples.
 boardInput.space({ target: tuple });
 const q = createTableQueries(
-  game.contract.manifest.createInitialTable(),
+  game.contract.manifest.createInitialTable({
+    playerIds: ["player-1", "player-2"],
+  }),
   game.contract.manifest,
 );
 q.slot.occupants({ kind: "piece", id: "pawn" }, "pocket");

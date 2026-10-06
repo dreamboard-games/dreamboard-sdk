@@ -307,6 +307,10 @@ export type FieldReferenceContext = {
   stage: "manifest" | "session";
   ids: Readonly<Partial<Record<FieldRefFamily, readonly string[]>>>;
   deferred?: readonly FieldRefFamily[];
+  /** Static declaration membership for families whose seats are not known yet. */
+  accepts?: Readonly<
+    Partial<Record<FieldRefFamily, (value: string) => boolean>>
+  >;
 };
 export function fieldValidator(
   schema: FieldSchemaJson,
@@ -365,7 +369,86 @@ export function fieldValidator(
   const json = z.record(z.string(), z.json()).parse(resolve(schema));
   validateDefaults(json);
   const normalize = createOutputNormalizer(json);
-  return validatorFromJson(json).transform(normalize);
+  const referenceChecks = createDeferredReferenceChecks(schema, context);
+  function checkDefaults(node: FieldSchemaJson): void {
+    if (Object.hasOwn(node, "default")) {
+      const issues = createDeferredReferenceChecks(node, context)(node.default);
+      if (issues.length)
+        throw new Error(
+          `Invalid field reference default: ${issues.map((issue) => issue.message).join("; ")}`,
+        );
+    }
+    for (const child of schemaChildren(node)) checkDefaults(child);
+  }
+  checkDefaults(schema);
+  return validatorFromJson(json)
+    .superRefine((value, ctx) => {
+      for (const issue of referenceChecks(value))
+        ctx.addIssue({ code: "custom", ...issue });
+    })
+    .transform(normalize);
+}
+
+/** Compile only deferred reference membership, alongside the JSON constraint owner. */
+function createDeferredReferenceChecks(
+  schema: FieldSchemaJson,
+  context: FieldReferenceContext,
+) {
+  type Issue = { path: PropertyKey[]; message: string };
+  type Check = (value: unknown, path: PropertyKey[], issues: Issue[]) => void;
+  function build(node: FieldSchemaJson): Check {
+    const family = FIELD_REF_FAMILIES.find(
+      (family) => node[FIELD_REF_KEY] === family,
+    );
+    const admit =
+      family && context.deferred?.includes(family)
+        ? context.accepts?.[family]
+        : undefined;
+    const properties =
+      node.properties === undefined
+        ? new Map<string, Check>()
+        : new Map(
+            Object.entries(jsonObject(node.properties)).map(([key, child]) => [
+              key,
+              build(jsonObject(child)),
+            ]),
+          );
+    const items =
+      node.items === undefined ? undefined : build(jsonObject(node.items));
+    const additional =
+      node.additionalProperties && typeof node.additionalProperties === "object"
+        ? build(jsonObject(node.additionalProperties))
+        : undefined;
+    const nullable = Array.isArray(node.anyOf)
+      ? node.anyOf
+          .filter((child) => jsonObject(child).type !== "null")
+          .map((child) => build(jsonObject(child)))
+      : [];
+    return (value, path, issues) => {
+      if (typeof value === "string" && admit && !admit(value))
+        issues.push({
+          path,
+          message: `Unknown declared ${family} reference '${value}'`,
+        });
+      if (Array.isArray(value) && items)
+        value.forEach((child, i) => items(child, [...path, i], issues));
+      else if (
+        value !== null &&
+        typeof value === "object" &&
+        !Array.isArray(value)
+      )
+        for (const [key, child] of Object.entries(value))
+          (properties.get(key) ?? additional)?.(child, [...path, key], issues);
+      if (value !== null)
+        for (const check of nullable) check(value, path, issues);
+    };
+  }
+  const check = build(schema);
+  return (value: unknown): Issue[] => {
+    const issues: Issue[] = [];
+    check(value, [], issues);
+    return issues;
+  };
 }
 
 /** Zod's JSON reader prioritizes enum/const over sibling constraints. */

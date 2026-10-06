@@ -59,7 +59,7 @@ export function materializePluginGameplayFrame(
       actionSetVersion: input.actionSetVersion,
       perspectivePlayerId: input.perspectivePlayerId,
     },
-    view: materializeView(staticProjection, seat?.view),
+    view: materializeView(staticProjection, seat?.view, seat?.boards),
     flow: {
       currentPhase: input.currentPhase,
       activePlayers: [...input.activePlayers],
@@ -75,10 +75,13 @@ export function materializePluginGameplayFrame(
 function materializeView(
   staticProjection: ReducerBoardStaticProjection | null,
   seatView: unknown,
+  seatBoards: ReducerSeatProjectionBundle["seats"][string]["boards"],
 ): RuntimeJson | null {
-  const parts = [staticProjection?.view, seatView].filter(
-    (part) => part !== undefined && part !== null,
-  );
+  const parts = [
+    staticProjection?.view,
+    seatView,
+    seatBoards === undefined ? undefined : { boards: seatBoards },
+  ].filter((part) => part !== undefined && part !== null);
   if (parts.length === 0) return null;
   // Admitting schemas guarantee records and reject authored `boards` fields.
   return Object.assign({}, ...parts) as Record<string, RuntimeJson>;

@@ -32,9 +32,10 @@ export type CardInputCollectorMeta = {
 
 export type BoardInputCollectorMeta = {
   readonly targetKind: TargetKind;
-  readonly boardId: string;
-  readonly valueKind?: "board-id" | "player-board-space";
-};
+} & (
+  | { readonly boardId: string; readonly valueKind?: "board-id" }
+  | { readonly boardBaseId: string; readonly valueKind: "board-space" }
+);
 
 export type RngInputCollectorMeta =
   { readonly rng: "d6"; readonly count: number } | { readonly rng: "coin" };

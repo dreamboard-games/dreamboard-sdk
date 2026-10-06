@@ -10,7 +10,9 @@ export default defineTopologyManifest({
     optimalPlayers: 3,
   },
   cardSets: [],
-  zones: [],
+  zones: [
+    { id: "supply", name: "Supply", scope: "perPlayer", visibility: "public" },
+  ],
   boards,
   pieceTypes,
   pieceSeeds,

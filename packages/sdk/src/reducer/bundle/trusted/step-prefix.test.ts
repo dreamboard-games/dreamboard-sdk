@@ -1,3 +1,5 @@
+import { perPlayerInstanceId } from "../../../shared/domain/per-player-instance.js";
+import { isBoardSpaceTarget } from "../../../shared/board-target.js";
 import { inputDefinitions } from "../../input-test-fixtures";
 import { describe, expect, test } from "vitest";
 import { InteractionSteps } from "../../authoring/steps";
@@ -113,16 +115,22 @@ describe("ordered committed prefix evaluation", () => {
     const scoped = {
       ...collector,
       eligibleTargets: () => [
-        { boardId: "home", playerId: "player-1", spaceId: "slot" },
+        {
+          boardId: perPlayerInstanceId("board", "home", "player-1"),
+          spaceId: "slot",
+        },
       ],
       domain: () => ({
         type: "boardTarget" as const,
         projection: "resolved" as const,
         targetKind: "space" as const,
-        boardId: "home",
-        valueKind: "player-board-space" as const,
+        boardBaseId: "home",
+        valueKind: "board-space" as const,
         eligibleTargets: [
-          { boardId: "home", playerId: "player-1", spaceId: "slot" },
+          {
+            boardId: perPlayerInstanceId("board", "home", "player-1"),
+            spaceId: "slot",
+          },
         ],
       }),
       validateTarget: (
@@ -131,8 +139,8 @@ describe("ordered committed prefix evaluation", () => {
         _q: unknown,
         value: unknown,
       ) => {
-        const target = value as { playerId: string };
-        return target.playerId === playerId
+        return isBoardSpaceTarget(value) &&
+          value.boardId === perPlayerInstanceId("board", "home", playerId)
           ? null
           : { errorCode: "WRONG_SEAT" };
       },
@@ -143,11 +151,19 @@ describe("ordered committed prefix evaluation", () => {
         steps,
         state,
         "player-1",
-        [{ boardId: "home", playerId: "player-1", spaceId: "slot" }],
+        [
+          {
+            boardId: perPlayerInstanceId("board", "home", "player-1"),
+            spaceId: "slot",
+          },
+        ],
         inputDefinitions,
       ).selected,
     ).toEqual({
-      space: { boardId: "home", playerId: "player-1", spaceId: "slot" },
+      space: {
+        boardId: perPlayerInstanceId("board", "home", "player-1"),
+        spaceId: "slot",
+      },
     });
     expect(
       evaluateStepPrefix(steps, state, "player-1", ["slot"], inputDefinitions)
@@ -158,7 +174,12 @@ describe("ordered committed prefix evaluation", () => {
         steps,
         state,
         "player-1",
-        [{ boardId: "home", playerId: "player-2", spaceId: "slot" }],
+        [
+          {
+            boardId: perPlayerInstanceId("board", "home", "player-2"),
+            spaceId: "slot",
+          },
+        ],
         inputDefinitions,
       ).complete,
     ).toBe(false);
@@ -167,7 +188,12 @@ describe("ordered committed prefix evaluation", () => {
         steps,
         state,
         "player-1",
-        [{ boardId: "other", playerId: "player-1", spaceId: "slot" }],
+        [
+          {
+            boardId: perPlayerInstanceId("board", "other", "player-1"),
+            spaceId: "slot",
+          },
+        ],
         inputDefinitions,
       ).complete,
     ).toBe(false);
