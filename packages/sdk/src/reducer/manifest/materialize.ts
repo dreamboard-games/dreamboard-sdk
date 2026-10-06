@@ -166,6 +166,10 @@ interface ManifestAnalysis {
   pieceTypeIdByPieceId: Map<string, string>;
   dieTypeIds: string[];
   dieIds: string[];
+  tileTypeIds: string[];
+  tileIds: string[];
+  tileTypeIdByTileId: Map<string, string>;
+  tilePropertiesSchemasById: Map<string, FieldSchemaJson | undefined>;
   dieTypeIdByDieId: Map<string, string>;
   boardBaseIds: string[];
   boardIds: string[];
@@ -830,6 +834,22 @@ export function analyzeManifestStructure(
     }
   }
   const dieIds = dedupeSorted(dieTypeIdByDieId.keys());
+  const tileTypeIds = dedupeSorted(
+    (manifest.tileTypes ?? []).map((type) => type.id),
+  );
+  const tilePropertiesSchemasById = new Map(
+    (manifest.tileTypes ?? []).map((type) => [type.id, type.propertiesSchema]),
+  );
+  const tileTypeIdByTileId = new Map<string, string>();
+  for (const seed of manifest.tileSeeds ?? [])
+    for (const { id } of scopedInstances(
+      "tile",
+      expandSeedIds([seed]),
+      seed.scope,
+      playerIds,
+    ))
+      tileTypeIdByTileId.set(id, seed.typeId);
+  const tileIds = dedupeSorted(tileTypeIdByTileId.keys());
   const analyzedBoards = analyzeBoards(manifest, playerIds);
   const boardBaseIds = dedupeSorted(
     analyzedBoards.map(({ board }) => board.id),
@@ -1011,6 +1031,10 @@ export function analyzeManifestStructure(
     dieTypeIds,
     dieIds,
     dieTypeIdByDieId,
+    tileTypeIds,
+    tileIds,
+    tileTypeIdByTileId,
+    tilePropertiesSchemasById,
     boardBaseIds,
     boardIds,
     boardTypeIds,
@@ -1078,6 +1102,11 @@ export function fieldReferenceContext(
             )
               ? ["pieceId" as const]
               : []),
+            ...(analysis.manifest.tileSeeds?.some(
+              (seed) => seed.scope === "perPlayer",
+            )
+              ? ["tileId" as const]
+              : []),
             ...(analysis.manifest.dieSeeds?.some(
               (seed) => seed.scope === "perPlayer",
             )
@@ -1112,6 +1141,13 @@ export function fieldReferenceContext(
                 scope: seed.scope,
               })),
             ).accepts,
+            tileId: createInstanceDeclaration(
+              "tile",
+              (analysis.manifest.tileSeeds ?? []).map((seed) => ({
+                baseIds: expandSeedIds([seed]),
+                scope: seed.scope,
+              })),
+            ).accepts,
             dieId: createInstanceDeclaration(
               "die",
               (analysis.manifest.dieSeeds ?? []).map((seed) => ({
@@ -1139,6 +1175,7 @@ export function fieldReferenceContext(
           : analysis.vertexIds,
       pieceId: analysis.pieceIds,
       dieId: analysis.dieIds,
+      tileId: analysis.tileIds,
       resourceId: analysis.resourceIds,
     },
   };
@@ -1261,11 +1298,24 @@ function materializeManifest(
   const manifest = analysis.manifest;
   const playerIds = [...options.playerIds];
 
+  for (const type of manifest.tileTypes ?? []) {
+    fields(type.fieldsSchema, analysis, type.fields);
+    for (const cell of type.cells)
+      fields(type.cellFieldsSchema, analysis, cell.fields);
+    for (const edge of type.edges ?? [])
+      fields(type.edgeFieldsSchema, analysis, edge.fields);
+    for (const vertex of type.vertices ?? [])
+      fields(type.vertexFieldsSchema, analysis, vertex.fields);
+  }
+
   const cards = createRecord<
     ZoneTable["cards"][string] & Record<string, unknown>
   >();
   const pieces = createRecord<
     ZoneTable["pieces"][string] & Record<string, unknown>
+  >();
+  const tiles = createRecord<
+    ZoneTable["tiles"][string] & Record<string, unknown>
   >();
   const dice = createRecord<
     ZoneTable["dice"][string] & Record<string, unknown>
@@ -1642,6 +1692,30 @@ function materializeManifest(
     }
   }
 
+  for (const [index, seed] of (manifest.tileSeeds ?? []).entries()) {
+    for (const { id, playerId: origin } of scopedInstances(
+      "tile",
+      expandSeedIds([seed]),
+      seed.scope,
+      playerIds,
+    )) {
+      tiles[id] = {
+        componentType: "tile",
+        id,
+        tileTypeId: seed.typeId,
+        ownerId: origin,
+        properties: fields(
+          analysis.tilePropertiesSchemasById.get(seed.typeId),
+          analysis,
+          seed.properties,
+        ),
+      };
+      assignSeedLocation(id, origin, seed.home, {
+        path: `manifest.tileSeeds[${index}].home`,
+        label: `Tile seed '${seed.id}'`,
+      });
+    }
+  }
   const boardStatesById = createRecord<
     ZoneTable["boards"]["byId"][string] & Record<string, unknown>
   >();
@@ -1793,6 +1867,7 @@ function materializeManifest(
     cards,
     pieces,
     dice,
+    tiles,
     componentLocations,
     boards: { byId: boardStatesById },
   };
@@ -1835,5 +1910,6 @@ function materializeManifest(
       track: {},
     },
     dice,
+    tiles,
   });
 }

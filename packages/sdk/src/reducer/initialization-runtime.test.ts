@@ -43,6 +43,7 @@ function createEmptyTable(
   playerIds = ["player-1", "player-2"],
 ): RuntimeTableRecord {
   return {
+    tiles: {},
     playerOrder: [...playerIds],
     zones: {},
 
@@ -404,6 +405,7 @@ describe("initialization runtime", () => {
     const initialized = (
       await bundle.initialize({
         table: {
+          tiles: {},
           playerOrder: ["player-1", "player-2"],
           zones: {
             "draw-deck": { table: ["card-1"] },
@@ -555,6 +557,7 @@ describe("initialization runtime", () => {
   test("transaction initialization shuffles, deals cards, and places components", () => {
     const initialState = {
       table: {
+        tiles: {},
         playerOrder: ["player-1", "player-2"],
         zones: {
           "draw-deck": { table: ["card-1", "card-2", "card-3"] },
@@ -742,6 +745,7 @@ describe("initialization runtime", () => {
   test("transaction initialization rejects incompatible card destinations", () => {
     const initialState = {
       table: {
+        tiles: {},
         playerOrder: ["player-1"],
         zones: {
           "draw-deck": { table: ["card-1"] },

@@ -14,6 +14,8 @@ function buildMinimalManifest() {
   const resourceIds = ["brick", "grain", "lumber"] as const;
   return {
     literals: {
+      tileTypeIds: [] as const,
+      tileIds: [] as const,
       boardLayouts: [] as const,
       boardTypeIds: [] as const,
       relationTypeIds: [] as const,
@@ -40,6 +42,8 @@ function buildMinimalManifest() {
       cardTypeByCardId: {} as const,
     },
     ids: {
+      tileTypeId: z.never(),
+      tileId: z.never(),
       boardLayout: z.enum(["hex", "square", "network", "track"]),
       playerId: createManifestStringLiteralSchema(playerIds),
       phaseName: z.enum(["phase-1"] as const),

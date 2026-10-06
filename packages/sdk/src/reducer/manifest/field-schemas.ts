@@ -22,6 +22,7 @@ export const FIELD_REF_FAMILIES = [
   "vertexId",
   "pieceId",
   "dieId",
+  "tileId",
   "resourceId",
 ] as const;
 export type FieldRefFamily = (typeof FIELD_REF_FAMILIES)[number];
@@ -40,6 +41,7 @@ export const ref = {
   vertexId: () => marker("vertexId"),
   pieceId: () => marker("pieceId"),
   dieId: () => marker("dieId"),
+  tileId: () => marker("tileId"),
   resourceId: () => marker("resourceId"),
 };
 export type FieldSchema = z.ZodObject<
@@ -947,9 +949,17 @@ export function toManifestJson(value: unknown): unknown {
               "edgeFieldsSchema",
               "vertexFieldsSchema",
             ])
-          : key === "pieceTypes" || key === "dieTypes"
-            ? entries(child, ["fieldsSchema"])
-            : cloneData(child),
+          : key === "tileTypes"
+            ? entries(child, [
+                "fieldsSchema",
+                "propertiesSchema",
+                "cellFieldsSchema",
+                "edgeFieldsSchema",
+                "vertexFieldsSchema",
+              ])
+            : key === "pieceTypes" || key === "dieTypes"
+              ? entries(child, ["fieldsSchema"])
+              : cloneData(child),
     ]),
   );
   return json;

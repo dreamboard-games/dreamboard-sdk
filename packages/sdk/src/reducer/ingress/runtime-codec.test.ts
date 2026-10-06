@@ -95,6 +95,7 @@ function buildDefinition(
 function rawCanonicalTable() {
   const players = [asPlayerId("player-1"), asPlayerId("player-2")];
   return {
+    tiles: {},
     playerOrder: ["player-1", "player-2"],
     zones: {
       draw: { table: ["card-1"] },

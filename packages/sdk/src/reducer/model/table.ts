@@ -182,6 +182,14 @@ export type RuntimeDieData = {
   value?: number | null;
   properties: RuntimeRecord;
 };
+/** Geometry remains in public definitions; instances own only mutable state. */
+export type RuntimeTileData = {
+  componentType: "tile";
+  id: string;
+  tileTypeId: string;
+  ownerId: string | null;
+  properties: RuntimeRecord;
+};
 export type RuntimeComponentLocation =
   | { type: "Detached" }
   | {
@@ -224,4 +232,5 @@ export type RuntimeTableRecord = {
   resources: RuntimeResourceMap;
   boards: RuntimeBoardCollections;
   dice: Record<string, RuntimeDieData>;
+  tiles: Record<string, RuntimeTileData>;
 };

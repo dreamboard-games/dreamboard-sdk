@@ -7,6 +7,7 @@ import type {
   ZoneIdOfTable,
   ZoneComponentsOfTable,
   ZoneHostsOfTable,
+  TileIdOfTable,
   ZoneScopeOfTable,
   BoardIdOfTable,
   CardIdOfTable,
@@ -80,14 +81,12 @@ export type ComponentDataOfTable<
   cards: infer Cards extends Record<string, unknown>;
   pieces: infer Pieces extends Record<string, unknown>;
   dice: infer Dice extends Record<string, unknown>;
+  tiles: infer Tiles extends Record<string, unknown>;
 }
-  ? ComponentId extends keyof Cards
-    ? Cards[ComponentId]
-    : ComponentId extends keyof Pieces
-      ? Pieces[ComponentId]
-      : ComponentId extends keyof Dice
-        ? Dice[ComponentId]
-        : never
+  ? | (ComponentId extends keyof Cards ? Cards[ComponentId] : never)
+    | (ComponentId extends keyof Pieces ? Pieces[ComponentId] : never)
+    | (ComponentId extends keyof Dice ? Dice[ComponentId] : never)
+    | (ComponentId extends keyof Tiles ? Tiles[ComponentId] : never)
   : never;
 
 export type ComponentLocationByTypeOfTable<
@@ -196,6 +195,7 @@ export type TableQueries<Table extends RuntimeTableRecord> = {
     Table["boards"]["byId"][BoardId],
     ComponentIdOfTable<Table>
   >;
+  tile: <Id extends TileIdOfTable<Table>>(tileId: Id) => Table["tiles"][Id];
   zone: {
     <Z extends ZoneIdOfTable<Table>>(
       zoneId: Z,

@@ -16,6 +16,8 @@ function createModel() {
   return {
     manifest: {
       literals: {
+        tileTypeIds: [] as const,
+        tileIds: [] as const,
         playerIds,
         phaseNames,
         boardLayouts: emptyIds,
@@ -43,6 +45,8 @@ function createModel() {
         cardTypeByCardId: { "card-1": "action", "card-2": "action" },
       },
       ids: {
+        tileTypeId: z.never(),
+        tileId: z.never(),
         playerId: literalIds(playerIds),
         phaseName: literalIds(phaseNames),
         boardLayout: z.never(),

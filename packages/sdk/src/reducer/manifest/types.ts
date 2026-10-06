@@ -19,6 +19,7 @@ import type {
   RuntimeCardData,
   RuntimePieceData,
   RuntimeDieData,
+  RuntimeTileData,
   RuntimeComponentLocation,
   RuntimeBoardState,
   RuntimeGenericBoardState,
@@ -37,6 +38,8 @@ export type SchemaAuthoring<T> = T extends readonly (infer V)[]
         readonly [K in keyof T]: K extends "cardSchema"
           ? CardSchema
           : K extends
+                | "propertiesSchema"
+                | "cellFieldsSchema"
                 | "fieldsSchema"
                 | "boardFieldsSchema"
                 | "spaceFieldsSchema"
@@ -76,7 +79,7 @@ type ScopedId<
   Family extends PerPlayerInstanceFamily,
   Base extends string,
 > = S extends { scope: "perPlayer" } ? PerPlayerInstanceId<Family, Base> : Base;
-type SeedIds<S, Family extends "piece" | "die" = "piece"> = S extends {
+type SeedIds<S, Family extends "piece" | "die" | "tile" = "piece"> = S extends {
   typeId: infer T extends string;
 }
   ? ScopedId<
@@ -119,6 +122,8 @@ export type ManifestIdsOf<M> = {
   pieceId: SeedIds<Entries<M, "pieceSeeds">>;
   dieTypeId: Id<Entries<M, "dieTypes">>;
   dieId: SeedIds<Entries<M, "dieSeeds">, "die">;
+  tileTypeId: Id<Entries<M, "tileTypes">>;
+  tileId: SeedIds<Entries<M, "tileSeeds">, "tile">;
   boardTypeId: Extract<Get<Boards<M>, "typeId">, string>;
   boardBaseId: Id<Boards<M>>;
   boardId: RuntimeBoardId<Boards<M>>;
@@ -197,13 +202,20 @@ type SeedState<
 > = Seed extends { typeId: infer TypeId extends string }
   ? SeedIds<
       Seed,
-      TypeKey extends "dieTypeId" ? "die" : "piece"
+      TypeKey extends "tileTypeId"
+        ? "tile"
+        : TypeKey extends "dieTypeId"
+          ? "die"
+          : "piece"
     > extends infer RuntimeId
     ? RuntimeId extends string
       ? Omit<Data, "id" | TypeKey | "properties"> & {
           id: RuntimeId;
           properties: ObjectFields<
-            Get<Extract<Definition, { id: TypeId }>, "fieldsSchema">,
+            Get<
+              Extract<Definition, { id: TypeId }>,
+              TypeKey extends "tileTypeId" ? "propertiesSchema" : "fieldsSchema"
+            >,
             M
           >;
         } & Record<TypeKey, TypeId>
@@ -224,6 +236,13 @@ type DieState<M> = SeedState<
   RuntimeDieData,
   "dieTypeId"
 >;
+type TileState<M> = SeedState<
+  M,
+  Entries<M, "tileSeeds">,
+  Entries<M, "tileTypes">,
+  RuntimeTileData,
+  "tileTypeId"
+>;
 type EntityAtId<Entity, Id extends string> = Entity extends { id: infer Key }
   ? Id extends Key
     ? Entity & { id: Id }
@@ -236,6 +255,9 @@ type InferredPieces<M> = {
 };
 type InferredDice<M> = {
   [Id in SeedIds<Entries<M, "dieSeeds">, "die">]: EntityAtId<DieState<M>, Id>;
+};
+type InferredTiles<M> = {
+  [I in SeedIds<Entries<M, "tileSeeds">, "tile">]: EntityAtId<TileState<M>, I>;
 };
 type BoardField<B, K extends PropertyKey, M> = ObjectFields<Get<B, K>, M, B>;
 type BoardSpaceEntry<B> = B extends { layout: "hex"; spaces: infer Spaces }
@@ -351,10 +373,15 @@ export type HostIdOfZone<M, Z> = Z extends { scope: "shared" }
           : Z extends { attachedTo: { dieType: infer T } }
             ? SeedIds<Extract<Entries<M, "dieSeeds">, { typeId: T }>, "die">
             : never;
+type ZoneTileIds<M, Z> = Z extends { visibility: "hidden" | "ownerOnly" }
+  ? never
+  : ManifestIdsOf<M>["tileId"];
 type InferredZones<M> = {
   [Z in Entries<M, "zones"> as Id<Z>]: ZoneHostMap<
     HostIdOfZone<M, Z>,
-    ZoneCardIds<M, Z> | ManifestIdsOf<M>["pieceId" | "dieId"],
+    | ZoneCardIds<M, Z>
+    | ManifestIdsOf<M>["pieceId" | "dieId"]
+    | ZoneTileIds<M, Z>,
     Z extends { scope: infer S extends "shared" | "perPlayer" } ? S : "attached"
   >;
 };
@@ -367,6 +394,7 @@ export type ManifestTable<M> = AuthoredManifest extends M
       | "zones"
       | "cards"
       | "pieces"
+      | "tiles"
       | "dice"
       | "boards"
       | "resources"
@@ -378,10 +406,15 @@ export type ManifestTable<M> = AuthoredManifest extends M
       cards: InferredCards<M>;
       pieces: InferredPieces<M>;
       dice: InferredDice<M>;
+      tiles: InferredTiles<M>;
       componentLocations: Record<
         ManifestIdsOf<M>["cardId" | "pieceId" | "dieId"],
         RuntimeComponentLocation
-      >;
+      > &
+        Record<
+          ManifestIdsOf<M>["tileId"],
+          Extract<RuntimeComponentLocation, { type: "Detached" | "InZone" }>
+        >;
       resources: Record<
         PlayerId,
         Record<ManifestIdsOf<M>["resourceId"], number>
@@ -392,7 +425,7 @@ type SharedCardMetadata<M, Key extends "cardSetId" | "cardType"> = {
     Card in Exclude<CardState<M>, { id: PerPlayerInstanceId }> as Card["id"]
   ]: Card[Key];
 };
-type InstanceFamily = "cardId" | "pieceId" | "dieId" | "boardId";
+type InstanceFamily = "cardId" | "pieceId" | "dieId" | "tileId" | "boardId";
 type SharedBoardManifest<M> = Omit<M, "boards"> & {
   boards: readonly Exclude<Boards<M>, { scope: "perPlayer" }>[];
 };

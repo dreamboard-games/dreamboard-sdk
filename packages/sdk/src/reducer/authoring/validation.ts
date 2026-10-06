@@ -43,6 +43,8 @@ const MANIFEST_SCOPED_ID_NAMES = [
   "pieceId",
   "pieceTypeId",
   "dieId",
+  "tileId",
+  "tileTypeId",
   "dieTypeId",
   "cardSetId",
   "cardType",

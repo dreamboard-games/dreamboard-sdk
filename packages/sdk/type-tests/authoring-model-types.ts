@@ -80,6 +80,8 @@ const manifest = {
     },
   } as const,
   literals: {
+    tileTypeIds: [] as const,
+    tileIds: [] as const,
     playerIds,
     phaseNames,
     boardLayouts: [] as const,
@@ -106,6 +108,8 @@ const manifest = {
     cardTypeByCardId: { "card-1": "action", "card-2": "action" },
   },
   ids: {
+    tileTypeId: z.never(),
+    tileId: z.never(),
     playerId: createManifestStringLiteralSchema(playerIds),
     phaseName: createManifestStringLiteralSchema(phaseNames),
     boardLayout: z.never(),

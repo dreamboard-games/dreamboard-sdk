@@ -253,6 +253,7 @@ export function createSpatialTable() {
       network: {},
       track: {},
     },
+    tiles: {},
     dice: {
       "die-1": {
         id: "die-1",

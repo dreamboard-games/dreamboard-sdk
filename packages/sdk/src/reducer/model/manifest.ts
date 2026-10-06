@@ -51,6 +51,8 @@ export type ManifestLiterals<
   pieceIds: readonly string[];
   dieTypeIds: readonly string[];
   dieIds: readonly string[];
+  tileTypeIds: readonly string[];
+  tileIds: readonly string[];
   boardTypeIds: readonly string[];
   boardBaseIds: readonly string[];
   boardIds: readonly string[];
@@ -83,6 +85,8 @@ export type ManifestIds<
   pieceId: AnySchema;
   dieId: AnySchema;
   dieTypeId: AnySchema;
+  tileId: AnySchema;
+  tileTypeId: AnySchema;
   boardTypeId: AnySchema;
   boardId: AnySchema;
   boardBaseId: AnySchema;

@@ -1,3 +1,4 @@
+import { TileTypeSpecSchema } from "../../shared/domain/manifest-schema.js";
 import * as z from "zod";
 import { renderCardInstanceIds, expandSeedIds } from "./identity-runtime.js";
 import { GENERATED_ID_PREFIX } from "../../shared/domain/per-player-instance.js";
@@ -202,7 +203,7 @@ function validateCardHomes(manifest: GameTopologyManifest): string[] {
   return issues;
 }
 
-const CARD_IMAGE_PATH =
+const ASSET_IMAGE_PATH =
   /^assets\/(?:[\w-][\w.-]*\/)*[\w-][\w.-]*\.(?:avif|gif|jpe?g|png|svg|webp)$/i;
 
 /** Card images are repository files that hosts publish and deliver offline. */
@@ -211,7 +212,7 @@ function validateCardImages(manifest: GameTopologyManifest): string[] {
     cardSet.cards.flatMap((card, cardIndex) =>
       (["frontImage", "backImage"] as const).flatMap((key) => {
         const image = card[key];
-        return image === undefined || CARD_IMAGE_PATH.test(image)
+        return image === undefined || ASSET_IMAGE_PATH.test(image)
           ? []
           : [
               `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}].${key}: '${image}' must be an image path under assets/, such as assets/cards/front.webp.`,
@@ -564,6 +565,110 @@ function collectManifestRecordKeyIssues(
   ];
 }
 
+function validateTileDefinitions(manifest: GameTopologyManifest): string[] {
+  const errors: string[] = [];
+  errors.push(
+    ...collectDuplicateIdIssues({
+      entries: (manifest.tileTypes ?? []).map((type, i) => ({
+        id: type.id,
+        path: `manifest.tileTypes[${i}].id`,
+      })),
+      label: "tile type id",
+    }),
+  );
+  for (const [i, type] of (manifest.tileTypes ?? []).entries()) {
+    const path = `manifest.tileTypes[${i}]`;
+    const parsed = TileTypeSpecSchema.safeParse(type);
+    if (!parsed.success)
+      for (const issue of parsed.error.issues)
+        errors.push(`${path}.${issue.path.join(".")}: ${issue.message}`);
+    errors.push(...validateRecordKey(type.id, `${path}.id`));
+    errors.push(
+      ...collectDuplicateIdIssues({
+        entries: type.cells.map((cell, j) => ({
+          id: cell.id,
+          path: `${path}.cells[${j}].id`,
+        })),
+        label: "tile local cell id",
+      }),
+    );
+    const coordinates = new Set<string>();
+    for (const [j, cell] of type.cells.entries()) {
+      errors.push(...validateRecordKey(cell.id, `${path}.cells[${j}].id`));
+      errors.push(
+        ...validateRecordKey(cell.typeId, `${path}.cells[${j}].typeId`),
+      );
+      const key =
+        "q" in cell.at
+          ? JSON.stringify([cell.at.q, cell.at.r])
+          : JSON.stringify([cell.at.col, cell.at.row]);
+      if (coordinates.has(key))
+        errors.push(`${path}.cells[${j}].at: Duplicate tile local coordinate.`);
+      coordinates.add(key);
+    }
+    for (const kind of ["edges", "vertices"] as const) {
+      const addresses = new Set<string>();
+      for (const [j, annotation] of (type[kind] ?? []).entries()) {
+        errors.push(
+          ...validateRecordKey(
+            annotation.typeId,
+            `${path}.${kind}[${j}].typeId`,
+          ),
+        );
+        if (!type.cells.some((cell) => cell.id === annotation.cellId))
+          errors.push(
+            `${path}.${kind}[${j}].cellId: Unknown tile cell '${annotation.cellId}'.`,
+          );
+        const address = JSON.stringify([
+          annotation.cellId,
+          "side" in annotation ? annotation.side : annotation.corner,
+        ]);
+        if (addresses.has(address))
+          errors.push(
+            `${path}.${kind}[${j}]: Duplicate tile annotation address.`,
+          );
+        addresses.add(address);
+      }
+    }
+    if (
+      type.frontImage !== undefined &&
+      !ASSET_IMAGE_PATH.test(type.frontImage)
+    )
+      errors.push(`${path}.frontImage: Must be an image path under assets/.`);
+    for (const key of [
+      "fieldsSchema",
+      "propertiesSchema",
+      "cellFieldsSchema",
+      "edgeFieldsSchema",
+      "vertexFieldsSchema",
+    ] as const)
+      errors.push(...fieldSchemaKeyIssues(type[key], `${path}.${key}`));
+  }
+  for (const [i, seed] of (manifest.tileSeeds ?? []).entries()) {
+    errors.push(...validateRecordKey(seed.id, `manifest.tileSeeds[${i}].id`));
+    for (const id of expandSeedIds([seed]))
+      errors.push(...validateRecordKey(id, `manifest.tileSeeds[${i}].id`));
+    if (seed.home?.type === "zone") {
+      const zoneId = seed.home.zoneId;
+      const zone = manifest.zones?.find((zone) => zone.id === zoneId);
+      if (zone && (zone.visibility ?? "public") !== "public")
+        errors.push(
+          `manifest.tileSeeds[${i}].home: Tile inventory requires a public zone until private tile projection is supported.`,
+        );
+      if (
+        zone &&
+        "scope" in zone &&
+        zone.scope === "perPlayer" &&
+        seed.scope !== "perPlayer"
+      )
+        errors.push(
+          `manifest.tileSeeds[${i}].home: Shared tile inventory cannot infer a per-player host.`,
+        );
+    }
+  }
+  return errors;
+}
+
 function validateCounts(manifest: GameTopologyManifest): string[] {
   const errors: string[] = [];
   const check = (count: number, path: string) => {
@@ -576,7 +681,7 @@ function validateCounts(manifest: GameTopologyManifest): string[] {
       check(card.count, `manifest.cardSets[${setIndex}].cards[${index}].count`),
     );
   });
-  for (const family of ["pieceSeeds", "dieSeeds"] as const) {
+  for (const family of ["pieceSeeds", "dieSeeds", "tileSeeds"] as const) {
     manifest[family]?.forEach((seed, index) => {
       if (seed.count !== undefined)
         check(seed.count, `manifest.${family}[${index}].count`);
@@ -634,6 +739,7 @@ export function validateManifestAuthoring(
     ),
     ...expandSeedIds(manifest.pieceSeeds ?? []),
     ...expandSeedIds(manifest.dieSeeds ?? []),
+    ...expandSeedIds(manifest.tileSeeds ?? []),
   ];
   for (const id of componentIds)
     if (id.startsWith("hidden:"))
@@ -656,6 +762,10 @@ export function validateManifestAuthoring(
         ...expandSeedIds(manifest.pieceSeeds ?? []).map((id, index) => ({
           id,
           path: `manifest.pieceSeeds.runtimeIds[${index}]`,
+        })),
+        ...expandSeedIds(manifest.tileSeeds ?? []).map((id, index) => ({
+          id,
+          path: `manifest.tileSeeds.runtimeIds[${index}]`,
         })),
         ...expandSeedIds(manifest.dieSeeds ?? []).map((id, index) => ({
           id,
@@ -754,9 +864,11 @@ export function validateManifestAuthoring(
   );
   errors.push(...validatePlayerScopedSeedHomes(manifest));
   errors.push(...validateCardHomes(manifest));
+  errors.push(...validateTileDefinitions(manifest));
   for (const [kind, seeds, types] of [
     ["pieceSeeds", manifest.pieceSeeds ?? [], manifest.pieceTypes ?? []],
     ["dieSeeds", manifest.dieSeeds ?? [], manifest.dieTypes ?? []],
+    ["tileSeeds", manifest.tileSeeds ?? [], manifest.tileTypes ?? []],
   ] as const)
     for (const [index, seed] of seeds.entries()) {
       if (!types.some((type) => type.id === seed.typeId))
@@ -884,6 +996,43 @@ function validateAnalyzedManifest(manifest: GameTopologyManifest): string[] {
         );
       }
     }
+  for (const [i, type] of (manifest.tileTypes ?? []).entries()) {
+    const path = `manifest.tileTypes[${i}]`;
+    for (const key of [
+      "fieldsSchema",
+      "propertiesSchema",
+      "cellFieldsSchema",
+      "edgeFieldsSchema",
+      "vertexFieldsSchema",
+    ] as const)
+      if (type[key]) {
+        try {
+          resolve(type[key]);
+        } catch (error) {
+          errors.push(
+            `${path}.${key}: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
+      }
+    check(type.fieldsSchema, type.fields, `${path}.fields`);
+    for (const [j, cell] of type.cells.entries())
+      check(type.cellFieldsSchema, cell.fields, `${path}.cells[${j}].fields`);
+    for (const [j, edge] of (type.edges ?? []).entries())
+      check(type.edgeFieldsSchema, edge.fields, `${path}.edges[${j}].fields`);
+    for (const [j, vertex] of (type.vertices ?? []).entries())
+      check(
+        type.vertexFieldsSchema,
+        vertex.fields,
+        `${path}.vertices[${j}].fields`,
+      );
+  }
+  for (const [i, seed] of (manifest.tileSeeds ?? []).entries())
+    check(
+      manifest.tileTypes?.find((type) => type.id === seed.typeId)
+        ?.propertiesSchema,
+      seed.properties,
+      `manifest.tileSeeds[${i}].properties`,
+    );
   for (const [si, set] of manifest.cardSets.entries())
     for (const [ci, card] of set.cards.entries()) {
       try {
@@ -1072,6 +1221,7 @@ function validateHomeMembership(
   for (const [kind, seeds] of [
     ["pieceSeeds", manifest.pieceSeeds ?? []],
     ["dieSeeds", manifest.dieSeeds ?? []],
+    ["tileSeeds", manifest.tileSeeds ?? []],
   ] as const)
     for (const [i, seed] of seeds.entries())
       check(seed.home, `manifest.${kind}[${i}].home`, seed.scope);
