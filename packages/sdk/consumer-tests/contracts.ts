@@ -1,7 +1,6 @@
 import { z } from "zod";
 import {
   createGame,
-  boardRefSchema,
   compileManifest,
   createTableQueries,
   tileSpaceId,
@@ -72,12 +71,6 @@ scenarios.defineScenario({
   ],
   then: () => {},
 });
-// @ts-expect-error A narrowed board ID needs a runtime schema witness.
-boardRefSchema<"main">();
-const board = boardRefSchema({ baseIdSchema: z.literal("main") });
-const id: "main" = board.parse({ baseId: "main" }).baseId;
-void id;
-
 // @ts-expect-error Ordinary assignment must not widen a literal setter.
 const erased: Pick<InputBase<unknown, string, string>, "setValue"> = input;
 void erased;

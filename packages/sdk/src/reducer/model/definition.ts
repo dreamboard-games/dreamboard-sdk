@@ -471,42 +471,23 @@ export type InputCollectorOfDefinition<
   > extends infer Spec
     ? Input extends keyof CollectorsOfInteractionDefinition<Spec>
       ? CollectorsOfInteractionDefinition<Spec>[Input]
-      : Input extends "cardId"
-        ? Spec extends {
-            readonly cardType: unknown;
-            readonly playFrom: unknown;
-          }
-          ? { readonly kind: "card" }
-          : never
-        : never
+      : never
     : never;
 
-type CollectorKindsOfInteractionDefinition<Spec> =
-  | (Spec extends { readonly cardType: unknown; readonly playFrom: unknown }
-      ? "card"
-      : never)
-  | CollectorKindsOf<CollectorsOfInteractionDefinition<Spec>>;
+type CollectorKindsOfInteractionDefinition<Spec> = CollectorKindsOf<
+  CollectorsOfInteractionDefinition<Spec>
+>;
 
 type InputKeysWithCollectorKindOfInteractionDefinition<
   Spec,
   Kind extends string,
-> =
-  | (Spec extends { readonly cardType: unknown; readonly playFrom: unknown }
-      ? Extract<"card", Kind> extends never
-        ? never
-        : "cardId"
-      : never)
-  | (CollectorKeysWithKind<CollectorsOfInteractionDefinition<Spec>, Kind> &
-      string);
+> = CollectorKeysWithKind<CollectorsOfInteractionDefinition<Spec>, Kind> &
+  string;
 
 type CardInputZoneIdsOfInteractionDefinition<
   Spec,
   Input extends string,
-> = Input extends "cardId"
-  ? Spec extends { readonly playFrom: infer PlayFrom extends string }
-    ? PlayFrom
-    : CollectorCardZoneIds<CollectorsOfInteractionDefinition<Spec>, Input>
-  : CollectorCardZoneIds<CollectorsOfInteractionDefinition<Spec>, Input>;
+> = CollectorCardZoneIds<CollectorsOfInteractionDefinition<Spec>, Input>;
 
 type ParamsOfCollectors<Collectors> =
   Collectors extends Record<string, InputCollector>
@@ -624,11 +605,7 @@ export type ParamsOfInteractionOfDefinition<
     PhaseName,
     InteractionId
   > extends infer Spec
-    ? Spec extends { readonly cardType: unknown; readonly playFrom: unknown }
-      ? { cardId: string } & ParamsOfCollectors<
-          CollectorsOfInteractionDefinition<Spec>
-        >
-      : ParamsOfCollectors<CollectorsOfInteractionDefinition<Spec>>
+    ? ParamsOfCollectors<CollectorsOfInteractionDefinition<Spec>>
     : never;
 
 /**
@@ -661,11 +638,7 @@ export type ClientParamsOfInteractionOfDefinition<
   > extends infer Spec
     ? Spec extends { readonly steps: unknown }
       ? CurrentStepParams<CollectorsOfInteractionDefinition<Spec>>
-      : Spec extends { readonly cardType: unknown; readonly playFrom: unknown }
-        ? { cardId: string } & ClientParamsOfCollectors<
-            CollectorsOfInteractionDefinition<Spec>
-          >
-        : ClientParamsOfCollectors<CollectorsOfInteractionDefinition<Spec>>
+      : ClientParamsOfCollectors<CollectorsOfInteractionDefinition<Spec>>
     : never;
 
 type DefaultedClientCollectorKeys<

@@ -68,7 +68,7 @@ function createScenarioGame() {
     .where({
       id: "own-open-cell",
       errorCode: "CELL_NOT_AVAILABLE",
-      test: ({ playerId, target, q }) =>
+      test: ({ playerId, targetId: target, q }) =>
         q.board(target.boardId).state.playerId === playerId &&
         target.spaceId === "cell-a",
     })

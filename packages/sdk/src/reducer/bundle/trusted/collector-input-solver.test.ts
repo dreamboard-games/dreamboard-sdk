@@ -228,7 +228,7 @@ describe("trusted collector input solver", () => {
         .where({
           id: "own-open-space",
           errorCode: "SPACE_BLOCKED",
-          test: ({ playerId, target, q }) =>
+          test: ({ playerId, targetId: target, q }) =>
             q.board(target.boardId).state.playerId === playerId &&
             target.spaceId === "s1",
         })

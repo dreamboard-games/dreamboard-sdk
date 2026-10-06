@@ -19,7 +19,6 @@ export type TargetPredicateArgs<
   Definitions extends TopologyDefinitions = TopologyDefinitions,
 > = TargetContext<State, Definitions> & {
   targetId: Target;
-  target: Target;
 };
 
 export type TargetPredicate<
@@ -108,9 +107,7 @@ export function createTargetRule<
     for (const candidate of candidates(ctx)) {
       if (!equals(candidate, target)) continue;
       for (const predicate of predicates) {
-        if (
-          !predicate.test({ ...ctx, targetId: candidate, target: candidate })
-        ) {
+        if (!predicate.test({ ...ctx, targetId: candidate })) {
           return { errorCode: predicate.errorCode, message: predicate.message };
         }
       }
