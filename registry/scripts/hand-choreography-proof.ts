@@ -60,11 +60,13 @@ export async function proveHandChoreography(
       expect(samples[index]).toBeLessThanOrEqual(samples[index - 1] + 0.002);
     // Interrupt the horizontal return twice. Sample the actual React/Motion
     // transform, including elapsed time, rather than assuming a 60fps machine.
+    await active.evaluate((element) =>
+      element.closest(".db-hand-slot")!.setAttribute("data-proof-sampling", ""),
+    );
     const flight = active.evaluate(async (element) => {
       const slot = element.closest(".db-hand-slot")!;
       const frames: { at: number; x: number; scale: number }[] = [];
-      const start = performance.now();
-      while (performance.now() - start < 750) {
+      while (slot.hasAttribute("data-proof-sampling")) {
         await new Promise(requestAnimationFrame);
         const matrix = new DOMMatrix(getComputedStyle(slot).transform);
         frames.push({
@@ -75,11 +77,29 @@ export async function proveHandChoreography(
       }
       return frames;
     });
-    for (const target of [active, next, active]) {
-      const at = await surface(target, undefined, false);
-      await page.mouse.move(at.x, at.y);
-      await expect(target).toHaveAttribute("data-hovered", "true");
-      await page.waitForTimeout(35);
+    try {
+      for (const target of [active, next, active]) {
+        // Track a moving face with real pointer movements. CI protocol latency
+        // can outlive a single measured point while the neighbour is returning.
+        await expect
+          .poll(
+            async () => {
+              const at = await surface(target, undefined, false);
+              await page.mouse.move(at.x, at.y);
+              return target.getAttribute("data-hovered");
+            },
+            { intervals: [16] },
+          )
+          .toBe("true");
+        await page.waitForTimeout(35);
+      }
+      await page.waitForTimeout(650);
+    } finally {
+      await active.evaluate((element) =>
+        element
+          .closest(".db-hand-slot")!
+          .removeAttribute("data-proof-sampling"),
+      );
     }
     const frames = await flight;
     const baseWidth = await active
