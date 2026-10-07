@@ -23,6 +23,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type PointerEvent,
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
@@ -51,9 +52,11 @@ export interface HandProps {
   getCardLabel?(card: Card): string;
   /**
    * How the fan rests and focuses a card. Spread a `handFanPresets` entry and
-   * override what differs; defaults to `handFanPresets.open`.
+   * override what differs; defaults to `handFanPresets.open`. A `tuck` hides
+   * part of each resting card below the hand's bottom edge, so place a tucked
+   * hand on the bottom edge of the game.
    */
-  options?: Omit<HandFanOptions, "tuck">;
+  options?: HandFanOptions;
 }
 
 const EMPTY: readonly CardId[] = [];
@@ -150,7 +153,8 @@ export function Hand({
         scroller.getBoundingClientRect().top +
         parseFloat(style.paddingTop) +
         cardHeight * 0.28 +
-        layout.height;
+        layout.height -
+        settings.tuck * cardHeight;
       // A focused face may not rise past the window's top edge. Record that
       // limit only while it binds, so ordinary page scrolling re-renders nothing.
       const room = Math.max(0, bottom - 16);
@@ -220,9 +224,13 @@ export function Hand({
     cardHeight: size.cardHeight || 1,
     ...arc,
   });
-  // Reserve the same vertical space before pickup, during preview and on arrival.
+  // Reserve the same vertical space before pickup, during preview and on
+  // arrival. Tucked cards hang below the hand's bottom edge, which clips them.
+  const tucked = (options.tuck ?? 0) * size.cardHeight;
   const height =
-    Math.max(size.cardHeight * 1.45, fan.height, nextFan.height) + lift;
+    Math.max(tucked ? 0 : size.cardHeight * 1.45, fan.height, nextFan.height) +
+    lift -
+    tucked;
   function placement(index: number, layout = fan): CardPlacement {
     const box = scroller!.getBoundingClientRect();
     const style = getComputedStyle(scroller!);
@@ -265,14 +273,22 @@ export function Hand({
       ),
     [],
   );
-  const held = menuCardId === null ? -1 : ids.indexOf(menuCardId);
-  const active = overlay
-    ? -1
-    : held >= 0
-      ? held
-      : activeCardId === null
-        ? -1
-        : ids.indexOf(activeCardId);
+  // A mouse crossing a sliver between moving cards keeps its last card in
+  // focus, so a slow sweep never drops the hand; leaving the hand clears it.
+  const [lastPointed, setLastPointed] = useState<CardId | null>(null);
+  const pointed = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== "mouse") return;
+    const value = (event.target as Element)
+      .closest("[data-card]")
+      ?.getAttribute("data-card");
+    const id = ids.find((candidate) => candidate === value);
+    if (id !== undefined) setLastPointed(id);
+  };
+  const focusedId =
+    (menuCardId !== null && ids.includes(menuCardId) ? menuCardId : null) ??
+    activeCardId ??
+    lastPointed;
+  const active = overlay || focusedId === null ? -1 : ids.indexOf(focusedId);
   // The fan sits centred between its gutters; handFan works in its coordinates.
   const inset = gutter + Math.max(0, (size.width - fan.width - gutter * 2) / 2);
   const focus = handFan({
@@ -317,7 +333,12 @@ export function Hand({
               marginTop: -headroom,
             }}
           >
-            <div className="db-hand-layer" style={{ top: headroom, height }}>
+            <div
+              className="db-hand-layer"
+              style={{ top: headroom, height }}
+              onPointerMove={pointed}
+              onPointerLeave={() => setLastPointed(null)}
+            >
               <div
                 ref={probe}
                 aria-hidden
