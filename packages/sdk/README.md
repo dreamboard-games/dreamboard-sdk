@@ -349,7 +349,7 @@ install the React adapter. The `/react` entry delegates selectors to that packag
 the application bundler resolves its supported React subscription dependencies.
 
 `/react` classifies each card press as a tap, hold, drag or browse. Enable
-`dragFeature`, export `useCardGesture`, `useDropArea` and `useDragOverlay` from the
+`dragFeature`, export `useCardGesture`, `useActiveCard`, `useDropArea` and `useDragOverlay` from the
 binding, and use the copied Hand and BoardTargets components or your own renderer.
 The SDK prescribes no layout. Headless `game.drag` remains browser-free and handles
 atomic domain routing. `fanLayout` computes arc positions for a hand, and

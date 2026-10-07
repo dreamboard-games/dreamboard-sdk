@@ -74,6 +74,8 @@ export interface DropArea {
 
 export interface DragOverlay<G> {
   readonly cardId: SeatCardId<G>;
+  /** The visible card bounds at pickup, including its readable hand pose. */
+  readonly size: { readonly width: number; readonly height: number };
   /** Dropped and submitted; the authoritative frame has not arrived yet. */
   readonly settling: boolean;
   /** Attach to a fixed-position copy of the card; it follows the pointer. */
@@ -278,6 +280,7 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
       return drag
         ? {
             cardId: drag.cardId as SeatCardId<Game>,
+            size: drag.size,
             settling: drag.settling,
             ref: session.overlayRef,
           }

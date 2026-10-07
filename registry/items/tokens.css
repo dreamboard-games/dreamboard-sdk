@@ -13,6 +13,7 @@
   --card-w-opponent: clamp(2.25rem, min(9vw, 11dvh), 3.5rem);
   --card-w-pile: var(--card-w-table);
   --card-w-preview: min(64vw, 15rem, calc(60dvh * 5 / 7));
+  --card-w-readable: 20rem;
   --card-w: var(--card-w-table);
   --card-aspect: 5 / 7;
   --card-radius: 0.55rem;
@@ -398,7 +399,12 @@
   .db-hand {
     position: relative;
     isolation: isolate;
+    display: flow-root;
     --card-w: var(--card-w-hand);
+  }
+  .db-hand-scroll {
+    position: relative;
+    pointer-events: none;
     overflow-x: auto;
     overflow-y: hidden;
     overscroll-behavior-x: contain;
@@ -413,6 +419,26 @@
   .db-hand-fan {
     position: relative;
     margin-inline: auto;
+    /* Clip animation overflow without creating a second focus-scroll owner. */
+    overflow: clip;
+  }
+  /* The shared buffer rises above the logical hand without changing its size.
+     Empty buffer lets clicks reach the table; the fan and scrollbar can scroll. */
+  .db-hand-layer {
+    position: relative;
+    pointer-events: auto;
+  }
+  .db-hand-scroll::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 14px;
+    pointer-events: auto;
+  }
+  .db-hand-readable-probe {
+    width: var(--card-w-readable);
   }
   .db-hand-empty {
     position: absolute;
@@ -428,6 +454,7 @@
     left: 0;
   }
   .db-hand-card {
+    pointer-events: auto;
     display: block;
     padding: 0;
     border: 0;
@@ -479,6 +506,15 @@
   .db-card-preview {
     --card-w: var(--card-w-preview);
     pointer-events: none;
+  }
+  .db-card-preview-frame {
+    position: relative;
+  }
+  .db-card-preview-face {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: 0 0;
   }
   .db-card-preview-hold {
     position: fixed;
@@ -718,14 +754,5 @@
       animation-duration: 0s !important;
       transition-duration: 0s !important;
     }
-  }
-}
-
-@layer components {
-  /* Keep the original pickup footprint while the face rises under the cursor. */
-  .db-hand-card[data-hovered]::after {
-    content: "";
-    position: absolute;
-    inset: 0 0 -25%;
   }
 }

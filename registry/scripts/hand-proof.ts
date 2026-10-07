@@ -154,13 +154,16 @@ export async function proveHand(page: Page, touch: boolean) {
   const assertPickup = async () => {
     await expect(club).toHaveCSS("visibility", "hidden");
     const lifted = page.locator(".db-drag-overlay > div");
+    const idleWidth = await club
+      .locator(".db-card")
+      .evaluate((element) => parseFloat(getComputedStyle(element).width));
     await expect
       .poll(async () =>
-        lifted.evaluate(
-          (element) => new DOMMatrix(getComputedStyle(element).transform).a,
-        ),
+        lifted
+          .locator(".db-card")
+          .evaluate((element) => element.getBoundingClientRect().width),
       )
-      .toBeGreaterThan(1.15);
+      .toBeGreaterThan(idleWidth * 1.15);
     await expect(lifted.locator(".db-card")).not.toHaveCSS(
       "box-shadow",
       "none",

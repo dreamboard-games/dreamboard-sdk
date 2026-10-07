@@ -45,7 +45,6 @@ export function CardControl({
   const gesture = useCardGesture(cardId, { drag });
   const overlay = useDragOverlay();
   const [anchor, setAnchor] = useState<HTMLButtonElement | null>(null);
-  const [hovered, setHovered] = useState(false);
   const [inspecting, setInspecting] = useState(false);
   const [open, setOpen] = useState(false);
   const [shake, setShake] = useState(0);
@@ -53,13 +52,11 @@ export function CardControl({
   const perspective = useGame((game) => game.snapshot?.me);
   useEffect(() => {
     setOpen(false);
-    setHovered(false);
     setInspecting(false);
   }, [perspective]);
   useEffect(() => {
     if (dragging) {
       setOpen(false);
-      setHovered(false);
       setInspecting(false);
     }
   }, [dragging]);
@@ -76,14 +73,6 @@ export function CardControl({
   const control = (
     <button
       {...gesture.props}
-      onPointerEnter={(event) => {
-        gesture.props.onPointerEnter(event);
-        if (event.pointerType === "mouse" && !dragging) setHovered(true);
-      }}
-      onPointerLeave={(event) => {
-        gesture.props.onPointerLeave(event);
-        setHovered(false);
-      }}
       ref={setAnchor}
       type="button"
       className={className}
@@ -96,7 +85,7 @@ export function CardControl({
       data-value={card.id}
       data-card={card.id}
       data-action="select"
-      data-hovered={(hovered && !dragging && !open) || undefined}
+      data-hovered={(gesture.isActive && !dragging) || undefined}
       data-disabled={String(!card.getCanSelect())}
       aria-haspopup="dialog"
       aria-expanded={open}
@@ -133,7 +122,7 @@ export function CardControl({
       {children
         ? children({
             raised,
-            hovered: hovered && !dragging && !open,
+            hovered: gesture.isActive && !dragging,
             anchor,
             control,
           })
