@@ -102,16 +102,15 @@ export function handFocusLayout({
   return poses;
 }
 
-/** Motion restarts duration springs from their current value with zero velocity. */
-export const handReturn = {
-  type: "spring",
-  visualDuration: 0.3,
-  bounce: 0,
-  velocity: 0,
-} as const;
-export const handEnter = {
-  type: "spring",
-  visualDuration: 0.055,
-  bounce: 0,
-  velocity: 0,
-} as const;
+/**
+ * An exponential approach to the target. Motion restarts a retargeted
+ * animation from the card's current pose; this curve continues from there at
+ * full speed, so a sweep never stalls a card and never overshoots.
+ */
+export function exponentialOut(progress: number) {
+  return (1 - Math.exp(-4.5 * progress)) / (1 - Math.exp(-4.5));
+}
+/** Sideways travel, neighbours and returning cards: 90% home in about 300ms. */
+export const handReturn = { duration: 0.6, ease: exponentialOut } as const;
+/** The focused face rises: 90% in about 45ms. */
+export const handEnter = { duration: 0.09, ease: exponentialOut } as const;

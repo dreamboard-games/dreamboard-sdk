@@ -20,6 +20,8 @@ export interface CardControlProps {
   disabled?: boolean;
   style?: CSSProperties;
   className?: string;
+  /** Reports the action menu opening and closing, so a hand can hold the card still. */
+  onMenuChange?(open: boolean): void;
   /** A hand can position the control and animate its arrival. */
   children?(slot: {
     raised: boolean;
@@ -39,6 +41,7 @@ export function CardControl({
   disabled = false,
   style,
   className = "db-hand-card",
+  onMenuChange,
   children,
 }: CardControlProps) {
   const card = useGame((game) => game.cards.find(cardId));
@@ -60,6 +63,12 @@ export function CardControl({
       setInspecting(false);
     }
   }, [dragging]);
+  const menu = open && !dragging;
+  useEffect(() => {
+    if (!menu) return;
+    onMenuChange?.(true);
+    return () => onMenuChange?.(false);
+  }, [menu, onMenuChange]);
   if (!card) return null;
   const selected = card.getIsSelected();
   const raised = selected || (open && card.getIsEligible());

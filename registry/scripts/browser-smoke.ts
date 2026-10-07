@@ -17,6 +17,7 @@ import { proveHand } from "./hand-proof.ts";
 import { proveHandPickup } from "./hand-pickup-proof.ts";
 import {
   proveHandChoreography,
+  proveHandMenuHold,
   proveHandReading,
 } from "./hand-choreography-proof.ts";
 import { chromium, expect } from "@playwright/test";
@@ -312,6 +313,8 @@ try {
           touch,
           `${root}/build/screenshots/${story.id}-${name}`,
         );
+        await page.reload();
+        await proveHandMenuHold(page, touch);
         await page.reload();
         await proveCardControl(page, touch);
         await page.reload();
