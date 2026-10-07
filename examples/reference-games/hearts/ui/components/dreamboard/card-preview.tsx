@@ -1,71 +1,56 @@
-import { PreviewCard } from "@base-ui/react/preview-card";
-import { motion } from "motion/react";
+import { Dialog } from "@base-ui/react/dialog";
+import { motion, useReducedMotion } from "motion/react";
 import { useEffect, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { cardSpring } from "./card";
 import "./tokens.css";
 export interface CardPreviewProps {
-  /** `useCardGesture(...).inspecting`: a resting mouse or a held finger. */
-  via: "hover" | "hold";
-  /** The inspected card's element; a hover preview sits beside it. */
+  via: "hover" | "hold" | "action";
   anchor: Element | null;
-  /** The enlarged card. Cards inside size themselves with `--card-w-preview`. */
   children: ReactNode;
+  onClose?(): void;
 }
-/**
- * An enlarged copy of an inspected card. A mouse sees it beside the card
- * without moving the layout; a held finger sees it centred over a dimmed
- * table, with a short vibration where the browser supports it. Neither takes
- * focus, and the card's own label already names it.
- */
-export function CardPreview({ via, anchor, children }: CardPreviewProps) {
+/** Alt/Option, a held finger, or the card menu explicitly opens inspection. */
+export function CardPreview({
+  via,
+  anchor,
+  children,
+  onClose,
+}: CardPreviewProps) {
+  const reduced = useReducedMotion();
   useEffect(() => {
     if (via === "hold") navigator.vibrate?.(12);
   }, [via]);
-  if (via === "hover")
+  if (via === "action")
     return (
-      <PreviewCard.Root open>
-        <PreviewCard.Portal>
-          <PreviewCard.Positioner
-            anchor={anchor}
-            side="right"
-            sideOffset={12}
-            collisionPadding={8}
-            className="z-50"
+      <Dialog.Root
+        open
+        onOpenChange={(open) => {
+          if (!open) onClose?.();
+        }}
+      >
+        <Dialog.Portal>
+          <Dialog.Backdrop className="db-inspect-backdrop" />
+          <Dialog.Popup
+            className="db-inspect-dialog db-card-preview"
+            finalFocus={() => (anchor instanceof HTMLElement ? anchor : null)}
           >
-            <PreviewCard.Popup
-              className="db-card-preview"
-              aria-hidden
-              data-card-preview="hover"
-            >
-              <motion.div
-                initial={{ opacity: 0, scale: 0.92 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.15 }}
-              >
-                {children}
-              </motion.div>
-            </PreviewCard.Popup>
-          </PreviewCard.Positioner>
-        </PreviewCard.Portal>
-      </PreviewCard.Root>
+            <Dialog.Title className="sr-only">Card inspection</Dialog.Title>
+            {children}
+            <Dialog.Close className="db-inspect-close">Close</Dialog.Close>
+          </Dialog.Popup>
+        </Dialog.Portal>
+      </Dialog.Root>
     );
   return createPortal(
     <motion.div
       className="db-card-preview db-card-preview-hold"
       aria-hidden
-      data-card-preview="hold"
+      data-card-preview={via}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.15 }}
+      transition={{ duration: reduced ? 0 : 0.12 }}
     >
-      <motion.div
-        initial={{ scale: 0.6 }}
-        animate={{ scale: 1 }}
-        transition={cardSpring}
-      >
-        {children}
-      </motion.div>
+      {children}
     </motion.div>,
     document.body,
   );

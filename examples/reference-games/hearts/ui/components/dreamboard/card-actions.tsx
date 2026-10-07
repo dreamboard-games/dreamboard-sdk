@@ -24,6 +24,7 @@ export interface CardActionsProps {
   /** The card's own control; the menu opens above it and returns focus to it. */
   anchor: HTMLElement;
   onClose(): void;
+  onInspect?(): void;
 }
 /**
  * A menu of the card's available actions above the card, the first one
@@ -31,7 +32,12 @@ export interface CardActionsProps {
  * it when the interaction commits on its own. A card without an action shows
  * why instead.
  */
-export function CardActions({ cardId, anchor, onClose }: CardActionsProps) {
+export function CardActions({
+  cardId,
+  anchor,
+  onClose,
+  onInspect,
+}: CardActionsProps) {
   const card = useGame((game) => game.cards.find(cardId));
   if (!card) return null;
   const actions = getCardActions(card);
@@ -86,6 +92,16 @@ export function CardActions({ cardId, anchor, onClose }: CardActionsProps) {
               <p role="status" className="m-0 px-2 py-1 text-sm">
                 {getCardUnavailableReason(card)}
               </p>
+            )}
+            {onInspect && (
+              <Button
+                type="button"
+                variant="outline"
+                className="min-h-11 px-4"
+                onClick={onInspect}
+              >
+                Inspect card
+              </Button>
             )}
           </Popover.Popup>
         </Popover.Positioner>

@@ -49,7 +49,7 @@ const sameIds = (left: readonly CardId[], right: readonly CardId[]) =>
 /**
  * A fanned hand over one explicitly addressed zone host. A tap opens the card's action
  * menu, or toggles it when its only action picks several cards; a hold or a
- * resting mouse previews it; a card with somewhere to land drags. The hand
+ * Alt/Option previews it; a card with somewhere to land drags. The hand
  * scrolls sideways when the fan is wider than it, and cards arriving with an
  * origin come from the element marked `data-zone` and `data-zone-host`,
  * or `data-player`, for it.
@@ -117,17 +117,18 @@ export function Hand({
   }, [scroller]);
 
   // Room for a lifted card above the fan and beside its end cards.
-  const lift = size.cardHeight * 0.16;
+  const lift = size.cardHeight * 0.28;
+  const gutter = size.card * 0.35;
   const fan = fanLayout({
     count: ids.length + (drawOver ? 1 : 0),
-    width: size.width - lift,
+    width: size.width - gutter * 2,
     cardWidth: size.card || 1,
     cardHeight: size.cardHeight || 1,
   });
   const ready = size.width > 0 && size.card > 0;
   const nextFan = fanLayout({
     count: ids.length + 1,
-    width: size.width - lift,
+    width: size.width - gutter * 2,
     cardWidth: size.card || 1,
     cardHeight: size.cardHeight || 1,
   });
@@ -141,10 +142,10 @@ export function Hand({
       x:
         box.x +
         parseFloat(style.paddingLeft) +
-        Math.max(0, (size.width - layout.width - lift) / 2) -
+        Math.max(0, (size.width - layout.width - gutter * 2) / 2) -
         scroller!.scrollLeft +
         card.x +
-        lift / 2,
+        gutter,
       y: box.y + parseFloat(style.paddingTop) + card.y + lift,
       width: size.card,
       height: size.cardHeight,
@@ -173,7 +174,7 @@ export function Hand({
       >
         <div
           className="db-hand-fan"
-          style={{ width: fan.width + lift, height }}
+          style={{ width: fan.width + gutter * 2, height }}
         >
           <div
             ref={probe}
@@ -190,7 +191,7 @@ export function Hand({
                 hostId={hostId}
                 gameUI={scroller?.closest("[data-game-ui]") ?? null}
                 index={index}
-                x={fan.cards[index].x + lift / 2}
+                x={fan.cards[index].x + gutter}
                 y={fan.cards[index].y + lift}
                 rotate={fan.cards[index].rotate}
                 lift={lift}
@@ -207,7 +208,7 @@ export function Hand({
               style={{
                 width: size.card,
                 height: size.cardHeight,
-                transform: `translate(${fan.cards[ids.length].x + lift / 2}px, ${fan.cards[ids.length].y + lift}px) rotate(${fan.cards[ids.length].rotate}deg)`,
+                transform: `translate(${fan.cards[ids.length].x + gutter}px, ${fan.cards[ids.length].y + lift}px) rotate(${fan.cards[ids.length].rotate}deg)`,
               }}
             />
           )}
@@ -322,21 +323,27 @@ const HandCard = memo(function HandCard({
       renderCard={renderCard}
       getCardLabel={getCardLabel}
     >
-      {({ raised, anchor, control }) => {
-        const place = raised
-          ? liftFanCard({ x, y, rotate }, lift)
-          : { x, y, rotate };
+      {({ raised, hovered, anchor, control }) => {
+        const place = hovered
+          ? { x, y: y - lift * 0.6, rotate: 0 }
+          : raised
+            ? liftFanCard({ x, y, rotate }, lift * 0.5)
+            : { x, y, rotate };
         return (
           <motion.div
-            layoutId={arrival ? undefined : cardId}
             className="db-hand-slot"
             initial={false}
-            animate={{ ...place, scale: 1, rotateY: 0 }}
+            animate={{ ...place, scale: hovered ? 1.22 : 1 }}
             transition={cardSpring}
             {...moving}
-            style={{ zIndex: index, transformPerspective: 600 }}
+            style={{
+              zIndex: hovered ? 100 : index,
+              transformPerspective: 600,
+            }}
           >
-            {control}
+            <motion.div layoutId={arrival ? undefined : cardId} initial={false}>
+              {control}
+            </motion.div>
             {arrival && anchor && (
               <CardArrival
                 origin={arrival.box}

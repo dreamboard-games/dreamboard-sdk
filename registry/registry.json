@@ -307,7 +307,7 @@
       "name": "card-preview",
       "type": "registry:component",
       "title": "Card Preview",
-      "description": "An enlarged inspected card: beside it on hover, centred over the table on hold. No SDK dependency.",
+      "description": "A centred card inspection opened with Alt/Option, a held finger, or an explicit action.",
       "dependencies": ["@base-ui/react@^1.8.0", "motion@13.5.0"],
       "registryDependencies": ["@dreamboard/tokens", "@dreamboard/card"],
       "files": [

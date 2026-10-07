@@ -53,8 +53,10 @@ export async function proveCardControl(page: Page, touch: boolean) {
     await expect(page.locator('[data-card-preview="hold"]')).toHaveCount(0);
   } else {
     await page.mouse.move(from.x, from.y);
+    await page.keyboard.down("Alt");
     await expect(page.locator('[data-card-preview="hover"]')).toBeVisible();
     await page.mouse.move(1, 1);
+    await page.keyboard.up("Alt");
     await expect(page.locator('[data-card-preview="hover"]')).toHaveCount(0);
   }
   if (touch) {

@@ -29,7 +29,7 @@ function DraggedCard() {
 
 The SDK provides behavior, not layout. Hooks classify presses, route drops and
 report state; the game decides where hands, piles and boards sit and how cards
-look and move. Enable `dragFeature` for dragging; tap, hold and hover work
+look and move. Enable `dragFeature` for dragging; tap, hold and Alt/Option inspection work
 without it.
 
 ## One press, four outcomes
@@ -40,7 +40,7 @@ Spread them after the card's selection props. A press becomes:
 | Outcome | Mouse                                            | Touch or pen                               |
 | ------- | ------------------------------------------------ | ------------------------------------------ |
 | Tap     | Release without moving: the native click selects | The same                                   |
-| Inspect | Rest on the card for 250 ms (`hover`)            | Hold still for 350 ms (`hold`)             |
+| Inspect | Hold Alt/Option over the card (`hover`)          | Hold still for 350 ms (`hold`)             |
 | Drag    | Move 8 px in any direction                       | Move 8 px upward                           |
 | Browse  | —                                                | Move sideways; native scrolling takes over |
 

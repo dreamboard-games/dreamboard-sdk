@@ -234,9 +234,9 @@ test("only the press's own click is swallowed; a new press or the keyboard still
   expect(clicks).toBe(3);
 });
 
-test("a resting mouse inspects the card until it leaves", async () => {
+test("Alt inspects the hovered card and clears on release, leave, window blur, and new frames", async () => {
   vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
-  const { get } = await mount();
+  const { get, source } = await mount();
   const over = (type: string) =>
     act(async () => {
       get("red")!.dispatchEvent(
@@ -245,9 +245,41 @@ test("a resting mouse inspects the card until it leaves", async () => {
     });
   await over("pointerover");
   await act(async () => vi.advanceTimersByTime(GESTURE_THRESHOLDS.hoverMs));
+  expect(get("red")!.dataset.inspecting).toBeUndefined();
+  const key = (type: string) =>
+    act(async () => {
+      window.dispatchEvent(
+        new KeyboardEvent(type, { key: "Alt", altKey: type === "keydown" }),
+      );
+    });
+  await key("keydown");
+  expect(get("red")!.dataset.inspecting).toBe("hover");
+  await key("keyup");
+  expect(get("red")!.dataset.inspecting).toBeUndefined();
+  await key("keydown");
+  await act(async () => {
+    window.dispatchEvent(new Event("blur"));
+  });
+  expect(get("red")!.dataset.inspecting).toBeUndefined();
+  await over("pointerover");
+  await key("keydown");
   expect(get("red")!.dataset.inspecting).toBe("hover");
   await over("pointerout");
   expect(get("red")!.dataset.inspecting).toBeUndefined();
+  await over("pointerover");
+  await key("keydown");
+  await act(async () => source.emit(snapshot(2)));
+  expect(get("red")!.dataset.inspecting).toBeUndefined();
+  await key("keyup");
+  await key("keydown");
+  expect(get("red")!.dataset.inspecting).toBe("hover");
+  await over("pointerout");
+  await act(async () => get("red")!.focus());
+  await act(async () => source.emit(snapshot(3)));
+  expect(get("red")!.dataset.inspecting).toBeUndefined();
+  await key("keyup");
+  await key("keydown");
+  expect(get("red")!.dataset.inspecting).toBe("hover");
 });
 
 test("a card dragged onto an area runs its interaction and settles until the frame", async () => {

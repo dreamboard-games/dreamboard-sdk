@@ -31,10 +31,6 @@ export async function proveHand(page: Page, touch: boolean) {
     if (touch) await page.touchscreen.tap(at.x, at.y);
     else await page.mouse.click(at.x, at.y);
   };
-  const dismiss = async () => {
-    await page.keyboard.press("Escape");
-    await expect(page.getByRole("dialog")).toHaveCount(0);
-  };
 
   await expect(cards).toHaveCount(9);
   // The fan tilts outward, overlaps its cards and fits the hand.
@@ -57,6 +53,25 @@ export async function proveHand(page: Page, touch: boolean) {
     ),
   ).toBe(true);
 
+  if (!touch) {
+    const end = cards.last();
+    await end.hover();
+    await expect(end).toHaveAttribute("data-hovered", "true");
+    await expect
+      .poll(() =>
+        end.evaluate(
+          (element) =>
+            new DOMMatrix(
+              getComputedStyle(element.closest(".db-hand-slot")!).transform,
+            ).a,
+        ),
+      )
+      .toBeGreaterThan(1.2);
+    await expect(page.locator("[data-card-preview]")).toHaveCount(0);
+    await page.mouse.move(1, 1);
+    await expect(end).not.toHaveAttribute("data-hovered");
+  }
+
   // A dimmed card shakes and says why; it has no actions.
   const diamond = suit("diamonds").first();
   await expect(diamond).toBeEnabled();
@@ -66,7 +81,12 @@ export async function proveHand(page: Page, touch: boolean) {
     "You can't play this card now.",
   );
   await expect(actions).toHaveCount(0);
-  await dismiss();
+  await page.getByRole("button", { name: "Inspect card", exact: true }).click();
+  await expect(
+    page.getByRole("dialog", { name: "Card inspection" }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(diamond).toBeFocused();
 
   // A card with two actions offers both, the first primary.
   const spade = suit("spades").first();
@@ -96,8 +116,10 @@ export async function proveHand(page: Page, touch: boolean) {
     await expect(page.locator('[data-card-preview="hold"]')).toHaveCount(0);
   } else {
     await page.mouse.move(at.x, at.y);
+    await page.keyboard.down("Alt");
     await expect(page.locator('[data-card-preview="hover"]')).toBeVisible();
     await page.mouse.move(4, 4);
+    await page.keyboard.up("Alt");
     await expect(page.locator('[data-card-preview="hover"]')).toHaveCount(0);
   }
   await expect(page.getByRole("dialog")).toHaveCount(0);

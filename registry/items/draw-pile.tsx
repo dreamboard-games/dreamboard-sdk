@@ -360,6 +360,7 @@ export function DrawPile({
               className="z-50"
             >
               <Popover.Popup
+                initialFocus
                 aria-label={`${label} actions`}
                 finalFocus={() => control.current}
                 className="db-card-actions"
