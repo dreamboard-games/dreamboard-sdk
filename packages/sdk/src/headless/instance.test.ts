@@ -249,6 +249,37 @@ it("retains valid partial many choices when projection removes a stale option", 
 });
 describe("headless instance", () => {
   it.each([true, false])(
+    "explicit params preserve the existing draft through ACK/frame, frame first=%s",
+    async (frameFirst) => {
+      const x = setup();
+      const game = createGameInstance()({ source: x.source });
+      const interaction = game.interactions.get("play.move");
+      interaction.getInput("choice").setValue("a");
+      interaction.activate();
+      const drafts = game.state.drafts;
+      const submitted = interaction.submit({ choice: "b" });
+      expect(x.source.submissions.at(-1)?.params).toEqual({ choice: "b" });
+      if (frameFirst) x.emit(2);
+      expect(game.state.drafts).toBe(drafts);
+      x.ack();
+      await submitted;
+      expect(game.state.drafts).toBe(drafts);
+      if (!frameFirst) x.emit(2);
+      expect(game.state.drafts).toBe(drafts);
+      expect(game.state.activeInteraction).toBe("play.move");
+
+      // The preserved draft still belongs to a later draft-based submission.
+      const draftSubmitted = interaction.submit();
+      expect(x.source.submissions.at(-1)?.params).toEqual({ choice: "a" });
+      x.ack();
+      await draftSubmitted;
+      x.emit(3);
+      expect(game.state.drafts["play.move"]).toBeUndefined();
+      expect(game.state.activeInteraction).toBeNull();
+      game.dispose();
+    },
+  );
+  it.each([true, false])(
     "clears only after both ACK and frame, frame first=%s",
     async (frameFirst) => {
       const x = setup();

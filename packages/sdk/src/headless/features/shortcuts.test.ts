@@ -92,6 +92,7 @@ test("unconfigured is inert; eligible authored draw count submits one atomic pay
   // Result alone cannot release the authoritative-frame barrier.
   expect(game.shortcuts.handle("1", target)).toBeNull();
   source.emit(snapshot(2));
+  expect(game.state.drafts).toBe(drafts);
   expect(game.shortcuts.getHints(target)).toHaveLength(1);
   unregister.dispose();
   expect(game.shortcuts.getHints(target)).toEqual([]);

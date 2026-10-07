@@ -829,8 +829,7 @@ class Controller {
   pending: {
     source: GameSource;
     key: string;
-    draft: Values;
-    revision: number;
+    draftRevision: number | undefined;
     version: number;
     epoch: number;
     accepted: boolean;
@@ -1265,8 +1264,8 @@ class Controller {
     const operation = {
       source,
       key,
-      draft: this.drafts()[key] ?? EMPTY,
-      revision: this.revisions.get(key) ?? 0,
+      draftRevision:
+        params === undefined ? (this.revisions.get(key) ?? 0) : undefined,
       version: this.sourceState.snapshot.version,
       epoch: this.epoch,
       accepted: false,
@@ -1320,7 +1319,10 @@ class Controller {
     )
       return;
     this.pending = null;
-    if ((this.revisions.get(operation.key) ?? 0) === operation.revision)
+    if (
+      operation.draftRevision !== undefined &&
+      (this.revisions.get(operation.key) ?? 0) === operation.draftRevision
+    )
       this.reset(operation.key);
     else this.refresh();
   }
