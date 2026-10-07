@@ -431,7 +431,7 @@ function makeBundle(
                       flow: { currentPhase: string };
                     },
                     string
-                  >(["playZone"])
+                  >(["playZone"], contract.contract.manifest)
                   .where({
                     id: "card-type",
                     errorCode: "CARD_TYPE_NOT_ALLOWED",
@@ -728,13 +728,9 @@ describe("trusted interaction decision pipeline", () => {
         hidden,
         zone?.playableByCardId[zone.cardIds[0]],
       );
-      if (seat === "player-1") {
-        expect(play?.inputs[0]?.domain).toMatchObject({
-          eligibleTargets: [zone?.cardIds[0]],
-        });
-      } else {
-        expect(play).toBeUndefined();
-      }
+      expect(play?.inputs[0]?.domain).toMatchObject({
+        eligibleTargets: [zone?.cardIds[0]],
+      });
       expect(JSON.stringify(hidden.interactionsByRef)).not.toContain("card-a");
     }
     table.visibility["card-b"] = { faceUp: true };
@@ -1087,7 +1083,10 @@ describe("trusted interaction decision pipeline", () => {
       },
     });
     const playZoneTarget = cardTarget
-      .zones<never, "card-a" | "card-b">(["playZone"])
+      .zones<never, "card-a" | "card-b">(
+        ["playZone"],
+        contract.contract.manifest,
+      )
       .build();
     const game = contract.assemble({
       initial: {
@@ -1195,7 +1194,7 @@ describe("trusted interaction decision pipeline", () => {
                         flow: { currentPhase: string };
                       },
                       string
-                    >(["playZone"])
+                    >(["playZone"], contract.contract.manifest)
                     .where({
                       id: "card-type",
                       errorCode: "CARD_TYPE_NOT_ALLOWED",
@@ -1242,7 +1241,10 @@ describe("trusted interaction decision pipeline", () => {
       },
     });
     const playZoneTarget = cardTarget
-      .zones<never, "card-a" | "card-b">(["playZone"])
+      .zones<never, "card-a" | "card-b">(
+        ["playZone"],
+        contract.contract.manifest,
+      )
       .build();
     const game = contract.assemble({
       initial: {
@@ -1340,7 +1342,10 @@ describe("trusted interaction decision pipeline", () => {
       },
     });
     const playZoneTarget = cardTarget
-      .zones<never, "card-a" | "card-b">(["playZone"])
+      .zones<never, "card-a" | "card-b">(
+        ["playZone"],
+        contract.contract.manifest,
+      )
       .build();
     expect(contract.contract.phaseNames).toEqual(["takeTurn"]);
     expect(
@@ -1398,7 +1403,7 @@ describe("trusted interaction decision pipeline", () => {
                 .input("cardId", ({ selected }) =>
                   cardInput({
                     target: cardTarget
-                      .zones(["playZone"])
+                      .zones(["playZone"], contract.contract.manifest)
                       .where({
                         id: "mode-enabled",
                         errorCode: "MODE_BLOCKED",
@@ -1500,10 +1505,16 @@ describe("trusted interaction decision pipeline", () => {
       },
     });
     const discardTarget = cardTarget
-      .zones<never, "card-a" | "card-b">(["discardZone"])
+      .zones<never, "card-a" | "card-b">(
+        ["discardZone"],
+        contract.contract.manifest,
+      )
       .build();
     const playTarget = cardTarget
-      .zones<never, "card-a" | "card-b">(["playZone"])
+      .zones<never, "card-a" | "card-b">(
+        ["playZone"],
+        contract.contract.manifest,
+      )
       .build();
     const game = contract.assemble({
       initial: {
@@ -1567,7 +1578,10 @@ describe("trusted interaction decision pipeline", () => {
       },
     });
     const playZoneTarget = cardTarget
-      .zones<never, "card-a" | "card-b">(["playZone"])
+      .zones<never, "card-a" | "card-b">(
+        ["playZone"],
+        contract.contract.manifest,
+      )
       .build();
     const game = contract.assemble({
       initial: {
@@ -1729,7 +1743,7 @@ describe("trusted interaction decision pipeline", () => {
                         flow: { currentPhase: string };
                       },
                       string
-                    >(["playZone"])
+                    >(["playZone"], contract.contract.manifest)
                     .where({
                       id: "card-type",
                       errorCode: "CARD_TYPE_NOT_ALLOWED",

@@ -39,7 +39,8 @@ export async function proveHandChoreography(
     const at = await surface(next);
     const entryWatch = await next.evaluateHandle((element) => {
       const horizontal = element.closest(".db-hand-slot")!;
-      const vertical = element.closest(".db-hand-vertical")!;
+      // The shared child owns the painted lift; its parent sets the destination.
+      const vertical = element.closest(".db-hand-pose")!.parentElement!;
       const before = {
         x: horizontal.getBoundingClientRect().x,
         y: vertical.getBoundingClientRect().y,

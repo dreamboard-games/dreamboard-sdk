@@ -1,5 +1,7 @@
+import { resolveZoneAccess } from "../table/zones";
 import type { TopologyDefinitions } from "../../shared/domain/topology-definitions.js";
 import type { CollectorState } from "../model/spec";
+import type { ZoneDefinitions } from "../model/table";
 import type { CardIdOfState } from "../model/extract";
 import {
   createTargetRule,
@@ -43,7 +45,10 @@ function createCardTargetBuilder<
   Id extends string,
   ZoneIds extends readonly string[],
   Definitions extends TopologyDefinitions = TopologyDefinitions,
->(zoneIds: ZoneIds): CardTargetBuilder<State, Id, ZoneIds, Definitions> {
+>(
+  zoneIds: ZoneIds,
+  definitions: ZoneDefinitions,
+): CardTargetBuilder<State, Id, ZoneIds, Definitions> {
   return createTargetRuleBuilder<
     State,
     Id,
@@ -58,9 +63,17 @@ function createCardTargetBuilder<
           zoneId: string,
         ) => Readonly<Record<string, readonly string[]>>;
         return zoneIds.flatMap((zoneId) => {
-          const hosts = zones(zoneId);
-          return (hosts[playerId] ?? hosts.table ?? []).filter((id) =>
-            Object.hasOwn(state.table.cards, id),
+          const definition = definitions.zoneDefinitions[zoneId];
+          return Object.entries(zones(zoneId)).flatMap(([hostId, cards]) =>
+            resolveZoneAccess(
+              state.table,
+              definitions,
+              definition,
+              hostId,
+              playerId,
+            )
+              ? cards.filter((id) => Object.hasOwn(state.table.cards, id))
+              : [],
           );
         }) as Id[];
       },
@@ -84,7 +97,13 @@ export const cardTarget = {
     Id extends string = CardIdOfState<State>,
     const ZoneIds extends readonly string[] = readonly string[],
     Definitions extends TopologyDefinitions = TopologyDefinitions,
-  >(zoneIds: ZoneIds): CardTargetBuilder<State, Id, ZoneIds, Definitions> {
-    return createCardTargetBuilder<State, Id, ZoneIds, Definitions>(zoneIds);
+  >(
+    zoneIds: ZoneIds,
+    definitions: ZoneDefinitions,
+  ): CardTargetBuilder<State, Id, ZoneIds, Definitions> {
+    return createCardTargetBuilder<State, Id, ZoneIds, Definitions>(
+      zoneIds,
+      definitions,
+    );
   },
 };

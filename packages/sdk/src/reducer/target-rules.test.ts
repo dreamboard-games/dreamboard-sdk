@@ -122,7 +122,7 @@ describe("target rules", () => {
 
   test("card targets expose the same rule API and validate collectors", () => {
     const target = cardTarget
-      .zones<CollectorState, "card-a" | "card-b">(["hand"])
+      .zones<CollectorState, "card-a" | "card-b">(["hand"], inputDefinitions)
       .where({
         id: "only-card-a",
         errorCode: "card-blocked",
@@ -147,7 +147,7 @@ describe("target rules", () => {
 
   test("card target predicates capture selected step values", () => {
     const target = cardTarget
-      .zones<CollectorState, "card-a" | "card-b">(["hand"])
+      .zones<CollectorState, "card-a" | "card-b">(["hand"], inputDefinitions)
       .where({
         id: "selected-mode",
         errorCode: "wrong-mode",
@@ -198,7 +198,7 @@ describe("runtime target admission", () => {
       let predicateCalls = 0;
       const input = cardInput({
         target: cardTarget
-          .zones(["hand"])
+          .zones(["hand"], inputDefinitions)
           .where({
             id: "record-calls",
             errorCode: "PREDICATE_REJECTED",

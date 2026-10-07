@@ -467,9 +467,9 @@ function applyWhere<
   );
 }
 
-function createFusedCardInput<
-  Contract extends ContractWithPhases,
->(): BoundCardInput<Contract> {
+function createFusedCardInput<Contract extends ContractWithPhases>(
+  contract: Contract,
+): BoundCardInput<Contract> {
   return (options) =>
     cardInput({
       target: applyWhere(
@@ -478,7 +478,7 @@ function createFusedCardInput<
           CardIdOfManifest<BoundManifest<Contract>>,
           typeof options.from,
           BoundManifest<Contract>
-        >(options.from),
+        >(options.from, contract.manifest),
         options.where,
       ).build(),
     });
@@ -586,7 +586,7 @@ function createBoundInputBuilders<Contract extends ContractWithPhases>(
 ): BoundInputBuilders<Contract> {
   return {
     board: createFusedBoardInputs<Contract>(),
-    card: createFusedCardInput<Contract>(),
+    card: createFusedCardInput(contract),
     tile: createFusedTileInput(contract),
     form: formInput.forState<BoundState<Contract>>(),
     rng: rngInput,
