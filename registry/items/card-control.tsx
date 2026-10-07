@@ -23,6 +23,7 @@ export interface CardControlProps {
   /** A hand can position the control and animate its arrival. */
   children?(slot: {
     raised: boolean;
+    hovered: boolean;
     anchor: HTMLButtonElement | null;
     control: ReactNode;
   }): ReactNode;
@@ -44,11 +45,23 @@ export function CardControl({
   const gesture = useCardGesture(cardId, { drag });
   const overlay = useDragOverlay();
   const [anchor, setAnchor] = useState<HTMLButtonElement | null>(null);
+  const [hovered, setHovered] = useState(false);
+  const [inspecting, setInspecting] = useState(false);
   const [open, setOpen] = useState(false);
   const [shake, setShake] = useState(0);
   const dragging = overlay !== null;
+  const perspective = useGame((game) => game.snapshot?.me);
   useEffect(() => {
-    if (dragging) setOpen(false);
+    setOpen(false);
+    setHovered(false);
+    setInspecting(false);
+  }, [perspective]);
+  useEffect(() => {
+    if (dragging) {
+      setOpen(false);
+      setHovered(false);
+      setInspecting(false);
+    }
   }, [dragging]);
   if (!card) return null;
   const selected = card.getIsSelected();
@@ -63,6 +76,14 @@ export function CardControl({
   const control = (
     <button
       {...gesture.props}
+      onPointerEnter={(event) => {
+        gesture.props.onPointerEnter(event);
+        if (event.pointerType === "mouse" && !dragging) setHovered(true);
+      }}
+      onPointerLeave={(event) => {
+        gesture.props.onPointerLeave(event);
+        setHovered(false);
+      }}
       ref={setAnchor}
       type="button"
       className={className}
@@ -75,6 +96,7 @@ export function CardControl({
       data-value={card.id}
       data-card={card.id}
       data-action="select"
+      data-hovered={(hovered && !dragging && !open) || undefined}
       data-disabled={String(!card.getCanSelect())}
       aria-haspopup="dialog"
       aria-expanded={open}
@@ -108,16 +130,35 @@ export function CardControl({
   );
   return (
     <>
-      {children ? children({ raised, anchor, control }) : control}
+      {children
+        ? children({
+            raised,
+            hovered: hovered && !dragging && !open,
+            anchor,
+            control,
+          })
+        : control}
       {open && !dragging && anchor && (
         <CardActions
           cardId={cardId}
           anchor={anchor}
           onClose={() => setOpen(false)}
+          onInspect={
+            card.hidden
+              ? undefined
+              : () => {
+                  setOpen(false);
+                  setInspecting(true);
+                }
+          }
         />
       )}
-      {gesture.inspecting && !card.hidden && (
-        <CardPreview via={gesture.inspecting} anchor={anchor}>
+      {(inspecting || gesture.inspecting) && !card.hidden && (
+        <CardPreview
+          via={inspecting ? "action" : gesture.inspecting!}
+          anchor={anchor}
+          onClose={() => setInspecting(false)}
+        >
           {renderCard(card, "idle")}
         </CardPreview>
       )}

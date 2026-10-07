@@ -10,7 +10,6 @@ import {
 } from "react";
 import {
   createGestureRecognizer,
-  GESTURE_THRESHOLDS,
   type GestureRecognizer,
 } from "../headless/gesture.js";
 import { isSameDropTarget } from "../headless/drop-targets.js";
@@ -33,6 +32,7 @@ export interface GestureDrag {
 export interface GestureGame {
   readonly drag?: GestureDrag;
   readonly request: unknown;
+  readonly snapshot: unknown;
   subscribe(listener: () => void): () => void;
 }
 
@@ -55,6 +55,8 @@ export interface CardGestureProps {
   onPointerDown(event: PointerEvent<Element>): void;
   onPointerEnter(event: PointerEvent<Element>): void;
   onPointerLeave(event: PointerEvent<Element>): void;
+  onFocus(): void;
+  onBlur(): void;
   onContextMenu(event: MouseEvent<Element>): void;
   onDragStart(event: DragEvent<Element>): void;
   readonly style: CSSProperties;
@@ -127,8 +129,9 @@ export function createGestureSession(game: GestureGame) {
     area: string | null;
     target: RuntimeDropTarget | null;
   } | null = null;
-  let hover: { cardId: string; timer: ReturnType<typeof setTimeout> } | null =
-    null;
+  let hover: string | null = null;
+  let focused: string | null = null;
+  let alt = false;
   let pointer: Point = { x: 0, y: 0 };
   let swallowing = false;
   let guardingClicks = false;
@@ -137,7 +140,13 @@ export function createGestureSession(game: GestureGame) {
   const set = (patch: Partial<GestureState>) =>
     store.setState((previous) => ({ ...previous, ...patch }));
 
+  let snapshot = game.snapshot;
   const unsubscribe = game.subscribe(() => {
+    if (snapshot !== game.snapshot) {
+      snapshot = game.snapshot;
+      press?.recognizer.cancel();
+      loseFocus();
+    }
     // New frames, seats and sources cancel the semantic drag; end the press with it.
     if (press?.dragging && !game.drag?.active) press.recognizer.cancel();
     const drag = store.get().drag;
@@ -181,9 +190,31 @@ export function createGestureSession(game: GestureGame) {
     addEventListener("pointerdown", newPress, true);
   }
   function clearHover() {
-    if (hover) clearTimeout(hover.timer);
     hover = null;
   }
+  function inspectWithAlt() {
+    const cardId = hover ?? focused;
+    set({ inspect: alt && cardId && !press ? { cardId, via: "hover" } : null });
+  }
+  const key = (event: KeyboardEvent) => {
+    if (event.key === "Escape") {
+      press?.recognizer.cancel();
+      alt = false;
+      set({ inspect: null });
+    } else if (event.key === "Alt") {
+      alt = event.type === "keydown";
+      inspectWithAlt();
+    }
+  };
+  const loseFocus = () => {
+    alt = false;
+    clearHover();
+    focused = null;
+    set({ inspect: null });
+  };
+  addEventListener("keydown", key);
+  addEventListener("keyup", key);
+  addEventListener("blur", loseFocus);
   function release() {
     press?.detach();
     press = null;
@@ -291,19 +322,21 @@ export function createGestureSession(game: GestureGame) {
       onPointerEnter(event) {
         if (event.pointerType !== "mouse" || press?.dragging) return;
         clearHover();
-        hover = {
-          cardId,
-          timer: setTimeout(
-            () => set({ inspect: { cardId, via: "hover" } }),
-            GESTURE_THRESHOLDS.hoverMs,
-          ),
-        };
+        hover = cardId;
+        alt = event.altKey;
+        inspectWithAlt();
       },
       onPointerLeave() {
-        if (hover?.cardId === cardId) clearHover();
-        const inspect = store.get().inspect;
-        if (inspect?.cardId === cardId && inspect.via === "hover")
-          set({ inspect: null });
+        if (hover === cardId) clearHover();
+        inspectWithAlt();
+      },
+      onFocus() {
+        focused = cardId;
+        inspectWithAlt();
+      },
+      onBlur() {
+        if (focused === cardId) focused = null;
+        inspectWithAlt();
       },
       onContextMenu(event) {
         // A long press must inspect the card, not open the browser's menu.
@@ -356,6 +389,9 @@ export function createGestureSession(game: GestureGame) {
       disposed = true;
       press?.recognizer.cancel();
       clearHover();
+      removeEventListener("keydown", key);
+      removeEventListener("keyup", key);
+      removeEventListener("blur", loseFocus);
       unsubscribe();
       followers.clear();
       if (!guardingClicks) return;
