@@ -26,3 +26,5 @@ are authoritative; there is no separate SDK component import.
 - A card arriving with an origin starts at the element marked `data-zone` or `data-player` for it, travels in a portal outside the hand's clipped scroll container, and flips from back to face after settling when it was hidden there. The hand marks itself with its own `data-zone`.
 
 Cards stay pressable when unplayable so they can be inspected and explain themselves. The shared [CardControl](card-control.md) owns the action menu and inspection; its opener stays enabled while the selected action decides whether the card can be played.
+
+Draws keep one face-down flight all the way to the insertion slot before flipping. Eligible rectangular drop areas acquire a nearby pointer early and retain it through a wider exit band; exact board-space targets keep their native shape. Touch has a larger snap margin. Escape, pointer cancellation, a changed frame, and a lost window focus cancel a drag.

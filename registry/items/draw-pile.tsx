@@ -1,6 +1,7 @@
 import { Popover } from "@base-ui/react/popover";
 import {
   createGestureRecognizer,
+  magneticDropPoint,
   type GestureRecognizer,
 } from "@dreamboard-games/sdk";
 import { useGame } from "@game";
@@ -70,6 +71,7 @@ export function DrawPile({
     box: CardBox;
     phase: "drag" | "pending" | "return";
     snapshot: Model["snapshot"];
+    landed?: Promise<unknown>;
   } | null>(null);
   const press = useRef<{
     recognizer: GestureRecognizer;
@@ -84,6 +86,7 @@ export function DrawPile({
   const latest = useRef({ draw, available, snapshot, table });
   latest.current = { draw, available, snapshot, table };
   const highlighted = useRef<HTMLElement | null>(null);
+  const snapped = useRef(false);
   const sourceZone = { zoneId, hostId };
   const destinationZone = {
     zoneId: destinationZoneId,
@@ -92,6 +95,7 @@ export function DrawPile({
 
   function clearTarget() {
     highlighted.current = null;
+    snapped.current = false;
     latest.current.table.setDrop(null);
   }
   function destination() {
@@ -103,15 +107,19 @@ export function DrawPile({
         ) ?? null
     );
   }
-  function isOver(clientX: number, clientY: number) {
+  function snap(clientX: number, clientY: number, coarse: boolean) {
     const hand = highlighted.current;
-    const over =
-      !!hand &&
-      document
-        .elementsFromPoint(clientX, clientY)
-        .some((element) => hand.contains(element));
-    latest.current.table.setDrop(destinationZone, over);
-    return over;
+    const point = hand
+      ? magneticDropPoint(
+          { x: clientX, y: clientY },
+          hand.getBoundingClientRect(),
+          snapped.current,
+          coarse,
+        )
+      : null;
+    snapped.current = point !== null;
+    latest.current.table.setDrop(destinationZone, snapped.current);
+    return point;
   }
   function returnToPile() {
     clearTarget();
@@ -157,15 +165,16 @@ export function DrawPile({
     setOpen(false);
     setError(null);
     const target = current.table.getDrawTarget(destinationZone);
+    const landed = moveTo(target, box);
     current.table.stageDraw(
       sourceZone,
       destinationZone,
       () => placement(box),
       target,
+      landed,
     );
     current.table.setDrop(destinationZone, true);
-    setGhost({ box, phase: "pending", snapshot: current.snapshot });
-    void moveTo(target, box);
+    setGhost({ box, phase: "pending", snapshot: current.snapshot, landed });
     try {
       const result = await current.draw.submit();
       if (!result.accepted) {
@@ -186,13 +195,12 @@ export function DrawPile({
       snapshot !== ghost.snapshot &&
       request === null
     ) {
-      x.stop();
-      y.stop();
-      scale.stop();
-      rotate.stop();
-      setGhost(null);
+      const pending = ghost;
+      void pending.landed?.then(() =>
+        setGhost((current) => (current === pending ? null : current)),
+      );
     }
-  }, [snapshot, request, ghost?.phase, ghost?.snapshot, x, y, scale, rotate]);
+  }, [snapshot, request, ghost]);
   useEffect(() => {
     press.current?.recognizer.cancel();
   }, [snapshot, request, zoneId, hostId, destinationZoneId, destinationHostId]);
@@ -242,12 +250,13 @@ export function DrawPile({
           return true;
         },
         dragMove(at) {
-          x.set(at.x - grab.x);
-          y.set(at.y - grab.y);
-          isOver(at.x, at.y);
+          const point = snap(at.x, at.y, event.pointerType !== "mouse") ?? at;
+          x.set(point.x - grab.x);
+          y.set(point.y - grab.y);
         },
         end(kind, at) {
-          const over = kind === "drag" && isOver(at.x, at.y);
+          const over =
+            kind === "drag" && snap(at.x, at.y, event.pointerType !== "mouse");
           press.current?.detach();
           press.current = null;
           const touchTap = kind === "tap" && event.pointerType === "touch";
