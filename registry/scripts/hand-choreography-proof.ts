@@ -1,24 +1,5 @@
-import { expect, type Locator, type Page } from "@playwright/test";
-
-/** Find an actually visible surface rather than a covered fan card's box centre. */
-async function surface(card: Locator, clip?: { x: number; width: number }) {
-  return card.evaluate((element, clip) => {
-    const box = element.getBoundingClientRect();
-    for (const vertical of [0.65, 0.5, 0.8, 0.3])
-      for (let horizontal = 0.05; horizontal < 1; horizontal += 0.05) {
-        const x = box.x + box.width * horizontal;
-        const y = box.y + box.height * vertical;
-        if (clip && (x < clip.x || x > clip.x + clip.width)) continue;
-        if (
-          document.elementFromPoint(x, y)?.closest(".db-hand-card") === element
-        )
-          return { x, y };
-      }
-    throw new Error(
-      `No visible surface for ${element.getAttribute("data-card")}`,
-    );
-  }, clip);
-}
+import { expect, type Page } from "@playwright/test";
+import { cardSurface as surface } from "./card-surface.ts";
 
 export async function proveHandChoreography(
   page: Page,
@@ -95,7 +76,7 @@ export async function proveHandChoreography(
       return frames;
     });
     for (const target of [active, next, active]) {
-      const at = await surface(target);
+      const at = await surface(target, undefined, false);
       await page.mouse.move(at.x, at.y);
       await expect(target).toHaveAttribute("data-hovered", "true");
       await page.waitForTimeout(35);

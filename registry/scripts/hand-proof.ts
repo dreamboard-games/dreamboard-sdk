@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { z } from "zod";
+import { cardSurface } from "./card-surface.ts";
 
 type Point = { x: number; y: number };
 const zonesSchema = z.array(z.tuple([z.string(), z.array(z.string())]));
@@ -21,10 +22,14 @@ export async function proveHand(page: Page, touch: boolean) {
     const box = (await locator.boundingBox())!;
     return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
   };
-  // A fanned card shows at least its left quarter; press it there.
-  const grip = async (locator: Locator): Promise<Point> => {
-    const box = (await locator.boundingBox())!;
-    return { x: box.x + box.width * 0.2, y: box.y + box.height / 2 };
+  const grip = async (locator: Locator) => {
+    let at = await cardSurface(locator);
+    if (!touch) {
+      await page.mouse.move(at.x, at.y);
+      await expect(locator).toHaveAttribute("data-hovered", "true");
+      at = await cardSurface(locator);
+    }
+    return at;
   };
   const activate = async (locator: Locator) => {
     const at = await grip(locator);
