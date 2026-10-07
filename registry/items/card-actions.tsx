@@ -1,6 +1,11 @@
 import { Popover } from "@base-ui/react/popover";
 import { Button } from "@/components/ui/button";
-import { useGame, type GameCard as Card, type CardId } from "@game";
+import {
+  useGame,
+  useShortcutHints,
+  type GameCard as Card,
+  type CardId,
+} from "@game";
 import "./tokens.css";
 
 /** The interactions this card can start now, in the game's order. */
@@ -38,6 +43,7 @@ export function CardActions({
   onClose,
   onInspect,
 }: CardActionsProps) {
+  const hints = useShortcutHints({ kind: "card", value: cardId });
   const card = useGame((game) => game.cards.find(cardId));
   if (!card) return null;
   const actions = getCardActions(card);
@@ -86,6 +92,13 @@ export function CardActions({
                   }}
                 >
                   {route.label}
+                  {hints
+                    .filter((hint) => hint.interaction === route.key)
+                    .map((hint) => (
+                      <kbd key={hint.label} className="ml-2 text-xs opacity-70">
+                        {hint.keys.join(" / ")}
+                      </kbd>
+                    ))}
                 </Button>
               ))
             ) : (

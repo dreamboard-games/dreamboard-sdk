@@ -81,9 +81,9 @@ const { GameProvider, useGame, useCardGesture, useDropArea, useDragOverlay } =
     debug: false,
   });
 function Card({ id, draggable }: { id: string; draggable: boolean }) {
-  const card = useGame((game) => game.cards.get(id));
+  const card = useGame((game) => game.cards.find(id));
   const gesture = useCardGesture(id, { drag: draggable ? {} : false });
-  return (
+  return card ? (
     <button
       {...card.getProps()}
       {...gesture.props}
@@ -92,7 +92,7 @@ function Card({ id, draggable }: { id: string; draggable: boolean }) {
     >
       {id}
     </button>
-  );
+  ) : null;
 }
 let areaRenders = 0;
 function Discard() {
@@ -281,8 +281,8 @@ test("physical pointer focus survives motion-driven boundaries and Alt uses that
   expect(get("blue")!.dataset.inspecting).toBe("hover");
   await act(async () => source.emit(snapshot(2)));
   expect(get("blue")!.dataset.inspecting).toBeUndefined();
-  expect(get("blue")!.dataset.active).toBeUndefined();
-  // A new intentional movement establishes focus in the new frame.
+  expect(get("blue")!.dataset.active).toBe("true");
+  // Inspection ends on a frame, while admitted physical focus survives.
   await move(mouse(12));
   await key("keydown");
   expect(get("blue")!.dataset.inspecting).toBe("hover");
@@ -300,6 +300,98 @@ test("physical pointer focus survives motion-driven boundaries and Alt uses that
   expect(get("red")!.dataset.active).toBe("true");
   await act(async () => window.dispatchEvent(new Event("blur")));
   expect(get("red")!.dataset.active).toBeUndefined();
+  expect(get("red")!.dataset.inspecting).toBeUndefined();
+});
+
+test("a removed card clears parked focus without a pointer movement", async () => {
+  const { get, source } = await mount(false);
+  hitTesting(() => get("red"));
+  await move({ pointerType: "mouse", x: 10, y: 10 });
+  expect(get("red")!.dataset.active).toBe("true");
+  const current = snapshot(2);
+  const hand = current.frame.zones.hand.alice;
+  const removed: SourceSnapshot = {
+    ...current,
+    frame: {
+      ...current.frame,
+      zones: {
+        hand: {
+          alice: {
+            ...hand,
+            cardIds: ["blue"],
+            cardViewsById: { blue: hand.cardViewsById.blue },
+            playableByCardId: { blue: [discard] },
+          },
+        },
+      },
+    },
+  };
+  await act(async () => source.emit(removed));
+  expect(get("red")).toBeNull();
+  await act(async () =>
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Alt" })),
+  );
+  expect(get("blue")!.dataset.active).toBeUndefined();
+  expect(get("blue")!.dataset.inspecting).toBeUndefined();
+});
+
+test("surviving DOM keyboard focus remains readable and can inspect after a frame", async () => {
+  const { get, source } = await mount(false);
+  const red = get("red")!;
+  const matches = red.matches.bind(red);
+  vi.spyOn(red, "matches").mockImplementation(
+    (selector) => selector === ":focus-visible" || matches(selector),
+  );
+  await act(async () => red.focus());
+  expect(document.activeElement).toBe(red);
+  expect(red.dataset.active).toBe("true");
+  await act(async () => source.emit(snapshot(2)));
+  expect(get("red")).toBe(red);
+  expect(document.activeElement).toBe(red);
+  expect(red.dataset.active).toBe("true");
+  await act(async () =>
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Alt" })),
+  );
+  expect(red.dataset.inspecting).toBe("hover");
+});
+
+test("moving the same card identity to another attachment clears parked focus", async () => {
+  const { get, source } = await mount(false);
+  hitTesting(() => get("red"));
+  await move({ pointerType: "mouse", x: 10, y: 10 });
+  expect(get("red")!.dataset.active).toBe("true");
+  const current = snapshot(2);
+  const hand = current.frame.zones.hand.alice;
+  const moved: SourceSnapshot = {
+    ...current,
+    frame: {
+      ...current.frame,
+      zones: {
+        hand: {
+          alice: {
+            ...hand,
+            cardIds: ["blue"],
+            cardViewsById: { blue: hand.cardViewsById.blue },
+            playableByCardId: { blue: [discard] },
+          },
+        },
+        table: {
+          table: {
+            ...hand,
+            cardIds: ["red"],
+            cardViewsById: { red: hand.cardViewsById.red },
+            playableByCardId: { red: [discard] },
+          },
+        },
+      },
+    },
+  };
+  await act(async () => source.emit(moved));
+  expect(get("red")).not.toBeNull();
+  expect(get("red")!.dataset.active).toBeUndefined();
+  await act(async () =>
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Alt" })),
+  );
   expect(get("red")!.dataset.inspecting).toBeUndefined();
 });
 

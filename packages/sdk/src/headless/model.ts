@@ -491,14 +491,14 @@ export interface InteractionBase<G, K extends InteractionKey<G>> {
   readonly kind: "inputs" | "steps";
   readonly game: CoreInstance<G>;
   getAvailability(): InteractionDescriptor["availability"];
-  getIsAvailable(): boolean;
+  getIsAvailable(params?: InteractionParams<G, K>): boolean;
   getUnavailableReason(): string | null;
   getStep(): InteractionDescriptor["step"] | null;
   getStepIndex(): number | null;
-  getIsReady(): boolean;
+  getIsReady(params?: InteractionParams<G, K>): boolean;
   getMissingInputs(): readonly InputKey<G, K>[];
   getStatus(): "open" | "submitting" | "submitted";
-  submit(): Promise<SubmitResult>;
+  submit(params?: InteractionParams<G, K>): Promise<SubmitResult>;
   cancel(): Promise<SubmitResult>;
   reset(): void;
   activate(): void;

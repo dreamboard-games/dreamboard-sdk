@@ -176,8 +176,12 @@ class InteractionObject {
   getAvailability() {
     return this.descriptor.availability;
   }
-  getIsAvailable() {
-    return this.descriptor.availability.status === "available";
+  getIsAvailable(params?: Values) {
+    const descriptor =
+      params === undefined
+        ? this.descriptor
+        : this.owner.descriptorFor(this.descriptor, params);
+    return descriptor.availability.status === "available";
   }
   getUnavailableReason() {
     return this.descriptor.availability.status === "available"
@@ -203,11 +207,14 @@ class InteractionObject {
   getInputs() {
     return this.inputObjects;
   }
-  readiness() {
-    return getInteractionDraftReadiness(this.descriptor, this.draft);
+  readiness(params = this.draft) {
+    return getInteractionDraftReadiness(
+      this.owner.descriptorFor(this.descriptor, params),
+      params,
+    );
   }
-  getIsReady() {
-    return this.readiness().ready;
+  getIsReady(params?: Values) {
+    return this.readiness(params).ready;
   }
   getMissingInputs() {
     return this.readiness().missingInputs;
@@ -222,9 +229,9 @@ class InteractionObject {
       !this.owner.disposed
     );
   }
-  submit() {
+  submit(params?: Values) {
     return this.currentLifetime()
-      ? this.owner.submit(this.key, false)
+      ? this.owner.submit(this.key, false, params)
       : Promise.resolve({ accepted: false as const, errorCode: "CLOSED" });
   }
   cancel() {
@@ -822,8 +829,7 @@ class Controller {
   pending: {
     source: GameSource;
     key: string;
-    draft: Values;
-    revision: number;
+    draftRevision: number | undefined;
     version: number;
     epoch: number;
     accepted: boolean;
@@ -1228,7 +1234,11 @@ class Controller {
       },
     );
   }
-  async submit(key: string, cancel: boolean): Promise<SubmitResult> {
+  async submit(
+    key: string,
+    cancel: boolean,
+    params?: Values,
+  ): Promise<SubmitResult> {
     const source = this.options.source;
     const interaction = this.current(key);
     if (
@@ -1242,7 +1252,7 @@ class Controller {
     if (
       cancel
         ? !interaction.getStep()?.canCancel
-        : !interaction.getIsAvailable() || !interaction.getIsReady()
+        : !interaction.getIsAvailable(params) || !interaction.getIsReady(params)
     )
       return { accepted: false, errorCode: "UNAVAILABLE" };
     if (!("submit" in source) || !("cancel" in source))
@@ -1254,8 +1264,8 @@ class Controller {
     const operation = {
       source,
       key,
-      draft: this.drafts()[key] ?? EMPTY,
-      revision: this.revisions.get(key) ?? 0,
+      draftRevision:
+        params === undefined ? (this.revisions.get(key) ?? 0) : undefined,
       version: this.sourceState.snapshot.version,
       epoch: this.epoch,
       accepted: false,
@@ -1267,7 +1277,7 @@ class Controller {
         ? commandSource.cancel(interaction.id)
         : commandSource.submit(
             interaction.id,
-            interaction.readiness().values as RuntimeJson,
+            interaction.readiness(params).values as RuntimeJson,
           ));
       if (this.pending !== operation) return result;
       if (!result.accepted) {
@@ -1309,7 +1319,10 @@ class Controller {
     )
       return;
     this.pending = null;
-    if ((this.revisions.get(operation.key) ?? 0) === operation.revision)
+    if (
+      operation.draftRevision !== undefined &&
+      (this.revisions.get(operation.key) ?? 0) === operation.draftRevision
+    )
       this.reset(operation.key);
     else this.refresh();
   }

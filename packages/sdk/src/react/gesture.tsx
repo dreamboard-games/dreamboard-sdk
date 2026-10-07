@@ -1,3 +1,6 @@
+import type { RuntimeShortcutTarget } from "../headless/features/shortcuts.js";
+import type { CoreInstance, InstanceOptions } from "../headless/model.js";
+import { inputValueKey } from "../shared/input-domain.js";
 import { createStore } from "@tanstack/store";
 import { useSelector } from "@tanstack/react-store";
 import {
@@ -31,16 +34,17 @@ export interface GestureDrag {
   drop(): void;
   cancel(): void;
 }
-export interface GestureGame {
+export interface GestureGame extends Pick<
+  CoreInstance<unknown>,
+  "snapshot" | "subscribe"
+> {
   readonly drag?: GestureDrag;
   readonly request: unknown;
-  readonly snapshot: unknown;
-  subscribe(listener: () => void): () => void;
+  getOptions(): Pick<InstanceOptions<unknown>, "source">;
 }
 
 export interface GestureState {
-  /** The card under an intentional pointer movement or keyboard focus. */
-  readonly activeCardId: string | null;
+  readonly activeTarget: RuntimeShortcutTarget | null;
   readonly drag: {
     readonly cardId: string;
     /** Pointer offset inside the card where it was picked up. */
@@ -123,10 +127,15 @@ export type GestureSession = ReturnType<typeof createGestureSession>;
 export function createGestureSession(game: GestureGame) {
   const id = `g${++sessions}`;
   const store = createStore<GestureState>({
-    activeCardId: null,
+    activeTarget: null,
     drag: null,
     inspect: null,
   });
+  const targets = new Map<string, () => RuntimeShortcutTarget>();
+  const sameTarget = (
+    left: RuntimeShortcutTarget | null,
+    right: RuntimeShortcutTarget | null,
+  ) => inputValueKey(left) === inputValueKey(right);
   const areas = new Map<string, () => DropAreaInput>();
   const followers = new Set<(point: Point) => void>();
   let press: {
@@ -137,9 +146,9 @@ export function createGestureSession(game: GestureGame) {
     area: string | null;
     target: RuntimeDropTarget | null;
   } | null = null;
-  let hover: string | null = null;
+  let hover: RuntimeShortcutTarget | null = null;
   let hoverPoint: Point | null = null;
-  let focused: string | null = null;
+  let focused: RuntimeShortcutTarget | null = null;
   let alt = false;
   let pointer: Point = { x: 0, y: 0 };
   let swallowing = false;
@@ -150,15 +159,46 @@ export function createGestureSession(game: GestureGame) {
     store.setState((previous) => ({ ...previous, ...patch }));
 
   let snapshot = game.snapshot;
+  let source = game.getOptions().source;
+  function admitted(target: RuntimeShortcutTarget | null) {
+    if (!target || !game.snapshot) return null;
+    const zones = game.snapshot.frame.zones;
+    if (target.kind === "zone")
+      return zones[target.zoneId]?.[target.hostId] ? target : null;
+    if (target.kind === "card")
+      return Object.entries(snapshot?.frame.zones ?? {}).some(
+        ([zoneId, hosts]) =>
+          Object.entries(hosts).some(
+            ([hostId, zone]) =>
+              zone.cardIds.includes(target.value) &&
+              zones[zoneId]?.[hostId]?.cardIds.includes(target.value),
+          ),
+      )
+        ? target
+        : null;
+    // Board controls own their mounted identity; each shortcut still checks
+    // the current projected input domain before submitting.
+    return [...targets.values()].some((read) => sameTarget(read(), target))
+      ? target
+      : null;
+  }
   const unsubscribe = game.subscribe(() => {
-    if (snapshot !== game.snapshot) {
+    const nextSource = game.getOptions().source;
+    const changedLifetime =
+      source !== nextSource || snapshot?.me !== game.snapshot?.me;
+    if (changedLifetime || snapshot !== game.snapshot) {
+      const nextHover = changedLifetime ? null : admitted(hover);
+      const nextFocused = changedLifetime ? null : admitted(focused);
+      source = nextSource;
       snapshot = game.snapshot;
       press?.recognizer.cancel();
-      // Surviving DOM cards do not receive another enter/focus event.
       alt = false;
-      hover = null;
-      focused = null;
-      set({ activeCardId: null, inspect: null });
+      // A parked pointer or keyboard focus survives an admitted same-seat
+      // frame, so separate key presses can keep acting on the same control.
+      hover = nextHover;
+      focused = nextFocused;
+      if (changedLifetime) hoverPoint = null;
+      set({ activeTarget: hover ?? focused, inspect: null });
     }
     // New frames, seats and sources cancel the semantic drag; end the press with it.
     if (press?.dragging && !game.drag?.active) press.recognizer.cancel();
@@ -244,9 +284,10 @@ export function createGestureSession(game: GestureGame) {
     hover = null;
   }
   function inspectWithAlt() {
-    const cardId = hover ?? focused;
+    const target = hover ?? focused;
+    const cardId = target?.kind === "card" ? target.value : null;
     set({
-      activeCardId: cardId,
+      activeTarget: target,
       inspect: alt && cardId && !press ? { cardId, via: "hover" } : null,
     });
   }
@@ -256,11 +297,17 @@ export function createGestureSession(game: GestureGame) {
     focused = null;
     const hit = document
       .elementFromPoint(at.x, at.y)
-      ?.closest("[data-card-gesture]");
+      ?.closest("[data-card-gesture], [data-shortcut-target]");
     const control =
       hit?.getAttribute("data-gesture-session") === id ? hit : null;
-    const next = control?.getAttribute("data-card-gesture") ?? null;
-    if (hover === next && !wasFocused) return;
+    const targetId = control?.getAttribute("data-shortcut-target");
+    const cardId = control?.getAttribute("data-card-gesture");
+    const next: RuntimeShortcutTarget | null = targetId
+      ? (targets.get(targetId)?.() ?? null)
+      : cardId
+        ? { kind: "card", value: cardId }
+        : null;
+    if (sameTarget(hover, next) && !wasFocused) return;
     hover = next;
     inspectWithAlt();
   }
@@ -288,7 +335,7 @@ export function createGestureSession(game: GestureGame) {
     clearHover();
     hoverPoint = null;
     focused = null;
-    set({ activeCardId: null, inspect: null });
+    set({ activeTarget: null, inspect: null });
   };
   addEventListener("keydown", key);
   addEventListener("keyup", key);
@@ -334,7 +381,7 @@ export function createGestureSession(game: GestureGame) {
             settling: false,
           },
           inspect: null,
-          activeCardId: null,
+          activeTarget: null,
         });
         return true;
       },
@@ -414,19 +461,22 @@ export function createGestureSession(game: GestureGame) {
     return {
       onPointerDown(event) {
         if (event.pointerType === "mouse") {
-          hover = cardId;
+          hover = { kind: "card", value: cardId };
           alt = event.altKey;
           inspectWithAlt();
         }
         start(event.nativeEvent, cardId, event.currentTarget, options);
       },
       onFocus(event) {
-        focused = event.currentTarget.matches(":focus-visible") ? cardId : null;
+        focused = event.currentTarget.matches(":focus-visible")
+          ? { kind: "card", value: cardId }
+          : null;
         if (focused) hover = null;
         inspectWithAlt();
       },
       onBlur() {
-        if (focused === cardId) focused = null;
+        if (focused?.kind === "card" && focused.value === cardId)
+          focused = null;
         inspectWithAlt();
       },
       onContextMenu(event) {
@@ -470,7 +520,45 @@ export function createGestureSession(game: GestureGame) {
     id,
     store,
     cardProps,
-    getActiveCardId: () => store.get().activeCardId,
+    getActiveCardId() {
+      const target = store.get().activeTarget;
+      return target?.kind === "card" ? target.value : null;
+    },
+    getActiveTarget: () => store.get().activeTarget,
+    registerTarget(targetId: string, read: () => RuntimeShortcutTarget) {
+      const target = read();
+      targets.set(targetId, read);
+      return () => {
+        targets.delete(targetId);
+        if (sameTarget(hover, target)) hover = null;
+        if (sameTarget(focused, target)) focused = null;
+        inspectWithAlt();
+      };
+    },
+    targetProps(targetId: string) {
+      return {
+        "data-shortcut-target": targetId,
+        "data-gesture-session": id,
+        onPointerDown(event: PointerEvent<Element>) {
+          if (event.pointerType !== "mouse") return;
+          hover = targets.get(targetId)?.() ?? null;
+          alt = event.altKey;
+          inspectWithAlt();
+        },
+        onFocus(event: FocusEvent<Element>) {
+          focused = event.currentTarget.matches(":focus-visible")
+            ? (targets.get(targetId)?.() ?? null)
+            : null;
+          if (focused) hover = null;
+          inspectWithAlt();
+        },
+        onBlur() {
+          const target = targets.get(targetId)?.() ?? null;
+          if (sameTarget(focused, target)) focused = null;
+          inspectWithAlt();
+        },
+      };
+    },
     overlayRef,
     /** `read` returns the area's current binding; targets resolve when hit. */
     registerArea(area: string, read: () => DropAreaInput) {
@@ -490,6 +578,7 @@ export function createGestureSession(game: GestureGame) {
       removeEventListener("pointerout", leaveWindow);
       unsubscribe();
       followers.clear();
+      targets.clear();
       if (!guardingClicks) return;
       removeEventListener("click", swallow, true);
       removeEventListener("pointerdown", newPress, true);

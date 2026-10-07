@@ -4,7 +4,7 @@ import {
   magneticDropPoint,
   type GestureRecognizer,
 } from "@dreamboard-games/sdk";
-import { useGame } from "@game";
+import { useGame, useShortcutTarget, useShortcutHints } from "@game";
 import {
   animate,
   motion,
@@ -32,28 +32,39 @@ import { Pile } from "./pile";
 import { useCardMotion, type CardBox, type CardPlacement } from "./card-motion";
 import "./tokens.css";
 
-import type { GameModel as Model, GameCard as Card, ZoneId } from "@game";
+import type { GameModel as Model, ShortcutZoneTarget } from "@game";
 import type { InteractionKey } from "@game";
-export interface DrawPileProps {
-  zoneId: ZoneId;
-  hostId: Card["hostId"];
-  destinationHostId: Card["hostId"];
-  interaction: InteractionKey;
-  destinationZoneId: ZoneId;
-  label?: string;
-  className?: string;
-}
+type SourceZone = ShortcutZoneTarget extends infer Target
+  ? Target extends { readonly zoneId: infer Zone; readonly hostId: infer Host }
+    ? { zoneId: Zone; hostId: Host }
+    : never
+  : never;
+type DestinationZone = ShortcutZoneTarget extends infer Target
+  ? Target extends { readonly zoneId: infer Zone; readonly hostId: infer Host }
+    ? { destinationZoneId: Zone; destinationHostId: Host }
+    : never
+  : never;
+export type DrawPileProps = SourceZone &
+  DestinationZone & {
+    interaction: InteractionKey;
+    label?: string;
+    className?: string;
+  };
 
 /** A face-down draw action: tap for its menu or drop its visual copy into a hand. */
-export function DrawPile({
-  zoneId,
-  hostId,
-  destinationHostId,
-  interaction: key,
-  destinationZoneId,
-  label = "Draw pile",
-  className,
-}: DrawPileProps) {
+export function DrawPile(props: DrawPileProps) {
+  const {
+    destinationHostId,
+    interaction: key,
+    destinationZoneId,
+    label = "Draw pile",
+    className,
+    ...source
+  } = props;
+  const { zoneId, hostId } = source;
+  const shortcutTarget = { kind: "zone" as const, ...source };
+  const shortcut = useShortcutTarget(shortcutTarget);
+  const hints = useShortcutHints(shortcutTarget);
   const draw = useGame((game) => game.interactions.find(key));
   const count = useGame((game) => game.zones.find(zoneId, hostId)?.count ?? 0);
   const back = useGame((game) => {
@@ -351,6 +362,7 @@ export function DrawPile({
         className={className}
       >
         <button
+          {...shortcut.props}
           ref={control}
           type="button"
           className="db-draw-pile-card"
@@ -360,7 +372,10 @@ export function DrawPile({
           aria-expanded={open}
           data-draw-pile={zoneId}
           data-picked-up={ghost !== null || undefined}
-          onPointerDown={start}
+          onPointerDown={(event) => {
+            shortcut.props.onPointerDown(event);
+            start(event);
+          }}
           onDragStart={(event) => event.preventDefault()}
           onContextMenu={(event) => event.preventDefault()}
           onClick={(event) => {
@@ -421,6 +436,13 @@ export function DrawPile({
                   }}
                 >
                   {draw?.label ?? "Draw"}
+                  {hints
+                    .filter((hint) => hint.interaction === key)
+                    .map((hint) => (
+                      <kbd key={hint.label} className="ml-2 text-xs opacity-70">
+                        {hint.keys.join(" / ")}
+                      </kbd>
+                    ))}
                 </Button>
                 {!available && (
                   <p role="status" className="m-0 px-2 py-1 text-sm">

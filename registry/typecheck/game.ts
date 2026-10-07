@@ -3,6 +3,7 @@ import {
   dragFeature,
   handFeature,
   originsFeature,
+  shortcutsFeature,
   panZoomFeature,
 } from "@dreamboard-games/sdk";
 import type {
@@ -14,6 +15,8 @@ import type {
   InteractionKey as SDKInteractionKey,
   Player,
   SeatCardId,
+  ShortcutTarget as SDKShortcutTarget,
+  ShortcutZoneTarget as SDKShortcutZoneTarget,
   ViewOf,
 } from "@dreamboard-games/sdk";
 import type { CardGestureOptions } from "@dreamboard-games/sdk/react";
@@ -29,6 +32,7 @@ function features(
     drag: dragFeature(core, context),
     hand: handFeature(core),
     origins: originsFeature(core),
+    shortcuts: shortcutsFeature(core, context),
     panZoom: panZoomFeature(core, context),
   };
 }
@@ -40,12 +44,17 @@ export type ZoneId = IdOf<Definition, "zoneId">;
 export type GamePlayer = Player<Definition>;
 export type GameView = ViewOf<Definition>;
 export type InteractionKey = SDKInteractionKey<Definition>;
+export type ShortcutTarget = SDKShortcutTarget<Definition>;
+export type ShortcutZoneTarget = SDKShortcutZoneTarget<Definition>;
 export type CardDrag = CardGestureOptions<Definition>["drag"];
 export const {
   useGame,
   GameProvider: SDKGameProvider,
   useCardGesture,
   useActiveCard,
+  useGameShortcuts,
+  useShortcutTarget,
+  useShortcutHints,
   useDropArea,
   useDragOverlay,
 } = createGameHook<unknown>()({

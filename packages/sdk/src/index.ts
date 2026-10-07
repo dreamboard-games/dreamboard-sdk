@@ -12,6 +12,15 @@ export {
 export type * from "./headless/model.js";
 export * from "./headless/sources/index.js";
 
+export {
+  shortcutsFeature,
+  type ShortcutBinding,
+  type ShortcutOptions,
+  type ShortcutTarget,
+  type ShortcutZoneTarget,
+  type ShortcutHint,
+  type ShortcutsController,
+} from "./headless/features/shortcuts.js";
 export * from "./headless/features/hand.js";
 export * from "./headless/features/board.js";
 export * from "./headless/features/drag.js";
