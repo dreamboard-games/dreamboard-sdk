@@ -378,6 +378,10 @@ export function DrawPile(props: DrawPileProps) {
           }}
           onDragStart={(event) => event.preventDefault()}
           onContextMenu={(event) => event.preventDefault()}
+          onMouseDown={(event) => {
+            // A touch tap already opened and focused the menu.
+            if (suppressClick.current) event.preventDefault();
+          }}
           onClick={(event) => {
             if (suppressClick.current && event.detail !== 0) {
               suppressClick.current = false;

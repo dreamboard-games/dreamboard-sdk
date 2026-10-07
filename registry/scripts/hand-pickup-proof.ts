@@ -202,9 +202,9 @@ export async function proveHandPickup(
         await page.mouse.up();
       }
       await interrupted;
-      const at = await cardSurface(card, undefined, false);
-      if (!cdp) {
-        await page.mouse.move(at.x, at.y);
+      const mouse = cdp ? null : await cardSurface(card, undefined, false);
+      if (mouse) {
+        await page.mouse.move(mouse.x, mouse.y);
         await page.mouse.down();
       }
       // Observe the actual painted source at the physical drag event, before
@@ -232,6 +232,8 @@ export async function proveHandPickup(
       });
       const regrab = flight(card, false);
       if (cdp) {
+        // The returning fan is moving: find its exposed interior after setup.
+        const at = await cardSurface(card, undefined, false);
         await cdp.send("Input.dispatchTouchEvent", {
           type: "touchStart",
           touchPoints: [{ ...at, id: 1 }],
@@ -240,7 +242,8 @@ export async function proveHandPickup(
           type: "touchMove",
           touchPoints: [{ x: at.x, y: at.y - 20, id: 1 }],
         });
-      } else await page.mouse.move(at.x, at.y - 20);
+      } else await page.mouse.move(mouse!.x, mouse!.y - 20);
+      await expect(card).toHaveAttribute("data-dragging", "true");
       const frames = await regrab;
       const measured = await contact.evaluate((value) => ({
         width: value.width,

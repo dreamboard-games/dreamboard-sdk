@@ -18,7 +18,9 @@ export async function cardSurface(
             document.elementFromPoint(x, y)?.closest(".db-hand-card") ===
             element;
           for (const vertical of [0.5, 0.65, 0.3, 0.8])
-            for (let horizontal = 0.05; horizontal < 1; horizontal += 0.05) {
+            for (const horizontal of [
+              0.5, 0.65, 0.35, 0.8, 0.2, 0.9, 0.1, 0.95, 0.05,
+            ]) {
               const at = {
                 x: x + width * horizontal,
                 y: y + height * vertical,
