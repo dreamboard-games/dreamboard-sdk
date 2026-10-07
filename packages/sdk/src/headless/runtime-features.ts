@@ -6,6 +6,7 @@ import type {
   GameSource,
   SourceSnapshot,
   SourceState,
+  SubmitResult,
 } from "./sources/types.js";
 import type {
   RuntimeSelectionTarget,
@@ -17,6 +18,7 @@ import type {
 export const runtimeFeatures = Symbol("runtimeFeatures");
 export interface RuntimeInput {
   readonly key: string;
+  readonly kind: import("./model.js").InteractionInputDescriptor["kind"];
   getDomain(): InputDomain;
   getIsEligible(value: RuntimeJson): boolean;
   getIsSelected(value: RuntimeJson): boolean;
@@ -24,14 +26,21 @@ export interface RuntimeInput {
 }
 export interface RuntimeInteraction {
   readonly key: string;
-  getIsAvailable(): boolean;
+  getIsAvailable(params?: Readonly<Record<string, RuntimeJson>>): boolean;
+  getIsReady(params?: Readonly<Record<string, RuntimeJson>>): boolean;
+  getStatus(): "open" | "submitting" | "submitted";
+  submit(params?: Readonly<Record<string, RuntimeJson>>): Promise<SubmitResult>;
   getInputs(): readonly RuntimeInput[];
 }
 export interface RuntimeFeatureSnapshot {
   readonly view: unknown;
   readonly snapshot: SourceSnapshot | null;
   readonly connection: SourceState["connection"];
+  readonly request: SourceState["request"];
   readonly interactions: { list(): readonly RuntimeInteraction[] };
+  readonly zones: {
+    find(id: string, hostId: string): { readonly count: number } | undefined;
+  };
   readonly cards: {
     find(
       id: string,

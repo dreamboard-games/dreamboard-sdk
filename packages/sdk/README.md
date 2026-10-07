@@ -356,6 +356,73 @@ atomic domain routing. `fanLayout` computes arc positions for a hand, and
 `originsFeature` adds `card.getOrigin()` so a newly shown card can animate from
 the zone or player it came from.
 
+## Opt-in game shortcuts
+
+Install `shortcutsFeature` in the same `createGameHook<Definition>()` binding as
+other features, and export its inferred `useGameShortcuts` and
+`useShortcutTarget` and `useShortcutHints` hooks. A child inside the bound `GameProvider` installs the
+app's bindings once:
+
+```tsx
+function AppShortcuts() {
+  useGameShortcuts({
+    bindings: [
+      {
+        keys: ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+        label: "Draw cards",
+        target: "zone",
+        zoneId: "deck",
+        interaction: "play.draw",
+        inputs: ({ key }) => ({ count: Number(key) }),
+      },
+      {
+        keys: ["f"],
+        label: "Flip card",
+        target: "card",
+        input: "card",
+        interaction: "play.flip",
+        inputs: ({ target }) => ({ card: target.value }),
+      },
+    ],
+  });
+  return null;
+}
+```
+
+These interaction and input names are examples from an authored reducer. The
+binding's discriminated types derive from that reducer: interaction names,
+input keys, target kinds, and every required payload field must match. A game
+that exposes a counted draw submits one `count` payload; shortcuts never repeat
+a draw-one action. No actions or keys are supplied by default.
+
+Card controls using `useCardGesture` share its canonical pointer and keyboard
+focus. Zone controls spread
+`useShortcutTarget({ kind: "zone", zoneId: "deck", hostId: "table" }).props`;
+`hostId` must be the actual host allowed by that zone's attachment. Selectable
+board and tile controls can use the same hook with their canonical
+`SelectionTarget`. Hidden cards retain their opaque seat references.
+
+Keys are exact browser `event.key` strings. The adapter ignores held repeats,
+composition, editing controls, modifier combinations, and open modal or menu
+surfaces. It prevents the browser default only when a single eligible binding
+handles the key. Source and seat changes clear the gesture target; unmounting
+removes the listener and binding hints.
+
+Input factories must be pure: eligibility and hints evaluate them against the
+current projected domains. `game.shortcuts.getHints(target)` returns only
+currently usable, unambiguous keys with their labels and typed interaction
+names, for menus or help. `useShortcutHints(target)` reads those hints reactively
+and returns no hints when the feature is absent. The mounted
+`useGameShortcuts` hook returns `{ target, hints }` for a reserved help/status
+area. Rejected actions and transport failures use the binding's existing
+`onError` handler; callbacks from an old source, seat, or unmounted child are
+ignored. `game.shortcuts.handle(key, target)` uses the same
+atomic `interaction.submit(params)` path available to authored action buttons.
+Explicit params are validated against the current projected descriptor without
+mutating drafts. Existing `submit()` continues to submit the interaction draft
+and defaults; both forms share availability and in-flight lifecycle barriers.
+The headless feature installs no DOM listeners.
+
 ## Local development and tests
 
 `localSource(game, { players, seed, as, options })` executes the production reducer

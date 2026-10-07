@@ -126,6 +126,7 @@ exports[`public export surface > root export names are stable 1`] = `
   "parsePluginSessionDescriptor",
   "parsePluginToHostEnvelope",
   "perPlayerInstanceId",
+  "shortcutsFeature",
   "staticSource",
 ]
 `;

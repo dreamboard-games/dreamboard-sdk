@@ -55,13 +55,15 @@ try {
     sdkArchive = path.join(project, `dreamboard-games-sdk-${pkg.version}.tgz`);
     await writeFile(
       path.join(project, "src/game.ts"),
-      `import type { Card, SeatCardId, IdOf, InteractionKey as SDKInteractionKey, GameSnapshot, boardFeature, handFeature, panZoomFeature, dragFeature, originsFeature } from "@dreamboard-games/sdk";
-      type Features = { board: ReturnType<typeof boardFeature<unknown>>; hand: ReturnType<typeof handFeature<unknown>>; drag: ReturnType<typeof dragFeature<unknown>>; origins: ReturnType<typeof originsFeature<unknown>>; panZoom: ReturnType<typeof panZoomFeature<unknown>> };
+      `import type { Card, SeatCardId, IdOf, InteractionKey as SDKInteractionKey, GameSnapshot, boardFeature, handFeature, panZoomFeature, dragFeature, originsFeature, shortcutsFeature, ShortcutTarget as SDKShortcutTarget, ShortcutZoneTarget as SDKShortcutZoneTarget } from "@dreamboard-games/sdk";
+      type Features = { board: ReturnType<typeof boardFeature<unknown>>; hand: ReturnType<typeof handFeature<unknown>>; drag: ReturnType<typeof dragFeature<unknown>>; origins: ReturnType<typeof originsFeature<unknown>>; panZoom: ReturnType<typeof panZoomFeature<unknown>>; shortcuts: ReturnType<typeof shortcutsFeature<unknown>> };
       export type GameModel = GameSnapshot<unknown, Features>;
       export type GameCard = Card<unknown, Features>;
       export type CardId = SeatCardId<unknown>;
       export type ZoneId = IdOf<unknown, "zoneId">;
       export type InteractionKey = SDKInteractionKey<unknown>;
+      export type ShortcutTarget = SDKShortcutTarget<unknown>;
+      export type ShortcutZoneTarget = SDKShortcutZoneTarget<unknown>;
       export type CardDrag = import("@dreamboard-games/sdk/react").CardGestureOptions<unknown>["drag"];
       type Model = GameModel;
       export declare function useGame<Value>(select: (game: Model) => Value, options?: { readonly compare?: (previous: Value, next: Value) => boolean }): Value;
@@ -71,6 +73,9 @@ try {
       export { GameProvider } from "./components/dreamboard/game-provider";
       export declare const useCardGesture: Hooks["useCardGesture"];
       export declare const useActiveCard: Hooks["useActiveCard"];
+      export declare const useGameShortcuts: Hooks["useGameShortcuts"];
+      export declare const useShortcutTarget: Hooks["useShortcutTarget"];
+      export declare const useShortcutHints: Hooks["useShortcutHints"];
       export declare const useDropArea: Hooks["useDropArea"];
       export declare const useDragOverlay: Hooks["useDragOverlay"];`,
     );

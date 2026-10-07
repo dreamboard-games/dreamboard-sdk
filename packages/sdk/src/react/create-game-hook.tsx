@@ -1,3 +1,13 @@
+import { createStore } from "@tanstack/store";
+import { inputValueKey } from "../shared/input-domain.js";
+import { useShortcutsAdapter } from "./shortcuts.js";
+import type {
+  ShortcutOptions,
+  ShortcutTarget,
+  ShortcutHint,
+  ShortcutsController,
+  RuntimeShortcutTarget,
+} from "../headless/features/shortcuts.js";
 import {
   createGestureSession,
   resolveDropArea,
@@ -223,7 +233,9 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
       );
       const isActive = useGestureState(
         session,
-        (state) => state.activeCardId === cardId,
+        (state) =>
+          state.activeTarget?.kind === "card" &&
+          state.activeTarget.value === cardId,
       );
       return {
         props: session.cardProps(cardId, routes, { dragging, inspecting }),
@@ -271,6 +283,90 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
       };
     }
 
+    const shortcutsOf = (snapshot: Snapshot) =>
+      (
+        snapshot as Snapshot & {
+          readonly shortcuts?: ShortcutsController<Game>;
+        }
+      ).shortcuts;
+    const noShortcutsConfiguration = createStore<ShortcutOptions<Game> | null>(
+      null,
+    );
+    const sameHints = (
+      left: readonly ShortcutHint<Game>[],
+      right: readonly ShortcutHint<Game>[],
+    ) =>
+      left.length === right.length &&
+      left.every((hint, index) => {
+        const next = right[index];
+        return (
+          hint.label === next.label &&
+          hint.interaction === next.interaction &&
+          hint.keys.length === next.keys.length &&
+          hint.keys.every((key, at) => key === next.keys[at])
+        );
+      });
+    /** Current eligible hints; configuration and projected domains each notify their own readers. */
+    function useShortcutHints(
+      target: ShortcutTarget<Game> | null,
+    ): readonly ShortcutHint<Game>[] {
+      const controller = shortcutsOf(useInstance());
+      useGame((snapshot) => shortcutsOf(snapshot)?.getHints(target) ?? [], {
+        compare: sameHints,
+      });
+      return useSelector(
+        controller?.configuration ?? noShortcutsConfiguration,
+        () => controller?.getHints(target) ?? [],
+        { compare: sameHints },
+      );
+    }
+
+    /** Installs the authored keyboard bindings for this mounted application. */
+    function useGameShortcuts(options: ShortcutOptions<Game>): {
+      readonly target: ShortcutTarget<Game> | null;
+      readonly hints: readonly ShortcutHint<Game>[];
+    } {
+      const instance = useInstance();
+      const session = useGestureSession();
+      // Feature-composition boundary: this binding and its installed root feature share Game.
+      const controller = shortcutsOf(instance);
+      if (!controller)
+        throw new Error(
+          "useGameShortcuts requires shortcutsFeature in the game binding.",
+        );
+      useShortcutsAdapter(instance, controller, session, options, (result) => {
+        if (result instanceof Error) instance.getOptions().onError?.(result);
+        else if (!result.accepted)
+          instance
+            .getOptions()
+            .onError?.(
+              new Error(result.message ?? result.errorCode, { cause: result }),
+            );
+      });
+      const target = useGestureState(
+        session,
+        (state) => state.activeTarget,
+      ) as ShortcutTarget<Game> | null;
+      const hints = useShortcutHints(target);
+      return { target, hints };
+    }
+
+    /** Shares the canonical pointer and keyboard focus with a zone, tile or board control. */
+    function useShortcutTarget(target: ShortcutTarget<Game>) {
+      const session = useGestureSession();
+      const id = `${session.id}${useId()}`;
+      const latest = useRef<RuntimeShortcutTarget>(target);
+      const targetKey = inputValueKey(target);
+      useLayoutEffect(() => {
+        latest.current = target;
+      });
+      useLayoutEffect(
+        () => session.registerTarget(id, () => latest.current),
+        [session, id, targetKey],
+      );
+      return { props: session.targetProps(id) };
+    }
+
     /** The card being dragged, and a ref that keeps its copy under the pointer. */
     function useDragOverlay(): DragOverlay<Game> | null {
       const session = useGestureSession();
@@ -289,7 +385,10 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
       const session = useGestureSession();
       return useGestureState(
         session,
-        (state) => state.activeCardId as SeatCardId<Game> | null,
+        (state) =>
+          (state.activeTarget?.kind === "card"
+            ? state.activeTarget.value
+            : null) as SeatCardId<Game> | null,
       );
     }
 
@@ -299,6 +398,9 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
       Subscribe,
       useCardGesture,
       useActiveCard,
+      useGameShortcuts,
+      useShortcutTarget,
+      useShortcutHints,
       useDropArea,
       useDragOverlay,
     };

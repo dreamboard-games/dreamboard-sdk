@@ -12,16 +12,18 @@ destination hand also requires `originsFeature`.
 <GameProvider source={source}>
   <DrawPile
     zoneId="deck"
+    hostId="table"
     interaction="drawing.draw"
     destinationZoneId="hand"
+    destinationHostId={me.id}
     label="Draw pile"
   />
-  <Hand zoneId="hand" renderCard={renderCard} />
+  <Hand zoneId="hand" hostId={me.id} renderCard={renderCard} />
 </GameProvider>
 ```
 
-The bound interaction must be a no-input draw action that moves one card from the
-source zone into the destination hand. Its reducer owns actor authorization,
+The bound interaction must be ready from its draft or authored defaults. A
+counted draw can default its count to one for the menu and drag gesture. Its reducer owns actor authorization,
 availability, card choice and state changes. Both menu Draw and a hand drop
 submit that interaction through the SDK; lifting or cancelling submits nothing.
 
@@ -31,7 +33,7 @@ the actor to its active player, and the rule is checked again on submission.
 ```ts
 draw: play.interaction({
   presentation: { label: "Draw" },
-  inputs: {},
+  inputs: { count: play.inputs.form.number({ min: 1, max: 9, defaultValue: 1 }) },
   rules: [{
     id: "deck-has-cards",
     errorCode: "DECK_EMPTY",
@@ -43,14 +45,22 @@ draw: play.interaction({
       fromZoneId: "deck",
       toZoneId: "hand",
       playerId: input.playerId,
-      count: 1,
+      count: input.params.count,
     });
   },
 }),
 ```
 
 Bind this phase's interaction key (for example, `play.draw`) to `DrawPile`.
-Free play can use the same UI with broader reducer permissions.
+Free play can use the same UI with broader reducer permissions. `DrawPile`
+registers its exact source zone and host with `useShortcutTarget`. Install
+`shortcutsFeature` in the game binding and mount `useGameShortcuts` once in an App
+child to map number keys to the counted draw. The keys submit one canonical
+interaction payload; they do not loop the one-card menu action. Menu hints read
+that same binding through `useShortcutHints`, which returns no hints when the
+feature is absent. Export the inferred hooks and the bound SDK
+`ShortcutZoneTarget<Definition>` alias from `@game`; the source and destination
+props retain that canonical zone/host correlation.
 
 Tap, click or Enter opens the action menu. Escape closes it and returns focus.
 The pile and its lifted copy show the top card's back art when the game has one.
