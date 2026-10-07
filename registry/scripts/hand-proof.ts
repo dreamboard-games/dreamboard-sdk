@@ -39,7 +39,7 @@ export async function proveHand(page: Page, touch: boolean) {
 
   await expect(cards).toHaveCount(9);
   // The fan tilts outward, overlaps its cards and fits the hand.
-  const angles = await hand.locator(".db-hand-slot").evaluateAll((slots) =>
+  const angles = await hand.locator(".db-hand-pose").evaluateAll((slots) =>
     slots.map((slot) => {
       const { a, b } = new DOMMatrix(getComputedStyle(slot).transform);
       return (Math.atan2(b, a) * 180) / Math.PI;
@@ -67,7 +67,7 @@ export async function proveHand(page: Page, touch: boolean) {
         end.evaluate(
           (element) =>
             new DOMMatrix(
-              getComputedStyle(element.closest(".db-hand-slot")!).transform,
+              getComputedStyle(element.closest(".db-hand-pose")!).transform,
             ).a,
         ),
       )
