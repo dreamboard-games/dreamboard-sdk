@@ -84,7 +84,12 @@ function Card({ id, draggable }: { id: string; draggable: boolean }) {
   const card = useGame((game) => game.cards.get(id));
   const gesture = useCardGesture(id, { drag: draggable ? {} : false });
   return (
-    <button {...card.getProps()} {...gesture.props} data-testid={id}>
+    <button
+      {...card.getProps()}
+      {...gesture.props}
+      data-active={gesture.isActive || undefined}
+      data-testid={id}
+    >
       {id}
     </button>
   );
@@ -238,52 +243,70 @@ test("only the press's own click is swallowed; a new press or the keyboard still
   expect(clicks).toBe(3);
 });
 
-test("Alt inspects the hovered card and clears on release, leave, window blur, and new frames", async () => {
-  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+test("physical pointer focus survives motion-driven boundaries and Alt uses that same card", async () => {
   const { get, source } = await mount();
-  const over = (type: string) =>
-    act(async () => {
-      get("red")!.dispatchEvent(
-        new PointerEvent(type, { bubbles: true, pointerType: "mouse" }),
-      );
-    });
-  await over("pointerover");
-  await act(async () => vi.advanceTimersByTime(GESTURE_THRESHOLDS.hoverMs));
-  expect(get("red")!.dataset.inspecting).toBeUndefined();
+  let hit: Element | null = get("red");
+  hitTesting(() => hit);
+  const mouse = (x: number) => ({ pointerType: "mouse", x, y: 10 }) as const;
   const key = (type: string) =>
-    act(async () => {
+    act(async () =>
       window.dispatchEvent(
         new KeyboardEvent(type, { key: "Alt", altKey: type === "keydown" }),
-      );
-    });
-  await key("keydown");
-  expect(get("red")!.dataset.inspecting).toBe("hover");
-  await key("keyup");
+      ),
+    );
+  await move(mouse(10));
+  expect(get("red")!.dataset.active).toBe("true");
   expect(get("red")!.dataset.inspecting).toBeUndefined();
-  await key("keydown");
+  // A neighbour moves under the parked mouse and sends boundary events.
+  hit = get("blue");
   await act(async () => {
-    window.dispatchEvent(new Event("blur"));
+    get("red")!.dispatchEvent(pointer("pointerout", mouse(10)));
+    get("blue")!.dispatchEvent(pointer("pointerover", mouse(10)));
   });
-  expect(get("red")!.dataset.inspecting).toBeUndefined();
-  await over("pointerover");
+  await move(mouse(10));
   await key("keydown");
   expect(get("red")!.dataset.inspecting).toBe("hover");
-  await over("pointerout");
-  expect(get("red")!.dataset.inspecting).toBeUndefined();
-  await over("pointerover");
+  expect(get("blue")!.dataset.active).toBeUndefined();
+  await key("keyup");
+  await move(mouse(11));
+  expect(get("blue")!.dataset.active).toBe("true");
   await key("keydown");
+  expect(get("blue")!.dataset.inspecting).toBe("hover");
   await act(async () => source.emit(snapshot(2)));
-  expect(get("red")!.dataset.inspecting).toBeUndefined();
-  await key("keyup");
+  expect(get("blue")!.dataset.inspecting).toBeUndefined();
+  expect(get("blue")!.dataset.active).toBeUndefined();
+  // A new intentional movement establishes focus in the new frame.
+  await move(mouse(12));
   await key("keydown");
-  expect(get("red")!.dataset.inspecting).toBe("hover");
-  await over("pointerout");
+  expect(get("blue")!.dataset.inspecting).toBe("hover");
+  hit = null;
+  await move(mouse(13));
+  expect(get("blue")!.dataset.inspecting).toBeUndefined();
+  // happy-dom does not implement the browser's keyboard modality pseudo-class.
+  const matches = get("red")!.matches.bind(get("red")!);
+  vi.spyOn(get("red")!, "matches").mockImplementation(
+    (selector) => selector === ":focus-visible" || matches(selector),
+  );
   await act(async () => get("red")!.focus());
-  await act(async () => source.emit(snapshot(3)));
-  expect(get("red")!.dataset.inspecting).toBeUndefined();
-  await key("keyup");
   await key("keydown");
   expect(get("red")!.dataset.inspecting).toBe("hover");
+  expect(get("red")!.dataset.active).toBe("true");
+  await act(async () => window.dispatchEvent(new Event("blur")));
+  expect(get("red")!.dataset.active).toBeUndefined();
+  expect(get("red")!.dataset.inspecting).toBeUndefined();
+});
+
+test("pointer down activates the actual pressed face after a parked-pointer animation", async () => {
+  const { get } = await mount();
+  hitTesting(() => get("red"));
+  const mouse = { pointerType: "mouse", x: 10, y: 10 } as const;
+  await move(mouse);
+  await down(get("blue")!, mouse);
+  expect(get("red")!.dataset.active).toBeUndefined();
+  expect(get("blue")!.dataset.active).toBe("true");
+  await up(mouse);
+  await click(get("blue")!);
+  expect(get("drafts")!.textContent).toContain('"card":"blue"');
 });
 
 test("a card dragged onto an area runs its interaction and settles until the frame", async () => {

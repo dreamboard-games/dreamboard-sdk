@@ -57,6 +57,7 @@ export interface CardGesture {
   readonly props: CardGestureProps;
   readonly canDrag: boolean;
   readonly isDragging: boolean;
+  readonly isActive: boolean;
   /** Held on touch, or rested on with a mouse. */
   readonly inspecting: "hold" | "hover" | null;
 }
@@ -220,10 +221,15 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
       const inspecting = useGestureState(session, (state) =>
         state.inspect?.cardId === cardId ? state.inspect.via : null,
       );
+      const isActive = useGestureState(
+        session,
+        (state) => state.activeCardId === cardId,
+      );
       return {
         props: session.cardProps(cardId, routes, { dragging, inspecting }),
         canDrag,
         isDragging: dragging,
+        isActive,
         inspecting,
       };
     }
@@ -278,11 +284,21 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
         : null;
     }
 
+    /** Presentation focus shared by the fan, inspection and pointer activation. */
+    function useActiveCard(): SeatCardId<Game> | null {
+      const session = useGestureSession();
+      return useGestureState(
+        session,
+        (state) => state.activeCardId as SeatCardId<Game> | null,
+      );
+    }
+
     return {
       GameProvider,
       useGame,
       Subscribe,
       useCardGesture,
+      useActiveCard,
       useDropArea,
       useDragOverlay,
     };
