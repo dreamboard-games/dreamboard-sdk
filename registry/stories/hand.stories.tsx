@@ -173,10 +173,13 @@ function Area({
 function Table({
   onSwitchSeat,
   appearance,
+  drawLifecycle = false,
 }: {
   onSwitchSeat(): void;
   appearance?: "text" | "wide";
+  drawLifecycle?: boolean;
 }) {
+  const [showPile, setShowPile] = useState(true);
   const hostId = useGame((game) => game.me?.id);
   const endTurn = useGame((game) => game.interactions.find("play.endTurn"));
   const zones = useGame((game) =>
@@ -203,6 +206,9 @@ function Table({
               End turn
             </Button>
           )}
+          {drawLifecycle && (
+            <Button onClick={() => setShowPile(false)}>Hide deck</Button>
+          )}
         </div>
       </header>
       <p className="m-0 text-sm">
@@ -210,14 +216,16 @@ function Table({
       </p>
       <div className="flex flex-wrap items-start justify-center gap-4">
         <div className="grid justify-items-center gap-2" style={tableCards}>
-          <DrawPile
-            zoneId="deck"
-            hostId="table"
-            destinationHostId={hostId}
-            interaction="play.draw"
-            destinationZoneId="hand"
-            label="Deck"
-          />
+          {showPile && (
+            <DrawPile
+              zoneId="deck"
+              hostId="table"
+              destinationHostId={hostId}
+              interaction="play.draw"
+              destinationZoneId="hand"
+              label="Deck"
+            />
+          )}
         </div>
         <Area zoneId="table" label="Table" interaction="play.play" />
         <Area zoneId="discard" label="Discard" interaction="play.discard" top />
@@ -247,10 +255,12 @@ function OwnedSource({
   source,
   manualDraw,
   appearance,
+  drawLifecycle,
 }: {
   appearance?: "text" | "wide";
   source: CreatedHandSource;
   manualDraw: boolean;
+  drawLifecycle: boolean;
 }) {
   useLayoutEffect(() => {
     source.adopted = true;
@@ -266,6 +276,7 @@ function OwnedSource({
       )}
       <Table
         appearance={appearance}
+        drawLifecycle={drawLifecycle}
         onSwitchSeat={() => {
           const next = seat === "player-1" ? "player-2" : "player-1";
           source.value.switchSeat(next);
@@ -279,10 +290,12 @@ function HandTable({
   manualDraw = false,
   emptyHand = false,
   appearance,
+  drawLifecycle = false,
 }: {
   appearance?: "text" | "wide";
   manualDraw?: boolean;
   emptyHand?: boolean;
+  drawLifecycle?: boolean;
 }) {
   const [source, setSource] = useState<CreatedHandSource | null>(null);
   useEffect(() => {
@@ -341,6 +354,7 @@ function HandTable({
       source={source}
       manualDraw={manualDraw}
       appearance={appearance}
+      drawLifecycle={drawLifecycle}
     />
   ) : (
     <p>Loading…</p>
@@ -353,6 +367,9 @@ const meta = {
 } satisfies Meta<typeof HandTable>;
 export default meta;
 export const FannedHand: StoryObj<typeof meta> = {};
+export const DrawLifecycle: StoryObj<typeof meta> = {
+  args: { drawLifecycle: true },
+};
 
 export const PendingDraw: StoryObj<typeof meta> = {
   args: { manualDraw: true },

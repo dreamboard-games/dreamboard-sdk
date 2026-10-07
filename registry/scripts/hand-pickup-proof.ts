@@ -79,6 +79,8 @@ export async function proveHandPickup(
         await page.locator('[data-action="draw"]').click();
       }
       await expect(cards).toHaveCount(7);
+      for (const card of await cards.all()) await expect(card).toBeVisible();
+      await expect(page.locator("[data-card-arrival]")).toHaveCount(0);
     }
     if (scenario === "scrolled") {
       const hand = page.getByRole("region", { name: "Your hand" });

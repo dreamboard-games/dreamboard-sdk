@@ -82,6 +82,10 @@ export function DrawPile({
   const y = useMotionValue(0);
   const scale = useMotionValue(1);
   const rotate = useMotionValue(0);
+  const flight = useRef<{
+    controls: ReturnType<typeof animate>[];
+    finish(): void;
+  } | null>(null);
   const available = count > 0 && !!draw && !draw.getSubmitProps().disabled;
   const latest = useRef({ draw, available, snapshot, table });
   latest.current = { draw, available, snapshot, table };
@@ -123,9 +127,8 @@ export function DrawPile({
   }
   function returnToPile() {
     clearTarget();
-    setGhost((current) => (current ? { ...current, phase: "return" } : null));
     const home = control.current!.getBoundingClientRect();
-    void moveTo(
+    const landed = moveTo(
       {
         x: home.x,
         y: home.y,
@@ -134,16 +137,41 @@ export function DrawPile({
         rotate: 0,
       },
       home,
-    ).then(() => setGhost(null));
+    );
+    setGhost((current) =>
+      current ? { ...current, phase: "return", landed } : null,
+    );
+    void landed.then(() =>
+      setGhost((current) => (current?.landed === landed ? null : current)),
+    );
+  }
+  function completeFlight() {
+    const previous = flight.current;
+    flight.current = null;
+    previous?.finish();
+    previous?.controls.forEach((animation) => animation.complete());
   }
   function moveTo(target: CardPlacement, source: CardBox) {
+    completeFlight();
     const transition = reduced ? { duration: 0 } : cardSettle;
-    return Promise.all([
+    const controls = [
       animate(x, target.x + (target.width - source.width) / 2, transition),
       animate(y, target.y + (target.height - source.height) / 2, transition),
       animate(scale, target.width / source.width, transition),
       animate(rotate, target.rotate, transition),
-    ]);
+    ];
+    // Motion's cancelled animations do not settle their promises. A released
+    // visual handoff also lands when another flight replaces it or the pile leaves.
+    let finish!: () => void;
+    const landed = new Promise<void>((resolve) => {
+      finish = resolve;
+    });
+    flight.current = { controls, finish };
+    void Promise.all(controls).then(() => {
+      if (flight.current?.controls === controls) flight.current = null;
+      finish();
+    });
+    return landed;
   }
   function placement(box: CardBox): CardPlacement {
     const width = box.width * scale.get();
@@ -208,6 +236,7 @@ export function DrawPile({
     () => () => {
       press.current?.detach();
       latest.current.table.setDrop(null);
+      completeFlight();
       x.stop();
       y.stop();
       scale.stop();
@@ -382,6 +411,7 @@ export function DrawPile({
                   data-action="draw"
                   data-interaction={key}
                   onClick={() => {
+                    completeFlight();
                     const box = control.current!.getBoundingClientRect();
                     x.set(box.x);
                     y.set(box.y);
