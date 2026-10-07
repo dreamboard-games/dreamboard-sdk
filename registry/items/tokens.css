@@ -103,8 +103,7 @@
       var(--elevation-lift);
   }
   /* A card Motion is carrying between places flies above the others. */
-  .db-card[data-moving],
-  .db-hand-slot[data-moving] {
+  .db-card[data-moving] {
     z-index: 40 !important;
   }
   .db-card[data-card-state="dimmed"] {
@@ -479,11 +478,6 @@
   }
   .db-drag-overlay .db-card {
     box-shadow: var(--elevation-drag);
-  }
-  @media (pointer: coarse) {
-    .db-drag-overlay .db-card {
-      translate: 0 -30%;
-    }
   }
   .db-drop-area {
     border: 2px dashed transparent;

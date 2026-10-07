@@ -13,6 +13,7 @@ import {
 } from "./draw-proof.ts";
 import { proveCardControl } from "./card-control-proof.ts";
 import { proveHand } from "./hand-proof.ts";
+import { proveHandPickup } from "./hand-pickup-proof.ts";
 import {
   proveHandChoreography,
   proveHandReading,
@@ -299,6 +300,12 @@ try {
         await page.reload();
       }
       if (story.id.endsWith("fanned-hand") && name !== "landscape") {
+        await proveHandPickup(
+          page,
+          touch,
+          `${root}/build/screenshots/${story.id}-${name}`,
+        );
+        await page.reload();
         await proveHandChoreography(
           page,
           touch,

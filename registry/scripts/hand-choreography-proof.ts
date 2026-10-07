@@ -37,6 +37,44 @@ export async function proveHandChoreography(
     await expect(inspection).toHaveCount(0);
     const next = cards.nth(5);
     const at = await surface(next);
+    const entryWatch = await next.evaluateHandle((element) => {
+      const horizontal = element.closest(".db-hand-slot")!;
+      const vertical = element.closest(".db-hand-vertical")!;
+      const before = {
+        x: horizontal.getBoundingClientRect().x,
+        y: vertical.getBoundingClientRect().y,
+      };
+      let started = 0;
+      element.addEventListener(
+        "pointermove",
+        () => {
+          started = performance.now();
+        },
+        { once: true },
+      );
+      return {
+        horizontal,
+        vertical,
+        before,
+        get started() {
+          return started;
+        },
+      };
+    });
+    const entry = entryWatch.evaluate(async (watch) => {
+      const { horizontal, vertical, before } = watch;
+      const frames = [];
+      while (!watch.started || performance.now() - watch.started < 900) {
+        await new Promise(requestAnimationFrame);
+        if (watch.started)
+          frames.push({
+            at: performance.now() - watch.started,
+            x: horizontal.getBoundingClientRect().x,
+            y: vertical.getBoundingClientRect().y,
+          });
+      }
+      return { before, frames };
+    });
     await page.mouse.move(at.x, at.y);
     await expect(next).toHaveAttribute("data-hovered", "true");
     // Outgoing cards immediately return to ordinary fan order.
@@ -46,11 +84,12 @@ export async function proveHandChoreography(
         .evaluate((e) => getComputedStyle(e).zIndex),
     ).toBe("4");
     const samples = await active.evaluate(async (element) => {
-      const slot = element.closest(".db-hand-slot")!;
       const samples: number[] = [];
       for (let frame = 0; frame < 28; frame++) {
         await new Promise(requestAnimationFrame);
-        const matrix = new DOMMatrix(getComputedStyle(slot).transform);
+        const matrix = new DOMMatrix(
+          getComputedStyle(element.closest(".db-hand-pose")!).transform,
+        );
         samples.push(Math.hypot(matrix.a, matrix.b));
       }
       return samples;
@@ -58,6 +97,23 @@ export async function proveHandChoreography(
     expect(Math.min(...samples)).toBeGreaterThanOrEqual(0.999);
     for (let index = 1; index < samples.length; index++)
       expect(samples[index]).toBeLessThanOrEqual(samples[index - 1] + 0.002);
+    const lift = await entry;
+    await entryWatch.dispose();
+    const end = lift.frames.at(-1)!;
+    const ninety = (axis: "x" | "y") =>
+      lift.frames.find(
+        (frame) =>
+          Math.abs(end[axis] - frame[axis]) <=
+          Math.abs(end[axis] - lift.before[axis]) * 0.1,
+      )!.at;
+    expect(Math.abs(end.x - lift.before.x)).toBeGreaterThan(20);
+    expect(Math.abs(end.y - lift.before.y)).toBeGreaterThan(20);
+    expect(ninety("y")).toBeLessThan(ninety("x") * 0.5);
+    expect(ninety("x")).toBeGreaterThan(200);
+    expect(ninety("x")).toBeLessThan(450);
+    console.log(
+      `Hand entry 90%: vertical ${ninety("y").toFixed(1)}ms, horizontal ${ninety("x").toFixed(1)}ms.`,
+    );
     // Interrupt the horizontal return twice. Sample the actual React/Motion
     // transform, including elapsed time, rather than assuming a 60fps machine.
     await active.evaluate((element) =>
@@ -68,10 +124,12 @@ export async function proveHandChoreography(
       const frames: { at: number; x: number; scale: number }[] = [];
       while (slot.hasAttribute("data-proof-sampling")) {
         await new Promise(requestAnimationFrame);
-        const matrix = new DOMMatrix(getComputedStyle(slot).transform);
+        const matrix = new DOMMatrix(
+          getComputedStyle(element.closest(".db-hand-pose")!).transform,
+        );
         frames.push({
           at: performance.now(),
-          x: matrix.m41,
+          x: slot.getBoundingClientRect().x,
           scale: Math.hypot(matrix.a, matrix.b),
         });
       }
