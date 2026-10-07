@@ -16,6 +16,13 @@ afterAll(() => GlobalRegistrator.unregister());
 const snapshot = (version = 1): SourceSnapshot => {
   const { basis, ...seat } = frame(version);
   void basis;
+  const deck = {
+    tiles: [],
+    cardIds: [],
+    cardViewsById: {},
+    cardBacksById: {},
+    playableByCardId: {},
+  };
   return {
     me: "alice",
     players: session.players,
@@ -42,13 +49,8 @@ const snapshot = (version = 1): SourceSnapshot => {
       ],
       zones: {
         deck: {
-          table: {
-            tiles: [],
-            cardIds: [],
-            cardViewsById: {},
-            cardBacksById: {},
-            playableByCardId: {},
-          },
+          table: deck,
+          alice: deck,
         },
       },
     },
@@ -211,7 +213,7 @@ test("late result after unmount or source switch does not notify the new lifetim
   game.dispose();
 });
 
-test("bound hooks share one physical target, publish hints, and clear across frame and source changes", async () => {
+test("bound hooks retain admitted frame targets, clear replaced controls and source lifetimes, and publish current hints", async () => {
   const { createGameHook } = await import("./create-game-hook.js");
   const { GameProvider, useGame, useGameShortcuts, useShortcutTarget } =
     createGameHook()({
@@ -221,7 +223,13 @@ test("bound hooks share one physical target, publish hints, and clear across fra
     });
   const source = createTestSource(snapshot());
   const errors = vi.fn();
-  function App({ drawKey = "3" }: { drawKey?: string }) {
+  function App({
+    drawKey = "3",
+    hostId = "table",
+  }: {
+    drawKey?: string;
+    hostId?: string;
+  }) {
     useGame();
     const [, setTick] = useState(0);
     const shortcuts = useGameShortcuts({
@@ -239,7 +247,7 @@ test("bound hooks share one physical target, publish hints, and clear across fra
     const zone = useShortcutTarget({
       kind: "zone",
       zoneId: "deck",
-      hostId: "table",
+      hostId,
     });
     return (
       <>
@@ -308,6 +316,32 @@ test("bound hooks share one physical target, publish hints, and clear across fra
   );
   expect(errors).toHaveBeenCalledOnce();
   await act(async () => source.emit(snapshot(2)));
+  expect(host.querySelector("output")!.textContent).toContain(
+    '"hostId":"table"',
+  );
+  const repeated = new KeyboardEvent("keydown", { key: "2", cancelable: true });
+  await act(async () => window.dispatchEvent(repeated));
+  expect(repeated.defaultPrevented).toBe(true);
+  expect(source.submissions).toHaveLength(2);
+  await act(async () => source.submissions[1].resolve({ accepted: true }));
+  await act(async () => source.emit(snapshot(3)));
+  const third = new KeyboardEvent("keydown", { key: "2", cancelable: true });
+  await act(async () => window.dispatchEvent(third));
+  expect(third.defaultPrevented).toBe(true);
+  expect(source.submissions).toHaveLength(3);
+  await act(async () => source.submissions[2].resolve({ accepted: true }));
+  await act(async () => source.emit(snapshot(4)));
+  // The old host still exists: replacing the same DOM control must clear its
+  // old identity even though the layout effect has installed the new props.
+  await act(async () =>
+    root.render(
+      <StrictMode>
+        <GameProvider source={source} onError={errors}>
+          <App drawKey="2" hostId="alice" />
+        </GameProvider>
+      </StrictMode>,
+    ),
+  );
   expect(host.querySelector("output")!.textContent).toBe(
     '{"target":null,"hints":[]}',
   );
@@ -324,14 +358,16 @@ test("bound hooks share one physical target, publish hints, and clear across fra
   );
   await act(async () => button.focus());
   expect(host.querySelector("output")!.textContent).toContain(
-    '"hostId":"table"',
+    '"hostId":"alice"',
   );
   const next = createTestSource(snapshot());
   await act(async () =>
     root.render(
-      <GameProvider source={next} onError={errors}>
-        <App />
-      </GameProvider>,
+      <StrictMode>
+        <GameProvider source={next} onError={errors}>
+          <App />
+        </GameProvider>
+      </StrictMode>,
     ),
   );
   expect(host.querySelector("output")!.textContent).toBe(

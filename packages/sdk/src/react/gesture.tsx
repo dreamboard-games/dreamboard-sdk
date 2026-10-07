@@ -1,4 +1,5 @@
 import type { RuntimeShortcutTarget } from "../headless/features/shortcuts.js";
+import type { CoreInstance, InstanceOptions } from "../headless/model.js";
 import { inputValueKey } from "../shared/input-domain.js";
 import { createStore } from "@tanstack/store";
 import { useSelector } from "@tanstack/react-store";
@@ -33,11 +34,13 @@ export interface GestureDrag {
   drop(): void;
   cancel(): void;
 }
-export interface GestureGame {
+export interface GestureGame extends Pick<
+  CoreInstance<unknown>,
+  "snapshot" | "subscribe"
+> {
   readonly drag?: GestureDrag;
   readonly request: unknown;
-  readonly snapshot: unknown;
-  subscribe(listener: () => void): () => void;
+  getOptions(): Pick<InstanceOptions<unknown>, "source">;
 }
 
 export interface GestureState {
@@ -156,15 +159,41 @@ export function createGestureSession(game: GestureGame) {
     store.setState((previous) => ({ ...previous, ...patch }));
 
   let snapshot = game.snapshot;
+  let source = game.getOptions().source;
+  function admitted(target: RuntimeShortcutTarget | null) {
+    if (!target || !game.snapshot) return null;
+    const zones = game.snapshot.frame.zones;
+    if (target.kind === "zone")
+      return zones[target.zoneId]?.[target.hostId] ? target : null;
+    if (target.kind === "card")
+      return Object.values(zones).some((hosts) =>
+        Object.values(hosts).some((zone) =>
+          zone.cardIds.includes(target.value),
+        ),
+      )
+        ? target
+        : null;
+    // Board controls own their mounted identity; each shortcut still checks
+    // the current projected input domain before submitting.
+    return [...targets.values()].some((read) => sameTarget(read(), target))
+      ? target
+      : null;
+  }
   const unsubscribe = game.subscribe(() => {
-    if (snapshot !== game.snapshot) {
+    const nextSource = game.getOptions().source;
+    const changedLifetime =
+      source !== nextSource || snapshot?.me !== game.snapshot?.me;
+    if (changedLifetime || snapshot !== game.snapshot) {
+      source = nextSource;
       snapshot = game.snapshot;
       press?.recognizer.cancel();
-      // Surviving DOM cards do not receive another enter/focus event.
       alt = false;
-      hover = null;
-      focused = null;
-      set({ activeTarget: null, inspect: null });
+      // A parked pointer or keyboard focus survives an admitted same-seat
+      // frame, so separate key presses can keep acting on the same control.
+      hover = changedLifetime ? null : admitted(hover);
+      focused = changedLifetime ? null : admitted(focused);
+      if (changedLifetime) hoverPoint = null;
+      set({ activeTarget: hover ?? focused, inspect: null });
     }
     // New frames, seats and sources cancel the semantic drag; end the press with it.
     if (press?.dragging && !game.drag?.active) press.recognizer.cancel();
@@ -492,12 +521,12 @@ export function createGestureSession(game: GestureGame) {
     },
     getActiveTarget: () => store.get().activeTarget,
     registerTarget(targetId: string, read: () => RuntimeShortcutTarget) {
+      const target = read();
       targets.set(targetId, read);
       return () => {
-        const target = targets.get(targetId)?.() ?? null;
         targets.delete(targetId);
-        if (target && sameTarget(hover, target)) hover = null;
-        if (target && sameTarget(focused, target)) focused = null;
+        if (sameTarget(hover, target)) hover = null;
+        if (sameTarget(focused, target)) focused = null;
         inspectWithAlt();
       };
     },
