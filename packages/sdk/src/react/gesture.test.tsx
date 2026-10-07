@@ -335,6 +335,26 @@ test("a removed card clears parked focus without a pointer movement", async () =
   expect(get("blue")!.dataset.inspecting).toBeUndefined();
 });
 
+test("surviving DOM keyboard focus remains readable and can inspect after a frame", async () => {
+  const { get, source } = await mount(false);
+  const red = get("red")!;
+  const matches = red.matches.bind(red);
+  vi.spyOn(red, "matches").mockImplementation(
+    (selector) => selector === ":focus-visible" || matches(selector),
+  );
+  await act(async () => red.focus());
+  expect(document.activeElement).toBe(red);
+  expect(red.dataset.active).toBe("true");
+  await act(async () => source.emit(snapshot(2)));
+  expect(get("red")).toBe(red);
+  expect(document.activeElement).toBe(red);
+  expect(red.dataset.active).toBe("true");
+  await act(async () =>
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Alt" })),
+  );
+  expect(red.dataset.inspecting).toBe("hover");
+});
+
 test("moving the same card identity to another attachment clears parked focus", async () => {
   const { get, source } = await mount(false);
   hitTesting(() => get("red"));

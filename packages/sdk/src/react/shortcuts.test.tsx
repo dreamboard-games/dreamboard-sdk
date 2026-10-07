@@ -129,11 +129,35 @@ test("opt-in adapter ignores competing browser/UI input, handles once, and clean
   host.append(edit);
   expect((await key({}, edit)).defaultPrevented).toBe(false);
   edit.remove();
+  // UI libraries can keep closed surfaces mounted. None of these rendered
+  // visibility/ARIA states should suppress an otherwise eligible binding.
+  const dormant = document.createElement("div");
+  dormant.innerHTML = `
+    <div role="dialog" hidden style="display:none">Closed dialog</div>
+    <div role="menu" style="display:none">Closed menu</div>
+    <div style="visibility:hidden"><div role="listbox">Hidden list</div></div>
+    <div role="dialog" style="opacity:0">Transparent dialog</div>
+    <div aria-hidden="true"><div role="menu">Dormant menu</div></div>
+    <dialog>Closed native dialog</dialog>
+  `;
+  document.body.append(dormant);
   const modal = document.createElement("div");
   modal.setAttribute("aria-modal", "true");
   document.body.append(modal);
   expect((await key()).defaultPrevented).toBe(false);
   modal.remove();
+  for (const role of ["dialog", "menu", "listbox"]) {
+    const visible = document.createElement("div");
+    visible.setAttribute("role", role);
+    visible.textContent = "Open surface";
+    dormant.append(visible);
+    expect((await key()).defaultPrevented).toBe(false);
+    visible.remove();
+  }
+  const native = dormant.querySelector("dialog")!;
+  native.setAttribute("open", "");
+  expect((await key()).defaultPrevented).toBe(false);
+  native.removeAttribute("open");
   expect(source.submissions).toHaveLength(0);
   expect((await key()).defaultPrevented).toBe(true);
   expect(source.submissions).toHaveLength(1);
@@ -148,6 +172,7 @@ test("opt-in adapter ignores competing browser/UI input, handles once, and clean
   expect(game.shortcuts.getHints(target)).toEqual([]);
   game.dispose();
   host.remove();
+  dormant.remove();
 });
 test("late result after unmount or source switch does not notify the new lifetime", async () => {
   const source = createTestSource(snapshot());

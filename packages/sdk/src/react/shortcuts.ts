@@ -27,8 +27,17 @@ function canHandle(event: KeyboardEvent) {
         "input, textarea, select, [contenteditable]:not([contenteditable='false']), [role='textbox']",
       )
     ) &&
-    !document.querySelector(
-      "[aria-modal='true'], dialog[open], [role='dialog'], [role='menu'], [role='listbox']",
+    !Array.from(
+      document.querySelectorAll(
+        "[aria-modal='true'], dialog[open], [role='dialog'], [role='menu'], [role='listbox']",
+      ),
+    ).some(
+      (surface) =>
+        !surface.closest("[aria-hidden='true']") &&
+        surface.checkVisibility({
+          visibilityProperty: true,
+          opacityProperty: true,
+        }),
     )
   );
 }
