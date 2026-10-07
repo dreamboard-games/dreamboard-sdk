@@ -57,8 +57,6 @@ export interface GestureState {
 
 export interface CardGestureProps {
   onPointerDown(event: PointerEvent<Element>): void;
-  onPointerEnter(event: PointerEvent<Element>): void;
-  onPointerLeave(event: PointerEvent<Element>): void;
   onFocus(event: FocusEvent<Element>): void;
   onBlur(): void;
   onContextMenu(event: MouseEvent<Element>): void;
@@ -259,13 +257,16 @@ export function createGestureSession(game: GestureGame) {
     if (hoverPoint?.x === event.clientX && hoverPoint.y === event.clientY)
       return;
     hoverPoint = { x: event.clientX, y: event.clientY };
-    const control = document
-      .elementsFromPoint(event.clientX, event.clientY)
-      .map((element) => element.closest("[data-card-gesture]"))
-      .find((element) => element?.getAttribute("data-gesture-session") === id);
+    const wasFocused = focused !== null;
+    focused = null;
+    const hit = document
+      .elementFromPoint(event.clientX, event.clientY)
+      ?.closest("[data-card-gesture]");
+    const control =
+      hit?.getAttribute("data-gesture-session") === id ? hit : null;
     const next = control?.getAttribute("data-card-gesture") ?? null;
     alt = event.altKey;
-    if (hover === next) return;
+    if (hover === next && !wasFocused) return;
     hover = next;
     inspectWithAlt();
   };
@@ -289,7 +290,16 @@ export function createGestureSession(game: GestureGame) {
   addEventListener("keydown", key);
   addEventListener("keyup", key);
   addEventListener("blur", loseFocus);
+  const leaveWindow = (event: globalThis.PointerEvent) => {
+    if (event.pointerType !== "mouse" || event.relatedTarget !== null) return;
+    clearHover();
+    hoverPoint = null;
+    focused = null;
+    alt = false;
+    inspectWithAlt();
+  };
   addEventListener("pointermove", browse);
+  addEventListener("pointerout", leaveWindow);
   function release() {
     press?.detach();
     press = null;
@@ -401,8 +411,6 @@ export function createGestureSession(game: GestureGame) {
         }
         start(event.nativeEvent, cardId, event.currentTarget, options);
       },
-      onPointerEnter() {},
-      onPointerLeave() {},
       onFocus(event) {
         focused = event.currentTarget.matches(":focus-visible") ? cardId : null;
         if (focused) hover = null;
@@ -470,6 +478,7 @@ export function createGestureSession(game: GestureGame) {
       removeEventListener("keyup", key);
       removeEventListener("blur", loseFocus);
       removeEventListener("pointermove", browse);
+      removeEventListener("pointerout", leaveWindow);
       unsubscribe();
       followers.clear();
       if (!guardingClicks) return;

@@ -181,6 +181,7 @@ async function click(element: Element) {
 }
 /** Browser hit testing is not implemented by happy-dom. */
 function hitTesting(hit: () => Element | null) {
+  document.elementFromPoint = () => hit();
   document.elementsFromPoint = () => {
     const element = hit();
     return element ? [element] : [];
@@ -260,7 +261,13 @@ test("physical pointer focus survives motion-driven boundaries and Alt uses that
   // A neighbour moves under the parked mouse and sends boundary events.
   hit = get("blue");
   await act(async () => {
-    get("red")!.dispatchEvent(pointer("pointerout", mouse(10)));
+    get("red")!.dispatchEvent(
+      new PointerEvent("pointerout", {
+        bubbles: true,
+        pointerType: "mouse",
+        relatedTarget: get("blue"),
+      }),
+    );
     get("blue")!.dispatchEvent(pointer("pointerover", mouse(10)));
   });
   await move(mouse(10));
@@ -459,4 +466,47 @@ test("inspection-only controls still inspect on hold and activate by keyboard", 
     ),
   );
   expect(get("drafts")!.textContent).toContain('"card":"red"');
+});
+
+test("the topmost opaque surface blocks hover and mouse modality never revives keyboard focus", async () => {
+  const { get } = await mount();
+  const red = get("red")!;
+  const matches = red.matches.bind(red);
+  vi.spyOn(red, "matches").mockImplementation(
+    (selector) => selector === ":focus-visible" || matches(selector),
+  );
+  await act(async () => red.focus());
+  expect(red.dataset.active).toBe("true");
+  const cover = document.createElement("div");
+  document.body.append(cover);
+  document.elementFromPoint = () => cover;
+  document.elementsFromPoint = () => [cover, red];
+  await move({ pointerType: "mouse", x: 50, y: 50 });
+  expect(red.dataset.active).toBeUndefined();
+  hitTesting(() => null);
+  await move({ pointerType: "mouse", x: 51, y: 50 });
+  expect(red.dataset.active).toBeUndefined();
+  cover.remove();
+});
+test("leaving the iframe clears card hover and Alt inspection", async () => {
+  const { get } = await mount();
+  hitTesting(() => get("red"));
+  await move({ pointerType: "mouse", x: 60, y: 60 });
+  await act(async () =>
+    window.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Alt", altKey: true }),
+    ),
+  );
+  expect(get("red")!.dataset.inspecting).toBe("hover");
+  await act(async () =>
+    get("red")!.dispatchEvent(
+      new PointerEvent("pointerout", {
+        bubbles: true,
+        pointerType: "mouse",
+        relatedTarget: null,
+      }),
+    ),
+  );
+  expect(get("red")!.dataset.active).toBeUndefined();
+  expect(get("red")!.dataset.inspecting).toBeUndefined();
 });
