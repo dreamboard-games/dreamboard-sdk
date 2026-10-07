@@ -7,7 +7,7 @@ import {
 } from "react";
 import { z } from "zod";
 import { localSource } from "@dreamboard-games/sdk/testing";
-import type { CommandSource } from "@dreamboard-games/sdk";
+import { handFanPresets, type CommandSource } from "@dreamboard-games/sdk";
 import { Button } from "@/components/ui/button";
 import { GameProvider, useGame } from "../typecheck/game";
 import { CardControl } from "../items/card-control";
@@ -96,6 +96,10 @@ function cardLabel(card: GameCard) {
   return shown ? `${shown.rank} of ${shown.suit}` : "Face-down card";
 }
 const tableCards = { "--card-w": "var(--card-w-table)" } as CSSProperties;
+// A tucked hand shows larger cards, under a third of the window high.
+const tuckedCards = {
+  "--card-w-hand": "clamp(5rem, min(20vw, 20dvh), 10rem)",
+} as CSSProperties;
 const handCounts = z.object({ handCounts: z.record(z.string(), z.number()) });
 
 function Seats({ mine }: { mine: boolean }) {
@@ -174,10 +178,12 @@ function Table({
   onSwitchSeat,
   appearance,
   drawLifecycle = false,
+  tucked = false,
 }: {
   onSwitchSeat(): void;
   appearance?: "text" | "wide";
   drawLifecycle?: boolean;
+  tucked?: boolean;
 }) {
   const [showPile, setShowPile] = useState(true);
   const hostId = useGame((game) => game.me?.id);
@@ -191,7 +197,9 @@ function Table({
   );
   if (hostId === undefined) return null;
   return (
-    <main className="db-table flex min-h-dvh flex-col justify-between gap-3 p-3">
+    <main
+      className={`db-table flex min-h-dvh flex-col justify-between gap-3 p-3 ${tucked ? "pb-0" : ""}`}
+    >
       <output data-testid="table-cards" hidden>
         {zones}
       </output>
@@ -230,12 +238,14 @@ function Table({
         <Area zoneId="table" label="Table" interaction="play.play" />
         <Area zoneId="discard" label="Discard" interaction="play.discard" top />
       </div>
-      <div className="grid gap-2">
+      {/* A tucked hand sits on the bottom edge, which hides part of each card. */}
+      <div className="grid gap-2" style={tucked ? tuckedCards : undefined}>
         <Seats mine />
         <Hand
           zoneId="hand"
           hostId={hostId}
           label="Your hand"
+          options={tucked ? handFanPresets.tucked : undefined}
           renderCard={
             appearance === "text"
               ? renderTextCard
@@ -256,11 +266,13 @@ function OwnedSource({
   manualDraw,
   appearance,
   drawLifecycle,
+  tucked,
 }: {
   appearance?: "text" | "wide";
   source: CreatedHandSource;
   manualDraw: boolean;
   drawLifecycle: boolean;
+  tucked: boolean;
 }) {
   useLayoutEffect(() => {
     source.adopted = true;
@@ -277,6 +289,7 @@ function OwnedSource({
       <Table
         appearance={appearance}
         drawLifecycle={drawLifecycle}
+        tucked={tucked}
         onSwitchSeat={() => {
           const next = seat === "player-1" ? "player-2" : "player-1";
           source.value.switchSeat(next);
@@ -291,11 +304,13 @@ function HandTable({
   emptyHand = false,
   appearance,
   drawLifecycle = false,
+  tucked = false,
 }: {
   appearance?: "text" | "wide";
   manualDraw?: boolean;
   emptyHand?: boolean;
   drawLifecycle?: boolean;
+  tucked?: boolean;
 }) {
   const [source, setSource] = useState<CreatedHandSource | null>(null);
   useEffect(() => {
@@ -355,6 +370,7 @@ function HandTable({
       manualDraw={manualDraw}
       appearance={appearance}
       drawLifecycle={drawLifecycle}
+      tucked={tucked}
     />
   ) : (
     <p>Loading…</p>
@@ -380,3 +396,9 @@ export const EmptyHand: StoryObj<typeof meta> = {
 
 export const TextHand: StoryObj<typeof meta> = { args: { appearance: "text" } };
 export const WideHand: StoryObj<typeof meta> = { args: { appearance: "wide" } };
+export const TuckedHand: StoryObj<typeof meta> = {
+  args: { appearance: "text", tucked: true },
+};
+export const TuckedPlayingCards: StoryObj<typeof meta> = {
+  args: { tucked: true },
+};
