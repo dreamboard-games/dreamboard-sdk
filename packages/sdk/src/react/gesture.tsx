@@ -250,25 +250,28 @@ export function createGestureSession(game: GestureGame) {
       inspect: alt && cardId && !press ? { cardId, via: "hover" } : null,
     });
   }
+  function hoverAt(at: Point) {
+    hoverPoint = at;
+    const wasFocused = focused !== null;
+    focused = null;
+    const hit = document
+      .elementFromPoint(at.x, at.y)
+      ?.closest("[data-card-gesture]");
+    const control =
+      hit?.getAttribute("data-gesture-session") === id ? hit : null;
+    const next = control?.getAttribute("data-card-gesture") ?? null;
+    if (hover === next && !wasFocused) return;
+    hover = next;
+    inspectWithAlt();
+  }
   // CSS transforms generate enter/leave events under a parked mouse. Only
   // physical movement changes its target; down uses the actual pressed control.
   const browse = (event: globalThis.PointerEvent) => {
     if (event.pointerType !== "mouse" || press) return;
     if (hoverPoint?.x === event.clientX && hoverPoint.y === event.clientY)
       return;
-    hoverPoint = { x: event.clientX, y: event.clientY };
-    const wasFocused = focused !== null;
-    focused = null;
-    const hit = document
-      .elementFromPoint(event.clientX, event.clientY)
-      ?.closest("[data-card-gesture]");
-    const control =
-      hit?.getAttribute("data-gesture-session") === id ? hit : null;
-    const next = control?.getAttribute("data-card-gesture") ?? null;
     alt = event.altKey;
-    if (hover === next && !wasFocused) return;
-    hover = next;
-    inspectWithAlt();
+    hoverAt({ x: event.clientX, y: event.clientY });
   };
   const key = (event: KeyboardEvent) => {
     if (event.key === "Escape") {
@@ -341,11 +344,17 @@ export function createGestureSession(game: GestureGame) {
       },
       end(kind, at) {
         const dragging = press!.dragging;
+        const pointerType = press!.pointerType;
         if (dragging) retarget(at);
         release();
         if (kind !== "tap") swallowNextClick();
         if (kind === "hold") set({ inspect: null });
-        if (!dragging) return;
+        if (!dragging) {
+          // A rejected drag or inspection-only mouse press may browse to a
+          // different face. Its final physical point becomes the canonical target.
+          if (kind === "browse" && pointerType === "mouse") hoverAt(at);
+          return;
+        }
         const before = game.request;
         game.drag?.drop();
         // A submitted move keeps its overlay until the authoritative frame.

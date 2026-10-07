@@ -316,6 +316,64 @@ test("pointer down activates the actual pressed face after a parked-pointer anim
   expect(get("drafts")!.textContent).toContain('"card":"blue"');
 });
 
+test.each([false, true])(
+  "a non-drag mouse browse uses its release surface for hover and Alt (drag enabled: %s)",
+  async (draggable) => {
+    const { get, source } = await mount(draggable);
+    if (draggable) {
+      const frame = snapshot(2);
+      const hand = frame.frame.zones.hand.alice;
+      await act(async () =>
+        source.emit({
+          ...frame,
+          frame: {
+            ...frame.frame,
+            zones: {
+              hand: {
+                alice: {
+                  ...hand,
+                  playableByCardId: { red: [], blue: [discard] },
+                },
+              },
+            },
+          },
+        }),
+      );
+    }
+    let hit: Element | null = get("red");
+    hitTesting(() => hit);
+    const mouse = (x: number) => ({ pointerType: "mouse", x, y: 10 }) as const;
+    await move(mouse(10));
+    await down(get("red")!, mouse(10));
+    hit = get("blue");
+    await move(mouse(50));
+    expect(get("overlay")).toBeNull();
+    await up(mouse(50));
+    expect(get("red")!.dataset.active).toBeUndefined();
+    expect(get("blue")!.dataset.active).toBe("true");
+    await act(async () =>
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "Alt" })),
+    );
+    expect(get("blue")!.dataset.inspecting).toBe("hover");
+    expect(get("red")!.dataset.inspecting).toBeUndefined();
+    await click(get("red")!);
+    expect(get("drafts")!.textContent).toBe("{}");
+  },
+);
+
+test("a stationary mouse tap keeps its pressed card despite motion under the pointer", async () => {
+  const { get } = await mount(false);
+  let hit: Element | null = get("red");
+  hitTesting(() => hit);
+  const mouse = { pointerType: "mouse", x: 10, y: 10 } as const;
+  await move(mouse);
+  await down(get("red")!, mouse);
+  hit = get("blue");
+  await up(mouse);
+  expect(get("red")!.dataset.active).toBe("true");
+  expect(get("blue")!.dataset.active).toBeUndefined();
+});
+
 test("a card dragged onto an area runs its interaction and settles until the frame", async () => {
   const { get, source } = await mount();
   hitTesting(() => get("discard"));
