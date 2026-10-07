@@ -11,6 +11,8 @@ import type { CommandSource } from "./types.js";
 export function iframeSource(
   options: {
     timeoutMs?: number;
+    /** Trusted pass-and-play hosts may change seats without replacing the iframe. */
+    followHostSeat?: boolean;
   } = {},
 ): CommandSource {
   const target = window;
@@ -33,6 +35,7 @@ export function iframeSource(
   };
   const lifecycle = createSourceLifecycle({
     timeoutMs: options.timeoutMs,
+    followHostSeat: options.followHostSeat,
     send,
     recover: () => send({ type: "runtime.resume" }),
     close: () => target.removeEventListener("message", receive),
