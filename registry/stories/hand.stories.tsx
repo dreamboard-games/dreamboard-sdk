@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { GameProvider, useGame } from "../typecheck/game";
 import { CardControl } from "../items/card-control";
 import { Hand } from "../items/hand";
-import { CardBack, type CardState } from "../items/card";
+import { Card, CardBack, type CardState } from "../items/card";
 import { PlayingCard } from "../items/playing-card";
 import { DrawPile } from "../items/draw-pile";
 import { DropArea } from "../items/drop-area";
@@ -36,6 +36,60 @@ const faceOf = (card: GameCard) =>
 function renderCard(card: GameCard, state: CardState) {
   const shown = faceOf(card);
   return shown ? <PlayingCard {...shown} state={state} /> : <CardBack />;
+}
+function renderTextCard(card: GameCard, state: CardState) {
+  return (
+    <Card
+      state={state}
+      style={{
+        aspectRatio: "5 / 8",
+        height: "calc(var(--card-w) * 8 / 5)",
+        overflow: "hidden",
+        padding: "calc(var(--card-w) * 0.06)",
+        fontSize: "calc(var(--card-w) * 0.06)",
+        lineHeight: 1.25,
+        gap: "calc(var(--card-w) * 0.03)",
+        alignContent: "start",
+      }}
+    >
+      <strong style={{ fontSize: "calc(var(--card-w) * 0.09)" }}>
+        Ember guardian
+      </strong>
+      <span>2 energy · Ally</span>
+      <div
+        style={{
+          width: "100%",
+          height: "calc(var(--card-w) * 0.3)",
+          background: "linear-gradient(135deg, #edb571, #804f65)",
+          borderRadius: "0.2rem",
+        }}
+      />
+      <p style={{ margin: 0 }}>
+        Choose a friendly character. Prevent the next 3 damage dealt to it this
+        turn.
+      </p>
+      <p style={{ margin: 0 }}>When this card leaves your hand, draw a card.</p>
+      <em>Even a small flame can keep the darkness away.</em>
+    </Card>
+  );
+}
+function renderWideCard(card: GameCard, state: CardState) {
+  return (
+    <Card
+      state={state}
+      style={{
+        aspectRatio: "8 / 5",
+        height: "calc(var(--card-w) * 5 / 8)",
+        overflow: "hidden",
+        padding: "calc(var(--card-w) * 0.06)",
+        fontSize: "calc(var(--card-w) * 0.075)",
+        lineHeight: 1.25,
+      }}
+    >
+      <strong>Mountain passage</strong>
+      <span>Move up to two allies into an adjacent region.</span>
+    </Card>
+  );
 }
 function cardLabel(card: GameCard) {
   const shown = faceOf(card);
@@ -116,7 +170,16 @@ function Area({
   );
 }
 
-function Table({ onSwitchSeat }: { onSwitchSeat(): void }) {
+function Table({
+  onSwitchSeat,
+  appearance,
+  drawLifecycle = false,
+}: {
+  onSwitchSeat(): void;
+  appearance?: "text" | "wide";
+  drawLifecycle?: boolean;
+}) {
+  const [showPile, setShowPile] = useState(true);
   const hostId = useGame((game) => game.me?.id);
   const endTurn = useGame((game) => game.interactions.find("play.endTurn"));
   const zones = useGame((game) =>
@@ -143,6 +206,9 @@ function Table({ onSwitchSeat }: { onSwitchSeat(): void }) {
               End turn
             </Button>
           )}
+          {drawLifecycle && (
+            <Button onClick={() => setShowPile(false)}>Hide deck</Button>
+          )}
         </div>
       </header>
       <p className="m-0 text-sm">
@@ -150,14 +216,16 @@ function Table({ onSwitchSeat }: { onSwitchSeat(): void }) {
       </p>
       <div className="flex flex-wrap items-start justify-center gap-4">
         <div className="grid justify-items-center gap-2" style={tableCards}>
-          <DrawPile
-            zoneId="deck"
-            hostId="table"
-            destinationHostId={hostId}
-            interaction="play.draw"
-            destinationZoneId="hand"
-            label="Deck"
-          />
+          {showPile && (
+            <DrawPile
+              zoneId="deck"
+              hostId="table"
+              destinationHostId={hostId}
+              interaction="play.draw"
+              destinationZoneId="hand"
+              label="Deck"
+            />
+          )}
         </div>
         <Area zoneId="table" label="Table" interaction="play.play" />
         <Area zoneId="discard" label="Discard" interaction="play.discard" top />
@@ -168,7 +236,13 @@ function Table({ onSwitchSeat }: { onSwitchSeat(): void }) {
           zoneId="hand"
           hostId={hostId}
           label="Your hand"
-          renderCard={renderCard}
+          renderCard={
+            appearance === "text"
+              ? renderTextCard
+              : appearance === "wide"
+                ? renderWideCard
+                : renderCard
+          }
           getCardLabel={cardLabel}
         />
       </div>
@@ -180,9 +254,13 @@ function Table({ onSwitchSeat }: { onSwitchSeat(): void }) {
 function OwnedSource({
   source,
   manualDraw,
+  appearance,
+  drawLifecycle,
 }: {
+  appearance?: "text" | "wide";
   source: CreatedHandSource;
   manualDraw: boolean;
+  drawLifecycle: boolean;
 }) {
   useLayoutEffect(() => {
     source.adopted = true;
@@ -197,6 +275,8 @@ function OwnedSource({
         </div>
       )}
       <Table
+        appearance={appearance}
+        drawLifecycle={drawLifecycle}
         onSwitchSeat={() => {
           const next = seat === "player-1" ? "player-2" : "player-1";
           source.value.switchSeat(next);
@@ -209,9 +289,13 @@ function OwnedSource({
 function HandTable({
   manualDraw = false,
   emptyHand = false,
+  appearance,
+  drawLifecycle = false,
 }: {
+  appearance?: "text" | "wide";
   manualDraw?: boolean;
   emptyHand?: boolean;
+  drawLifecycle?: boolean;
 }) {
   const [source, setSource] = useState<CreatedHandSource | null>(null);
   useEffect(() => {
@@ -266,7 +350,12 @@ function HandTable({
     };
   }, [manualDraw, emptyHand]);
   return source ? (
-    <OwnedSource source={source} manualDraw={manualDraw} />
+    <OwnedSource
+      source={source}
+      manualDraw={manualDraw}
+      appearance={appearance}
+      drawLifecycle={drawLifecycle}
+    />
   ) : (
     <p>Loading…</p>
   );
@@ -278,6 +367,9 @@ const meta = {
 } satisfies Meta<typeof HandTable>;
 export default meta;
 export const FannedHand: StoryObj<typeof meta> = {};
+export const DrawLifecycle: StoryObj<typeof meta> = {
+  args: { drawLifecycle: true },
+};
 
 export const PendingDraw: StoryObj<typeof meta> = {
   args: { manualDraw: true },
@@ -285,3 +377,6 @@ export const PendingDraw: StoryObj<typeof meta> = {
 export const EmptyHand: StoryObj<typeof meta> = {
   args: { emptyHand: true, manualDraw: true },
 };
+
+export const TextHand: StoryObj<typeof meta> = { args: { appearance: "text" } };
+export const WideHand: StoryObj<typeof meta> = { args: { appearance: "wide" } };

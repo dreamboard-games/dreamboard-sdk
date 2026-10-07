@@ -1,22 +1,25 @@
 import { fanLayout, liftFanCard } from "@dreamboard-games/sdk";
 import {
   useDragOverlay,
+  useActiveCard,
   useGame,
   type GameCard as Card,
   type CardId,
   type ZoneId,
 } from "@game";
-import { motion } from "motion/react";
+import { motion, useMotionValue, type MotionValue } from "motion/react";
 import {
   memo,
   useCallback,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-import { backImageOf, cardSpring, useMoving, type CardState } from "./card";
+import { backImageOf, type CardState } from "./card";
 import { CardControl } from "./card-control";
 import { CardArrival } from "./card-arrival";
 import {
@@ -25,6 +28,7 @@ import {
   type CardZone,
 } from "./card-motion";
 import { cardDragScale, cardPickup } from "./card";
+import { handFocusLayout, handEnter, handReturn } from "./hand-layout";
 import "./tokens.css";
 export interface HandProps {
   zoneId: ZoneId;
@@ -80,6 +84,10 @@ export function Hand({
         .some((card) => card.getIsEligible()) ?? false,
   );
   const overlay = useDragOverlay();
+  const activeCardId = useActiveCard();
+  const firstCard = useGame((game) =>
+    ids.length ? game.cards.find(ids[0]) : undefined,
+  );
   const [scroller, setScroller] = useState<HTMLElement | null>(null);
   const table = useCardMotion();
   const snapshot = useGame((game) => game.snapshot);
@@ -88,23 +96,56 @@ export function Hand({
   const drawOver =
     drawTarget && table.drop?.over && table.drop.snapshot === snapshot;
   const probe = useRef<HTMLDivElement>(null);
-  const [size, setSize] = useState({ width: 0, card: 0, cardHeight: 0 });
+  const readableProbe = useRef<HTMLDivElement>(null);
+  const [scrollLeft, setScrollLeft] = useState(0);
+  const [size, setSize] = useState({
+    width: 0,
+    card: 0,
+    cardHeight: 0,
+    readable: 0,
+  });
   useLayoutEffect(() => {
     if (!scroller) return;
     const measure = () => {
+      setScrollLeft(scroller.scrollLeft);
       const style = getComputedStyle(scroller);
+      const card = probe.current
+        ? parseFloat(getComputedStyle(probe.current).width)
+        : 0;
+      const cardHeight = probe.current
+        ? parseFloat(getComputedStyle(probe.current).height)
+        : 0;
+      const width =
+        scroller.clientWidth -
+        parseFloat(style.paddingLeft) -
+        parseFloat(style.paddingRight);
+      const layout = fanLayout({
+        count: ids.length + (drawOver ? 1 : 0),
+        width: width - card * 0.7,
+        cardWidth: card || 1,
+        cardHeight: cardHeight || 1,
+      });
+      const bottom =
+        scroller.getBoundingClientRect().top +
+        parseFloat(style.paddingTop) +
+        cardHeight * 0.28 +
+        layout.height;
       const next = {
-        width:
-          scroller.clientWidth -
-          parseFloat(style.paddingLeft) -
-          parseFloat(style.paddingRight),
-        card: probe.current?.offsetWidth ?? 0,
-        cardHeight: probe.current?.offsetHeight ?? 0,
+        width,
+        card,
+        cardHeight,
+        readable: Math.min(
+          readableProbe.current?.offsetWidth ?? 0,
+          width,
+          (innerHeight * 0.55 * card) / (cardHeight || 1),
+          (Math.max(0, bottom - 16) * card) / (cardHeight || 1),
+        ),
       };
       setSize((previous) =>
         previous.width === next.width &&
         previous.card === next.card &&
-        previous.cardHeight === next.cardHeight
+        previous.cardHeight === next.cardHeight &&
+        previous.readable === next.readable
           ? previous
           : next,
       );
@@ -113,8 +154,15 @@ export function Hand({
     const observer = new ResizeObserver(measure);
     observer.observe(scroller);
     if (probe.current) observer.observe(probe.current);
-    return () => observer.disconnect();
-  }, [scroller]);
+    if (readableProbe.current) observer.observe(readableProbe.current);
+    addEventListener("resize", measure);
+    addEventListener("scroll", measure, true);
+    return () => {
+      observer.disconnect();
+      removeEventListener("resize", measure);
+      removeEventListener("scroll", measure, true);
+    };
+  }, [scroller, ids.length, drawOver]);
 
   // Room for a lifted card above the fan and beside its end cards.
   const lift = size.cardHeight * 0.28;
@@ -126,6 +174,9 @@ export function Hand({
     cardHeight: size.cardHeight || 1,
   });
   const ready = size.width > 0 && size.card > 0;
+  const headroom = size.card
+    ? (size.readable * size.cardHeight) / size.card
+    : 0;
   const nextFan = fanLayout({
     count: ids.length + 1,
     width: size.width - gutter * 2,
@@ -160,12 +211,24 @@ export function Hand({
     );
   });
 
-  const dragged = overlay ? ids.indexOf(overlay.cardId) : -1;
+  const active =
+    overlay || activeCardId === null ? -1 : ids.indexOf(activeCardId);
+  const offset = Math.max(0, (size.width - fan.width - gutter * 2) / 2);
+  const places = handFocusLayout({
+    fan,
+    active,
+    cardWidth: size.card || 1,
+    cardHeight: size.cardHeight || 1,
+    readableWidth: Math.min(size.readable, size.width),
+    lift,
+    gutter: gutter + offset,
+    visibleLeft: scrollLeft,
+    visibleWidth: size.width,
+  });
 
   return (
     <>
       <section
-        ref={setScroller}
         aria-label={label}
         data-zone={zoneId}
         data-zone-host={hostId}
@@ -173,61 +236,81 @@ export function Hand({
         data-draw-over={drawOver || undefined}
         className={`db-hand ${className}`}
       >
-        <div
-          className="db-hand-fan"
-          style={{ width: fan.width + gutter * 2, height }}
+        <motion.div
+          layoutScroll
+          ref={setScroller}
+          className="db-hand-scroll"
+          style={{ paddingTop: headroom, marginTop: -headroom }}
         >
           <div
-            ref={probe}
-            className="db-card"
-            aria-hidden
-            style={{ position: "absolute", visibility: "hidden" }}
-          />
-          {ready &&
-            ids.map((id, index) => (
-              <HandCard
-                key={id}
-                cardId={id}
-                zoneId={zoneId}
-                hostId={hostId}
-                gameUI={scroller?.closest("[data-game-ui]") ?? null}
-                index={index}
-                x={fan.cards[index].x + gutter}
-                y={fan.cards[index].y + lift}
-                rotate={fan.cards[index].rotate}
-                lift={lift}
-                choosing={choosing}
-                renderCard={renderCard}
-                getCardLabel={getCardLabel}
-                destination={() => placement(index)}
+            className="db-hand-fan"
+            style={{
+              width: Math.max(size.width, fan.width + gutter * 2),
+              height: height + headroom,
+              marginTop: -headroom,
+            }}
+          >
+            <div className="db-hand-layer" style={{ top: headroom, height }}>
+              <div
+                ref={probe}
+                aria-hidden
+                style={{
+                  position: "absolute",
+                  visibility: "hidden",
+                  width: "max-content",
+                }}
+              >
+                {firstCard ? (
+                  renderCard(firstCard, "idle")
+                ) : (
+                  <div className="db-card" />
+                )}
+              </div>
+              <div
+                ref={readableProbe}
+                className="db-card db-hand-readable-probe"
+                aria-hidden
+                style={{ position: "absolute", visibility: "hidden" }}
               />
-            ))}
-          {ready && drawOver && (
-            <div
-              className="db-draw-insertion"
-              aria-hidden
-              style={{
-                width: size.card,
-                height: size.cardHeight,
-                transform: `translate(${fan.cards[ids.length].x + gutter}px, ${fan.cards[ids.length].y + lift}px) rotate(${fan.cards[ids.length].rotate}deg)`,
-              }}
-            />
-          )}
-        </div>
+              {ready &&
+                ids.map((id, index) => (
+                  <HandCard
+                    key={id}
+                    cardId={id}
+                    zoneId={zoneId}
+                    hostId={hostId}
+                    gameUI={scroller?.closest("[data-game-ui]") ?? null}
+                    index={index}
+                    x={places[index].x}
+                    y={places[index].y}
+                    rotate={places[index].rotate}
+                    scale={places[index].scale}
+                    overlay={overlay?.cardId === id ? overlay : null}
+                    baseWidth={size.card}
+                    baseHeight={size.cardHeight}
+                    lift={lift}
+                    choosing={choosing}
+                    renderCard={renderCard}
+                    getCardLabel={getCardLabel}
+                    destination={() => placement(index)}
+                  />
+                ))}
+              {ready && drawOver && (
+                <div
+                  className="db-draw-insertion"
+                  aria-hidden
+                  style={{
+                    width: size.card,
+                    height: size.cardHeight,
+                    transform: `translate(${fan.cards[ids.length].x + gutter + offset}px, ${fan.cards[ids.length].y + lift}px) rotate(${fan.cards[ids.length].rotate}deg)`,
+                  }}
+                />
+              )}
+            </div>
+          </div>
+        </motion.div>
         {ids.length === 0 && <p className="db-hand-empty">No cards</p>}
       </section>
-      {overlay &&
-        dragged >= 0 &&
-        createPortal(
-          <div ref={overlay.ref} className="db-drag-overlay">
-            <DragCopy
-              cardId={overlay.cardId}
-              rotate={fan.cards[dragged]?.rotate ?? 0}
-              renderCard={renderCard}
-            />
-          </div>,
-          document.body,
-        )}
     </>
   );
 }
@@ -287,6 +370,10 @@ interface HandCardProps {
   x: number;
   y: number;
   rotate: number;
+  scale: number;
+  overlay: ReturnType<typeof useDragOverlay>;
+  baseWidth: number;
+  baseHeight: number;
   lift: number;
   choosing: boolean;
   renderCard: HandProps["renderCard"];
@@ -302,6 +389,10 @@ const HandCard = memo(function HandCard({
   x,
   y,
   rotate,
+  scale,
+  overlay,
+  baseWidth,
+  baseHeight,
   lift,
   choosing,
   renderCard,
@@ -314,79 +405,163 @@ const HandCard = memo(function HandCard({
     entryFrom(card, { zoneId, hostId }, table, gameUI),
   );
   const finishArrival = useCallback(() => setArrival(null), []);
-  const moving = useMoving();
+  // Keep pose out of shared layout's size/scroll projection. The source owns
+  // these values throughout pickup, return and an interrupted regrab.
+  const presentedScale = useMotionValue(scale);
+  const presentedRotation = useMotionValue(rotate);
+  const dragged = overlay?.cardId;
+  const pickup = useMemo(() => {
+    if (!dragged) return null;
+    const scale = Math.max(cardDragScale, presentedScale.get());
+    return {
+      scale,
+      y: matchMedia("(pointer: coarse)").matches
+        ? -baseHeight * 0.3 * scale
+        : 0,
+    };
+  }, [dragged, presentedScale, baseHeight]);
   if (!card) return null;
   return (
-    <CardControl
-      cardId={cardId}
-      drag={{}}
-      choosing={choosing}
-      disabled={!!arrival}
-      style={{ visibility: arrival ? "hidden" : undefined }}
-      renderCard={renderCard}
-      getCardLabel={getCardLabel}
-    >
-      {({ raised, hovered, anchor, control }) => {
-        const place = hovered
-          ? { x, y: y - lift * 0.6, rotate: 0 }
-          : raised
-            ? liftFanCard({ x, y, rotate }, lift * 0.5)
-            : { x, y, rotate };
-        return (
-          <motion.div
-            className="db-hand-slot"
-            initial={false}
-            animate={{ ...place, scale: hovered ? 1.22 : 1 }}
-            transition={cardSpring}
-            {...moving}
-            style={{
-              zIndex: hovered ? 100 : index,
-              transformPerspective: 600,
-            }}
-          >
-            <motion.div layoutId={arrival ? undefined : cardId} initial={false}>
-              {control}
-            </motion.div>
-            {arrival && anchor && (
-              <CardArrival
-                origin={arrival.box}
-                landed={arrival.landed}
-                hidden={arrival.hidden}
-                target={anchor}
-                destination={arrival.destination ?? destination()}
-                rotate={rotate}
-                back={backImageOf(card)}
-                onComplete={finishArrival}
+    <>
+      <CardControl
+        cardId={cardId}
+        drag={{}}
+        choosing={choosing}
+        disabled={!!arrival}
+        style={{ visibility: arrival ? "hidden" : undefined }}
+        renderCard={renderCard}
+        getCardLabel={getCardLabel}
+      >
+        {({ raised, hovered, anchor, control }) => {
+          const place = hovered
+            ? { x, y, rotate: 0 }
+            : raised
+              ? liftFanCard({ x, y, rotate }, lift * 0.5)
+              : { x, y, rotate };
+          return (
+            <motion.div
+              className="db-hand-slot"
+              // Layout owns horizontal movement independently of the fast lift.
+              layout="position"
+              initial={false}
+              transition={handReturn}
+              style={{
+                zIndex: hovered ? 100 : index,
+                left: place.x,
+                top: 0,
+              }}
+            >
+              <motion.div
+                className="db-hand-vertical"
+                layout="position"
+                transition={hovered ? handEnter : handReturn}
+                style={{ position: "relative", top: place.y }}
               >
-                {renderCard(card, "idle")}
-              </CardArrival>
-            )}
-          </motion.div>
-        );
-      }}
-    </CardControl>
+                <motion.div
+                  layoutId={arrival ? undefined : cardId}
+                  layout="position"
+                  initial={false}
+                  animate={{ y: 0 }}
+                  transition={handReturn}
+                >
+                  <motion.div
+                    className="db-hand-pose"
+                    initial={false}
+                    animate={{
+                      scale: pickup?.scale ?? scale,
+                      rotate: pickup ? 0 : place.rotate,
+                    }}
+                    transition={
+                      pickup ? cardPickup : hovered ? handEnter : handReturn
+                    }
+                    style={{
+                      scale: presentedScale,
+                      rotate: presentedRotation,
+                    }}
+                  >
+                    {control}
+                  </motion.div>
+                </motion.div>
+              </motion.div>
+              {arrival && anchor && (
+                <CardArrival
+                  origin={arrival.box}
+                  landed={arrival.landed}
+                  hidden={arrival.hidden}
+                  target={anchor}
+                  destination={arrival.destination ?? destination()}
+                  rotate={rotate}
+                  back={backImageOf(card)}
+                  onComplete={finishArrival}
+                >
+                  {renderCard(card, "idle")}
+                </CardArrival>
+              )}
+            </motion.div>
+          );
+        }}
+      </CardControl>
+      {overlay &&
+        createPortal(
+          <motion.div
+            layoutRoot
+            layoutScroll
+            ref={overlay.ref}
+            className="db-drag-overlay"
+            style={
+              {
+                "--card-w": `${baseWidth}px`,
+                "--card-aspect": `${baseWidth / baseHeight}`,
+              } as CSSProperties
+            }
+          >
+            <DragCopy
+              cardId={cardId}
+              scale={presentedScale}
+              rotate={presentedRotation}
+              lift={pickup!.y}
+              baseWidth={baseWidth}
+              baseHeight={baseHeight}
+              renderCard={renderCard}
+            />
+          </motion.div>,
+          document.body,
+        )}
+    </>
   );
 });
 
-/** The dragged card under the pointer; it shares the card's `layoutId`, so Motion carries it out of the fan and back. */
+/** Motion transports the base face; its source owns the shared visible pose. */
 function DragCopy({
   cardId,
+  scale,
   rotate,
+  lift,
+  baseWidth,
+  baseHeight,
   renderCard,
 }: {
   cardId: CardId;
-  rotate: number;
+  scale: MotionValue<number>;
+  rotate: MotionValue<number>;
+  lift: number;
+  baseWidth: number;
+  baseHeight: number;
   renderCard: HandProps["renderCard"];
 }) {
   const card = useGame((game) => game.cards.find(cardId));
   return card ? (
     <motion.div
       layoutId={cardId}
-      initial={{ rotate }}
-      animate={{ rotate: 0, scale: cardDragScale }}
+      layout="position"
+      initial={{ y: 0 }}
+      animate={{ y: lift }}
       transition={cardPickup}
+      style={{ width: baseWidth, height: baseHeight }}
     >
-      {renderCard(card, "selected")}
+      <motion.div className="db-hand-pose" style={{ scale, rotate }}>
+        {renderCard(card, "selected")}
+      </motion.div>
     </motion.div>
   ) : null;
 }

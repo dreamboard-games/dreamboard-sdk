@@ -7,12 +7,18 @@ import { z } from "zod";
 import { proveCardDrag } from "./card-drag-proof.ts";
 import {
   proveDraw,
+  proveDrawLifecycle,
   proveDrawTouchActivation,
   proveHostDraw,
   proveReducedCardMotion,
 } from "./draw-proof.ts";
 import { proveCardControl } from "./card-control-proof.ts";
 import { proveHand } from "./hand-proof.ts";
+import { proveHandPickup } from "./hand-pickup-proof.ts";
+import {
+  proveHandChoreography,
+  proveHandReading,
+} from "./hand-choreography-proof.ts";
 import { chromium, expect } from "@playwright/test";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -286,7 +292,27 @@ try {
         await proveHostDraw(page, touch);
       if (story.id.endsWith("card-drag-drop") && name !== "landscape")
         await proveCardDrag(page, touch);
+      if (story.id.endsWith("fanned-hand") && name === "landscape") {
+        await proveHandChoreography(
+          page,
+          touch,
+          `${root}/build/screenshots/${story.id}-${name}`,
+        );
+        await page.reload();
+      }
       if (story.id.endsWith("fanned-hand") && name !== "landscape") {
+        await proveHandPickup(
+          page,
+          touch,
+          `${root}/build/screenshots/${story.id}-${name}`,
+        );
+        await page.reload();
+        await proveHandChoreography(
+          page,
+          touch,
+          `${root}/build/screenshots/${story.id}-${name}`,
+        );
+        await page.reload();
         await proveCardControl(page, touch);
         await page.reload();
         await proveHand(page, touch);
@@ -296,10 +322,17 @@ try {
       }
       if (story.id.endsWith("pending-draw") && name !== "landscape")
         await proveDraw(page, touch, true);
+      if (story.id.endsWith("draw-lifecycle") && name !== "landscape")
+        await proveDrawLifecycle(page, touch);
       if (story.id.endsWith("empty-hand") && name !== "landscape") {
         if (touch) await proveDrawTouchActivation(page);
         await proveDraw(page, touch, true, 0);
       }
+      if (story.id.endsWith("--text-hand") || story.id.endsWith("--wide-hand"))
+        await proveHandReading(page, touch, {
+          readable: `${root}/build/screenshots/${story.id}-${name}-readable.png`,
+          inspection: `${root}/build/screenshots/${story.id}-${name}-inspection.png`,
+        });
       if (story.id.endsWith("hearts-passing")) {
         await expect(
           page.getByRole("heading", { name: "passing", exact: true }),

@@ -69,6 +69,7 @@ export const {
   useGame,
   Subscribe,
   useCardGesture,
+  useActiveCard,
   useDropArea,
   useDragOverlay,
 } = createGameHook<Game>()({

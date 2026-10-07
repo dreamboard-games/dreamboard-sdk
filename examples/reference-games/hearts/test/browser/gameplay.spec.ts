@@ -67,6 +67,10 @@ test("a complete hand uses real selected-seat commands, sealed passes and legal 
   ).toContainText("2 · win");
   await expect(page.getByText("13/13 tricks", { exact: true })).toBeVisible();
   await expect(page.locator('button[data-action="select"]')).toHaveCount(0);
+  // Measure text contrast after the result and last-action fades have settled.
+  await expect(page.locator(".db-results")).toHaveCSS("opacity", "1");
+  for (const action of await page.locator(".db-seat-action").all())
+    await expect(action).toHaveCSS("opacity", "1");
   await injectAxe(page);
   await checkA11y(page, undefined, {
     axeOptions: {

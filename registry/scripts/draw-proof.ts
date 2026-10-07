@@ -18,6 +18,80 @@ async function readSample<T>(watch: JSHandle<{ sample: T | null }>) {
   return sample!;
 }
 
+/** Replacing or unmounting a cosmetic flight must release its confirmed arrivals. */
+export async function proveDrawLifecycle(page: Page, touch: boolean) {
+  const cards = page
+    .getByRole("region", { name: "Your hand" })
+    .locator(".db-hand-card");
+  const pile = page.getByRole("button", { name: "Deck actions" });
+  const overlay = page.locator("[data-draw-overlay]");
+  const draw = async () => {
+    await pile.focus();
+    await pile.press("Enter");
+    await page.locator('[data-action="draw"]').press("Enter");
+  };
+  const visible = async (count: number) => {
+    await expect(cards).toHaveCount(count);
+    for (const card of await cards.all()) await expect(card).toBeVisible();
+    await expect(page.locator("[data-card-arrival]")).toHaveCount(0);
+  };
+  await expect(cards).toHaveCount(9);
+  for (let index = 0; index < 4; index++) {
+    await draw();
+    await expect(cards).toHaveCount(10 + index);
+  }
+  await visible(13);
+
+  await page.reload();
+  await expect(cards).toHaveCount(9);
+  const box = (await pile.boundingBox())!;
+  const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  const cdp = touch ? await page.context().newCDPSession(page) : null;
+  if (cdp) {
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [{ ...from, id: 1 }],
+    });
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchMove",
+      touchPoints: [{ x: from.x + 30, y: from.y + 30, id: 1 }],
+    });
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchEnd",
+      touchPoints: [],
+    });
+    await cdp.detach();
+  } else {
+    await page.mouse.move(from.x, from.y);
+    await page.mouse.down();
+    await page.mouse.move(from.x + 30, from.y + 30);
+    await page.mouse.up();
+  }
+  await expect(overlay).toHaveAttribute("data-draw-overlay", "return");
+  await draw();
+  await expect(cards).toHaveCount(10);
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  );
+  // Completing the old return may clear only its own ghost, not the new flight.
+  await expect(overlay).toHaveAttribute("data-draw-overlay", "pending");
+  await visible(10);
+
+  await page.reload();
+  await expect(cards).toHaveCount(9);
+  await draw();
+  await expect(cards).toHaveCount(10);
+  await expect(overlay).toHaveAttribute("data-draw-overlay", "pending");
+  await expect(cards.last()).not.toBeVisible();
+  await page.getByRole("button", { name: "Hide deck" }).click();
+  await expect(pile).toHaveCount(0);
+  await expect(overlay).toHaveCount(0);
+  await visible(10);
+}
+
 /** A physical touch tap does not depend on a browser compatibility click. */
 export async function proveDrawTouchActivation(page: Page) {
   const pile = page.getByRole("button", { name: "Deck actions" });

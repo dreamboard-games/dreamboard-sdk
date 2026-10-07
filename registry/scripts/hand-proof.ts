@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { z } from "zod";
+import { cardSurface } from "./card-surface.ts";
 
 type Point = { x: number; y: number };
 const zonesSchema = z.array(z.tuple([z.string(), z.array(z.string())]));
@@ -21,10 +22,14 @@ export async function proveHand(page: Page, touch: boolean) {
     const box = (await locator.boundingBox())!;
     return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
   };
-  // A fanned card shows at least its left quarter; press it there.
-  const grip = async (locator: Locator): Promise<Point> => {
-    const box = (await locator.boundingBox())!;
-    return { x: box.x + box.width * 0.2, y: box.y + box.height / 2 };
+  const grip = async (locator: Locator) => {
+    let at = await cardSurface(locator);
+    if (!touch) {
+      await page.mouse.move(at.x, at.y);
+      await expect(locator).toHaveAttribute("data-hovered", "true");
+      at = await cardSurface(locator);
+    }
+    return at;
   };
   const activate = async (locator: Locator) => {
     const at = await grip(locator);
@@ -34,7 +39,7 @@ export async function proveHand(page: Page, touch: boolean) {
 
   await expect(cards).toHaveCount(9);
   // The fan tilts outward, overlaps its cards and fits the hand.
-  const angles = await hand.locator(".db-hand-slot").evaluateAll((slots) =>
+  const angles = await hand.locator(".db-hand-pose").evaluateAll((slots) =>
     slots.map((slot) => {
       const { a, b } = new DOMMatrix(getComputedStyle(slot).transform);
       return (Math.atan2(b, a) * 180) / Math.PI;
@@ -62,7 +67,7 @@ export async function proveHand(page: Page, touch: boolean) {
         end.evaluate(
           (element) =>
             new DOMMatrix(
-              getComputedStyle(element.closest(".db-hand-slot")!).transform,
+              getComputedStyle(element.closest(".db-hand-pose")!).transform,
             ).a,
         ),
       )
@@ -154,13 +159,16 @@ export async function proveHand(page: Page, touch: boolean) {
   const assertPickup = async () => {
     await expect(club).toHaveCSS("visibility", "hidden");
     const lifted = page.locator(".db-drag-overlay > div");
+    const idleWidth = await club
+      .locator(".db-card")
+      .evaluate((element) => parseFloat(getComputedStyle(element).width));
     await expect
       .poll(async () =>
-        lifted.evaluate(
-          (element) => new DOMMatrix(getComputedStyle(element).transform).a,
-        ),
+        lifted
+          .locator(".db-card")
+          .evaluate((element) => element.getBoundingClientRect().width),
       )
-      .toBeGreaterThan(1.15);
+      .toBeGreaterThan(idleWidth * 1.15);
     await expect(lifted.locator(".db-card")).not.toHaveCSS(
       "box-shadow",
       "none",

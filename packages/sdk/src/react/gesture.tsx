@@ -5,6 +5,7 @@ import {
   useContext,
   type CSSProperties,
   type DragEvent,
+  type FocusEvent,
   type MouseEvent,
   type PointerEvent,
 } from "react";
@@ -38,6 +39,8 @@ export interface GestureGame {
 }
 
 export interface GestureState {
+  /** The card under an intentional pointer movement or keyboard focus. */
+  readonly activeCardId: string | null;
   readonly drag: {
     readonly cardId: string;
     /** Pointer offset inside the card where it was picked up. */
@@ -54,15 +57,15 @@ export interface GestureState {
 
 export interface CardGestureProps {
   onPointerDown(event: PointerEvent<Element>): void;
-  onPointerEnter(event: PointerEvent<Element>): void;
-  onPointerLeave(event: PointerEvent<Element>): void;
-  onFocus(): void;
+  onFocus(event: FocusEvent<Element>): void;
   onBlur(): void;
   onContextMenu(event: MouseEvent<Element>): void;
   onDragStart(event: DragEvent<Element>): void;
   readonly style: CSSProperties;
   readonly "data-dragging"?: true;
   readonly "data-inspecting"?: "hold" | "hover";
+  readonly "data-card-gesture": string;
+  readonly "data-gesture-session": string;
 }
 
 const CARD_STYLE: CSSProperties = Object.freeze({
@@ -119,7 +122,11 @@ export type GestureSession = ReturnType<typeof createGestureSession>;
  */
 export function createGestureSession(game: GestureGame) {
   const id = `g${++sessions}`;
-  const store = createStore<GestureState>({ drag: null, inspect: null });
+  const store = createStore<GestureState>({
+    activeCardId: null,
+    drag: null,
+    inspect: null,
+  });
   const areas = new Map<string, () => DropAreaInput>();
   const followers = new Set<(point: Point) => void>();
   let press: {
@@ -131,6 +138,7 @@ export function createGestureSession(game: GestureGame) {
     target: RuntimeDropTarget | null;
   } | null = null;
   let hover: string | null = null;
+  let hoverPoint: Point | null = null;
   let focused: string | null = null;
   let alt = false;
   let pointer: Point = { x: 0, y: 0 };
@@ -148,7 +156,9 @@ export function createGestureSession(game: GestureGame) {
       press?.recognizer.cancel();
       // Surviving DOM cards do not receive another enter/focus event.
       alt = false;
-      set({ inspect: null });
+      hover = null;
+      focused = null;
+      set({ activeCardId: null, inspect: null });
     }
     // New frames, seats and sources cancel the semantic drag; end the press with it.
     if (press?.dragging && !game.drag?.active) press.recognizer.cancel();
@@ -235,8 +245,34 @@ export function createGestureSession(game: GestureGame) {
   }
   function inspectWithAlt() {
     const cardId = hover ?? focused;
-    set({ inspect: alt && cardId && !press ? { cardId, via: "hover" } : null });
+    set({
+      activeCardId: cardId,
+      inspect: alt && cardId && !press ? { cardId, via: "hover" } : null,
+    });
   }
+  function hoverAt(at: Point) {
+    hoverPoint = at;
+    const wasFocused = focused !== null;
+    focused = null;
+    const hit = document
+      .elementFromPoint(at.x, at.y)
+      ?.closest("[data-card-gesture]");
+    const control =
+      hit?.getAttribute("data-gesture-session") === id ? hit : null;
+    const next = control?.getAttribute("data-card-gesture") ?? null;
+    if (hover === next && !wasFocused) return;
+    hover = next;
+    inspectWithAlt();
+  }
+  // CSS transforms generate enter/leave events under a parked mouse. Only
+  // physical movement changes its target; down uses the actual pressed control.
+  const browse = (event: globalThis.PointerEvent) => {
+    if (event.pointerType !== "mouse" || press) return;
+    if (hoverPoint?.x === event.clientX && hoverPoint.y === event.clientY)
+      return;
+    alt = event.altKey;
+    hoverAt({ x: event.clientX, y: event.clientY });
+  };
   const key = (event: KeyboardEvent) => {
     if (event.key === "Escape") {
       press?.recognizer.cancel();
@@ -250,12 +286,23 @@ export function createGestureSession(game: GestureGame) {
   const loseFocus = () => {
     alt = false;
     clearHover();
+    hoverPoint = null;
     focused = null;
-    set({ inspect: null });
+    set({ activeCardId: null, inspect: null });
   };
   addEventListener("keydown", key);
   addEventListener("keyup", key);
   addEventListener("blur", loseFocus);
+  const leaveWindow = (event: globalThis.PointerEvent) => {
+    if (event.pointerType !== "mouse" || event.relatedTarget !== null) return;
+    clearHover();
+    hoverPoint = null;
+    focused = null;
+    alt = false;
+    inspectWithAlt();
+  };
+  addEventListener("pointermove", browse);
+  addEventListener("pointerout", leaveWindow);
   function release() {
     press?.detach();
     press = null;
@@ -277,6 +324,7 @@ export function createGestureSession(game: GestureGame) {
           return false;
         const box = element.getBoundingClientRect();
         clearHover();
+        focused = null;
         press!.dragging = true;
         set({
           drag: {
@@ -286,6 +334,7 @@ export function createGestureSession(game: GestureGame) {
             settling: false,
           },
           inspect: null,
+          activeCardId: null,
         });
         return true;
       },
@@ -295,11 +344,17 @@ export function createGestureSession(game: GestureGame) {
       },
       end(kind, at) {
         const dragging = press!.dragging;
+        const pointerType = press!.pointerType;
         if (dragging) retarget(at);
         release();
         if (kind !== "tap") swallowNextClick();
         if (kind === "hold") set({ inspect: null });
-        if (!dragging) return;
+        if (!dragging) {
+          // A rejected drag or inspection-only mouse press may browse to a
+          // different face. Its final physical point becomes the canonical target.
+          if (kind === "browse" && pointerType === "mouse") hoverAt(at);
+          return;
+        }
         const before = game.request;
         game.drag?.drop();
         // A submitted move keeps its overlay until the authoritative frame.
@@ -357,21 +412,17 @@ export function createGestureSession(game: GestureGame) {
     flags: { dragging: boolean; inspecting: "hold" | "hover" | null },
   ): CardGestureProps {
     return {
-      onPointerDown: (event) =>
-        start(event.nativeEvent, cardId, event.currentTarget, options),
-      onPointerEnter(event) {
-        if (event.pointerType !== "mouse" || press?.dragging) return;
-        clearHover();
-        hover = cardId;
-        alt = event.altKey;
-        inspectWithAlt();
+      onPointerDown(event) {
+        if (event.pointerType === "mouse") {
+          hover = cardId;
+          alt = event.altKey;
+          inspectWithAlt();
+        }
+        start(event.nativeEvent, cardId, event.currentTarget, options);
       },
-      onPointerLeave() {
-        if (hover === cardId) clearHover();
-        inspectWithAlt();
-      },
-      onFocus() {
-        focused = cardId;
+      onFocus(event) {
+        focused = event.currentTarget.matches(":focus-visible") ? cardId : null;
+        if (focused) hover = null;
         inspectWithAlt();
       },
       onBlur() {
@@ -387,6 +438,8 @@ export function createGestureSession(game: GestureGame) {
       style: options === false ? INSPECTION_STYLE : CARD_STYLE,
       "data-dragging": flags.dragging || undefined,
       "data-inspecting": flags.inspecting ?? undefined,
+      "data-card-gesture": cardId,
+      "data-gesture-session": id,
     };
   }
 
@@ -417,6 +470,7 @@ export function createGestureSession(game: GestureGame) {
     id,
     store,
     cardProps,
+    getActiveCardId: () => store.get().activeCardId,
     overlayRef,
     /** `read` returns the area's current binding; targets resolve when hit. */
     registerArea(area: string, read: () => DropAreaInput) {
@@ -432,6 +486,8 @@ export function createGestureSession(game: GestureGame) {
       removeEventListener("keydown", key);
       removeEventListener("keyup", key);
       removeEventListener("blur", loseFocus);
+      removeEventListener("pointermove", browse);
+      removeEventListener("pointerout", leaveWindow);
       unsubscribe();
       followers.clear();
       if (!guardingClicks) return;
