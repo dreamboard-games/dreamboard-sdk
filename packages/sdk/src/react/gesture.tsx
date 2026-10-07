@@ -10,6 +10,7 @@ import {
 } from "react";
 import {
   createGestureRecognizer,
+  magneticDropPoint,
   type GestureRecognizer,
 } from "../headless/gesture.js";
 import { isSameDropTarget } from "../headless/drop-targets.js";
@@ -163,15 +164,53 @@ export function createGestureSession(game: GestureGame) {
     }
     return null;
   }
-  function retarget(at: Point) {
-    if (!press?.dragging) return;
-    const area = hitArea(at);
+  function retarget(at: Point): Point {
+    if (!press?.dragging) return at;
+    let area = hitArea(at);
     const read = area === null ? undefined : areas.get(area);
-    const target = read ? resolveDropArea(game.drag, read()) : null;
-    if (area === press.area && sameDropTarget(target, press.target)) return;
-    press.area = area;
-    press.target = target;
-    game.drag?.setDropTarget(target);
+    let target = read ? resolveDropArea(game.drag, read()) : null;
+    let point = at;
+    // Direct hits win; outside a target retain its edge before looking for a new one.
+    if (!target) {
+      const candidates = [...areas].sort(([left], [right]) =>
+        left === press?.area ? -1 : right === press?.area ? 1 : 0,
+      );
+      let distance = Infinity;
+      for (const [id, binding] of candidates) {
+        const resolved = resolveDropArea(game.drag, binding());
+        if (
+          !resolved ||
+          !game.drag
+            ?.getDropTargets()
+            .some((item) => sameDropTarget(item, resolved))
+        )
+          continue;
+        const element = document.querySelector(
+          `[data-drop-area="${CSS.escape(id)}"]`,
+        );
+        if (!(element instanceof HTMLElement)) continue;
+        const snapped = magneticDropPoint(
+          at,
+          element.getBoundingClientRect(),
+          id === press.area,
+          press.pointerType === "touch",
+        );
+        if (!snapped) continue;
+        const nextDistance = Math.hypot(at.x - snapped.x, at.y - snapped.y);
+        if (nextDistance >= distance) continue;
+        area = id;
+        target = resolved;
+        point = snapped;
+        distance = nextDistance;
+        if (id === press.area) break;
+      }
+    }
+    if (area !== press.area || !sameDropTarget(target, press.target)) {
+      press.area = area;
+      press.target = target;
+      game.drag?.setDropTarget(target);
+    }
+    return point;
   }
   // Keyboard clicks (detail 0) and clicks from a new press are never swallowed.
   function swallow(event: globalThis.MouseEvent) {
@@ -251,9 +290,8 @@ export function createGestureSession(game: GestureGame) {
         return true;
       },
       dragMove(at) {
-        pointer = at;
-        for (const follow of followers) follow(at);
-        retarget(at);
+        pointer = retarget(at);
+        for (const follow of followers) follow(pointer);
       },
       end(kind, at) {
         const dragging = press!.dragging;

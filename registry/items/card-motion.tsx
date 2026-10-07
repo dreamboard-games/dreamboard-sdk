@@ -22,6 +22,7 @@ interface DrawOrigin {
   placement(): CardPlacement;
   target: CardPlacement;
   snapshot: Model["snapshot"];
+  landed: Promise<unknown>;
 }
 const CardMotionContext = createContext<{
   stageDraw(
@@ -29,12 +30,17 @@ const CardMotionContext = createContext<{
     to: CardZone,
     placement: () => CardPlacement,
     target: CardPlacement,
+    landed: Promise<unknown>,
   ): void;
   clearDraw(): void;
   getDrawOrigin(
     from: CardZone,
     to: CardZone,
-  ): { from: CardPlacement; to: CardPlacement } | null;
+  ): {
+    from: CardPlacement;
+    to: CardPlacement;
+    landed: Promise<unknown>;
+  } | null;
   registerHand(zone: CardZone, target: () => CardPlacement): () => void;
   getDrawTarget(zone: CardZone): CardPlacement;
   drop: { zone: CardZone; over: boolean; snapshot: Model["snapshot"] } | null;
@@ -63,8 +69,8 @@ export function CardMotionProvider({ children }: { children: ReactNode }) {
     <MotionConfig reducedMotion="user">
       <CardMotionContext.Provider
         value={{
-          stageDraw(from, to, placement, target) {
-            pending.current = { from, to, placement, target, snapshot };
+          stageDraw(from, to, placement, target, landed) {
+            pending.current = { from, to, placement, target, snapshot, landed };
           },
           clearDraw() {
             pending.current = null;
@@ -110,7 +116,11 @@ export function CardMotionProvider({ children }: { children: ReactNode }) {
               origin.snapshot === snapshot
             )
               return null;
-            return { from: origin.placement(), to: origin.target };
+            return {
+              from: origin.placement(),
+              to: origin.target,
+              landed: origin.landed,
+            };
           },
         }}
       >

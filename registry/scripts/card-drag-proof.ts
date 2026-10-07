@@ -125,8 +125,15 @@ export async function proveCardDrag(page: Page, touch: boolean) {
   // Drop on an area that runs a card-only interaction.
   await reset();
   await lift(await center(card));
-  await pointer.move(await center(discard));
+  const edge = (await discard.boundingBox())!;
+  const near = { x: edge.x + edge.width / 2, y: edge.y - 12 };
+  await pointer.move(near);
   await expect(discard).toHaveAttribute("data-drop-over", "true");
+  await pointer.move({ ...near, y: edge.y - (touch ? 40 : 26) });
+  await expect(discard).toHaveAttribute("data-drop-over", "true");
+  await pointer.move({ ...near, y: edge.y - 65 });
+  await expect(discard).not.toHaveAttribute("data-drop-over", "true");
+  await pointer.move(near);
   await pointer.up();
   await expect(view).toContainText(`"discarded":${JSON.stringify(cardId)}`);
   await expect(page.locator("[data-drag-overlay]")).toHaveCount(0);

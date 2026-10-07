@@ -114,6 +114,7 @@ exports[`public export surface > root export names are stable 1`] = `
   "hostSource",
   "iframeSource",
   "liftFanCard",
+  "magneticDropPoint",
   "materializePluginGameplayFrame",
   "originsFeature",
   "panZoomFeature",

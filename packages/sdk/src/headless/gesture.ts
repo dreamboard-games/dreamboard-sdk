@@ -108,3 +108,18 @@ export function createGestureRecognizer(
     },
   };
 }
+
+/** Magnetic rectangular UI targets. A wider exit band prevents edge flicker.
+ * Call only for eligible targets; SVG board spaces keep native hit testing. */
+export function magneticDropPoint(
+  point: Point,
+  box: { x: number; y: number; width: number; height: number },
+  retained: boolean,
+  coarse: boolean,
+): Point | null {
+  const radius = coarse ? (retained ? 52 : 28) : retained ? 36 : 18;
+  if (box.width <= 0 || box.height <= 0) return null;
+  const x = Math.max(box.x, Math.min(point.x, box.x + box.width));
+  const y = Math.max(box.y, Math.min(point.y, box.y + box.height));
+  return Math.hypot(point.x - x, point.y - y) <= radius ? { x, y } : null;
+}

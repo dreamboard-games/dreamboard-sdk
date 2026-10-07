@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createGestureRecognizer,
+  magneticDropPoint,
   GESTURE_THRESHOLDS,
   type GestureCallbacks,
 } from "./gesture.js";
@@ -141,5 +142,35 @@ describe("gesture recognizer", () => {
     recognizer.cancel({ pointerId: 2 });
     recognizer.up(at("touch", 100, 100));
     expect(log).toEqual(["end tap 100,100"]);
+  });
+});
+
+describe("magnetic drop edges", () => {
+  const box = { x: 100, y: 100, width: 200, height: 120 };
+  it("acquires early, resists leaving, then releases without moving the pointer inside", () => {
+    expect(magneticDropPoint({ x: 85, y: 160 }, box, false, false)).toEqual({
+      x: 100,
+      y: 160,
+    });
+    expect(magneticDropPoint({ x: 70, y: 160 }, box, false, false)).toBeNull();
+    expect(magneticDropPoint({ x: 70, y: 160 }, box, true, false)).toEqual({
+      x: 100,
+      y: 160,
+    });
+    expect(magneticDropPoint({ x: 60, y: 160 }, box, true, false)).toBeNull();
+    expect(magneticDropPoint({ x: 210, y: 140 }, box, true, false)).toEqual({
+      x: 210,
+      y: 140,
+    });
+  });
+  it("touch has a larger acquisition band and corners use distance, not a bounding square", () => {
+    expect(magneticDropPoint({ x: 75, y: 160 }, box, false, true)).toEqual({
+      x: 100,
+      y: 160,
+    });
+    expect(magneticDropPoint({ x: 75, y: 75 }, box, false, true)).toBeNull();
+    expect(
+      magneticDropPoint({ x: 75, y: 160 }, { ...box, width: 0 }, true, true),
+    ).toBeNull();
   });
 });

@@ -133,7 +133,8 @@ export function Hand({
     cardHeight: size.cardHeight || 1,
   });
   // Reserve the same vertical space before pickup, during preview and on arrival.
-  const height = size.cardHeight * 1.75 + lift;
+  const height =
+    Math.max(size.cardHeight * 1.45, fan.height, nextFan.height) + lift;
   function placement(index: number, layout = fan): CardPlacement {
     const box = scroller!.getBoundingClientRect();
     const style = getComputedStyle(scroller!);
@@ -241,6 +242,7 @@ function entryFrom(
   box: CardPlacement | null;
   hidden: boolean;
   destination?: CardPlacement;
+  landed?: Promise<unknown>;
 } | null {
   const origin = card?.getOrigin();
   if (!origin) return null;
@@ -261,6 +263,7 @@ function entryFrom(
     return {
       box: released.from,
       destination: released.to,
+      landed: released.landed,
       hidden: origin.hidden,
     };
   const from = gameUI?.querySelector(
@@ -347,6 +350,7 @@ const HandCard = memo(function HandCard({
             {arrival && anchor && (
               <CardArrival
                 origin={arrival.box}
+                landed={arrival.landed}
                 hidden={arrival.hidden}
                 target={anchor}
                 destination={arrival.destination ?? destination()}
