@@ -14,7 +14,7 @@
 
 | Entry   | Source                                                              | Purpose                                      |
 | ------- | ------------------------------------------------------------------- | -------------------------------------------- |
-| root    | `iframeSource({ timeoutMs? })`                                      | Parent-window host channel                   |
+| root    | `iframeSource({ timeoutMs?, followHostSeat? })`                     | Parent-window host channel                   |
 | root    | `hostSource({ url, session, playerId, getCredential, timeoutMs? })` | Canonical websocket host                     |
 | root    | `staticSource(snapshot)`                                            | Validated read-only selected-seat frame      |
 | testing | `localSource(definition, options)`                                  | Local authoritative reducer                  |
@@ -41,3 +41,10 @@ Local sources expose `switchSeat(playerId)`, `checkpoint`, `restore(unknown)`,
 contain hidden authoritative state and are strictly local developer data. Restore
 validates before mutation and publishes a fresh revision. A provider or instance
 owns its source: do not share one source between independently owned instances.
+
+Iframe sources pin their first seat by default. A trusted local pass-and-play UI
+may use `iframeSource({ followHostSeat: true })` to accept host-selected seats
+within the same session. A change retires pending commands from the previous
+seat and publishes the new perspective without reconnecting. Unknown seats,
+other sessions, and unrelated host channels remain rejected. Hosts must still
+replace authored/private UI lifetimes when they require seat isolation.

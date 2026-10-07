@@ -33,6 +33,7 @@ export function createSourceLifecycle(options: {
   recover(): void;
   close(): void;
   timeoutMs?: number;
+  followHostSeat?: boolean;
 }) {
   let context = options.context ? immutableCopy(options.context) : null;
   const store = createStore<SourceState>(
@@ -219,24 +220,34 @@ export function createSourceLifecycle(options: {
         fail(new Error("Gameplay authority session changed."));
         return;
       }
-      if (parsed.basis.perspectivePlayerId !== context.playerId) {
+      const changedSeat = parsed.basis.perspectivePlayerId !== context.playerId;
+      if (changedSeat && !options.followHostSeat) {
         fail(new Error("Gameplay perspective changed."));
         return;
       }
       if (
-        !session.players.some((player) => player.playerId === context!.playerId)
+        !session.players.some(
+          (player) => player.playerId === parsed.basis.perspectivePlayerId,
+        )
       ) {
         fail(new Error("Gameplay seat is absent from session."));
         return;
       }
       if (basis && parsed.basis.version < basis.version) return;
+      if (changedSeat) {
+        clearTimer();
+        pending?.reject(new Error("Gameplay perspective changed."));
+        pending = null;
+        recovered = false;
+        context = { ...context, playerId: parsed.basis.perspectivePlayerId };
+      }
       const { basis: nextBasis, ...frame } = immutableCopy(
         withCardImageUrls(parsed, assetUrls),
       );
       basis = nextBasis;
       publish({
         failure: null,
-        request: store.get().request,
+        request: changedSeat ? null : store.get().request,
         snapshot: Object.freeze({
           me: context.playerId,
           players: session.players,

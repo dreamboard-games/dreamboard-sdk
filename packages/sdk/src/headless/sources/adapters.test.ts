@@ -74,6 +74,76 @@ afterEach(() => {
   TestSocket.instances = [];
 });
 describe("iframe source", () => {
+  it("lets a trusted host change seats and retires the previous seat's pending command", async () => {
+    vi.useFakeTimers();
+    const target = new EventTarget();
+    const parent = {
+      postMessage:
+        vi.fn<(message: PluginToHostEnvelope, targetOrigin: string) => void>(),
+    };
+    vi.stubGlobal("window", Object.assign(target, { parent }));
+    const source = iframeSource({ followHostSeat: true, timeoutMs: 100 });
+    let sequence = 0;
+    const receive = (payload: unknown) =>
+      target.dispatchEvent(
+        Object.assign(new Event("message"), {
+          source: parent,
+          origin: "https://host",
+          data: {
+            protocol: DREAMBOARD_PLUGIN_PROTOCOL,
+            version: DREAMBOARD_PLUGIN_PROTOCOL_VERSION,
+            channelId: "channel",
+            sequence: ++sequence,
+            payload,
+          },
+        }),
+      );
+    receive({
+      type: "runtime.init",
+      session: {
+        ...session,
+        players: [...session.players, { playerId: "bob", displayName: "Bob" }],
+      },
+    });
+    receive({ type: "gameplay.frame", frame: frame() });
+    const pending = source.submit("move", {}).catch((error: unknown) => error);
+    const oldCommand = parent.postMessage.mock.calls
+      .map(([envelope]) => envelope.payload)
+      .find((payload) => payload.type === "interaction.submit")!;
+    receive({ type: "gameplay.frame", frame: frame(1, "bob") });
+    expect(await pending).toEqual(new Error("Gameplay perspective changed."));
+    expect(source.store.get()).toMatchObject({
+      connection: "ready",
+      request: null,
+      snapshot: { me: "bob", version: 1 },
+    });
+    vi.advanceTimersByTime(200);
+    expect(source.store.get().connection).toBe("ready");
+    const next = source.cancel("move");
+    const newCommand = parent.postMessage.mock.calls
+      .map(([envelope]) => envelope.payload)
+      .find((payload) => payload.type === "interaction.cancel")!;
+    expect(newCommand.basis.perspectivePlayerId).toBe("bob");
+    receive({
+      type: "interaction.result",
+      clientActionId: oldCommand.clientActionId,
+      accepted: true,
+    });
+    expect(source.store.get().request?.phase).toBe("awaiting-result");
+    receive({
+      type: "interaction.result",
+      clientActionId: newCommand.clientActionId,
+      accepted: false,
+      errorCode: "cancelled",
+    });
+    await expect(next).resolves.toEqual({
+      accepted: false,
+      errorCode: "cancelled",
+    });
+    receive({ type: "gameplay.frame", frame: frame(2, "unknown") });
+    expect(source.store.get().connection).toBe("failed");
+  });
+
   it("closes and reports malformed pinned host ingress but ignores other channels", () => {
     const target = new EventTarget();
     const parent = {
