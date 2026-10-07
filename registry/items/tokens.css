@@ -397,6 +397,7 @@
   /* A hand scrolls sideways when its fan is wider than the hand. */
   .db-hand {
     position: relative;
+    isolation: isolate;
     --card-w: var(--card-w-hand);
     overflow-x: auto;
     overflow-y: hidden;
