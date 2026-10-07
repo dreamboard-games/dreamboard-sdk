@@ -193,7 +193,7 @@ export function createGestureSession(game: GestureGame) {
           at,
           element.getBoundingClientRect(),
           id === press.area,
-          press.pointerType !== "mouse",
+          press.pointerType === "touch",
         );
         if (!snapped) continue;
         const nextDistance = Math.hypot(at.x - snapped.x, at.y - snapped.y);

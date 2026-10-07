@@ -250,13 +250,13 @@ export function DrawPile({
           return true;
         },
         dragMove(at) {
-          const point = snap(at.x, at.y, event.pointerType !== "mouse") ?? at;
+          const point = snap(at.x, at.y, event.pointerType === "touch") ?? at;
           x.set(point.x - grab.x);
           y.set(point.y - grab.y);
         },
         end(kind, at) {
           const over =
-            kind === "drag" && snap(at.x, at.y, event.pointerType !== "mouse");
+            kind === "drag" && snap(at.x, at.y, event.pointerType === "touch");
           press.current?.detach();
           press.current = null;
           const touchTap = kind === "tap" && event.pointerType === "touch";

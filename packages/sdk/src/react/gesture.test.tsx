@@ -136,7 +136,11 @@ async function mount(draggable = true) {
   return { source, get };
 }
 
-type PointerInit = { pointerType: "mouse" | "touch"; x: number; y: number };
+type PointerInit = {
+  pointerType: "mouse" | "touch" | "pen";
+  x: number;
+  y: number;
+};
 const pointer = (type: string, { pointerType, x, y }: PointerInit) =>
   new PointerEvent(type, {
     bubbles: true,
@@ -312,6 +316,25 @@ test("a card dragged onto an area runs its interaction and settles until the fra
   expect(get("overlay")).toBeNull();
   expect(get("red")!.dataset.dragging).toBeUndefined();
 });
+
+test.each(["mouse", "pen", "touch"] as const)(
+  "only touch uses coarse snapping: %s",
+  async (pointerType) => {
+    const { get, source } = await mount();
+    hitTesting(() => null);
+    vi.spyOn(get("discard")!, "getBoundingClientRect").mockReturnValue(
+      new DOMRect(100, 100, 100, 100),
+    );
+    await down(get("red")!, { pointerType, x: 110, y: 250 });
+    // 24 px is outside the precise band but inside the touch band.
+    await move({ pointerType, x: 110, y: 76 });
+    expect(get("discard")!.dataset.dropOver === "true").toBe(
+      pointerType === "touch",
+    );
+    await up({ pointerType, x: 110, y: 76 });
+    expect(source.submissions).toHaveLength(pointerType === "touch" ? 1 : 0);
+  },
+);
 
 test("moving within one area does not render on every pointer move", async () => {
   const { get } = await mount();
