@@ -289,11 +289,6 @@
           "target": "@components/dreamboard/hand.tsx"
         },
         {
-          "path": "items/hand-layout.ts",
-          "type": "registry:file",
-          "target": "@components/dreamboard/hand-layout.ts"
-        },
-        {
           "path": "items/card-arrival.tsx",
           "type": "registry:component",
           "target": "@components/dreamboard/card-arrival.tsx"

@@ -71,6 +71,59 @@ card, and leave room above it for a lifted card.
 selected or inspected card. Animate `translate` and `rotate` as separate CSS
 properties, or Motion's `x`, `y` and `rotate`, so a tilted card never skews.
 
+## Focusing a card
+
+`handFan` lays the same arc and focuses one card for reading. The focused card
+stands upright with its bottom on the band's bottom edge, scaled up, and its
+neighbours move sideways by a tapering push. They keep their order and an
+exposed strip, so the next card stays reachable. Every option is relative to
+the resting card, so one configuration fits every card size:
+
+```ts
+import { handFan, handFanPresets } from "@dreamboard-games/sdk";
+
+const hand = handFan({
+  count: cards.length,
+  width,
+  cardWidth: 72,
+  cardHeight: 100,
+  focused: cards.findIndex((card) => card.id === focusedId),
+  windowHeight: innerHeight,
+  options: { ...handFanPresets.open, focusScale: 2.5 },
+});
+// hand.cards[i]: { x, y, rotate, scale, layer }; hand.headroom is the space
+// the focused face rises into above the band.
+```
+
+- `spacing` sets the distance between resting cards in card widths when there
+  is room; the fan still tightens to fit.
+- `tuck` hides that share of each resting card below the band's bottom edge.
+  `hand.height` is the visible band; clip the cards there.
+- `focusScale` sizes the focused face; `focusMaxHeight` caps it as a share of
+  `windowHeight`, and `room` caps it in pixels when the hand sits near the top.
+- `push` lists the sideways shift of the first, second and third neighbour in
+  card widths; the face's extra width tapers over the same neighbours.
+- `exposed` is the narrowest strip of each neighbour that stays visible.
+- `visible` is the scrolled window in fan coordinates; an end card's face stays
+  inside it.
+
+`handFanPresets.open` keeps whole resting cards and doubles the focused one.
+`tucked` spaces larger cards like a dealt hand and hides 40% of each below the
+edge, so focusing mostly reveals the card. `touch` suits coarse pointers.
+Spread one and override what differs.
+
+`handFanTiming.focus` and `handFanTiming.settle` are durations in seconds with
+the `exponentialOut` easing, the shape Motion transitions take. A retargeted
+animation restarts from the card's current pose, and this curve continues
+from there at full speed, so sweeping across the hand never stalls a card.
+Without Motion, `cssEasing(handFanTiming.settle.ease)` returns the same curve
+as a CSS `linear()` easing:
+
+```ts
+const settle = `${handFanTiming.settle.duration}s ${cssEasing(handFanTiming.settle.ease)}`;
+element.style.transition = `transform ${settle}`;
+```
+
 ## Where a card came from
 
 `originsFeature(core)` adds `card.getOrigin()`. For a card that arrived in its

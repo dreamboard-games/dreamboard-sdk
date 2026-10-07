@@ -352,7 +352,9 @@ the application bundler resolves its supported React subscription dependencies.
 `dragFeature`, export `useCardGesture`, `useActiveCard`, `useDropArea` and `useDragOverlay` from the
 binding, and use the copied Hand and BoardTargets components or your own renderer.
 The SDK prescribes no layout. Headless `game.drag` remains browser-free and handles
-atomic domain routing. `fanLayout` computes arc positions for a hand, and
+atomic domain routing. `fanLayout` computes arc positions for a hand,
+`handFan` adds a focused, readable card with configurable presets and timing,
+and
 `originsFeature` adds `card.getOrigin()` so a newly shown card can animate from
 the zone or player it came from.
 
