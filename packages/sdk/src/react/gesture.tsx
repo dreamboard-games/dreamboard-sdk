@@ -166,10 +166,13 @@ export function createGestureSession(game: GestureGame) {
     if (target.kind === "zone")
       return zones[target.zoneId]?.[target.hostId] ? target : null;
     if (target.kind === "card")
-      return Object.values(zones).some((hosts) =>
-        Object.values(hosts).some((zone) =>
-          zone.cardIds.includes(target.value),
-        ),
+      return Object.entries(snapshot?.frame.zones ?? {}).some(
+        ([zoneId, hosts]) =>
+          Object.entries(hosts).some(
+            ([hostId, zone]) =>
+              zone.cardIds.includes(target.value) &&
+              zones[zoneId]?.[hostId]?.cardIds.includes(target.value),
+          ),
       )
         ? target
         : null;
@@ -184,14 +187,16 @@ export function createGestureSession(game: GestureGame) {
     const changedLifetime =
       source !== nextSource || snapshot?.me !== game.snapshot?.me;
     if (changedLifetime || snapshot !== game.snapshot) {
+      const nextHover = changedLifetime ? null : admitted(hover);
+      const nextFocused = changedLifetime ? null : admitted(focused);
       source = nextSource;
       snapshot = game.snapshot;
       press?.recognizer.cancel();
       alt = false;
       // A parked pointer or keyboard focus survives an admitted same-seat
       // frame, so separate key presses can keep acting on the same control.
-      hover = changedLifetime ? null : admitted(hover);
-      focused = changedLifetime ? null : admitted(focused);
+      hover = nextHover;
+      focused = nextFocused;
       if (changedLifetime) hoverPoint = null;
       set({ activeTarget: hover ?? focused, inspect: null });
     }

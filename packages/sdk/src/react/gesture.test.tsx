@@ -335,6 +335,46 @@ test("a removed card clears parked focus without a pointer movement", async () =
   expect(get("blue")!.dataset.inspecting).toBeUndefined();
 });
 
+test("moving the same card identity to another attachment clears parked focus", async () => {
+  const { get, source } = await mount(false);
+  hitTesting(() => get("red"));
+  await move({ pointerType: "mouse", x: 10, y: 10 });
+  expect(get("red")!.dataset.active).toBe("true");
+  const current = snapshot(2);
+  const hand = current.frame.zones.hand.alice;
+  const moved: SourceSnapshot = {
+    ...current,
+    frame: {
+      ...current.frame,
+      zones: {
+        hand: {
+          alice: {
+            ...hand,
+            cardIds: ["blue"],
+            cardViewsById: { blue: hand.cardViewsById.blue },
+            playableByCardId: { blue: [discard] },
+          },
+        },
+        table: {
+          table: {
+            ...hand,
+            cardIds: ["red"],
+            cardViewsById: { red: hand.cardViewsById.red },
+            playableByCardId: { red: [discard] },
+          },
+        },
+      },
+    },
+  };
+  await act(async () => source.emit(moved));
+  expect(get("red")).not.toBeNull();
+  expect(get("red")!.dataset.active).toBeUndefined();
+  await act(async () =>
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Alt" })),
+  );
+  expect(get("red")!.dataset.inspecting).toBeUndefined();
+});
+
 test("pointer down activates the actual pressed face after a parked-pointer animation", async () => {
   const { get } = await mount();
   hitTesting(() => get("red"));
