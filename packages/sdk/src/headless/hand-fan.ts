@@ -122,10 +122,10 @@ export function handFan({
     maxSpread: o.maxSpread,
     step: o.spacing === undefined ? undefined : o.spacing * cardWidth,
   });
-  const band = fan.height - o.tuck * cardHeight;
+  const band = Math.max(0, fan.height - o.tuck * cardHeight);
   const view = visible ?? {
-    left: Math.min(0, (fan.width - width) / 2),
-    width: Math.max(width, fan.width),
+    left: (fan.width - width) / 2,
+    width,
   };
   const exposed = cardWidth * o.exposed;
   // The widest face this hand shows, before an end card's missing strip.

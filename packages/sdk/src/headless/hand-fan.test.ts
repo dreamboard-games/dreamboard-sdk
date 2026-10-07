@@ -67,6 +67,29 @@ describe("handFan", () => {
     }
   });
 
+  it("centres the default viewport on an overflowing fan and keeps focused faces inside it", () => {
+    const input = { ...card, count: 20, width: 260 };
+    const fan = fanLayout(input);
+    expect(fan.width).toBeGreaterThan(input.width);
+    const left = (fan.width - input.width) / 2;
+    for (let focused = 0; focused < input.count; focused++) {
+      const pose = handFan({ ...input, focused }).cards[focused];
+      const centre = pose.x + input.cardWidth / 2;
+      const half = (pose.scale * input.cardWidth) / 2;
+      expect(centre - half).toBeGreaterThanOrEqual(left - 1e-8);
+      expect(centre + half).toBeLessThanOrEqual(left + input.width + 1e-8);
+    }
+  });
+
+  it("keeps empty hands at zero height under every preset", () => {
+    for (const options of Object.values(handFanPresets)) {
+      const hand = handFan({ ...card, count: 0, width: 260, options });
+      expect(hand.cards).toEqual([]);
+      expect(hand.width).toBe(0);
+      expect(hand.height).toBe(0);
+    }
+  });
+
   it("tucks resting cards below the band without moving them", () => {
     const open = handFan(nine);
     const tucked = handFan({
