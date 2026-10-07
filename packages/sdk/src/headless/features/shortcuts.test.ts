@@ -168,7 +168,7 @@ test("card-specific availability and hidden seat references share canonical atom
       },
     ],
   };
-  const source = createTestSource({
+  const projected: SourceSnapshot = {
     ...initial,
     frame: {
       ...initial.frame,
@@ -185,7 +185,8 @@ test("card-specific availability and hidden seat references share canonical atom
         },
       },
     },
-  });
+  };
+  const source = createTestSource(projected);
   const game = createGameInstance()({
     source,
     features: (game, context) => ({
@@ -202,6 +203,14 @@ test("card-specific availability and hidden seat references share canonical atom
         input: "card",
         inputs: ({ target }) => ({ card: target.value }),
       },
+      {
+        keys: ["t"],
+        label: "Flip top card",
+        interaction: "play.flip",
+        target: "zone",
+        zoneId: "deck",
+        inputs: () => ({ card: hidden }),
+      },
     ],
   });
   const card = { kind: "card" as const, value: hidden };
@@ -210,11 +219,19 @@ test("card-specific availability and hidden seat references share canonical atom
   expect(
     game.interactions.get("play.flip").getIsAvailable({ card: hidden }),
   ).toBe(true);
-  const pending = game.shortcuts.handle("f", card)!;
+  expect(game.shortcuts.getHints(target)).toEqual([
+    { keys: ["t"], label: "Flip top card", interaction: "play.flip" },
+  ]);
+  const zonePending = game.shortcuts.handle("t", target)!;
   expect(source.submissions[0].params).toEqual({ card: hidden });
   source.submissions[0].resolve({ accepted: true });
+  await zonePending;
+  source.emit({ ...projected, version: 2 });
+  const pending = game.shortcuts.handle("f", card)!;
+  expect(source.submissions[1].params).toEqual({ card: hidden });
+  source.submissions[1].resolve({ accepted: true });
   await pending;
-  source.emit(snapshot(2));
+  source.emit(snapshot(3));
   expect(game.shortcuts.handle("f", card)).toBeNull();
   expect(game.shortcuts.getHints(card)).toEqual([]);
   unregister.dispose();

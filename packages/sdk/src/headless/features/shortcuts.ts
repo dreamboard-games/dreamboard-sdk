@@ -156,8 +156,7 @@ export function shortcutsFeature<G>(
         ? (game.cards.find(target.value)?.getInteractions() ?? [])
         : game.interactions.list();
     const interaction = routes.find((item) => item.key === binding.interaction);
-    if (!interaction?.getIsAvailable() || interaction.getStatus() !== "open")
-      return null;
+    if (!interaction || interaction.getStatus() !== "open") return null;
     if (target.kind === "zone") {
       if (
         target.zoneId !== binding.zoneId ||
@@ -192,7 +191,9 @@ export function shortcutsFeature<G>(
       }
     }
     const params = binding.inputs({ key, target });
-    return interaction.getIsReady(params) ? { interaction, params } : null;
+    return interaction.getIsAvailable(params) && interaction.getIsReady(params)
+      ? { interaction, params }
+      : null;
   }
   const controller: ShortcutsController<G> = {
     configuration,
