@@ -291,6 +291,8 @@ export async function proveHandPickup(
       await page.mouse.up();
     }
     const returning = await returned;
+    // Remaining over the desktop hand keeps its readable focus after pickup.
+    const returnPose = touch ? rest : source;
     for (const frame of returning) {
       // These straight-up grabs share the fan's horizontal centre. A return
       // projection must not multiply its ancestor's hand translation by scale.
@@ -304,10 +306,16 @@ export async function proveHandPickup(
       );
       const centre = frame.y + frame.height / 2;
       expect(centre).toBeGreaterThanOrEqual(
-        Math.min(clone.y + clone.height / 2, rest.y + rest.height / 2) - 2,
+        Math.min(
+          clone.y + clone.height / 2,
+          returnPose.y + returnPose.height / 2,
+        ) - 2,
       );
       expect(centre).toBeLessThanOrEqual(
-        Math.max(clone.y + clone.height / 2, rest.y + rest.height / 2) + 2,
+        Math.max(
+          clone.y + clone.height / 2,
+          returnPose.y + returnPose.height / 2,
+        ) + 2,
       );
     }
     for (let index = 1; index < returning.length; index++)
@@ -315,9 +323,19 @@ export async function proveHandPickup(
         returning[index - 1].scale + 0.003,
       );
     const final = returning.at(-1)!;
-    expect(final.x + final.scroll).toBeCloseTo(rest.x + rest.scroll, 0);
+    expect(final.x + final.scroll).toBeCloseTo(
+      returnPose.x + returnPose.scroll,
+      0,
+    );
     for (const key of ["y", "width", "height"] as const)
-      expect(final[key]).toBeCloseTo(rest[key], 0);
+      expect(final[key]).toBeCloseTo(returnPose[key], 0);
+    if (!touch) {
+      await page.mouse.move(1, 1);
+      for (const key of ["x", "y", "width", "height"] as const)
+        await expect
+          .poll(async () => (await pose(card))[key])
+          .toBeCloseTo(rest[key], 0);
+    }
     console.log(
       `Hand pickup ${scenario}: scale ${source.scale.toFixed(3)}→${targetScale.toFixed(3)}, first ${first.width.toFixed(2)}×${first.height.toFixed(2)}, ${returning.length} return frames.`,
     );

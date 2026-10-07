@@ -544,12 +544,9 @@ const HandCard = memo(function HandCard({
                 top: 0,
               }}
             >
-              <motion.div
+              {/* One projection owns both focus lift and the shared drag return. */}
+              <div
                 className="db-hand-vertical"
-                layout="position"
-                transition={
-                  focused ? handFanTiming.focus : handFanTiming.settle
-                }
                 style={{ position: "relative", top: place.y }}
               >
                 <motion.div
@@ -557,7 +554,9 @@ const HandCard = memo(function HandCard({
                   layout="position"
                   initial={false}
                   animate={{ y: 0 }}
-                  transition={handFanTiming.settle}
+                  transition={
+                    focused ? handFanTiming.focus : handFanTiming.settle
+                  }
                 >
                   <motion.div
                     className="db-hand-pose"
@@ -581,7 +580,7 @@ const HandCard = memo(function HandCard({
                     {control}
                   </motion.div>
                 </motion.div>
-              </motion.div>
+              </div>
               {arrival && anchor && (
                 <CardArrival
                   origin={arrival.box}
