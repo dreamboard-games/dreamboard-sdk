@@ -23,9 +23,13 @@ alongside the other card gesture hooks from the game's binding.
 
 Readable cards stand upright on a common bottom edge. Nearby cards spread
 horizontally, with a longer taper only when crowded spacing needs it to keep
-cards ordered and exposed. Motion uses zero-bounce duration springs: the face
-enters quickly, while horizontal travel and returning cards settle over 300ms.
-Retargeting continues from the current position with zero initial velocity.
+cards ordered and exposed. Motion uses one exponential ease-out: the face
+rises 90% of the way in about 45ms, while horizontal travel and returning cards
+are 90% home in about 300ms. Motion restarts a retargeted animation from the
+current pose, and this curve continues from there at full speed, so sweeping
+across the hand never stalls a card or overshoots. A card whose action menu is
+open keeps its readable pose until the menu closes, so the menu stays where it
+opened while the pointer or keyboard focus moves into it.
 Narrow hands reserve visible strips for the immediately adjacent cards. Farther
 cards may temporarily be clipped while a readable face is active; leaving the
 face restores the ordinary fan within the same native scroll extent. Drag

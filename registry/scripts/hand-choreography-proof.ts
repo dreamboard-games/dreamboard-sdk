@@ -386,3 +386,49 @@ export async function proveHandReading(
   } else await page.keyboard.up("Alt");
   await expect(preview).toHaveCount(0);
 }
+
+/** An open action menu holds its card still, so the menu stays where it opened. */
+export async function proveHandMenuHold(page: Page, touch: boolean) {
+  const hand = page.getByRole("region", { name: "Your hand" });
+  const card = hand.locator(".db-hand-card").nth(4);
+  const play = page.getByRole("button", { name: "Play", exact: true });
+  const expectMenuStill = async (
+    travel?: (menu: { x: number; y: number }) => Promise<void>,
+  ) => {
+    await expect(card).toHaveAttribute("aria-expanded", "true");
+    await expect(play).toBeVisible();
+    const opened = (await play.boundingBox())!;
+    await travel?.({
+      x: opened.x + opened.width / 2,
+      y: opened.y + opened.height / 2,
+    });
+    // Longer than the whole return curve: a released card carries its menu away.
+    await page.waitForTimeout(700);
+    const held = (await play.boundingBox())!;
+    expect(Math.abs(held.x - opened.x)).toBeLessThan(1);
+    expect(Math.abs(held.y - opened.y)).toBeLessThan(1);
+    await page.keyboard.press("Escape");
+    await expect(card).toHaveAttribute("aria-expanded", "false");
+  };
+  if (!touch) {
+    const at = await surface(card);
+    await page.mouse.move(at.x, at.y);
+    await expect(card).toHaveAttribute("data-hovered", "true");
+    await page.waitForTimeout(650);
+    await page.mouse.down();
+    await page.mouse.up();
+    // A person travels to the menu, and the pointer leaves the card on the way.
+    await expectMenuStill((menu) =>
+      page.mouse.move(menu.x, menu.y, { steps: 12 }),
+    );
+    await page.mouse.move(1, 1);
+  }
+  // Enter moves focus into the menu while the card keeps its pose under it.
+  await page.keyboard.press("Tab");
+  await card.focus();
+  await expect(card).toHaveAttribute("data-hovered", "true");
+  await page.waitForTimeout(650);
+  await page.keyboard.press("Enter");
+  await expectMenuStill();
+  await expect(card).toBeFocused();
+}

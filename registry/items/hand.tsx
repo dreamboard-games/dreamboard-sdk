@@ -150,17 +150,22 @@ export function Hand({
           : next,
       );
     };
+    // Only scrolling the hand itself, or something containing it, moves the fan.
+    const scrolled = (event: Event) => {
+      if (event.target instanceof Node && event.target.contains(scroller))
+        measure();
+    };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(scroller);
     if (probe.current) observer.observe(probe.current);
     if (readableProbe.current) observer.observe(readableProbe.current);
     addEventListener("resize", measure);
-    addEventListener("scroll", measure, true);
+    addEventListener("scroll", scrolled, true);
     return () => {
       observer.disconnect();
       removeEventListener("resize", measure);
-      removeEventListener("scroll", measure, true);
+      removeEventListener("scroll", scrolled, true);
     };
   }, [scroller, ids.length, drawOver]);
 
@@ -210,9 +215,32 @@ export function Hand({
       placement(ids.length, nextFan),
     );
   });
-
-  const active =
-    overlay || activeCardId === null ? -1 : ids.indexOf(activeCardId);
+  // A stable getter keeps memoized cards from re-rendering on every scroll;
+  // an arrival reads it once, in the render that mounts the new card.
+  const latestPlacement = useRef(placement);
+  latestPlacement.current = placement;
+  const destination = useCallback(
+    (index: number) => latestPlacement.current(index),
+    [],
+  );
+  // A card holds its readable pose while its action menu is open, so the
+  // menu stays where it opened when the pointer or focus moves into it.
+  const [menuCardId, setMenuCardId] = useState<CardId | null>(null);
+  const onMenuChange = useCallback(
+    (cardId: CardId, open: boolean) =>
+      setMenuCardId((current) =>
+        open ? cardId : current === cardId ? null : current,
+      ),
+    [],
+  );
+  const held = menuCardId === null ? -1 : ids.indexOf(menuCardId);
+  const active = overlay
+    ? -1
+    : held >= 0
+      ? held
+      : activeCardId === null
+        ? -1
+        : ids.indexOf(activeCardId);
   const offset = Math.max(0, (size.width - fan.width - gutter * 2) / 2);
   const places = handFocusLayout({
     fan,
@@ -289,10 +317,12 @@ export function Hand({
                     baseWidth={size.card}
                     baseHeight={size.cardHeight}
                     lift={lift}
+                    focused={index === active}
                     choosing={choosing}
                     renderCard={renderCard}
                     getCardLabel={getCardLabel}
-                    destination={() => placement(index)}
+                    destination={destination}
+                    onMenuChange={onMenuChange}
                   />
                 ))}
               {ready && drawOver && (
@@ -378,7 +408,9 @@ interface HandCardProps {
   choosing: boolean;
   renderCard: HandProps["renderCard"];
   getCardLabel: HandProps["getCardLabel"];
-  destination(): CardPlacement;
+  focused: boolean;
+  destination(index: number): CardPlacement;
+  onMenuChange(cardId: CardId, open: boolean): void;
 }
 const HandCard = memo(function HandCard({
   cardId,
@@ -397,7 +429,9 @@ const HandCard = memo(function HandCard({
   choosing,
   renderCard,
   getCardLabel,
+  focused,
   destination,
+  onMenuChange,
 }: HandCardProps) {
   const card = useGame((game) => game.cards.find(cardId));
   const table = useCardMotion();
@@ -420,6 +454,10 @@ const HandCard = memo(function HandCard({
         : 0,
     };
   }, [dragged, presentedScale, baseHeight]);
+  const menuChanged = useCallback(
+    (open: boolean) => onMenuChange(cardId, open),
+    [onMenuChange, cardId],
+  );
   if (!card) return null;
   return (
     <>
@@ -431,9 +469,10 @@ const HandCard = memo(function HandCard({
         style={{ visibility: arrival ? "hidden" : undefined }}
         renderCard={renderCard}
         getCardLabel={getCardLabel}
+        onMenuChange={menuChanged}
       >
-        {({ raised, hovered, anchor, control }) => {
-          const place = hovered
+        {({ raised, anchor, control }) => {
+          const place = focused
             ? { x, y, rotate: 0 }
             : raised
               ? liftFanCard({ x, y, rotate }, lift * 0.5)
@@ -446,7 +485,7 @@ const HandCard = memo(function HandCard({
               initial={false}
               transition={handReturn}
               style={{
-                zIndex: hovered ? 100 : index,
+                zIndex: focused ? 100 : index,
                 left: place.x,
                 top: 0,
               }}
@@ -454,7 +493,7 @@ const HandCard = memo(function HandCard({
               <motion.div
                 className="db-hand-vertical"
                 layout="position"
-                transition={hovered ? handEnter : handReturn}
+                transition={focused ? handEnter : handReturn}
                 style={{ position: "relative", top: place.y }}
               >
                 <motion.div
@@ -472,7 +511,7 @@ const HandCard = memo(function HandCard({
                       rotate: pickup ? 0 : place.rotate,
                     }}
                     transition={
-                      pickup ? cardPickup : hovered ? handEnter : handReturn
+                      pickup ? cardPickup : focused ? handEnter : handReturn
                     }
                     style={{
                       scale: presentedScale,
@@ -489,7 +528,7 @@ const HandCard = memo(function HandCard({
                   landed={arrival.landed}
                   hidden={arrival.hidden}
                   target={anchor}
-                  destination={arrival.destination ?? destination()}
+                  destination={arrival.destination ?? destination(index)}
                   rotate={rotate}
                   back={backImageOf(card)}
                   onComplete={finishArrival}

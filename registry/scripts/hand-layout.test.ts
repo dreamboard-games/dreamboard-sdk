@@ -1,7 +1,11 @@
 import { expect, test } from "vitest";
 import { fanLayout } from "@dreamboard-games/sdk";
-import { spring } from "motion";
-import { handFocusLayout, handReturn, handEnter } from "../items/hand-layout";
+import {
+  exponentialOut,
+  handFocusLayout,
+  handReturn,
+  handEnter,
+} from "../items/hand-layout";
 
 const options = { cardWidth: 80, cardHeight: 112, width: 640, count: 9 };
 const fan = fanLayout(options);
@@ -46,30 +50,48 @@ test("readable end faces stay inside the visible window after horizontal scrolli
   }
 });
 
-test("configured Motion response is monotone, fast on entry and over 90 percent home at 300ms", () => {
-  for (const config of [handReturn, handEnter]) {
-    for (const [from, to] of [
-      [0, 100],
-      [100, 0],
-      [37, 20],
-    ]) {
-      const animation = spring({ ...config, keyframes: [from, to] });
-      let previous = from;
-      for (let time = 0; time <= 800; time += 8) {
-        const current = animation.next(time).value;
-        expect(current).toBeGreaterThanOrEqual(Math.min(from, to));
-        expect(current).toBeLessThanOrEqual(Math.max(from, to));
-        expect(Math.abs(to - current)).toBeLessThanOrEqual(
-          Math.abs(to - previous) + 1e-8,
-        );
-        previous = current;
-      }
-      const sampled = spring({ ...config, keyframes: [from, to] });
-      const time = config === handEnter ? 64 : 300;
-      expect(
-        Math.abs(to - sampled.next(time).value) / Math.abs(to - from),
-      ).toBeLessThan(0.1);
-    }
+test("hand motion starts at full speed, never overshoots and is 90 percent home at 300ms", () => {
+  const at = (config: typeof handReturn | typeof handEnter, ms: number) =>
+    config.ease(Math.min(1, ms / 1000 / config.duration));
+  const ninety = (config: typeof handReturn | typeof handEnter) => {
+    let ms = 0;
+    while (at(config, ms) < 0.9) ms += 1;
+    return ms;
+  };
+  expect(exponentialOut(0)).toBe(0);
+  expect(exponentialOut(1)).toBeCloseTo(1, 12);
+  let previous = 0;
+  for (let step = 1; step <= 1000; step++) {
+    const value = exponentialOut(step / 1000);
+    expect(value).toBeGreaterThan(previous);
+    expect(value).toBeLessThanOrEqual(1);
+    // Each step moves less than the one before: the fastest is the first.
+    if (step > 1)
+      expect(value - previous).toBeLessThan(
+        previous - exponentialOut((step - 2) / 1000),
+      );
+    previous = value;
+  }
+  // The first 60Hz frame already covers about an eighth of the distance.
+  expect(at(handReturn, 1000 / 60)).toBeGreaterThan(0.1);
+  expect(ninety(handReturn)).toBeGreaterThanOrEqual(280);
+  expect(ninety(handReturn)).toBeLessThanOrEqual(320);
+  expect(ninety(handEnter)).toBeLessThanOrEqual(64);
+});
+
+test("a retarget continues the curve instead of restarting from rest", () => {
+  // Motion restarts from the current pose. The restarted curve's speed matches
+  // the uninterrupted curve's speed at that moment, so nothing stalls.
+  const rate = (progress: number) =>
+    (exponentialOut(progress + 1e-6) - exponentialOut(progress)) / 1e-6;
+  for (const progress of [0.05, 0.1, 0.25, 0.5]) {
+    const remaining = 1 - exponentialOut(progress);
+    const continuing = rate(progress);
+    const restarted = rate(0) * remaining;
+    // Landing exactly at the duration costs a little speed late in the curve;
+    // a zero-velocity spring would restart at 0%.
+    expect(restarted / continuing).toBeGreaterThan(0.9);
+    expect(restarted / continuing).toBeLessThanOrEqual(1 + 1e-6);
   }
 });
 
