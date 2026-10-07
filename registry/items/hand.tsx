@@ -1,4 +1,11 @@
-import { fanLayout, liftFanCard } from "@dreamboard-games/sdk";
+import {
+  fanLayout,
+  handFan,
+  handFanPresets,
+  handFanTiming,
+  liftFanCard,
+  type HandFanOptions,
+} from "@dreamboard-games/sdk";
 import {
   useDragOverlay,
   useActiveCard,
@@ -28,7 +35,6 @@ import {
   type CardZone,
 } from "./card-motion";
 import { cardDragScale, cardPickup } from "./card";
-import { handFocusLayout, handEnter, handReturn } from "./hand-layout";
 import "./tokens.css";
 export interface HandProps {
   zoneId: ZoneId;
@@ -43,6 +49,11 @@ export interface HandProps {
    */
   renderCard(card: Card, state: CardState): ReactNode;
   getCardLabel?(card: Card): string;
+  /**
+   * How the fan rests and focuses a card. Spread a `handFanPresets` entry and
+   * override what differs; defaults to `handFanPresets.open`.
+   */
+  options?: Omit<HandFanOptions, "tuck">;
 }
 
 const EMPTY: readonly CardId[] = [];
@@ -66,6 +77,7 @@ export function Hand({
   sort,
   renderCard,
   getCardLabel,
+  options = handFanPresets.open,
 }: HandProps) {
   const ids = useGame(
     (game) =>
@@ -96,13 +108,15 @@ export function Hand({
   const drawOver =
     drawTarget && table.drop?.over && table.drop.snapshot === snapshot;
   const probe = useRef<HTMLDivElement>(null);
-  const readableProbe = useRef<HTMLDivElement>(null);
+  const latestOptions = useRef(options);
+  latestOptions.current = options;
   const [scrollLeft, setScrollLeft] = useState(0);
   const [size, setSize] = useState({
     width: 0,
     card: 0,
     cardHeight: 0,
-    readable: 0,
+    room: Infinity,
+    windowHeight: Infinity,
   });
   useLayoutEffect(() => {
     if (!scroller) return;
@@ -119,33 +133,44 @@ export function Hand({
         scroller.clientWidth -
         parseFloat(style.paddingLeft) -
         parseFloat(style.paddingRight);
+      const settings = { ...handFanPresets.open, ...latestOptions.current };
       const layout = fanLayout({
         count: ids.length + (drawOver ? 1 : 0),
         width: width - card * 0.7,
         cardWidth: card || 1,
         cardHeight: cardHeight || 1,
+        angle: settings.angle,
+        maxSpread: settings.maxSpread,
+        step:
+          settings.spacing === undefined
+            ? undefined
+            : settings.spacing * (card || 1),
       });
       const bottom =
         scroller.getBoundingClientRect().top +
         parseFloat(style.paddingTop) +
         cardHeight * 0.28 +
         layout.height;
+      // A focused face may not rise past the window's top edge. Record that
+      // limit only while it binds, so ordinary page scrolling re-renders nothing.
+      const room = Math.max(0, bottom - 16);
+      const tallest = Math.min(
+        cardHeight * settings.focusScale,
+        innerHeight * settings.focusMaxHeight,
+      );
       const next = {
         width,
         card,
         cardHeight,
-        readable: Math.min(
-          readableProbe.current?.offsetWidth ?? 0,
-          width,
-          (innerHeight * 0.55 * card) / (cardHeight || 1),
-          (Math.max(0, bottom - 16) * card) / (cardHeight || 1),
-        ),
+        room: room < tallest ? room : Infinity,
+        windowHeight: innerHeight,
       };
       setSize((previous) =>
         previous.width === next.width &&
         previous.card === next.card &&
         previous.cardHeight === next.cardHeight &&
-        previous.readable === next.readable
+        previous.room === next.room &&
+        previous.windowHeight === next.windowHeight
           ? previous
           : next,
       );
@@ -159,7 +184,6 @@ export function Hand({
     const observer = new ResizeObserver(measure);
     observer.observe(scroller);
     if (probe.current) observer.observe(probe.current);
-    if (readableProbe.current) observer.observe(readableProbe.current);
     addEventListener("resize", measure);
     addEventListener("scroll", scrolled, true);
     return () => {
@@ -172,21 +196,29 @@ export function Hand({
   // Room for a lifted card above the fan and beside its end cards.
   const lift = size.cardHeight * 0.28;
   const gutter = size.card * 0.35;
+  // The same arc handFan lays, for arrival destinations and reserved height.
+  const arc = {
+    angle: options.angle,
+    maxSpread: options.maxSpread,
+    step:
+      options.spacing === undefined
+        ? undefined
+        : options.spacing * (size.card || 1),
+  };
   const fan = fanLayout({
     count: ids.length + (drawOver ? 1 : 0),
     width: size.width - gutter * 2,
     cardWidth: size.card || 1,
     cardHeight: size.cardHeight || 1,
+    ...arc,
   });
   const ready = size.width > 0 && size.card > 0;
-  const headroom = size.card
-    ? (size.readable * size.cardHeight) / size.card
-    : 0;
   const nextFan = fanLayout({
     count: ids.length + 1,
     width: size.width - gutter * 2,
     cardWidth: size.card || 1,
     cardHeight: size.cardHeight || 1,
+    ...arc,
   });
   // Reserve the same vertical space before pickup, during preview and on arrival.
   const height =
@@ -241,18 +273,25 @@ export function Hand({
       : activeCardId === null
         ? -1
         : ids.indexOf(activeCardId);
-  const offset = Math.max(0, (size.width - fan.width - gutter * 2) / 2);
-  const places = handFocusLayout({
-    fan,
-    active,
+  // The fan sits centred between its gutters; handFan works in its coordinates.
+  const inset = gutter + Math.max(0, (size.width - fan.width - gutter * 2) / 2);
+  const focus = handFan({
+    count: ids.length + (drawOver ? 1 : 0),
+    width: size.width - gutter * 2,
     cardWidth: size.card || 1,
     cardHeight: size.cardHeight || 1,
-    readableWidth: Math.min(size.readable, size.width),
-    lift,
-    gutter: gutter + offset,
-    visibleLeft: scrollLeft,
-    visibleWidth: size.width,
+    focused: active,
+    visible: { left: scrollLeft - inset, width: size.width },
+    windowHeight: size.windowHeight,
+    room: size.room,
+    options,
   });
+  const places = focus.cards.map((card) => ({
+    ...card,
+    x: card.x + inset,
+    y: card.y + lift,
+  }));
+  const headroom = focus.headroom;
 
   return (
     <>
@@ -294,12 +333,6 @@ export function Hand({
                   <div className="db-card" />
                 )}
               </div>
-              <div
-                ref={readableProbe}
-                className="db-card db-hand-readable-probe"
-                aria-hidden
-                style={{ position: "absolute", visibility: "hidden" }}
-              />
               {ready &&
                 ids.map((id, index) => (
                   <HandCard
@@ -332,7 +365,7 @@ export function Hand({
                   style={{
                     width: size.card,
                     height: size.cardHeight,
-                    transform: `translate(${fan.cards[ids.length].x + gutter + offset}px, ${fan.cards[ids.length].y + lift}px) rotate(${fan.cards[ids.length].rotate}deg)`,
+                    transform: `translate(${fan.cards[ids.length].x + inset}px, ${fan.cards[ids.length].y + lift}px) rotate(${fan.cards[ids.length].rotate}deg)`,
                   }}
                 />
               )}
@@ -483,7 +516,7 @@ const HandCard = memo(function HandCard({
               // Layout owns horizontal movement independently of the fast lift.
               layout="position"
               initial={false}
-              transition={handReturn}
+              transition={handFanTiming.settle}
               style={{
                 zIndex: focused ? 100 : index,
                 left: place.x,
@@ -493,7 +526,9 @@ const HandCard = memo(function HandCard({
               <motion.div
                 className="db-hand-vertical"
                 layout="position"
-                transition={focused ? handEnter : handReturn}
+                transition={
+                  focused ? handFanTiming.focus : handFanTiming.settle
+                }
                 style={{ position: "relative", top: place.y }}
               >
                 <motion.div
@@ -501,7 +536,7 @@ const HandCard = memo(function HandCard({
                   layout="position"
                   initial={false}
                   animate={{ y: 0 }}
-                  transition={handReturn}
+                  transition={handFanTiming.settle}
                 >
                   <motion.div
                     className="db-hand-pose"
@@ -511,7 +546,11 @@ const HandCard = memo(function HandCard({
                       rotate: pickup ? 0 : place.rotate,
                     }}
                     transition={
-                      pickup ? cardPickup : focused ? handEnter : handReturn
+                      pickup
+                        ? cardPickup
+                        : focused
+                          ? handFanTiming.focus
+                          : handFanTiming.settle
                     }
                     style={{
                       scale: presentedScale,

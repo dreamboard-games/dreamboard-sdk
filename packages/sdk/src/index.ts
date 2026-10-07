@@ -31,6 +31,7 @@ export {
 } from "./headless/features/origins.js";
 export * from "./headless/gesture.js";
 export * from "./headless/fan.js";
+export * from "./headless/hand-fan.js";
 
 export type {
   ActionInteractionDescriptor,

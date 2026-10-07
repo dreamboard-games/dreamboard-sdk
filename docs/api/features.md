@@ -28,6 +28,15 @@
 <!-- api: root FanOptions -->
 <!-- api: root FanCard -->
 <!-- api: root FanLayout -->
+<!-- api: root handFan -->
+<!-- api: root handFanPresets -->
+<!-- api: root handFanTiming -->
+<!-- api: root exponentialOut -->
+<!-- api: root cssEasing -->
+<!-- api: root HandFan -->
+<!-- api: root HandFanInput -->
+<!-- api: root HandFanOptions -->
+<!-- api: root HandFanPose -->
 <!-- api: react CardGesture -->
 <!-- api: react CardGestureProps -->
 <!-- api: react DropArea -->
@@ -134,7 +143,14 @@ return `null`. It is also `null` on the first frame and after a seat or source
 change. `fanLayout(FanOptions)`
 returns a `FanLayout`: a `FanCard` (`x`, `y`, `rotate`) per card on a circular
 arc, and the bounding `width` and `height`. `liftFanCard(card, distance)` moves
-a card along its own tilt. See [Fans and card movement](../guides/ui/card-movement.md).
+a card along its own tilt. `handFan(HandFanInput)` adds one focused card to that
+arc: a `HandFanPose` per card also carries `scale` and `layer`, the focused card
+stands upright on the band's bottom edge, and nearby cards move sideways while
+keeping their order and an exposed strip. `HandFanOptions` set the spacing,
+tuck, focus size and push in card-relative units; `handFanPresets` offers `open`, `tucked`
+and `touch` starting points. `handFanTiming` holds Motion-shaped durations with
+the `exponentialOut` easing, and `cssEasing(ease)` converts an easing to a CSS
+`linear()` function. See [Fans and card movement](../guides/ui/card-movement.md).
 
 `panZoomFeature(core, context, { initial?, minScale?, maxScale? })` owns the viewport.
 Native wheel listeners must be non-passive. SVG rendering must convert client
