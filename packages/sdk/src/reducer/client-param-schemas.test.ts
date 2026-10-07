@@ -111,7 +111,10 @@ describe("createClientParamSchemasByPhase", () => {
               inputs: {
                 cardId: cardInput({
                   target: cardTarget
-                    .zones<CollectorState, string>(["hand"])
+                    .zones<CollectorState, string>(
+                      ["hand"],
+                      contract.contract.manifest,
+                    )
                     .where({
                       id: "card-type",
                       errorCode: "CARD_TYPE_NOT_ALLOWED",

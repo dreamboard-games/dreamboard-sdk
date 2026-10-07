@@ -127,7 +127,7 @@ describe("interaction input projection", () => {
 
   test("card and board targets project renderable domains", () => {
     const cardRule = cardTarget
-      .zones<typeof stepState, "card-a" | "card-b">(["hand"])
+      .zones<typeof stepState, "card-a" | "card-b">(["hand"], inputDefinitions)
       .where({
         id: "only-first",
         errorCode: "wrong-card",

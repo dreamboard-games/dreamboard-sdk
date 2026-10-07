@@ -236,7 +236,7 @@ describe("trusted collector input solver", () => {
     });
     const card = cardInput({
       target: cardTarget
-        .zones(["hand"] as const)
+        .zones(["hand"] as const, inputDefinitions)
         .where({
           id: "playable-card",
           errorCode: "CARD_BLOCKED",
