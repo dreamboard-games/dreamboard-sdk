@@ -145,7 +145,9 @@ export function createGestureSession(game: GestureGame) {
     if (snapshot !== game.snapshot) {
       snapshot = game.snapshot;
       press?.recognizer.cancel();
-      loseFocus();
+      // Surviving DOM cards do not receive another enter/focus event.
+      alt = false;
+      set({ inspect: null });
     }
     // New frames, seats and sources cancel the semantic drag; end the press with it.
     if (press?.dragging && !game.drag?.active) press.recognizer.cancel();

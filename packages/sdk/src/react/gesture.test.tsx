@@ -270,6 +270,16 @@ test("Alt inspects the hovered card and clears on release, leave, window blur, a
   await key("keydown");
   await act(async () => source.emit(snapshot(2)));
   expect(get("red")!.dataset.inspecting).toBeUndefined();
+  await key("keyup");
+  await key("keydown");
+  expect(get("red")!.dataset.inspecting).toBe("hover");
+  await over("pointerout");
+  await act(async () => get("red")!.focus());
+  await act(async () => source.emit(snapshot(3)));
+  expect(get("red")!.dataset.inspecting).toBeUndefined();
+  await key("keyup");
+  await key("keydown");
+  expect(get("red")!.dataset.inspecting).toBe("hover");
 });
 
 test("a card dragged onto an area runs its interaction and settles until the frame", async () => {
