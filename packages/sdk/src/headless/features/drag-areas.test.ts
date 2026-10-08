@@ -376,4 +376,46 @@ describe("position targets", () => {
     });
     game.dispose();
   });
+  it("keeps position drop targets alongside a selected board destination", () => {
+    const space = { boardId: "map", spaceId: "a" };
+    const { game, source } = setup([
+      {
+        ...reorder,
+        inputs: [
+          ...reorder.inputs,
+          {
+            key: "space",
+            kind: "board-space",
+            domain: {
+              type: "boardTarget",
+              projection: "resolved",
+              targetKind: "space",
+              valueKind: "board-space",
+              boardBaseId: "map",
+              eligibleTargets: [space],
+            },
+          },
+        ],
+      },
+    ]);
+    game.interactions
+      .get("play.reorder")
+      .getInputs()
+      .find((input) => input.key === "space")!
+      .setValue(space);
+    game.drag.begin("red");
+    expect(game.drag.getDropTargets()).toContainEqual(
+      expect.objectContaining({ kind: "space", value: space }),
+    );
+    expect(game.drag.getDropTargets()).toContainEqual(at(1));
+    expect(game.drag.getIsDropTarget(at(1))).toBe(true);
+    game.drag.setDropTarget(at(1));
+    game.drag.drop();
+    expect(source.submissions[0]?.params).toEqual({
+      card: "red",
+      to: { zoneId: "hand", hostId: "alice", index: 1 },
+      space,
+    });
+    game.dispose();
+  });
 });

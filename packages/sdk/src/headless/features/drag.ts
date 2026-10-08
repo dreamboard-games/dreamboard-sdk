@@ -106,7 +106,7 @@ function createRuntimeDragFeature(context: RuntimeFeatureContext) {
             ),
             ...positions,
           ];
-        return cardInputs.flatMap((cardInput) =>
+        const boardTargets = cardInputs.flatMap((cardInput) =>
           inputs.flatMap((input): RuntimeDropTarget[] => {
             const domain = input.getDomain();
             if (domain.type !== "boardTarget") return [];
@@ -139,6 +139,7 @@ function createRuntimeDragFeature(context: RuntimeFeatureContext) {
               );
           }),
         );
+        return [...boardTargets, ...positions];
       },
     );
     return resolved;
