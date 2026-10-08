@@ -98,7 +98,7 @@ describe("handFan", () => {
     });
     expect(tucked.cards).toEqual(open.cards);
     // The middle card, at the top of the arc, hides the tucked share of itself.
-    expect(tucked.height).toBeCloseTo(open.cards[4].y + 0.6 * 112);
+    expect(tucked.height).toBeCloseTo(0.6 * 112);
     expect(tucked.headroom).toBeCloseTo(1.4 * 112 - tucked.height);
     const pose = handFan({
       ...nine,
@@ -120,7 +120,7 @@ describe("handFan", () => {
       expect(end.y).toBeGreaterThanOrEqual(middle.y);
       return hand.height;
     });
-    expect(Math.max(...bands) - Math.min(...bands)).toBeLessThan(0.05 * 112);
+    expect(new Set(bands)).toEqual(new Set([(1 - options.tuck) * 112]));
   });
 
   it("spaces resting cards in card widths", () => {

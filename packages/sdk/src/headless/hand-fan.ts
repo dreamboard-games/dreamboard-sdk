@@ -126,10 +126,11 @@ export function handFan({
     maxSpread: o.maxSpread,
     step: o.spacing === undefined ? undefined : o.spacing * cardWidth,
   });
-  // The crest card hides `tuck` of itself; deeper arcs sink only the outer cards.
-  const crest = Math.min(...fan.cards.map((card) => card.y));
+  // The edge sits a fixed depth below the fan's top, where the middle card
+  // rests, so it never moves as cards come and go; deeper arcs sink only the
+  // outer cards.
   const band = o.tuck
-    ? Math.min(fan.height, Math.max(0, crest + (1 - o.tuck) * cardHeight))
+    ? Math.min(fan.height, (1 - o.tuck) * cardHeight)
     : fan.height;
   const view = visible ?? {
     left: (fan.width - width) / 2,

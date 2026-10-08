@@ -529,3 +529,34 @@ export async function proveHostDraw(page: Page, touch: boolean) {
     await cdp?.detach();
   }
 }
+
+/**
+ * A tucked hand keeps its edge and height as cards arrive, so nothing laid
+ * out around it moves, and a lone card reads.
+ */
+export async function proveSteadyTuckedHand(page: Page) {
+  const pile = page.getByRole("button", { name: "Deck actions" });
+  const hand = page.getByRole("region", { name: "Your hand" });
+  const cards = hand.locator(".db-hand-card");
+  await expect(cards).toHaveCount(0);
+  const handBox = (await hand.boundingBox())!;
+  for (let count = 1; count <= 8; count++) {
+    await pile.focus();
+    await pile.press("Enter");
+    await page.locator('[data-action="draw"]').press("Enter");
+    await expect(cards).toHaveCount(count);
+    await expect(page.locator("[data-card-arrival]")).toHaveCount(0);
+    const box = (await hand.boundingBox())!;
+    expect(box.y).toBeCloseTo(handBox.y, 0);
+    expect(box.height).toBeCloseTo(handBox.height, 0);
+    if (count === 1) {
+      // The lone card shows all but the tucked share of itself.
+      const shown = await cards.first().evaluate((element) => {
+        const clip = element.closest(".db-hand-clip")!.getBoundingClientRect();
+        const card = element.getBoundingClientRect();
+        return (clip.bottom - card.top) / card.height;
+      });
+      expect(shown).toBeGreaterThan(0.8);
+    }
+  }
+}

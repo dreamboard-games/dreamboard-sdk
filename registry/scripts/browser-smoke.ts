@@ -11,6 +11,7 @@ import {
   proveDrawTouchActivation,
   proveHostDraw,
   proveReducedCardMotion,
+  proveSteadyTuckedHand,
 } from "./draw-proof.ts";
 import { proveCardControl } from "./card-control-proof.ts";
 import { proveCrowdedHand, proveHand, proveHandSlide } from "./hand-proof.ts";
@@ -334,6 +335,8 @@ try {
         await proveHandSorting(page, touch, false);
       if (story.id.endsWith("--sorting-tucked-hand") && name === "phone")
         await proveHandSorting(page, touch, true);
+      if (story.id.endsWith("--tucked-draws") && name !== "landscape")
+        await proveSteadyTuckedHand(page);
       if (story.id.endsWith("pending-draw") && name !== "landscape")
         await proveDraw(page, touch, true);
       if (story.id.endsWith("draw-lifecycle") && name !== "landscape")

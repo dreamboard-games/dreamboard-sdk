@@ -439,6 +439,10 @@ export const TuckedHand: StoryObj<typeof meta> = {
 export const TuckedPlayingCards: StoryObj<typeof meta> = {
   args: { tucked: true },
 };
+/** Drawing into a tucked hand leaves the table where it is. */
+export const TuckedDraws: StoryObj<typeof meta> = {
+  args: { emptyHand: true, tucked: true },
+};
 export const CrowdedHand: StoryObj<typeof meta> = {
   args: { crowded: true, tucked: true },
 };
