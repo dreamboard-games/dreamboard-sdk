@@ -16,9 +16,15 @@ import { Card, CardBack, type CardState } from "../items/card";
 import { PlayingCard } from "../items/playing-card";
 import { DrawPile } from "../items/draw-pile";
 import { DropArea } from "../items/drop-area";
+import { InteractionForm } from "../items/interaction-form";
 import { Seat, type SeatNumber } from "../items/seat";
 import { TurnBanner } from "../items/turn-banner";
-import { handGame, createHandGame, crowdedHandGame } from "./hand-game";
+import {
+  handGame,
+  createHandGame,
+  crowdedHandGame,
+  reorderHandGame,
+} from "./hand-game";
 type HandSource = CommandSource & { switchSeat(playerId: string): void };
 interface CreatedHandSource {
   value: HandSource;
@@ -180,12 +186,14 @@ function Table({
   drawLifecycle = false,
   tucked = false,
   sorting = false,
+  reorder = false,
 }: {
   onSwitchSeat(): void;
   appearance?: "text" | "wide";
   drawLifecycle?: boolean;
   tucked?: boolean;
   sorting?: boolean;
+  reorder?: boolean;
 }) {
   const [showPile, setShowPile] = useState(true);
   const hostId = useGame((game) => game.me?.id);
@@ -244,11 +252,13 @@ function Table({
       <div className="grid gap-2" style={tucked ? tuckedCards : undefined}>
         <Seats mine />
         {sorting && <HandOrder hostId={hostId} />}
+        {reorder && <ReorderForm />}
         <Hand
           zoneId="hand"
           hostId={hostId}
           label="Your hand"
           options={tucked ? handFanPresets.tucked : undefined}
+          reorder={reorder ? { interaction: "play.reorder" } : undefined}
           renderCard={
             appearance === "text"
               ? renderTextCard
@@ -262,6 +272,16 @@ function Table({
       <TurnBanner />
     </main>
   );
+}
+
+/** The card menu's move asks for its place here, for players who do not drag. */
+function ReorderForm() {
+  const active = useGame(
+    (game) => game.state.activeInteraction === "play.reorder",
+  );
+  return active ? (
+    <InteractionForm interaction="play.reorder" labels={{ to: "Place" }} />
+  ) : null;
 }
 
 /** Authored story controls demonstrate a game selecting its own order. */
@@ -294,6 +314,7 @@ function OwnedSource({
   drawLifecycle,
   tucked,
   sorting,
+  reorder,
 }: {
   appearance?: "text" | "wide";
   source: CreatedHandSource;
@@ -301,6 +322,7 @@ function OwnedSource({
   drawLifecycle: boolean;
   tucked: boolean;
   sorting: boolean;
+  reorder: boolean;
 }) {
   useLayoutEffect(() => {
     source.adopted = true;
@@ -319,6 +341,7 @@ function OwnedSource({
         drawLifecycle={drawLifecycle}
         tucked={tucked}
         sorting={sorting}
+        reorder={reorder}
         onSwitchSeat={() => {
           const next = seat === "player-1" ? "player-2" : "player-1";
           source.value.switchSeat(next);
@@ -336,6 +359,7 @@ function HandTable({
   drawLifecycle = false,
   tucked = false,
   sorting = false,
+  reorder = false,
 }: {
   appearance?: "text" | "wide";
   manualDraw?: boolean;
@@ -344,13 +368,20 @@ function HandTable({
   drawLifecycle?: boolean;
   tucked?: boolean;
   sorting?: boolean;
+  reorder?: boolean;
 }) {
   const [source, setSource] = useState<CreatedHandSource | null>(null);
   useEffect(() => {
     let active = true;
     let created: CreatedHandSource | undefined;
     void localSource(
-      emptyHand ? createHandGame(0) : crowded ? crowdedHandGame : handGame,
+      emptyHand
+        ? createHandGame(0)
+        : crowded
+          ? crowdedHandGame
+          : reorder
+            ? reorderHandGame
+            : handGame,
       {
         players: 2,
         seed: 3,
@@ -399,7 +430,7 @@ function HandTable({
       // The provider owns the source once it commits.
       if (created && !created.adopted) created.value.dispose();
     };
-  }, [manualDraw, emptyHand, crowded]);
+  }, [manualDraw, emptyHand, crowded, reorder]);
   return source ? (
     <OwnedSource
       source={source}
@@ -408,6 +439,7 @@ function HandTable({
       drawLifecycle={drawLifecycle}
       tucked={tucked}
       sorting={sorting}
+      reorder={reorder}
     />
   ) : (
     <p>Loading…</p>
@@ -452,4 +484,11 @@ export const SortingHand: StoryObj<typeof meta> = {
 };
 export const SortingTuckedHand: StoryObj<typeof meta> = {
   args: { sorting: true, tucked: true },
+};
+/** Drag a card along the hand to move it; a gap shows where it lands. */
+export const ReorderingHand: StoryObj<typeof meta> = {
+  args: { reorder: true, tucked: true },
+};
+export const ReorderingOpenHand: StoryObj<typeof meta> = {
+  args: { reorder: true },
 };

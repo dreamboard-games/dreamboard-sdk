@@ -278,7 +278,7 @@
       "name": "hand",
       "type": "registry:component",
       "title": "Hand",
-      "description": "A fanned hand that always fits: tap for actions, slide to browse, hold or hover to preview, drag to a drop area. A crowded hand opens every card in a sheet.",
+      "description": "A fanned hand that always fits: tap for actions, slide to browse, hold or hover to preview, drag to a drop area or along the hand to reorder it. A crowded hand opens every card in a sheet.",
       "meta": {
         "binding": "workspace"
       },

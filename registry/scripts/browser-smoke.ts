@@ -16,6 +16,7 @@ import {
 import { proveCardControl } from "./card-control-proof.ts";
 import { proveCrowdedHand, proveHand, proveHandSlide } from "./hand-proof.ts";
 import { proveHandSorting } from "./hand-sorting-proof.ts";
+import { proveHandReorder } from "./hand-reorder-proof.ts";
 import { proveHandPickup } from "./hand-pickup-proof.ts";
 import {
   proveHandChoreography,
@@ -337,6 +338,10 @@ try {
         await proveHandSorting(page, touch, true);
       if (story.id.endsWith("--tucked-draws") && name !== "landscape")
         await proveSteadyTuckedHand(page);
+      if (story.id.endsWith("--reordering-hand") && name !== "landscape")
+        await proveHandReorder(page, touch);
+      if (story.id.endsWith("--reordering-open-hand") && name === "desktop")
+        await proveHandReorder(page, touch);
       if (story.id.endsWith("pending-draw") && name !== "landscape")
         await proveDraw(page, touch, true);
       if (story.id.endsWith("draw-lifecycle") && name !== "landscape")

@@ -55,11 +55,27 @@ const createHandModel = (copies: number) =>
 /**
  * A dealt hand where hearts only play, spades play or discard, clubs only
  * discard and diamonds do nothing: one card per action-menu case. Ending the
- * turn passes it to the other player.
+ * turn passes it to the other player. With `reorder`, any hand card also
+ * moves to a place in the hand.
  */
-export function createHandGame(handSize: number, copies = 1) {
+export function createHandGame(handSize: number, copies = 1, reorder = false) {
   const model = createHandModel(copies);
   const play = model.phase("play");
+  const moves = {
+    reorder: play.interaction({
+      presentation: { label: "Move in hand" },
+      inputs: {
+        card: play.inputs.card({ from: ["hand"] }),
+        to: play.inputs.position({ zones: ["hand"] }),
+      },
+      reduce({ tx, input }) {
+        tx.moveComponentToPosition({
+          componentId: input.params.card,
+          at: input.params.to,
+        });
+      },
+    }),
+  };
   /** A hand card of these suits. */
   const handCard = (accepted: readonly string[]) =>
     play.inputs.card({
@@ -154,6 +170,7 @@ export function createHandGame(handSize: number, copies = 1) {
               ]);
             },
           }),
+          ...(reorder ? moves : {}),
         },
       }),
     },
@@ -170,3 +187,5 @@ export function createHandGame(handSize: number, copies = 1) {
 export const handGame = createHandGame(9);
 /** More cards than a phone's hand can show: the hand opens as a sheet. */
 export const crowdedHandGame = createHandGame(24, 2);
+/** A hand whose cards also move to a place in it. */
+export const reorderHandGame = createHandGame(9, 1, true);

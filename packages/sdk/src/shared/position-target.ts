@@ -36,17 +36,6 @@ export function isPositionTarget(value: unknown): value is PositionTarget {
   );
 }
 
-export function samePositionTarget(
-  left: PositionTarget,
-  right: PositionTarget,
-): boolean {
-  return (
-    left.zoneId === right.zoneId &&
-    left.hostId === right.hostId &&
-    left.index === right.index
-  );
-}
-
 /** Every insertion point in the given zone hosts, in zone order. */
 export function zonePositions(
   zones: readonly {

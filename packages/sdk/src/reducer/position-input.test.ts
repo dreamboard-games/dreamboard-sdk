@@ -121,6 +121,15 @@ test("a position input offers each reachable zone host with its size", async () 
       .getInputs()
       .find((value) => value.key === "to")!;
     expect(input.kind).toBe("position");
+    expect(input.getTargetOptions().map((option) => option.label)).toEqual([
+      "hand (player-1): Before a",
+      "hand (player-1): Before b",
+      "hand (player-1): Before c",
+      "hand (player-1): Before d",
+      "hand (player-1): At the end",
+      "pile (table): Before card 1",
+      "pile (table): At the end",
+    ]);
     // Another player's own hand is out of reach; a hidden shared pile is not.
     expect(input.getDomain()).toEqual({
       type: "zonePosition",

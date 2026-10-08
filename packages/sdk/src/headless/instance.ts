@@ -289,14 +289,23 @@ function createInputTargetLabels(
       );
     });
   }
+  // A point reads by the card it goes before, as players say it.
   if (domain.type === "zonePosition")
-    for (const value of zonePositions(domain.zones))
+    for (const value of zonePositions(domain.zones)) {
+      const zone = snapshot?.frame.zones[value.zoneId]?.[value.hostId];
+      const id = zone?.cardIds[value.index];
+      const name = id === undefined ? undefined : zone?.cardViewsById[id]?.name;
+      const place =
+        id === undefined
+          ? "At the end"
+          : `Before ${name || `card ${value.index + 1}`}`;
       targetLabels.set(
         inputValueKey(value),
         domain.zones.length === 1
-          ? `Position ${value.index + 1}`
-          : `${value.zoneId} (${value.hostId}) position ${value.index + 1}`,
+          ? place
+          : `${value.zoneId} (${value.hostId}): ${place}`,
       );
+    }
   if (domain.type === "tileTarget" || domain.type === "boardTarget") {
     if (domain.type === "tileTarget") {
       const presentations = [

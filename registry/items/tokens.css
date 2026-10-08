@@ -778,7 +778,8 @@
   .db-hand[data-draw-over] {
     background: color-mix(in srgb, var(--table-foreground) 10%, transparent);
   }
-  .db-draw-insertion {
+  .db-draw-insertion,
+  .db-hand-insertion {
     position: absolute;
     top: 0;
     left: 0;
