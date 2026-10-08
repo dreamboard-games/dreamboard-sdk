@@ -12,6 +12,7 @@ export interface HandSheetProps {
   label: string;
   choosing: boolean;
   renderCard(card: Card, state: CardState): ReactNode;
+  renderPreview?(card: Card): ReactNode;
   getCardLabel?(card: Card): string;
 }
 
@@ -28,6 +29,7 @@ export function HandSheet({
   label,
   choosing,
   renderCard,
+  renderPreview,
   getCardLabel,
 }: HandSheetProps) {
   return (
@@ -51,6 +53,7 @@ export function HandSheet({
                   drag={false}
                   choosing={choosing}
                   renderCard={renderCard}
+                  renderPreview={renderPreview}
                   getCardLabel={getCardLabel}
                   onAction={() => onOpenChange(false)}
                 />

@@ -51,6 +51,11 @@ export interface HandProps {
    * hand owns the card's `layoutId`.
    */
   renderCard(card: Card, state: CardState): ReactNode;
+  /**
+   * Draws the face that a hold or Alt/Option inspects, without table markers.
+   * Defaults to the idle card; keep it stable like `renderCard`.
+   */
+  renderPreview?(card: Card): ReactNode;
   getCardLabel?(card: Card): string;
   /**
    * How the fan rests and focuses a card. Spread a `handFanPresets` entry and
@@ -84,6 +89,7 @@ export function Hand({
   label = "Hand",
   className = "",
   renderCard,
+  renderPreview,
   getCardLabel,
   options = handFanPresets.open,
 }: HandProps) {
@@ -407,6 +413,7 @@ export function Hand({
                     crowded={crowded}
                     choosing={choosing}
                     renderCard={renderCard}
+                    renderPreview={renderPreview}
                     getCardLabel={getCardLabel}
                     destination={destination}
                     onMenuChange={onMenuChange}
@@ -446,6 +453,7 @@ export function Hand({
         label={label}
         choosing={choosing}
         renderCard={renderCard}
+        renderPreview={renderPreview}
         getCardLabel={getCardLabel}
       />
     </>
@@ -513,6 +521,7 @@ interface HandCardProps {
   lift: number;
   choosing: boolean;
   renderCard: HandProps["renderCard"];
+  renderPreview: HandProps["renderPreview"];
   getCardLabel: HandProps["getCardLabel"];
   focused: boolean;
   /** The hand opens as a sheet; its cards show without their own gestures. */
@@ -536,6 +545,7 @@ const HandCard = memo(function HandCard({
   lift,
   choosing,
   renderCard,
+  renderPreview,
   getCardLabel,
   focused,
   crowded,
@@ -578,6 +588,7 @@ const HandCard = memo(function HandCard({
         disabled={!!arrival}
         style={{ visibility: arrival ? "hidden" : undefined }}
         renderCard={renderCard}
+        renderPreview={renderPreview}
         getCardLabel={getCardLabel}
         onMenuChange={menuChanged}
       >

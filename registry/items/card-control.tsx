@@ -17,6 +17,11 @@ export interface CardControlProps {
   /** Shows the face without its own gestures, menu or preview, as in a hand too crowded to aim at. */
   inert?: boolean;
   renderCard(card: GameCard, state: CardState): ReactNode;
+  /**
+   * Draws the inspected face. Leave out table markers such as damage or
+   * exhaustion; defaults to the idle card.
+   */
+  renderPreview?(card: GameCard): ReactNode;
   getCardLabel?(card: GameCard): string;
   choosing?: boolean;
   disabled?: boolean;
@@ -41,6 +46,7 @@ export function CardControl({
   drag,
   inert = false,
   renderCard,
+  renderPreview = (card) => renderCard(card, "idle"),
   getCardLabel,
   choosing = false,
   disabled = false,
@@ -168,7 +174,7 @@ export function CardControl({
           anchor={anchor}
           onClose={() => setInspecting(false)}
         >
-          {renderCard(card, "idle")}
+          {renderPreview(card)}
         </CardPreview>
       )}
     </>
