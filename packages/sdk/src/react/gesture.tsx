@@ -70,6 +70,7 @@ export interface CardGestureProps {
   readonly "data-dragging"?: true;
   readonly "data-inspecting"?: "hold" | "hover";
   readonly "data-card-gesture": string;
+  readonly "data-card-control": string;
   readonly "data-gesture-session": string;
 }
 
@@ -159,8 +160,9 @@ export function createGestureSession(game: GestureGame) {
   ) => inputValueKey(left) === inputValueKey(right);
   const areas = new Map<string, () => DropAreaInput>();
   const rows = new Map<string, CardRowLookup>();
-  // A scrub can end on a card other than the pressed one; it drags with its own routes.
-  const routes = new Map<string, false | RuntimeTargetOptions>();
+  // A slide can end on a control other than the pressed one; it drags with
+  // that mounted control's own routes.
+  const controls = new Map<string, () => false | RuntimeTargetOptions>();
   const followers = new Set<(point: Point) => void>();
   let press: {
     readonly recognizer: GestureRecognizer;
@@ -409,14 +411,13 @@ export function createGestureSession(game: GestureGame) {
         next === null
           ? null
           : row!.querySelector(`[data-card-gesture="${CSS.escape(next)}"]`);
+      const routes = controls.get(
+        control?.getAttribute("data-card-control") ?? "",
+      );
       card =
-        next === null || !control
+        next === null || !control || !routes
           ? null
-          : {
-              cardId: next,
-              element: control,
-              options: routes.get(next) ?? false,
-            };
+          : { cardId: next, element: control, options: routes() };
       activate(card?.cardId ?? null);
     }
     const recognizer = createGestureRecognizer(
@@ -527,10 +528,10 @@ export function createGestureSession(game: GestureGame) {
 
   function cardProps(
     cardId: string,
+    control: string,
     options: false | RuntimeTargetOptions,
     flags: { dragging: boolean; inspecting: "hold" | "hover" | null },
   ): CardGestureProps {
-    routes.set(cardId, options);
     return {
       onPointerDown(event) {
         if (event.pointerType === "mouse") {
@@ -562,6 +563,7 @@ export function createGestureSession(game: GestureGame) {
       "data-dragging": flags.dragging || undefined,
       "data-inspecting": flags.inspecting ?? undefined,
       "data-card-gesture": cardId,
+      "data-card-control": control,
       "data-gesture-session": id,
     };
   }
@@ -640,6 +642,13 @@ export function createGestureSession(game: GestureGame) {
         areas.delete(area);
       };
     },
+    /** `read` returns a mounted card control's current drag routes. */
+    registerControl(control: string, read: () => false | RuntimeTargetOptions) {
+      controls.set(control, read);
+      return () => {
+        controls.delete(control);
+      };
+    },
     registerRow(row: string, cardAt: CardRowLookup) {
       rows.set(row, cardAt);
       return () => {
@@ -662,7 +671,7 @@ export function createGestureSession(game: GestureGame) {
       followers.clear();
       targets.clear();
       rows.clear();
-      routes.clear();
+      controls.clear();
       if (!guardingClicks) return;
       removeEventListener("click", swallow, true);
       removeEventListener("pointerdown", newPress, true);

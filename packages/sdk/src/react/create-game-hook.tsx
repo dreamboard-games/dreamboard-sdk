@@ -225,7 +225,16 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
       options: CardGestureOptions<Game>,
     ): CardGesture {
       const session = useGestureSession();
+      const control = `${session.id}${useId()}`;
       const routes = options.drag as false | RuntimeTargetOptions;
+      const latestRoutes = useRef(routes);
+      useLayoutEffect(() => {
+        latestRoutes.current = routes;
+      });
+      useLayoutEffect(
+        () => session.registerControl(control, () => latestRoutes.current),
+        [session, control],
+      );
       const canDrag = useGame(
         (snapshot) =>
           routes !== false &&
@@ -245,7 +254,10 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
           state.activeTarget.value === cardId,
       );
       return {
-        props: session.cardProps(cardId, routes, { dragging, inspecting }),
+        props: session.cardProps(cardId, control, routes, {
+          dragging,
+          inspecting,
+        }),
         canDrag,
         isDragging: dragging,
         isActive,

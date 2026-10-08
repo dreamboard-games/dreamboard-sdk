@@ -1,6 +1,6 @@
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
 import { afterAll, afterEach, beforeAll, expect, test, vi } from "vitest";
-import { act, type ReactNode } from "react";
+import { act, useState, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { createGameHook } from "./create-game-hook.js";
 import { dragFeature } from "../headless/features/drag.js";
@@ -259,6 +259,45 @@ test("a finger moving straight up from a card in a row drags that card", async (
   await down(get("red")!, { pointerType: "touch", x: 10, y: 50 });
   await move({ pointerType: "touch", x: 10, y: 30 });
   expect(get("overlay")!.dataset.card).toBe("red");
+  await act(async () =>
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })),
+  );
+});
+
+test("a pull drags with the routes of the mounted control under the finger", async () => {
+  const source = createTestSource(snapshot());
+  const host = document.createElement("div");
+  document.body.append(host);
+  const root = createRoot(host);
+  roots.push(root);
+  // A copy of blue that cannot drag renders after the row, then unmounts alone.
+  let hideCopy = () => {};
+  function Copy() {
+    const [shown, setShown] = useState(true);
+    hideCopy = () => setShown(false);
+    return shown ? <Card id="blue" draggable={false} /> : null;
+  }
+  await act(async () =>
+    root.render(
+      <GameProvider source={source}>
+        <Row>
+          <Card id="red" draggable={false} />
+          <Card id="blue" draggable />
+        </Row>
+        <Copy />
+        <Overlay />
+      </GameProvider>,
+    ),
+  );
+  await act(async () => hideCopy());
+  hitTesting(() => null);
+  const overlay = () =>
+    document.querySelector<HTMLElement>("[data-testid=overlay]");
+  const red = document.querySelector('[data-card-gesture="red"]')!;
+  await down(red, { pointerType: "touch", x: 10, y: 50 });
+  await move({ pointerType: "touch", x: 30, y: 50 });
+  await move({ pointerType: "touch", x: 31, y: 30 });
+  expect(overlay()!.dataset.card).toBe("blue");
   await act(async () =>
     window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })),
   );
