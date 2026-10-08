@@ -1,5 +1,6 @@
 import { isBoardSpaceTarget } from "../../../shared/board-target.js";
 import { inputValueInDomain } from "../../../shared/input-domain.js";
+import { isPositionTarget } from "../../../shared/position-target.js";
 import type {
   InputCollector,
   InputDomainDescriptor,
@@ -62,6 +63,35 @@ function boardReference(
   return map(domain.targetKind, domain.boardId, value) ?? denied;
 }
 
+function zoneHostReference(
+  zoneId: string,
+  hostId: string,
+  disclosure: SeatDisclosure,
+  decode: boolean,
+): string | null {
+  const zone = disclosure.zones.find(
+    (zone) =>
+      zone.zoneId === zoneId &&
+      (decode ? zone.seatHostId : zone.hostId) === hostId,
+  );
+  return zone ? (decode ? zone.hostId : zone.seatHostId) : null;
+}
+
+function positionReference(
+  value: unknown,
+  disclosure: SeatDisclosure,
+  decode: boolean,
+): unknown {
+  if (!isPositionTarget(value)) return denied;
+  const hostId = zoneHostReference(
+    value.zoneId,
+    value.hostId,
+    disclosure,
+    decode,
+  );
+  return hostId === null ? denied : { ...value, hostId };
+}
+
 function domainMapper(
   domain: InputDomainDescriptor,
   disclosure: SeatDisclosure,
@@ -79,6 +109,8 @@ function domainMapper(
       return (value) => cardReference(value, disclosure, cards, decode);
     case "boardTarget":
       return (value) => boardReference(value, domain, disclosure, decode);
+    case "zonePosition":
+      return (value) => positionReference(value, disclosure, decode);
     default:
       return undefined;
   }
@@ -92,6 +124,8 @@ function collectorMapper(
   decode: boolean,
 ): ReferenceMapper | undefined {
   switch (collector.kind) {
+    case "position":
+      return (value) => positionReference(value, disclosure, decode);
     case "tile":
       return (value) =>
         typeof value === "string"
@@ -159,18 +193,33 @@ function projectInput(
   if (
     domain.type !== "tileTarget" &&
     domain.type !== "cardTarget" &&
-    domain.type !== "boardTarget"
+    domain.type !== "boardTarget" &&
+    domain.type !== "zonePosition"
   )
     return input;
-  const eligibleTargets = domain.eligibleTargets.flatMap((value) => {
-    const mapped = map(value);
-    return mapped === denied ? [] : [mapped];
-  });
   // The domain discriminator and mapper preserve the domain's scalar/object representation.
-  const projectedDomain = {
-    ...domain,
-    eligibleTargets,
-  } as InputDomainDescriptor;
+  const projectedDomain = (
+    domain.type === "zonePosition"
+      ? {
+          ...domain,
+          zones: domain.zones.flatMap((zone) => {
+            const hostId = zoneHostReference(
+              zone.zoneId,
+              zone.hostId,
+              disclosure,
+              false,
+            );
+            return hostId === null ? [] : [{ ...zone, hostId }];
+          }),
+        }
+      : {
+          ...domain,
+          eligibleTargets: domain.eligibleTargets.flatMap((value) => {
+            const mapped = map(value);
+            return mapped === denied ? [] : [mapped];
+          }),
+        }
+  ) as InputDomainDescriptor;
   const { defaultValue, ...rest } = input;
   const mappedDefault =
     defaultValue === undefined
