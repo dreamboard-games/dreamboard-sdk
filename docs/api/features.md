@@ -11,6 +11,8 @@
 <!-- api: root BoardCollection -->
 <!-- api: root BoardLayoutOptions -->
 <!-- api: root HandOptions -->
+<!-- api: root HandSort -->
+<!-- api: root HandController -->
 <!-- api: root DropTarget -->
 <!-- api: root BoardDropTarget -->
 <!-- api: root InteractionDropTarget -->
@@ -89,14 +91,59 @@ Generic boards reject spatial layout requests; square and hex layouts reuse the 
 
 ## Hand, drag, origins and viewport
 
-| Object                   | Data                      | Getters                                                          | Handlers                                                     |
-| ------------------------ | ------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------ |
-| Zone with handFeature    | Existing zone data        | `getSortedCardIds`, `getSelectedCardIds`, `getSelectableCardIds` | Canonical card selection                                     |
-| `game.drag`              | `active` (cardId, target) | `getCanDrag(cardId, options?)`, `getDropTargets()`               | `begin(cardId, options?)`, `setDropTarget`, `drop`, `cancel` |
-| `game.viewport`          | `transform` (x, y, scale) | `getTransform`, `getProps`                                       | `setTransform`, `reset`; pointer and wheel props             |
-| Card with originsFeature | Existing card data        | `getOrigin()`                                                    | —                                                            |
+| Object                   | Data                        | Getters                                                             | Handlers                                                     |
+| ------------------------ | --------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Zone with handFeature    | Existing zone data          | `getSelectedCardIds`, `getSelectableCardIds`                        | Canonical card selection                                     |
+| `game.hand`              | Captured local sort choices | `getSortModes(zone)`, `getSortMode(zone)`, `getSortedCardIds(zone)` | `setSortMode(zone, mode)`                                    |
+| `game.drag`              | `active` (cardId, target)   | `getCanDrag(cardId, options?)`, `getDropTargets()`                  | `begin(cardId, options?)`, `setDropTarget`, `drop`, `cancel` |
+| `game.viewport`          | `transform` (x, y, scale)   | `getTransform`, `getProps`                                          | `setTransform`, `reset`; pointer and wheel props             |
+| Card with originsFeature | Existing card data          | `getOrigin()`                                                       | —                                                            |
 
-`handFeature(core, { sort? })` sorts projected card objects only.
+`handFeature(core, context, { zones? })` owns local sort selection per zone and
+host. Declare each zone's named `sorts` with a `compare` function and optional
+`defaultSort`:
+
+```ts
+features: (core, context) => ({
+  hand: handFeature(core, context, {
+    zones: {
+      hand: {
+        defaultSort: "rank",
+        sorts: {
+          rank: {
+            compare: (left, right) => {
+              if (left.hidden) return right.hidden ? 0 : 1;
+              if (right.hidden) return -1;
+              return (
+                Number(left.view.properties.rank) -
+                Number(right.view.properties.rank)
+              );
+            },
+          },
+        },
+      },
+    },
+  }),
+});
+```
+
+Pass a projected zone to `game.hand.getSortModes(zone)`, `getSortMode(zone)`,
+`setSortMode(zone, mode)`, and `getSortedCardIds(zone)`. Zone identities and mode
+IDs are inferred from the game and configuration; defaults must name a declared
+mode. Invalid runtime defaults throw during feature construction; unknown runtime
+mode IDs passed to `setSortMode` are ignored. `getSortModes` returns IDs in
+declaration order. Labels, controls, and cycling belong to authored UI.
+
+Comparators receive only projected `Card` objects. Narrow `card.hidden` before
+reading visible fields; hidden cards expose no private data. Equal comparisons
+retain source order. Zones without configured sorts, or without a selected or
+default mode, retain source order and report a `null` mode. Changing the mode
+invalidates subscribers without changing card selection, drafts, or submission.
+New frames preserve choices while sorting their projected inventory. Source or
+seat changes reset choices; disposed and earlier-lifetime setters do nothing.
+Retained `game.hand` branches capture their modes, and sorting a retained zone
+uses that zone's immutable projected cards.
+
 `dragFeature(core, context)` owns semantic drag state and atomically routes card
 and destination into canonical drafts. Beginning or hovering never selects a card.
 A drop without a valid destination and cancellation leave drafts untouched.

@@ -39,7 +39,7 @@ function features(
   context: FeatureContext<Definition>,
 ) {
   return {
-    hand: handFeature(core),
+    hand: handFeature(core, context),
     drag: dragFeature(core, context),
     origins: originsFeature(core),
   };

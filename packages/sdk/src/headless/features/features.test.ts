@@ -3,6 +3,8 @@ import { parseBoardElementId } from "../../shared/domain/board-element.js";
 import { perPlayerInstanceId } from "../../shared/domain/per-player-instance.js";
 import { RuntimeJsonSchema } from "../../shared/runtime-json.js";
 import { describe, expect, it, vi } from "vitest";
+import { createStore } from "@tanstack/store";
+import type { SourceState } from "../sources/types.js";
 import { createGameInstance, AmbiguousTargetError } from "../instance.js";
 import type { InteractionDescriptor } from "../model.js";
 import {
@@ -22,7 +24,7 @@ import {
 import { SeatBoardTopologySchema } from "../../shared/seat-topology-schema.js";
 import { deriveBoardTopology } from "../../shared/board-topology.js";
 import { createHexTopology } from "../../shared/hex-board.js";
-import { handFeature } from "./hand.js";
+import { handFeature, type HandController, type HandOptions } from "./hand.js";
 import { boardFeature } from "./board.js";
 import { dragFeature } from "./drag.js";
 import { panZoomFeature } from "./pan-zoom.js";
@@ -254,10 +256,25 @@ function setup(board?: BoardTopology) {
   const game = createGameInstance()({
     source: input,
     features: (core, context) => ({
-      hand: handFeature(core, {
-        sort: (a, b) =>
-          Number(a.view?.properties.rank ?? Infinity) -
-          Number(b.view?.properties.rank ?? Infinity),
+      hand: handFeature(core, context, {
+        zones: {
+          hand: {
+            defaultSort: "rank",
+            sorts: {
+              rank: {
+                compare: (a, b) =>
+                  Number(a.view?.properties.rank ?? Infinity) -
+                  Number(b.view?.properties.rank ?? Infinity),
+              },
+              reverse: {
+                compare: (a, b) =>
+                  Number(b.view?.properties.rank ?? -Infinity) -
+                  Number(a.view?.properties.rank ?? -Infinity),
+              },
+              tied: { compare: () => 0 },
+            },
+          },
+        },
       }),
       board: boardFeature(core, context),
       drag: dragFeature(core, context),
@@ -297,7 +314,7 @@ describe("headless features", () => {
   it("sorts projected hands without mutating zone order or exposing hidden data", () => {
     const { game } = setup();
     const hand = game.zones.get("hand", "alice");
-    expect(hand.getSortedCardIds()).toEqual(["blue", "red", "hidden"]);
+    expect(game.hand.getSortedCardIds(hand)).toEqual(["blue", "red", "hidden"]);
     expect(hand.getCards().map((card) => card.id)).toEqual([
       "red",
       "blue",
@@ -1000,4 +1017,255 @@ it("rejects overflowing finite viewport transforms while preserving valid tile t
     ),
   ).toBe(CENTER);
   game.dispose();
+});
+
+describe("hand sort modes", () => {
+  it("rejects unknown modes admitted by widened public controller types without notifying", () => {
+    const { game } = setup();
+    const zone = game.zones.get("hand", "alice");
+    const controller: HandController<unknown> = game.hand;
+    const changed = vi.fn();
+    const unsubscribe = game.subscribe(changed);
+    controller.setSortMode(zone, "missing");
+    expect(game.hand.getSortMode(zone)).toBe("rank");
+    expect(changed).not.toHaveBeenCalled();
+    unsubscribe();
+    game.dispose();
+  });
+
+  it("rejects unknown defaults admitted by widened public option types", () => {
+    const options: HandOptions<unknown> = {
+      zones: {
+        hand: {
+          defaultSort: "missing",
+          sorts: { rank: { compare: () => 0 } },
+        },
+      },
+    };
+    const input = source();
+    expect(() =>
+      createGameInstance()({
+        source: input,
+        features: (core, context) => ({
+          hand: handFeature(core, context, options),
+        }),
+      }),
+    ).toThrow('Unknown default hand sort "missing" for zone "hand".');
+    input.dispose();
+  });
+
+  it("captures immutable modes, invalidates subscribers, and keeps selection and submissions untouched", () => {
+    const { game, input } = setup();
+    game.cards.get("red").select();
+    const before = game.getSnapshot();
+    const zone = before.zones.get("hand", "alice");
+    const changed = vi.fn(() => game.hand.getSortMode(zone));
+    const unsubscribe = game.subscribe(changed);
+    game.hand.setSortMode(zone, "reverse");
+    expect(changed).toHaveBeenCalledTimes(1);
+    expect(changed).toHaveReturnedWith("reverse");
+    expect(before.hand.getSortMode(zone)).toBe("rank");
+    expect(before.hand.getSortedCardIds(zone)).toEqual([
+      "blue",
+      "red",
+      "hidden",
+    ]);
+    expect(game.hand.getSortedCardIds(zone)).toEqual(["red", "blue", "hidden"]);
+    expect(game.getSnapshot().state).toBe(before.state);
+    expect(game.zones.get("hand", "alice").getSelectedCardIds()).toEqual([
+      "red",
+    ]);
+    expect(input.submissions).toEqual([]);
+    expect(Object.isFrozen(game.hand)).toBe(true);
+    expect(Object.isFrozen(game.hand.getSortModes(zone))).toBe(true);
+    expect(Object.isFrozen(game.hand.getSortedCardIds(zone))).toBe(true);
+    game.hand.setSortMode(zone, "reverse");
+    expect(changed).toHaveBeenCalledTimes(1);
+    unsubscribe();
+    game.dispose();
+  });
+
+  it("isolates hosts and preserves source order for ties and unconfigured zones", () => {
+    const { game, input } = setup();
+    const initial = input.store.get().snapshot!;
+    emitFrame(input, {
+      ...initial.frame,
+      zones: {
+        hand: {
+          ...initial.frame.zones.hand,
+          bob: {
+            tiles: [],
+            cardIds: [],
+            cardViewsById: {},
+            cardBacksById: {},
+            playableByCardId: {},
+          },
+        },
+        discard: {
+          table: {
+            tiles: [],
+            cardIds: ["last", "first"],
+            cardViewsById: {
+              last: { id: "last", cardType: "ranked", properties: { rank: 2 } },
+              first: {
+                id: "first",
+                cardType: "ranked",
+                properties: { rank: 1 },
+              },
+            },
+            cardBacksById: {},
+            playableByCardId: {},
+          },
+        },
+      },
+    });
+    const alice = game.zones.get("hand", "alice");
+    const bob = game.zones.get("hand", "bob");
+    game.hand.setSortMode(alice, "tied");
+    expect(game.hand.getSortedCardIds(alice)).toEqual([
+      "red",
+      "blue",
+      "hidden",
+    ]);
+    expect(game.hand.getSortMode(bob)).toBe("rank");
+    expect(game.hand.getSortedCardIds(bob)).toEqual([]);
+    const discard = game.zones.get("discard", "table");
+    expect(game.hand.getSortModes(discard)).toEqual([]);
+    expect(game.hand.getSortMode(discard)).toBeNull();
+    expect(game.hand.getSortedCardIds(discard)).toEqual(["last", "first"]);
+    game.dispose();
+  });
+
+  it("derives new projected order after frames and never reveals hidden fields to comparators", () => {
+    const input = source();
+    const compare = vi.fn(
+      (
+        a: import("../model.js").Card<unknown, Record<never, never>>,
+        b: import("../model.js").Card<unknown, Record<never, never>>,
+      ) => {
+        for (const card of [a, b]) {
+          if (card.hidden) expect(card.view).toBeNull();
+          else expect(card.view.properties.rank).toBeTypeOf("number");
+        }
+        return (
+          Number(a.view?.properties.rank ?? Infinity) -
+          Number(b.view?.properties.rank ?? Infinity)
+        );
+      },
+    );
+    const game = createGameInstance()({
+      source: input,
+      features: (core, context) => ({
+        hand: handFeature(core, context, {
+          zones: { hand: { sorts: { rank: { compare } } } },
+        }),
+      }),
+    });
+    const before = game.getSnapshot();
+    const zone = before.zones.get("hand", "alice");
+    expect(game.hand.getSortMode(zone)).toBeNull();
+    expect(game.hand.getSortedCardIds(zone)).toEqual(["red", "blue", "hidden"]);
+    expect(compare).not.toHaveBeenCalled();
+    game.hand.setSortMode(zone, "rank");
+    const frame = input.store.get().snapshot!.frame;
+    const hand = frame.zones.hand.alice;
+    emitFrame(input, {
+      ...frame,
+      zones: {
+        hand: {
+          alice: {
+            ...hand,
+            cardIds: ["red", "blue", "green", "hidden"],
+            cardViewsById: {
+              ...hand.cardViewsById,
+              green: {
+                id: "green",
+                cardType: "ranked",
+                properties: { rank: 0 },
+              },
+            },
+          },
+        },
+      },
+    });
+    expect(game.hand.getSortMode(game.zones.get("hand", "alice"))).toBe("rank");
+    expect(game.hand.getSortedCardIds(game.zones.get("hand", "alice"))).toEqual(
+      ["green", "blue", "red", "hidden"],
+    );
+    expect(before.hand.getSortedCardIds(zone)).toEqual([
+      "red",
+      "blue",
+      "hidden",
+    ]);
+    expect(compare).toHaveBeenCalled();
+    game.dispose();
+  });
+
+  it("resets on seat and source lifetimes and rejects old setters even after returning to a seat", () => {
+    // Test-owned composition allows a seat switch on one source, unlike hosted transport.
+    const initial = source().store.get().snapshot!;
+    const store = createStore<SourceState>({
+      connection: "ready",
+      snapshot: initial,
+      request: null,
+      failure: null,
+    });
+    const input = { store, dispose: vi.fn() };
+    const game = createGameInstance()({
+      source: input,
+      features: (core, context) => ({
+        hand: handFeature(core, context, {
+          zones: {
+            hand: {
+              defaultSort: "rank",
+              sorts: {
+                rank: { compare: () => 0 },
+                reverse: { compare: () => 0 },
+                tied: { compare: () => 0 },
+              },
+            },
+          },
+        }),
+      }),
+    });
+    const old = game.hand;
+    const zone = game.zones.get("hand", "alice");
+    old.setSortMode(zone, "reverse");
+    const players = [
+      ...initial.players,
+      { playerId: "bob", displayName: "Bob" },
+    ];
+    store.setState(() => ({
+      connection: "ready",
+      snapshot: { ...initial, players, me: "bob", version: 2 },
+      request: null,
+      failure: null,
+    }));
+    expect(game.hand.getSortMode(zone)).toBe("rank");
+    store.setState(() => ({
+      connection: "ready",
+      snapshot: { ...initial, players, version: 3 },
+      request: null,
+      failure: null,
+    }));
+    old.setSortMode(zone, "tied");
+    expect(game.hand.getSortMode(zone)).toBe("rank");
+    const oldSource = game.hand;
+    game.hand.setSortMode(zone, "reverse");
+    const replacement = {
+      store: createStore<SourceState>(store.get()),
+      dispose: vi.fn(),
+    };
+    game.setOptions({ source: replacement });
+    expect(game.hand.getSortMode(zone)).toBe("rank");
+    oldSource.setSortMode(zone, "tied");
+    expect(game.hand.getSortMode(zone)).toBe("rank");
+    game.setOptions({ source: input });
+    oldSource.setSortMode(zone, "reverse");
+    expect(game.hand.getSortMode(zone)).toBe("rank");
+    const latest = game.hand;
+    game.dispose();
+    latest.setSortMode(zone, "reverse");
+    expect(game.hand).toBe(latest);
+  });
 });

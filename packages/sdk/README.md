@@ -366,6 +366,26 @@ and
 `originsFeature` adds `card.getOrigin()` so a newly shown card can animate from
 the zone or player it came from.
 
+## Local hand sorting
+
+Install `handFeature(core, context, { zones })` with named sorts for each zone:
+`{ hand: { defaultSort: "rank", sorts: { rank: { compare } } } }`.
+Comparators receive the seat's projected `Card` objects; narrow `card.hidden`
+before reading visible card data. Equal comparisons retain source order.
+
+`game.hand.getSortModes(zone)` returns typed mode IDs in declaration order.
+Read `getSortMode(zone)` and `getSortedCardIds(zone)`, then call
+`setSortMode(zone, mode)` from your UI. The zone carries its canonical host;
+each host's choice is independent. Labels, buttons and cycling are authored UI.
+Without a selected or default mode, the order comes directly from the source.
+The feature retains the zone's selected/selectable card ID helpers.
+
+Sort changes notify subscribers and preserve drafts and card selection without
+submitting. Choices survive frames and reset on source or seat changes. Captured
+`game.hand` branches retain their modes, and sorted IDs are derived from the
+projected zone passed to that branch. Old lifetime setters and disposed setters
+do nothing. See [Optional features](../../docs/api/features.md).
+
 ## Opt-in game shortcuts
 
 Install `shortcutsFeature` in the same `createGameHook<Definition>()` binding as

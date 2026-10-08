@@ -29,7 +29,7 @@ const game = createGameInstance<Game>()({
   source,
   features: (core, context) => ({
     board: boardFeature(core, context),
-    hand: handFeature(core),
+    hand: handFeature(core, context),
     drag: dragFeature(core, context),
     viewport: panZoomFeature(core, context),
     origins: originsFeature(core),

@@ -30,7 +30,7 @@ function features(
   return {
     board: boardFeature(core, context),
     drag: dragFeature(core, context),
-    hand: handFeature(core),
+    hand: handFeature(core, context),
     origins: originsFeature(core),
     shortcuts: shortcutsFeature(core, context),
     panZoom: panZoomFeature(core, context),
