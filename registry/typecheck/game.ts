@@ -30,7 +30,17 @@ function features(
   return {
     board: boardFeature(core, context),
     drag: dragFeature(core, context),
-    hand: handFeature(core, context),
+    hand: handFeature(core, context, {
+      zones: {
+        hand: {
+          defaultSort: "dealt",
+          sorts: {
+            dealt: { compare: (left, right) => left.index - right.index },
+            reverse: { compare: (left, right) => right.index - left.index },
+          },
+        },
+      },
+    }),
     origins: originsFeature(core),
     shortcuts: shortcutsFeature(core, context),
     panZoom: panZoomFeature(core, context),

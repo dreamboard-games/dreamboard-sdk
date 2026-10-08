@@ -45,7 +45,6 @@ export interface HandProps {
   hostId: Card["hostId"];
   label?: string;
   className?: string;
-  sort?(left: Card, right: Card): number;
   /**
    * Draws a card in the state the hand gives it. Keep it stable, at module
    * scope or in `useCallback`, so a drag renders only the dragged card. The
@@ -84,17 +83,15 @@ export function Hand({
   hostId,
   label = "Hand",
   className = "",
-  sort,
   renderCard,
   getCardLabel,
   options = handFanPresets.open,
 }: HandProps) {
   const ids = useGame(
-    (game) =>
-      game.zones
-        .find(zoneId, hostId)
-        ?.getCards({ sort })
-        .map((card) => card.id) ?? EMPTY,
+    (game) => {
+      const zone = game.zones.find(zoneId, hostId);
+      return zone ? game.hand.getSortedCardIds(zone) : EMPTY;
+    },
     { compare: sameIds },
   );
   // Unplayable cards dim only while another card here is playable.
@@ -241,7 +238,10 @@ export function Hand({
     Math.max(tucked ? 0 : size.cardHeight * 1.45, fan.height, nextFan.height) +
     lift -
     tucked;
-  function placement(index: number, layout = fan): CardPlacement {
+  function placement(
+    index: number,
+    layout: Pick<typeof fan, "cards" | "width"> = fan,
+  ): CardPlacement {
     const box = clip!.getBoundingClientRect();
     const style = getComputedStyle(clip!);
     const card = layout.cards[index];
@@ -265,9 +265,8 @@ export function Hand({
     );
   });
   // A stable getter keeps memoized cards from re-rendering on every scroll;
-  // an arrival reads it once, in the render that mounts the new card.
+  // an arrival can retarget to its current slot when the hand order changes.
   const latestPlacement = useRef(placement);
-  latestPlacement.current = placement;
   const destination = useCallback(
     (index: number) => latestPlacement.current(index),
     [],
@@ -312,6 +311,7 @@ export function Hand({
     room: size.room,
     options,
   });
+  latestPlacement.current = (index) => placement(index, focus);
   const places = focus.cards.map((card) => ({
     ...card,
     x: card.x + inset,
@@ -458,7 +458,6 @@ function entryFrom(
 ): {
   box: CardPlacement | null;
   hidden: boolean;
-  destination?: CardPlacement;
   landed?: Promise<unknown>;
 } | null {
   const origin = card?.getOrigin();
@@ -476,10 +475,10 @@ function entryFrom(
           zone,
         )
       : null;
+  // The pile owns the first flight; this origin continues from its release slot.
   if (released)
     return {
-      box: released.from,
-      destination: released.to,
+      box: released.to,
       landed: released.landed,
       hidden: origin.hidden,
     };
@@ -641,7 +640,7 @@ const HandCard = memo(function HandCard({
                   landed={arrival.landed}
                   hidden={arrival.hidden}
                   target={anchor}
-                  destination={arrival.destination ?? destination(index)}
+                  destination={destination(index)}
                   rotate={rotate}
                   back={backImageOf(card)}
                   onComplete={finishArrival}

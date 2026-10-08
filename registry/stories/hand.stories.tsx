@@ -179,11 +179,13 @@ function Table({
   appearance,
   drawLifecycle = false,
   tucked = false,
+  sorting = false,
 }: {
   onSwitchSeat(): void;
   appearance?: "text" | "wide";
   drawLifecycle?: boolean;
   tucked?: boolean;
+  sorting?: boolean;
 }) {
   const [showPile, setShowPile] = useState(true);
   const hostId = useGame((game) => game.me?.id);
@@ -241,6 +243,7 @@ function Table({
       {/* A tucked hand sits on the bottom edge, which hides part of each card. */}
       <div className="grid gap-2" style={tucked ? tuckedCards : undefined}>
         <Seats mine />
+        {sorting && <HandOrder hostId={hostId} />}
         <Hand
           zoneId="hand"
           hostId={hostId}
@@ -261,18 +264,43 @@ function Table({
   );
 }
 
+/** Authored story controls demonstrate a game selecting its own order. */
+function HandOrder({ hostId }: { hostId: GameCard["hostId"] }) {
+  const game = useGame();
+  const hand = game.zones.get("hand", hostId);
+  return (
+    <div className="flex gap-2">
+      <Button onClick={() => game.interactions.get("play.draw").submit()}>
+        Draw card
+      </Button>
+      {game.hand.getSortModes(hand).map((mode) => (
+        <Button
+          key={mode}
+          variant="outline"
+          aria-pressed={game.hand.getSortMode(hand) === mode}
+          onClick={() => game.hand.setSortMode(hand, mode)}
+        >
+          {mode === "dealt" ? "Dealt order" : "Reverse order"}
+        </Button>
+      ))}
+    </div>
+  );
+}
+
 function OwnedSource({
   source,
   manualDraw,
   appearance,
   drawLifecycle,
   tucked,
+  sorting,
 }: {
   appearance?: "text" | "wide";
   source: CreatedHandSource;
   manualDraw: boolean;
   drawLifecycle: boolean;
   tucked: boolean;
+  sorting: boolean;
 }) {
   useLayoutEffect(() => {
     source.adopted = true;
@@ -290,6 +318,7 @@ function OwnedSource({
         appearance={appearance}
         drawLifecycle={drawLifecycle}
         tucked={tucked}
+        sorting={sorting}
         onSwitchSeat={() => {
           const next = seat === "player-1" ? "player-2" : "player-1";
           source.value.switchSeat(next);
@@ -306,6 +335,7 @@ function HandTable({
   appearance,
   drawLifecycle = false,
   tucked = false,
+  sorting = false,
 }: {
   appearance?: "text" | "wide";
   manualDraw?: boolean;
@@ -313,6 +343,7 @@ function HandTable({
   crowded?: boolean;
   drawLifecycle?: boolean;
   tucked?: boolean;
+  sorting?: boolean;
 }) {
   const [source, setSource] = useState<CreatedHandSource | null>(null);
   useEffect(() => {
@@ -376,6 +407,7 @@ function HandTable({
       appearance={appearance}
       drawLifecycle={drawLifecycle}
       tucked={tucked}
+      sorting={sorting}
     />
   ) : (
     <p>Loading…</p>
@@ -409,4 +441,11 @@ export const TuckedPlayingCards: StoryObj<typeof meta> = {
 };
 export const CrowdedHand: StoryObj<typeof meta> = {
   args: { crowded: true, tucked: true },
+};
+
+export const SortingHand: StoryObj<typeof meta> = {
+  args: { sorting: true },
+};
+export const SortingTuckedHand: StoryObj<typeof meta> = {
+  args: { sorting: true, tucked: true },
 };

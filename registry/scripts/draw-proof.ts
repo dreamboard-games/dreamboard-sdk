@@ -338,7 +338,9 @@ export async function proveDraw(
     expect(
       Math.hypot(menuStart.x - menuOrigin.x, menuStart.y - menuOrigin.y),
     ).toBeLessThan(2);
-  await expect(arrival).toHaveAttribute("data-card-arrival", "flip");
+  await expect
+    .poll(() => arrival.getAttribute("data-card-arrival"), { intervals: [16] })
+    .toBe("flip");
   await expect(arrival).toHaveCount(0);
   await expect(overlay).toHaveCount(0);
   await expect(cards).toHaveCount(initialCount + 1);

@@ -21,6 +21,10 @@ import type { CardGestureOptions } from "@dreamboard-games/sdk/react";
 import { createGameHook } from "@dreamboard-games/sdk/react";
 import type game from "../app/game";
 import { HandRow } from "./components/hand-row";
+import {
+  comparePlayingCards,
+  comparePlayingCardRanks,
+} from "./components/cards";
 
 export type Game = typeof game;
 type Definition = typeof game;
@@ -29,7 +33,23 @@ function features(
   context: FeatureContext<Definition>,
 ) {
   return {
-    hand: handFeature(core, context),
+    hand: handFeature(core, context, {
+      zones: {
+        hand: {
+          defaultSort: "suit",
+          sorts: {
+            suit: {
+              compare: (left, right) =>
+                comparePlayingCards(left.view, right.view),
+            },
+            rank: {
+              compare: (left, right) =>
+                comparePlayingCardRanks(left.view, right.view),
+            },
+          },
+        },
+      },
+    }),
     drag: dragFeature(core, context),
     origins: originsFeature(core),
     shortcuts: shortcutsFeature(core, context),

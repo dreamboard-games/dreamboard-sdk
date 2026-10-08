@@ -15,3 +15,11 @@ Named checkpoints, seat switching and JSON save/restore use canonical sources.
 Desktop/touch browser tests exercise real cards/board targets, authoritative
 frames, keyboard access and selected-seat privacy. No fixture tape or Workbench
 is part of this workflow.
+
+Hearts authors two local hand orders: Suit groups clubs, diamonds, spades and
+hearts with ranks 2 through Ace; Rank orders by rank with suit breaking ties.
+Suit is the default. Native radio controls work by touch and keyboard, and S
+changes order when a hand card or sort option has keyboard focus. Sorting preserves selected
+pass cards and changes no authoritative game state, including while waiting for
+another player. The SDK supplies the named-mode controller; the game owns this
+control and toggle policy.

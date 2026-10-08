@@ -1,12 +1,14 @@
+import { handFanTiming } from "@dreamboard-games/sdk";
 import { motion, useReducedMotion } from "motion/react";
 import {
   useLayoutEffect,
   useState,
+  useRef,
   type ReactNode,
   type CSSProperties,
 } from "react";
 import { createPortal } from "react-dom";
-import { CardBack, cardSettle } from "./card";
+import { CardBack } from "./card";
 import type { CardPlacement } from "./card-motion";
 
 /** A confirmed arrival flies outside the scrolling hand, then reveals its face. */
@@ -37,8 +39,24 @@ export function CardArrival({
   const [phase, setPhase] = useState<"waiting" | "flight" | "flip">(
     landed ? "waiting" : origin ? "flight" : "flip",
   );
-  const [box] = useState(destination);
-  const from = landed ? box : (origin ?? box);
+  const box = destination;
+  const [from] = useState(origin ?? box);
+  // Sorting can overlap travel and the face turn; reveal only after both finish.
+  const moving = useRef(!!origin);
+  const flipped = useRef(!hidden);
+  const latest = useRef({ ...box, rotate });
+  useLayoutEffect(() => {
+    const previous = latest.current;
+    if (
+      previous.x !== box.x ||
+      previous.y !== box.y ||
+      previous.width !== box.width ||
+      previous.height !== box.height ||
+      previous.rotate !== rotate
+    )
+      moving.current = true;
+    latest.current = { ...box, rotate };
+  }, [box.x, box.y, box.width, box.height, rotate]);
   const width = target.offsetWidth;
   const height = target.offsetHeight;
   useLayoutEffect(() => {
@@ -49,13 +67,26 @@ export function CardArrival({
     let cancelled = false;
     void landed.then(() => {
       if (cancelled) return;
-      if (hidden) setPhase("flip");
-      else onComplete();
+      const target = latest.current;
+      if (
+        from.x !== target.x ||
+        from.y !== target.y ||
+        from.width !== target.width ||
+        from.height !== target.height ||
+        from.rotate !== target.rotate
+      ) {
+        moving.current = true;
+        setPhase("flight");
+      } else {
+        moving.current = false;
+        if (hidden) setPhase("flip");
+        else onComplete();
+      }
     });
     return () => {
       cancelled = true;
     };
-  }, [landed, hidden, onComplete]);
+  }, [landed, hidden, from, onComplete]);
   if (reduced || phase === "waiting") return null;
   return createPortal(
     <motion.div
@@ -75,10 +106,11 @@ export function CardArrival({
         scale: 1,
         rotate,
       }}
-      transition={cardSettle}
+      transition={handFanTiming.settle}
       onAnimationComplete={() => {
-        if (hidden) setPhase("flip");
-        else onComplete();
+        moving.current = false;
+        if (flipped.current) onComplete();
+        else setPhase("flip");
       }}
     >
       <motion.div
@@ -87,7 +119,10 @@ export function CardArrival({
         animate={{ rotateY: phase === "flip" ? 0 : hidden ? 180 : 0 }}
         transition={{ duration: 0.2 }}
         onAnimationComplete={() => {
-          if (phase === "flip") onComplete();
+          if (phase === "flip") {
+            flipped.current = true;
+            if (!moving.current) onComplete();
+          }
         }}
       >
         <div className="db-card-flip-face">{children}</div>

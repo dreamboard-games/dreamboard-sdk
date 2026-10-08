@@ -1,14 +1,18 @@
-import { useGame } from "../game";
+import { useId } from "react";
+import {
+  useGame,
+  useDragOverlay,
+  useGameShortcuts,
+  useShortcutTarget,
+  type GamePlayer,
+} from "../game";
 import { HandDrawer } from "./dreamboard/hand-drawer";
 import { PlayingCard } from "./dreamboard/playing-card";
 import { CardBack, type CardState } from "./dreamboard/card";
 import { Actions } from "./dreamboard/actions";
-import { comparePlayingCards } from "./cards";
 
 import type { GameCard as HandCard } from "../game";
 // Module scope keeps the fanned cards memoized through a drag.
-const sortCards = (left: HandCard, right: HandCard) =>
-  comparePlayingCards(left.view ?? {}, right.view ?? {});
 const cardLabel = (card: HandCard) =>
   card.hidden ? "Face-down card" : (card.view.name ?? card.id);
 function renderCard(card: HandCard, state: CardState) {
@@ -32,12 +36,12 @@ export function HandRow({ recipientName }: { recipientName: string }) {
   const selected = game.zones.find("hand", me.id)?.getSelectedCardIds() ?? [];
   return (
     <section className="grid gap-3" aria-label="Your cards">
+      <HandOrder hostId={me.id} />
       <HandDrawer
         zoneId="hand"
         hostId={me.id}
         label={`Your hand · ${game.view?.hand.length ?? 0} cards`}
         className="hearts-hand"
-        sort={sortCards}
         getCardLabel={cardLabel}
         renderCard={renderCard}
       />
@@ -71,5 +75,52 @@ export function HandRow({ recipientName }: { recipientName: string }) {
         </>
       )}
     </section>
+  );
+}
+
+/** Hand order is a local presentation preference, including while waiting. */
+function HandOrder({ hostId }: { hostId: GamePlayer["id"] }) {
+  const game = useGame();
+  const hand = game.zones.get("hand", hostId);
+  const mode = game.hand.getSortMode(hand);
+  const dragging = useDragOverlay() !== null;
+  const name = useId();
+  const shortcut = useShortcutTarget({ kind: "zone", zoneId: "hand", hostId });
+  useGameShortcuts({
+    bindings: [
+      {
+        kind: "local",
+        keys: ["s"],
+        label: "Change hand order",
+        target: "zone",
+        zoneId: "hand",
+        getIsAvailable: ({ target }) => target.hostId === hostId && !dragging,
+        run: () =>
+          game.hand.setSortMode(hand, mode === "suit" ? "rank" : "suit"),
+      },
+    ],
+  });
+  return (
+    <fieldset disabled={dragging} className="hearts-hand-order">
+      <legend>Sort cards</legend>
+      <div className="hearts-hand-order-options">
+        {game.hand.getSortModes(hand).map((id) => (
+          <label key={id}>
+            <input
+              {...shortcut.props}
+              type="radio"
+              name={name}
+              value={id}
+              checked={mode === id}
+              onChange={() => game.hand.setSortMode(hand, id)}
+            />
+            <span>{id === "suit" ? "Suit" : "Rank"}</span>
+          </label>
+        ))}
+      </div>
+      <p className="text-sm text-slate-600">
+        Press S with a card or sort option focused to change order.
+      </p>
+    </fieldset>
   );
 }

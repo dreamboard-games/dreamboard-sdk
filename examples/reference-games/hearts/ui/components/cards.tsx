@@ -1,17 +1,16 @@
 import type { ViewOf } from "@dreamboard-games/sdk";
 import type game from "../../app/game";
 
-type Suit = "clubs" | "diamonds" | "spades" | "hearts";
 export type PlayingCardView = ViewOf<typeof game>["hand"][number];
 
-const SUIT_ORDER: Record<Suit, number> = {
+const SUIT_ORDER: Record<PlayingCardView["properties"]["suit"], number> = {
   clubs: 0,
   diamonds: 1,
   spades: 2,
   hearts: 3,
 };
 
-const RANK_ORDER: Record<string, number> = {
+const RANK_ORDER: Record<PlayingCardView["properties"]["rank"], number> = {
   "2": 2,
   "3": 3,
   "4": 4,
@@ -27,51 +26,20 @@ const RANK_ORDER: Record<string, number> = {
   A: 14,
 };
 
-function parseSuit(suit: string | undefined): Suit | undefined {
-  return suit === "clubs" ||
-    suit === "diamonds" ||
-    suit === "spades" ||
-    suit === "hearts"
-    ? suit
-    : undefined;
+type CardFace = Pick<PlayingCardView, "properties"> | null;
+
+/** Unknown faces remain at the end without inspecting hidden card data. */
+function compareFaces(a: CardFace, b: CardFace, rankFirst: boolean) {
+  if (!a || !b) return a ? -1 : b ? 1 : 0;
+  const suit = SUIT_ORDER[a.properties.suit] - SUIT_ORDER[b.properties.suit];
+  const rank = RANK_ORDER[a.properties.rank] - RANK_ORDER[b.properties.rank];
+  return rankFirst ? rank || suit : suit || rank;
 }
 
-function stringProperty(
-  properties: Record<string, unknown>,
-  key: string,
-): string | undefined {
-  const value = properties[key];
-  return typeof value === "string" ? value : undefined;
+export function comparePlayingCards(a: CardFace, b: CardFace) {
+  return compareFaces(a, b, false);
 }
 
-export function comparePlayingCards(
-  a: {
-    hidden?: boolean;
-    properties?: Record<string, unknown>;
-  },
-  b: {
-    hidden?: boolean;
-    properties?: Record<string, unknown>;
-  },
-) {
-  const aProperties = a.hidden ? undefined : a.properties;
-  const bProperties = b.hidden ? undefined : b.properties;
-  const aSuit = parseSuit(
-    aProperties ? stringProperty(aProperties, "suit") : undefined,
-  );
-  const bSuit = parseSuit(
-    bProperties ? stringProperty(bProperties, "suit") : undefined,
-  );
-  const sa = aSuit ? SUIT_ORDER[aSuit] : 99;
-  const sb = bSuit ? SUIT_ORDER[bSuit] : 99;
-  if (sa !== sb) return sa - sb;
-  const ra =
-    RANK_ORDER[
-      aProperties ? (stringProperty(aProperties, "rank") ?? "") : ""
-    ] ?? 0;
-  const rb =
-    RANK_ORDER[
-      bProperties ? (stringProperty(bProperties, "rank") ?? "") : ""
-    ] ?? 0;
-  return ra - rb;
+export function comparePlayingCardRanks(a: CardFace, b: CardFace) {
+  return compareFaces(a, b, true);
 }
