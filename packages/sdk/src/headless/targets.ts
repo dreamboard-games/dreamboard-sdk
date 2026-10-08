@@ -14,6 +14,7 @@ import type {
   InputKey,
   InputKind,
   InteractionKey,
+  InteractionParams,
   SeatCardId,
   TableOfGame,
 } from "./model.js";
@@ -49,6 +50,9 @@ export interface RuntimeInteractionDropTarget {
   readonly kind: "interaction";
   readonly interactionKey: string;
   readonly cardInputKey: string;
+  readonly params?: Readonly<
+    Record<string, import("../shared/runtime-json.js").RuntimeJson>
+  >;
 }
 export type RuntimeDropTarget =
   RuntimeBoardDropTarget | RuntimeInteractionDropTarget;
@@ -139,6 +143,12 @@ export type BoardDropTarget<G> = BoardTarget<G> &
       >;
     };
   }[InteractionKey<G>];
+type DropAreaParams<G, K extends InteractionKey<G>> = Partial<
+  InteractionParams<G, K>
+> &
+  (unknown extends G
+    ? Record<never, never>
+    : { readonly [N in KeysOfKind<G, K, "card">]?: never });
 /** An area that runs an interaction without a board input on the dropped card. */
 export type InteractionDropTarget<G> = {
   [K in InteractionKey<G>]: [KeysOfKind<G, K, "card">] extends [never]
@@ -147,6 +157,16 @@ export type InteractionDropTarget<G> = {
         readonly kind: "interaction";
         readonly interactionKey: K;
         readonly cardInputKey: KeysOfKind<G, K, "card">;
+        readonly params?: DropAreaParams<G, K>;
       };
 }[InteractionKey<G>];
 export type DropTarget<G> = BoardDropTarget<G> | InteractionDropTarget<G>;
+
+/** Bound inputs accompany the dropped card in one interaction draft. */
+export type DropAreaBinding<G> = {
+  [K in InteractionKey<G>]: {
+    readonly interaction: K;
+    readonly input?: KeysOfKind<G, K, "card">;
+    readonly params?: DropAreaParams<G, K>;
+  };
+}[InteractionKey<G>];

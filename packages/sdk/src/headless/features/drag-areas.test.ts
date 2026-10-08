@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createGameInstance } from "../instance.js";
 import type { InteractionDescriptor } from "../model.js";
 import { createTestSource } from "../../testing/sources/test-source.js";
+import { isSameDropTarget } from "../drop-targets.js";
 import { dragFeature } from "./drag.js";
 
 const hand = {
@@ -38,7 +39,27 @@ const pass: InteractionDescriptor = {
   ],
 };
 
-function setup() {
+const move: InteractionDescriptor = {
+  ...discard,
+  interactionId: "move",
+  interactionKey: "play.move",
+  commit: { mode: "manual" },
+  inputs: [
+    discard.inputs[0],
+    {
+      key: "destination",
+      kind: "form",
+      domain: {
+        type: "choice",
+        choices: [
+          { value: "left", label: "Left" },
+          { value: "right", label: "Right" },
+        ],
+      },
+    },
+  ],
+};
+function setup(interactions = [discard, pass]) {
   const source = createTestSource({
     me: "alice",
     players: [{ playerId: "alice", displayName: "Alice" }],
@@ -51,7 +72,7 @@ function setup() {
         activePlayers: ["alice"],
         simultaneousPhase: null,
       },
-      availableInteractions: [discard, pass],
+      availableInteractions: interactions,
       zones: {
         hand: {
           alice: {
@@ -64,9 +85,9 @@ function setup() {
             },
             cardBacksById: {},
             playableByCardId: {
-              red: [discard, pass],
-              blue: [discard, pass],
-              green: [discard, pass],
+              red: interactions,
+              blue: interactions,
+              green: interactions,
             },
           },
         },
@@ -144,6 +165,115 @@ describe("drop areas", () => {
     expect(game.drag.active?.target).toBeNull();
     game.drag.drop();
     expect(game.state.drafts).toEqual({});
+    game.dispose();
+  });
+});
+
+describe("bound drop areas", () => {
+  const target = (destination: string) => ({
+    kind: "interaction" as const,
+    interactionKey: "play.move",
+    cardInputKey: "card",
+    params: { destination },
+  });
+  it("distinguishes two destinations for one interaction and submits the hovered destination atomically", () => {
+    const { game, source } = setup([move]);
+    game.drag.begin("red");
+    expect(game.drag.getIsDropTarget(target("left"))).toBe(true);
+    expect(game.drag.getIsDropTarget(target("right"))).toBe(true);
+    expect(isSameDropTarget(target("left"), target("right"))).toBe(false);
+    game.drag.setDropTarget(target("left"));
+    game.drag.setDropTarget(target("right"));
+    game.drag.drop();
+    expect(source.submissions[0]?.params).toEqual({
+      card: "red",
+      destination: "right",
+    });
+    game.dispose();
+  });
+  it("keeps an unbound manual move as a draft", () => {
+    const { game, source } = setup([move]);
+    game.drag.begin("red");
+    game.drag.setDropTarget(game.drag.getDropTargets()[0]);
+    game.drag.drop();
+    expect(game.state.drafts["play.move"]).toEqual({ card: "red" });
+    expect(source.submissions).toEqual([]);
+    game.dispose();
+  });
+  it("blocks incomplete, ineligible, and card-overriding bindings without writing a draft", () => {
+    const { game, source } = setup([move]);
+    game.drag.begin("red");
+    for (const params of [
+      {},
+      { destination: "gone" },
+      { destination: "left", card: "hidden" },
+      { destination: "left", unknown: "value" },
+    ]) {
+      const invalid = { ...target("left"), params };
+      expect(game.drag.getIsDropTarget(invalid)).toBe(false);
+      game.drag.setDropTarget(invalid);
+      expect(game.drag.active?.target).toBeNull();
+    }
+    game.drag.drop();
+    expect(source.submissions).toEqual([]);
+    expect(game.state.drafts).toEqual({});
+    game.dispose();
+  });
+  it("validates bound params when a many-card draft already contains the dropped card", () => {
+    const boundPass = { ...pass, inputs: [...pass.inputs, move.inputs[1]] };
+    const { game, source } = setup([boundPass]);
+    for (const cardId of ["red", "blue"])
+      game.cards.get(cardId).select({ interaction: "play.pass" });
+    game.drag.begin("red");
+    const route = {
+      kind: "interaction" as const,
+      interactionKey: "play.pass",
+      cardInputKey: "cards",
+    };
+    const invalid = { ...route, params: { destination: "gone" } };
+    expect(game.drag.getIsDropTarget(invalid)).toBe(false);
+    game.drag.setDropTarget(invalid);
+    expect(game.state.drafts["play.pass"]).toEqual({ cards: ["red", "blue"] });
+    game.drag.setDropTarget({ ...route, params: { destination: "right" } });
+    game.drag.drop();
+    expect(game.state.drafts["play.pass"]).toEqual({
+      cards: ["red", "blue"],
+      destination: "right",
+    });
+    expect(source.submissions).toEqual([]);
+    game.dispose();
+  });
+  it("keeps bound submission controls disabled while pending or disconnected", () => {
+    const { game, source } = setup([move]);
+    const params = { card: "red", destination: "left" };
+    expect(game.interactions.get("play.move").getSubmitProps().disabled).toBe(
+      true,
+    );
+    expect(
+      game.interactions.get("play.move").getSubmitProps(params).disabled,
+    ).toBe(false);
+    game.interactions.get("play.move").getSubmitHandler(params)();
+    expect(source.submissions[0]?.params).toEqual(params);
+    expect(
+      game.interactions.get("play.move").getSubmitProps(params).disabled,
+    ).toBe(true);
+    game.dispose();
+    const disconnected = setup([move]);
+    disconnected.source.recovering();
+    expect(
+      disconnected.game.interactions.get("play.move").getSubmitProps(params)
+        .disabled,
+    ).toBe(true);
+    disconnected.game.dispose();
+  });
+  it("cancels a bound destination when the authoritative frame changes", () => {
+    const { game, source } = setup([move]);
+    game.drag.begin("red");
+    game.drag.setDropTarget(target("left"));
+    source.emit({ ...game.snapshot!, version: 2 });
+    game.drag.drop();
+    expect(source.submissions).toEqual([]);
+    expect(game.drag.active).toBeNull();
     game.dispose();
   });
 });

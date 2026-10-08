@@ -22,6 +22,7 @@ import {
 } from "./gesture.js";
 import type { SeatCardId } from "../headless/model.js";
 import type {
+  DropAreaBinding,
   DropTarget,
   RuntimeTargetOptions,
   TargetOptions,
@@ -57,10 +58,7 @@ export interface CardGestureOptions<Game> {
 }
 
 /** An area that runs this interaction with whichever card is dropped on it. */
-export type DropAreaBinding<G> = Exclude<
-  TargetOptions<G>,
-  { readonly interaction?: undefined }
->;
+export type { DropAreaBinding } from "../headless/targets.js";
 
 export interface CardGesture {
   /** Spread on the card's own control, after the card's selection props. */

@@ -72,6 +72,7 @@ const model = createGame({
     public: z.object({
       placed: target.nullable(),
       discarded: z.string().nullable(),
+      destination: z.enum(["left", "right"]).nullable(),
     }),
     private: z.object({}),
     hidden: z.object({}),
@@ -79,7 +80,9 @@ const model = createGame({
 });
 const play = model.phase("play");
 export const cardDropGame = model.assemble({
-  initial: { public: () => ({ placed: null, discarded: null }) },
+  initial: {
+    public: () => ({ placed: null, discarded: null, destination: null }),
+  },
   initialPhase: "play",
   phases: {
     play: play.define({
@@ -106,6 +109,22 @@ export const cardDropGame = model.assemble({
             tx.patchPublicState({ discarded: input.params.card });
           },
         }),
+        move: play.interaction({
+          commit: { mode: "manual" },
+          inputs: {
+            card: play.inputs.card({ from: ["table"] }),
+            destination: play.inputs.form.choice({
+              choices: [
+                { value: "left", label: "Left" },
+                { value: "right", label: "Right" },
+              ],
+              defaultValue: () => undefined,
+            }),
+          },
+          reduce({ tx, input }) {
+            tx.patchPublicState({ destination: input.params.destination });
+          },
+        }),
         refresh: play.interaction({ inputs: {}, reduce() {} }),
       },
     }),
@@ -113,5 +132,6 @@ export const cardDropGame = model.assemble({
   view: model.view(({ state }) => ({
     placed: state.publicState.placed,
     discarded: state.publicState.discarded,
+    destination: state.publicState.destination,
   })),
 });

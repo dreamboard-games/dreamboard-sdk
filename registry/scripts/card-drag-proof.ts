@@ -138,6 +138,35 @@ export async function proveCardDrag(page: Page, touch: boolean) {
   await expect(view).toContainText(`"discarded":${JSON.stringify(cardId)}`);
   await expect(page.locator("[data-drag-overlay]")).toHaveCount(0);
 
+  // One move interaction, two bound destinations; hovering must not merge them.
+  for (const selected of ["left", "right"]) {
+    await reset();
+    const left = page.getByRole("region", {
+      name: "Drop for play.move left",
+      exact: true,
+    });
+    const right = page.getByRole("region", {
+      name: "Drop for play.move right",
+      exact: true,
+    });
+    await lift(await center(card));
+    await expect(left).toHaveAttribute("data-drop-target", "true");
+    await expect(right).toHaveAttribute("data-drop-target", "true");
+    await pointer.move(await center(selected === "right" ? left : right));
+    await pointer.move(await center(selected === "right" ? right : left));
+    await expect(selected === "right" ? right : left).toHaveAttribute(
+      "data-drop-over",
+      "true",
+    );
+    await expect(selected === "right" ? left : right).not.toHaveAttribute(
+      "data-drop-over",
+      "true",
+    );
+    await pointer.up();
+    await expect(view).toContainText(`"destination":"${selected}"`);
+    await expect(drafts).toHaveText("{}");
+  }
+
   // Releasing over empty space changes nothing.
   await reset();
   const origin = await center(card);

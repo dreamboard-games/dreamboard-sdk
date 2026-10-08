@@ -12,7 +12,11 @@ export function isSameDropTarget(
   )
     return false;
   if (left.kind === "interaction" || right.kind === "interaction")
-    return left.kind === right.kind;
+    return (
+      left.kind === "interaction" &&
+      right.kind === "interaction" &&
+      sameParams(left.params, right.params)
+    );
   return (
     left.kind === right.kind &&
     left.valueKind === right.valueKind &&
@@ -20,5 +24,20 @@ export function isSameDropTarget(
     (left.valueKind !== "board-id" ||
       (right.valueKind === "board-id" && left.boardId === right.boardId)) &&
     left.inputKey === right.inputKey
+  );
+}
+
+function sameParams(
+  left: import("./targets.js").RuntimeInteractionDropTarget["params"],
+  right: import("./targets.js").RuntimeInteractionDropTarget["params"],
+): boolean {
+  if (left === undefined || right === undefined) return left === right;
+  const keys = Object.keys(left);
+  return (
+    keys.length === Object.keys(right).length &&
+    keys.every(
+      (key) =>
+        key in right && inputValueKey(left[key]) === inputValueKey(right[key]),
+    )
   );
 }

@@ -22,7 +22,7 @@ destination hand also requires `originsFeature`.
 </GameProvider>
 ```
 
-The bound interaction must be ready from its draft or authored defaults. A
+Supply `params` for a parameterized draw, for example `params={{ source: "deck", destination: me.id }}`. The values use the bound interaction’s canonical submit type. The bound interaction must be ready from these explicit params, its draft, or authored defaults. A
 counted draw can default its count to one for the menu and drag gesture. Its reducer owns actor authorization,
 availability, card choice and state changes. Both menu Draw and a hand drop
 submit that interaction through the SDK; lifting or cancelling submits nothing.

@@ -502,8 +502,10 @@ export interface InteractionBase<G, K extends InteractionKey<G>> {
   cancel(): Promise<SubmitResult>;
   reset(): void;
   activate(): void;
-  getSubmitHandler(): (event?: NativeEvent) => void;
-  getSubmitProps(): ActionProps;
+  getSubmitHandler(
+    params?: InteractionParams<G, K>,
+  ): (event?: NativeEvent) => void;
+  getSubmitProps(params?: InteractionParams<G, K>): ActionProps;
 }
 export type Interaction<
   G,

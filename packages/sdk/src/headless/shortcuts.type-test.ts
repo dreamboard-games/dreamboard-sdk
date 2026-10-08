@@ -169,3 +169,16 @@ hooks.useShortcutTarget({ kind: "zone", zoneId: "deck", hostId: "pawn" });
 // @ts-expect-error The inferred hook retains the zone's canonical host family.
 hooks.useShortcutTarget({ kind: "zone", zoneId: "deck", hostId: "alice" });
 void [interaction, unknownHint];
+
+// Bound submit controls preserve the interaction's canonical payload.
+core.interactions.get("play.draw").getSubmitProps({ count: 2 });
+core.interactions.get("play.draw").getSubmitHandler({ count: 2 });
+// @ts-expect-error Payloads remain correlated with the bound interaction.
+core.interactions.get("play.draw").getSubmitProps({ card: "pawn" });
+// @ts-expect-error Bound input values preserve their authored type.
+core.interactions.get("play.draw").getSubmitHandler({ count: "two" });
+hooks.useDropArea({ interaction: "play.draw", params: { count: 2 } });
+// @ts-expect-error Bound drop inputs are typed by the interaction.
+hooks.useDropArea({ interaction: "play.draw", params: { count: "two" } });
+// @ts-expect-error The gesture supplies the dropped card; an area cannot override it.
+hooks.useDropArea({ interaction: "play.flip", params: { card: "pawn" } });

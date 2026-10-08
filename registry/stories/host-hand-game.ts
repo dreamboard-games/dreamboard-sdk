@@ -1,5 +1,5 @@
 import { compileManifest } from "@dreamboard-games/sdk/reducer";
-import { createGame, z } from "@dreamboard-games/sdk/reducer";
+import { createGame, z, type PlayerId } from "@dreamboard-games/sdk/reducer";
 
 const model = createGame({
   manifest: compileManifest({
@@ -49,11 +49,21 @@ export const hostHandGame = model.assemble({
       },
       interactions: {
         draw: play.interaction({
-          inputs: {},
+          inputs: {
+            source: play.inputs.form.choice({
+              choices: [{ value: "deck", label: "Deck" }],
+              defaultValue: () => undefined,
+            }),
+            destination: play.inputs.form.choice<PlayerId>({
+              choices: ({ q }) =>
+                q.player.order().map((value) => ({ value, label: value })),
+              defaultValue: () => undefined,
+            }),
+          },
           reduce({ tx, input }) {
             tx.deal({
-              from: { zoneId: "deck" },
-              to: { zoneId: "hand", hostId: input.playerId },
+              from: { zoneId: input.params.source },
+              to: { zoneId: "hand", hostId: input.params.destination },
               count: 1,
             });
           },

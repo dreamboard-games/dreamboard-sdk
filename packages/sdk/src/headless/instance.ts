@@ -245,16 +245,16 @@ class InteractionObject {
   activate() {
     if (this.currentLifetime()) this.owner.activate(this.key);
   }
-  getSubmitHandler() {
+  getSubmitHandler(params?: Values) {
     return (event?: NativeEvent) => {
       event?.preventDefault();
-      this.owner.handle(() => this.submit());
+      this.owner.handle(() => this.submit(params));
     };
   }
-  getSubmitProps() {
+  getSubmitProps(params?: Values) {
     const disabled =
-      !this.getIsAvailable() ||
-      !this.getIsReady() ||
+      !this.getIsAvailable(params) ||
+      !this.getIsReady(params) ||
       this.status !== "open" ||
       !this.connected;
     return {
@@ -262,9 +262,9 @@ class InteractionObject {
       "data-seat": this.seat,
       type: "button" as const,
       disabled,
-      "data-ready": this.getIsReady(),
+      "data-ready": this.getIsReady(params),
       "data-disabled": disabled,
-      onClick: this.getSubmitHandler(),
+      onClick: this.getSubmitHandler(params),
     };
   }
 }
@@ -973,6 +973,8 @@ class Controller {
           game: this.instance,
         }),
       routeTarget: (target, options) => this.routeTarget(target, options),
+      getCanDropCard: (cardId, target) =>
+        this.prepareCardDrop(cardId, target) !== undefined,
       routeCardDrop: (cardId, target) => this.routeCardDrop(cardId, target),
       invalidate: () => {
         if (!this.disposed) this.refresh();
@@ -1492,7 +1494,7 @@ class Controller {
     if (match)
       this.select(match.interaction.key, match.input.key, target.value);
   }
-  routeCardDrop(cardId: string, target: RuntimeDropTarget) {
+  prepareCardDrop(cardId: string, target: RuntimeDropTarget) {
     if (
       this.disposed ||
       this.sourceState.request ||
@@ -1524,44 +1526,74 @@ class Controller {
         !input.getIsEligible(target.value))
     )
       return;
-    let next: Record<string, unknown> = { ...this.drafts()[interaction.key] };
+    const params = target.kind === "interaction" ? target.params : undefined;
+    if (
+      params &&
+      Object.keys(params).some(
+        (key) => key === cardInput.key || !interaction.findInput(key),
+      )
+    )
+      return;
+    let next: Record<string, unknown> = {
+      ...this.drafts()[interaction.key],
+      ...params,
+    };
     const chosen = next[cardInput.key];
     // Dropping adds a card; it never toggles an already chosen card back out.
-    if (
+    const alreadyChosen =
       !input &&
       isManyInput(cardInput.descriptor) &&
       Array.isArray(chosen) &&
-      chosen.includes(cardId)
-    ) {
-      this.activate(interaction.key);
+      chosen.includes(cardId);
+    if (!alreadyChosen)
+      routeCardInputIntent(
+        {
+          getDraft: () => next,
+          setInput: (_key, key, value) => {
+            next = { ...next, [key]: value };
+          },
+          clearInput: (_key, key) => {
+            if (key) delete next[key];
+          },
+        },
+        interaction.descriptor,
+        {
+          cardId,
+          cardInputKey: cardInput.key,
+          dropTarget:
+            input && target.kind !== "interaction"
+              ? { inputKey: input.key, value: target.value }
+              : undefined,
+        },
+      );
+    if (
+      params &&
+      (!interaction.getIsAvailable(next as Values) ||
+        !interaction.getIsReady(next as Values))
+    )
       return;
-    }
-    routeCardInputIntent(
-      {
-        getDraft: () => next,
-        setInput: (_key, key, value) => {
-          next = { ...next, [key]: value };
-        },
-        clearInput: (_key, key) => {
-          if (key) delete next[key];
-        },
-      },
-      interaction.descriptor,
-      {
-        cardId,
-        cardInputKey: cardInput.key,
-        dropTarget:
-          input && target.kind !== "interaction"
-            ? { inputKey: input.key, value: target.value }
-            : undefined,
-      },
-    );
-    this.writeDraft(interaction.key, next as Values);
+    return {
+      interaction,
+      next,
+      alreadyChosen,
+      submitBound: params !== undefined && !isManyInput(cardInput.descriptor),
+    };
+  }
+  routeCardDrop(cardId: string, target: RuntimeDropTarget) {
+    const prepared = this.prepareCardDrop(cardId, target);
+    if (!prepared) return;
+    const { interaction, next, alreadyChosen, submitBound } = prepared;
+    if (
+      !alreadyChosen ||
+      (target.kind === "interaction" && target.params !== undefined)
+    )
+      this.writeDraft(interaction.key, next as Values);
     this.activate(interaction.key);
     const current = this.current(interaction.key);
     if (
+      !alreadyChosen &&
       current &&
-      shouldAutoSubmitInteraction(current.descriptor) &&
+      (submitBound || shouldAutoSubmitInteraction(current.descriptor)) &&
       current.getIsReady()
     )
       this.handle(() => current.submit());
