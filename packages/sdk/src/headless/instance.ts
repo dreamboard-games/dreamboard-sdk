@@ -1435,7 +1435,16 @@ class Controller {
       }
       if (fieldChanged) next[key] = immutableValues(kept);
     }
-    if (changed) this.writeDrafts(Object.freeze(next));
+    if (changed) {
+      // A frame that conceals a submitted card prunes it from the draft; that
+      // is not an edit, so the submission still resets its own draft.
+      const operation = this.pending;
+      const submitted =
+        operation?.draftRevision !== undefined &&
+        (this.revisions.get(operation.key) ?? 0) === operation.draftRevision;
+      this.writeDrafts(Object.freeze(next));
+      if (submitted) operation.draftRevision = this.revisions.get(operation.key);
+    }
     const active = this.active();
     if (
       active &&

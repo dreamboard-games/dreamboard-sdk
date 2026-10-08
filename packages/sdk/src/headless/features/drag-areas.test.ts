@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createGameInstance } from "../instance.js";
 import type { InteractionDescriptor } from "../model.js";
 import { createTestSource } from "../../testing/sources/test-source.js";
@@ -265,6 +265,46 @@ describe("bound drop areas", () => {
         .disabled,
     ).toBe(true);
     disconnected.game.dispose();
+  });
+  it("closes a bound move whose accepted frame conceals the dropped card", async () => {
+    const { game, source } = setup([move]);
+    game.drag.begin("red");
+    game.drag.setDropTarget(target("left"));
+    game.drag.drop();
+    expect(game.state.activeInteraction).toBe("play.move");
+    source.submissions[0]!.resolve({ accepted: true });
+    // The card now lies face down elsewhere, so the hand no longer offers it.
+    const remaining = {
+      ...move,
+      inputs: [
+        {
+          ...move.inputs[0]!,
+          domain: { ...hand, eligibleTargets: ["blue", "green"] },
+        },
+        move.inputs[1]!,
+      ],
+    } satisfies InteractionDescriptor;
+    const hand0 = game.snapshot!.frame.zones.hand!.alice!;
+    source.emit({
+      ...game.snapshot!,
+      version: 2,
+      frame: {
+        ...game.snapshot!.frame,
+        availableInteractions: [remaining],
+        zones: {
+          hand: {
+            alice: {
+              ...hand0,
+              cardIds: ["blue", "green"],
+              playableByCardId: { blue: [remaining], green: [remaining] },
+            },
+          },
+        },
+      },
+    });
+    await vi.waitFor(() => expect(game.state.activeInteraction).toBeNull());
+    expect(game.state.drafts).toEqual({});
+    game.dispose();
   });
   it("cancels a bound destination when the authoritative frame changes", () => {
     const { game, source } = setup([move]);
