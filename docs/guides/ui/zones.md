@@ -53,4 +53,10 @@ do not reconstruct a table ID or infer ownership from the host or ID.
 
 Cards expose canonical routing, selection and native props. Multiple valid
 routes require an explicit interaction instead of choosing the first.
-`handFeature` adds hand helpers; optional sorting stays application-owned.
+`handFeature(core, context, { zones? })` adds `game.hand` for named local sort
+modes. Read `getSortModes(zone)`, `getSortMode(zone)` and
+`getSortedCardIds(zone)`, and call `setSortMode(zone, mode)` from authored controls.
+Configuration and mode IDs are typed by zone; each host keeps its own choice.
+Sorting reads projected cards and preserves ties. Unconfigured zones retain
+source order. Labels and cycling stay application-owned; changing a sort never
+changes selection or submits an interaction.

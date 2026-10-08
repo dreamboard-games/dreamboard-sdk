@@ -3,8 +3,12 @@
 Factories are installed through `features: (game, context) => ({ ... })`.
 They add no DOM, React, CSS dependencies, or executable game imports.
 
-- `handFeature` adds zone helpers for sorted, selected, and selectable card IDs.
-  Sorting reads projected data; core card handlers own selection and ambiguity.
+- `handFeature(core, context, { zones? })` adds immutable `game.hand` helpers
+  for named sort modes and sorted projected IDs. Mode selection is local to each
+  zone and host; frames preserve it and source/seat changes reset it. Unconfigured
+  zones preserve source order. Comparators receive projected cards only; labels,
+  controls and cycling belong to authored UI. Zone selected/selectable ID helpers
+  continue to use the core selection router.
 - `boardFeature` adds `boards.get/find/getAll`, `board.spaces`, and `board.getLayout`. Layout spaces,
   edges, and vertices expose captured eligibility/selection and native target
   props. Static metadata remains in `board.data` and each layout element's data.
