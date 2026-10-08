@@ -177,21 +177,32 @@ export async function proveCardDrag(page: Page, touch: boolean) {
   await expect(drafts).toHaveText("{}");
 
   if (touch) {
-    // Below the browser's scroll threshold, browsing can still emit a click.
-    for (const distance of [9, 12]) {
+    // A sideways finger slides along the hand instead of dragging. Lifting it
+    // over a card opens that card's menu once, without selecting it.
+    for (const distance of [9, 12, 40]) {
       await pointer.down(origin);
       await pointer.move({ x: origin.x + distance, y: origin.y });
       await expect(active).toHaveText("null");
+      await expect(card).not.toHaveAttribute("data-dragging", "true");
       await pointer.up();
+      // The card under the finger, which may already be the next one.
+      if (distance < 40)
+        await expect(
+          cards.and(page.locator('[aria-expanded="true"]')),
+        ).toHaveCount(1);
       await expect(drafts).toHaveText("{}");
+      await page.keyboard.press("Escape");
+      await expect(
+        cards.and(page.locator('[aria-expanded="true"]')),
+      ).toHaveCount(0);
+      // Escape returns keyboard focus to the card; start the next press clear.
+      await page.evaluate(() =>
+        (document.activeElement as HTMLElement | null)?.blur(),
+      );
     }
-    // A sideways finger browses instead of dragging.
-    await pointer.down(origin);
-    await pointer.move({ x: origin.x + 40, y: origin.y });
-    await expect(active).toHaveText("null");
-    await expect(card).not.toHaveAttribute("data-dragging", "true");
-    await pointer.up();
-    // Holding still inspects; the click that follows does not select.
+    // Holding still inspects; the click that follows does not select. The
+    // hand first settles from the last raised card.
+    await page.waitForTimeout(650);
     await pointer.down(origin);
     await expect(card).toHaveAttribute("data-inspecting", "hold");
     await pointer.up();

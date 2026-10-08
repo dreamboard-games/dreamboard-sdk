@@ -9,6 +9,7 @@ import {
 import {
   useDragOverlay,
   useActiveCard,
+  useCardRow,
   useGame,
   type GameCard as Card,
   type CardId,
@@ -18,6 +19,7 @@ import { motion, useMotionValue, type MotionValue } from "motion/react";
 import {
   memo,
   useCallback,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -30,6 +32,7 @@ import { createPortal } from "react-dom";
 import { backImageOf, type CardState } from "./card";
 import { CardControl } from "./card-control";
 import { CardArrival } from "./card-arrival";
+import { HandSheet } from "./hand-sheet";
 import {
   useCardMotion,
   type CardPlacement,
@@ -60,6 +63,8 @@ export interface HandProps {
 }
 
 const EMPTY: readonly CardId[] = [];
+/** Below this much of each covered card, in pixels, the hand opens as a sheet. */
+const CROWDED_STEP = 16;
 const sameIds = (left: readonly CardId[], right: readonly CardId[]) =>
   left.length === right.length &&
   left.every((id, index) => id === right[index]);
@@ -67,10 +72,12 @@ const sameIds = (left: readonly CardId[], right: readonly CardId[]) =>
 /**
  * A fanned hand over one explicitly addressed zone host. A tap opens the card's action
  * menu, or toggles it when its only action picks several cards; a hold or a
- * Alt/Option previews it; a card with somewhere to land drags. The hand
- * scrolls sideways when the fan is wider than it, and cards arriving with an
- * origin come from the element marked `data-zone` and `data-zone-host`,
- * or `data-player`, for it.
+ * Alt/Option previews it; a card with somewhere to land drags. A finger
+ * sliding along the hand raises the card under it, and lifting there taps it.
+ * The fan always fits the hand; once its cards are too thin to aim at, the
+ * hand is one button that opens every card in a sheet. Cards arriving with an
+ * origin come from the element marked `data-zone` and `data-zone-host`, or
+ * `data-player`, for it.
  */
 export function Hand({
   zoneId,
@@ -103,7 +110,7 @@ export function Hand({
   const firstCard = useGame((game) =>
     ids.length ? game.cards.find(ids[0]) : undefined,
   );
-  const [scroller, setScroller] = useState<HTMLElement | null>(null);
+  const [clip, setClip] = useState<HTMLElement | null>(null);
   const table = useCardMotion();
   const snapshot = useGame((game) => game.snapshot);
   const drawTarget =
@@ -113,7 +120,10 @@ export function Hand({
   const probe = useRef<HTMLDivElement>(null);
   const latestOptions = useRef(options);
   latestOptions.current = options;
-  const [scrollLeft, setScrollLeft] = useState(0);
+  const [sheet, setSheet] = useState(false);
+  // Another seat never sees the previous seat's open sheet.
+  const perspective = useGame((game) => game.snapshot?.me);
+  useEffect(() => setSheet(false), [perspective]);
   const [size, setSize] = useState({
     width: 0,
     card: 0,
@@ -122,10 +132,9 @@ export function Hand({
     windowHeight: Infinity,
   });
   useLayoutEffect(() => {
-    if (!scroller) return;
+    if (!clip) return;
     const measure = () => {
-      setScrollLeft(scroller.scrollLeft);
-      const style = getComputedStyle(scroller);
+      const style = getComputedStyle(clip);
       const card = probe.current
         ? parseFloat(getComputedStyle(probe.current).width)
         : 0;
@@ -133,7 +142,7 @@ export function Hand({
         ? parseFloat(getComputedStyle(probe.current).height)
         : 0;
       const width =
-        scroller.clientWidth -
+        clip.clientWidth -
         parseFloat(style.paddingLeft) -
         parseFloat(style.paddingRight);
       const settings = { ...handFanPresets.open, ...latestOptions.current };
@@ -150,7 +159,7 @@ export function Hand({
             : settings.spacing * (card || 1),
       });
       const bottom =
-        scroller.getBoundingClientRect().top +
+        clip.getBoundingClientRect().top +
         parseFloat(style.paddingTop) +
         cardHeight * 0.28 +
         layout.height -
@@ -179,14 +188,14 @@ export function Hand({
           : next,
       );
     };
-    // Only scrolling the hand itself, or something containing it, moves the fan.
+    // Only scrolling something containing the hand moves the fan.
     const scrolled = (event: Event) => {
-      if (event.target instanceof Node && event.target.contains(scroller))
+      if (event.target instanceof Node && event.target.contains(clip))
         measure();
     };
     measure();
     const observer = new ResizeObserver(measure);
-    observer.observe(scroller);
+    observer.observe(clip);
     if (probe.current) observer.observe(probe.current);
     addEventListener("resize", measure);
     addEventListener("scroll", scrolled, true);
@@ -195,7 +204,7 @@ export function Hand({
       removeEventListener("resize", measure);
       removeEventListener("scroll", scrolled, true);
     };
-  }, [scroller, ids.length, drawOver]);
+  }, [clip, ids.length, drawOver]);
 
   // Room for a lifted card above the fan and beside its end cards.
   const lift = size.cardHeight * 0.28;
@@ -217,6 +226,7 @@ export function Hand({
     ...arc,
   });
   const ready = size.width > 0 && size.card > 0;
+  const crowded = ready && ids.length > 1 && fan.step < CROWDED_STEP;
   const nextFan = fanLayout({
     count: ids.length + 1,
     width: size.width - gutter * 2,
@@ -232,15 +242,14 @@ export function Hand({
     lift -
     tucked;
   function placement(index: number, layout = fan): CardPlacement {
-    const box = scroller!.getBoundingClientRect();
-    const style = getComputedStyle(scroller!);
+    const box = clip!.getBoundingClientRect();
+    const style = getComputedStyle(clip!);
     const card = layout.cards[index];
     return {
       x:
         box.x +
         parseFloat(style.paddingLeft) +
-        Math.max(0, (size.width - layout.width - gutter * 2) / 2) -
-        scroller!.scrollLeft +
+        Math.max(0, (size.width - layout.width - gutter * 2) / 2) +
         card.x +
         gutter,
       y: box.y + parseFloat(style.paddingTop) + card.y + lift,
@@ -288,7 +297,8 @@ export function Hand({
     (menuCardId !== null && ids.includes(menuCardId) ? menuCardId : null) ??
     activeCardId ??
     lastPointed;
-  const active = overlay || focusedId === null ? -1 : ids.indexOf(focusedId);
+  const active =
+    crowded || overlay || focusedId === null ? -1 : ids.indexOf(focusedId);
   // The fan sits centred between its gutters; handFan works in its coordinates.
   const inset = gutter + Math.max(0, (size.width - fan.width - gutter * 2) / 2);
   const focus = handFan({
@@ -297,7 +307,7 @@ export function Hand({
     cardWidth: size.card || 1,
     cardHeight: size.cardHeight || 1,
     focused: active,
-    visible: { left: scrollLeft - inset, width: size.width },
+    visible: { left: -inset, width: size.width },
     windowHeight: size.windowHeight,
     room: size.room,
     options,
@@ -308,6 +318,25 @@ export function Hand({
     y: card.y + lift,
   }));
   const headroom = focus.headroom;
+  // A finger slides by resting places, so each card is one strip's travel
+  // from the next however large the raised face is.
+  const row = useCardRow((point) => {
+    const box = clip!.getBoundingClientRect();
+    if (point.y < box.top || point.y > box.bottom) return null;
+    const x =
+      point.x -
+      box.left -
+      parseFloat(getComputedStyle(clip!).paddingLeft) -
+      inset;
+    const last = fan.cards[ids.length - 1];
+    if (x < fan.cards[0].x - gutter || x > last.x + size.card + gutter)
+      return null;
+    // Cards run left to right, so the last one starting before x is under it.
+    const before = fan.cards
+      .slice(0, ids.length)
+      .filter((card) => card.x <= x).length;
+    return ids[Math.max(0, before - 1)];
+  });
 
   return (
     <>
@@ -319,10 +348,9 @@ export function Hand({
         data-draw-over={drawOver || undefined}
         className={`db-hand ${className}`}
       >
-        <motion.div
-          layoutScroll
-          ref={setScroller}
-          className="db-hand-scroll"
+        <div
+          ref={setClip}
+          className="db-hand-clip"
           style={{ paddingTop: headroom, marginTop: -headroom }}
         >
           <div
@@ -334,8 +362,9 @@ export function Hand({
             }}
           >
             <div
+              {...row.props}
               className="db-hand-layer"
-              style={{ top: headroom, height }}
+              style={{ ...row.props.style, top: headroom, height }}
               onPointerMove={pointed}
               onPointerLeave={() => setLastPointed(null)}
             >
@@ -361,7 +390,7 @@ export function Hand({
                     cardId={id}
                     zoneId={zoneId}
                     hostId={hostId}
-                    gameUI={scroller?.closest("[data-game-ui]") ?? null}
+                    gameUI={clip?.closest("[data-game-ui]") ?? null}
                     index={index}
                     x={places[index].x}
                     y={places[index].y}
@@ -372,6 +401,7 @@ export function Hand({
                     baseHeight={size.cardHeight}
                     lift={lift}
                     focused={index === active}
+                    crowded={crowded}
                     choosing={choosing}
                     renderCard={renderCard}
                     getCardLabel={getCardLabel}
@@ -390,11 +420,31 @@ export function Hand({
                   }}
                 />
               )}
+              {crowded && (
+                <button
+                  type="button"
+                  className="db-hand-open"
+                  aria-label={`${label}: ${ids.length} cards`}
+                  aria-haspopup="dialog"
+                  onClick={() => setSheet(true)}
+                >
+                  <span className="db-hand-count">{ids.length}</span>
+                </button>
+              )}
             </div>
           </div>
-        </motion.div>
+        </div>
         {ids.length === 0 && <p className="db-hand-empty">No cards</p>}
       </section>
+      <HandSheet
+        open={sheet}
+        onOpenChange={setSheet}
+        ids={ids}
+        label={label}
+        choosing={choosing}
+        renderCard={renderCard}
+        getCardLabel={getCardLabel}
+      />
     </>
   );
 }
@@ -463,6 +513,8 @@ interface HandCardProps {
   renderCard: HandProps["renderCard"];
   getCardLabel: HandProps["getCardLabel"];
   focused: boolean;
+  /** The hand opens as a sheet; its cards show without their own gestures. */
+  crowded: boolean;
   destination(index: number): CardPlacement;
   onMenuChange(cardId: CardId, open: boolean): void;
 }
@@ -484,6 +536,7 @@ const HandCard = memo(function HandCard({
   renderCard,
   getCardLabel,
   focused,
+  crowded,
   destination,
   onMenuChange,
 }: HandCardProps) {
@@ -518,6 +571,7 @@ const HandCard = memo(function HandCard({
       <CardControl
         cardId={cardId}
         drag={{}}
+        inert={crowded}
         choosing={choosing}
         disabled={!!arrival}
         style={{ visibility: arrival ? "hidden" : undefined }}

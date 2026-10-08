@@ -349,7 +349,7 @@ install the React adapter. The `/react` entry delegates selectors to that packag
 the application bundler resolves its supported React subscription dependencies.
 
 `/react` classifies each card press as a tap, hold, drag or browse. Enable
-`dragFeature`, export `useCardGesture`, `useActiveCard`, `useDropArea` and `useDragOverlay` from the
+`dragFeature`, export `useCardGesture`, `useCardRow`, `useActiveCard`, `useDropArea` and `useDragOverlay` from the
 binding, and use the copied Hand and BoardTargets components or your own renderer.
 The SDK prescribes no layout. Headless `game.drag` remains browser-free and handles
 atomic domain routing. A drop area can bind typed inputs with
@@ -360,7 +360,7 @@ manual; unbound drops and many-card drafts keep their normal commit behavior.
 `game.drag.getIsDropTarget(target)` uses the same admission as dropping.
 Interaction `getSubmitProps(params)` and `getSubmitHandler(params)` accept the
 same explicit params as `submit(params)`, retaining pending and connection gates.
-`fanLayout` computes arc positions for a hand,
+`fanLayout` computes arc positions that always fit a hand,
 `handFan` adds a focused, readable card with configurable presets and timing,
 and
 `originsFeature` adds `card.getOrigin()` so a newly shown card can animate from
@@ -492,7 +492,9 @@ Standard playing cards are game-owned definitions with ordinary suit/rank
 properties; the SDK does not synthesize inventories or assign built-in rules.
 
 The exported `createGestureRecognizer(down, callbacks, options)` defaults to
-upward touch dragging so hands retain sideways scrolling. Pile controls can use
+upward touch dragging so card containers retain sideways scrolling. A row that
+fits uses `{ scrub: true }`: a sliding finger reports each move through
+`browse`, and turning upward still drags. Pile controls can use
 `{ dragDirection: "any" }` with `touch-action: none` to drag toward a hand below
 or beside them. This classifies pointer intent only; submit an authored interaction
 through the bound game to enforce its rules, without selecting a hidden card ID.

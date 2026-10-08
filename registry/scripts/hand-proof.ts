@@ -226,3 +226,154 @@ export async function proveHand(page: Page, touch: boolean) {
   await expect(cards).toHaveCount(3);
   await expect(banner).toHaveCount(0);
 }
+
+/** A finger slides along the hand by resting places; lifting picks the card under it. */
+export async function proveHandSlide(page: Page) {
+  const hand = page.getByRole("region", { name: "Your hand" });
+  const cards = hand.locator(".db-hand-card");
+  await expect(cards).toHaveCount(9);
+  const ids = await cards.evaluateAll((elements) =>
+    elements.map((element) => element.getAttribute("data-card")!),
+  );
+  const start = await cardSurface(cards.nth(1));
+  const end = await cardSurface(cards.nth(6));
+  const cdp = await page.context().newCDPSession(page);
+  const send = (type: "touchStart" | "touchMove" | "touchEnd", at?: Point) =>
+    cdp.send("Input.dispatchTouchEvent", {
+      type,
+      touchPoints: at ? [{ ...at, id: 1 }] : [],
+    });
+  const raised = () =>
+    hand
+      .locator("[data-hovered]")
+      .evaluateAll((elements) =>
+        elements.map((element) => element.getAttribute("data-card")),
+      );
+
+  // Each card crossed rises in turn, however wide the raised face is.
+  await send("touchStart", start);
+  const crossed: string[] = [];
+  for (let step = 1; step <= 15; step++) {
+    await send("touchMove", {
+      x: start.x + ((end.x - start.x) * step) / 15,
+      y: start.y,
+    });
+    const [id] = await raised();
+    if (id && crossed.at(-1) !== id) crossed.push(id);
+  }
+  // The first move may already reach the next strip; none is ever skipped.
+  const from = ids.indexOf(crossed[0]);
+  expect(from).toBeGreaterThanOrEqual(1);
+  expect(from).toBeLessThanOrEqual(2);
+  expect(crossed).toEqual(ids.slice(from, 7));
+  await send("touchEnd");
+  await expect(cards.nth(6)).toHaveAttribute("aria-expanded", "true");
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  // Escape returned keyboard focus to the card; clear it before the next slide.
+  await cards.nth(6).blur();
+
+  // Sliding off the hand chooses nothing.
+  const bottom = (await hand.boundingBox())!;
+  await send("touchStart", start);
+  for (let step = 1; step <= 6; step++)
+    await send("touchMove", {
+      x: start.x + step * 10,
+      y: start.y + ((bottom.y + bottom.height + 30 - start.y) * step) / 6,
+    });
+  await expect.poll(raised).toEqual([]);
+  await send("touchEnd");
+  await expect(hand.locator('[aria-expanded="true"]')).toHaveCount(0);
+
+  // Turning upward mid-slide picks up the card under the finger.
+  const third = await cardSurface(cards.nth(3));
+  await send("touchStart", start);
+  for (let step = 1; step <= 6; step++)
+    await send("touchMove", {
+      x: start.x + ((third.x - start.x) * step) / 6,
+      y: start.y,
+    });
+  for (let step = 1; step <= 4; step++)
+    await send("touchMove", { x: third.x, y: third.y - step * 12 });
+  await expect(cards.nth(3)).toHaveAttribute("data-dragging", "true");
+  await cdp.send("Input.dispatchTouchEvent", {
+    type: "touchCancel",
+    touchPoints: [],
+  });
+  await cdp.detach();
+  await expect(page.locator("[data-drag-overlay]")).toHaveCount(0);
+}
+
+/** A crowded hand fits, then opens every card in a sheet. */
+export async function proveCrowdedHand(
+  page: Page,
+  touch: boolean,
+  crowded: boolean,
+) {
+  const hand = page.getByRole("region", { name: "Your hand" });
+  const faces = hand.locator(".db-hand-card");
+  const open = hand.getByRole("button", { name: "Your hand: 24 cards" });
+  await expect(faces).toHaveCount(24);
+  await page.waitForTimeout(650);
+  const bounds = (await hand.boundingBox())!;
+  for (const face of await faces.all()) {
+    const box = (await face.boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(bounds.x - 1);
+    expect(box.x + box.width).toBeLessThanOrEqual(bounds.x + bounds.width + 1);
+  }
+  if (!crowded) {
+    await expect(open).toHaveCount(0);
+    await expect(hand.getByRole("button")).toHaveCount(24);
+    return;
+  }
+  // Too thin to aim at, the hand is one button.
+  await expect(hand.getByRole("button")).toHaveCount(1);
+  const activate = (locator: Locator) =>
+    touch ? locator.tap() : locator.click();
+  await activate(open);
+  const sheet = page.getByRole("dialog", { name: "Your hand · 24" });
+  const cards = sheet.locator(".db-hand-card");
+  await expect(cards).toHaveCount(24);
+  await expect(page.getByRole("button", { name: "Done" })).toBeVisible();
+  // Aim only once the sheet has finished sliding in.
+  await expect(sheet).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)");
+
+  // A held card previews once, above the sheet.
+  if (touch) {
+    const box = (await cards.nth(4).boundingBox())!;
+    const at = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [{ ...at, id: 1 }],
+    });
+    await expect(page.locator('[data-card-preview="hold"]')).toHaveCount(1);
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchEnd",
+      touchPoints: [],
+    });
+    await cdp.detach();
+    await expect(page.locator('[data-card-preview="hold"]')).toHaveCount(0);
+  }
+
+  // Choosing an action closes the sheet so the table shows the move.
+  const spade = cards.and(page.locator('[data-value^="spades-"]')).first();
+  const spadeId = (await spade.getAttribute("data-value"))!;
+  await activate(spade);
+  const actions = page.locator('[data-action="card-action"]');
+  await expect(actions).toHaveText(["Play", "Discard"]);
+  await activate(actions.filter({ hasText: "Discard" }));
+  await expect(sheet).toHaveCount(0);
+  await expect
+    .poll(async () =>
+      zonesSchema.parse(
+        JSON.parse((await page.getByTestId("table-cards").textContent())!),
+      ),
+    )
+    .toContainEqual(["discard", [spadeId]]);
+  const reopen = hand.getByRole("button", { name: "Your hand: 23 cards" });
+  await expect(reopen).toBeVisible();
+  await activate(reopen);
+  await activate(page.getByRole("button", { name: "Done" }));
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+}

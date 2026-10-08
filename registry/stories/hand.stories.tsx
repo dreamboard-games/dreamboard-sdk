@@ -18,7 +18,7 @@ import { DrawPile } from "../items/draw-pile";
 import { DropArea } from "../items/drop-area";
 import { Seat, type SeatNumber } from "../items/seat";
 import { TurnBanner } from "../items/turn-banner";
-import { handGame, createHandGame } from "./hand-game";
+import { handGame, createHandGame, crowdedHandGame } from "./hand-game";
 type HandSource = CommandSource & { switchSeat(playerId: string): void };
 interface CreatedHandSource {
   value: HandSource;
@@ -302,6 +302,7 @@ function OwnedSource({
 function HandTable({
   manualDraw = false,
   emptyHand = false,
+  crowded = false,
   appearance,
   drawLifecycle = false,
   tucked = false,
@@ -309,6 +310,7 @@ function HandTable({
   appearance?: "text" | "wide";
   manualDraw?: boolean;
   emptyHand?: boolean;
+  crowded?: boolean;
   drawLifecycle?: boolean;
   tucked?: boolean;
 }) {
@@ -316,10 +318,13 @@ function HandTable({
   useEffect(() => {
     let active = true;
     let created: CreatedHandSource | undefined;
-    void localSource(emptyHand ? createHandGame(0) : handGame, {
-      players: 2,
-      seed: 3,
-    }).then((value) => {
+    void localSource(
+      emptyHand ? createHandGame(0) : crowded ? crowdedHandGame : handGame,
+      {
+        players: 2,
+        seed: 3,
+      },
+    ).then((value) => {
       if (!active) return value.dispose();
       let settle: ((accepted: boolean) => void) | null = null;
       const wrapped: HandSource = {
@@ -363,7 +368,7 @@ function HandTable({
       // The provider owns the source once it commits.
       if (created && !created.adopted) created.value.dispose();
     };
-  }, [manualDraw, emptyHand]);
+  }, [manualDraw, emptyHand, crowded]);
   return source ? (
     <OwnedSource
       source={source}
@@ -401,4 +406,7 @@ export const TuckedHand: StoryObj<typeof meta> = {
 };
 export const TuckedPlayingCards: StoryObj<typeof meta> = {
   args: { tucked: true },
+};
+export const CrowdedHand: StoryObj<typeof meta> = {
+  args: { crowded: true, tucked: true },
 };

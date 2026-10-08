@@ -9,7 +9,7 @@ import { createPortal } from "react-dom";
 import { CardBack, cardSettle } from "./card";
 import type { CardPlacement } from "./card-motion";
 
-/** A confirmed arrival flies outside the scrolling hand, then reveals its face. */
+/** A confirmed arrival flies outside the clipped hand, then reveals its face. */
 export function CardArrival({
   origin,
   landed,

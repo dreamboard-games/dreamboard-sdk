@@ -70,6 +70,7 @@ export interface CardGestureProps {
   readonly "data-dragging"?: true;
   readonly "data-inspecting"?: "hold" | "hover";
   readonly "data-card-gesture": string;
+  readonly "data-card-control": string;
   readonly "data-gesture-session": string;
 }
 
@@ -85,7 +86,14 @@ const INSPECTION_STYLE: CSSProperties = Object.freeze({
   // Inspection-only cards should not block their table's native scrolling.
   touchAction: "manipulation",
 });
+const ROW_STYLE: CSSProperties = Object.freeze({
+  // A row that fits never scrolls; its cards' sideways movement scrubs instead.
+  touchAction: "none",
+});
 const px = (value: number) => `${value}px`;
+
+/** The card whose resting place in a row is under a viewport point, or null off the row. */
+export type CardRowLookup = (point: Point) => string | null;
 
 /** A resolved board destination, or the interaction an area runs. */
 export type DropAreaInput =
@@ -133,7 +141,10 @@ export type GestureSession = ReturnType<typeof createGestureSession>;
  * One press at a time for a provider: tap, hold, drag or browse, plus mouse
  * hover intent. The session outlives the pressed element, so a hand may move
  * the card into an overlay mid-drag. Drop areas are found with the browser's
- * own hit testing, so transformed and SVG areas need no geometry.
+ * own hit testing, so transformed and SVG areas need no geometry. A finger on
+ * a card in a row slides along it: the row names the card whose resting place
+ * is under the finger, which becomes active; lifting there clicks that card,
+ * and pulling up drags it.
  */
 export function createGestureSession(game: GestureGame) {
   const id = `g${++sessions}`;
@@ -148,6 +159,10 @@ export function createGestureSession(game: GestureGame) {
     right: RuntimeShortcutTarget | null,
   ) => inputValueKey(left) === inputValueKey(right);
   const areas = new Map<string, () => DropAreaInput>();
+  const rows = new Map<string, CardRowLookup>();
+  // A slide can end on a control other than the pressed one; it drags with
+  // that mounted control's own routes.
+  const controls = new Map<string, () => false | RuntimeTargetOptions>();
   const followers = new Set<(point: Point) => void>();
   let press: {
     readonly recognizer: GestureRecognizer;
@@ -198,11 +213,12 @@ export function createGestureSession(game: GestureGame) {
     const changedLifetime =
       source !== nextSource || snapshot?.me !== game.snapshot?.me;
     if (changedLifetime || snapshot !== game.snapshot) {
+      // Cancelling first lets a scrubbing finger take its activity with it.
+      press?.recognizer.cancel();
       const nextHover = changedLifetime ? null : admitted(hover);
       const nextFocused = changedLifetime ? null : admitted(focused);
       source = nextSource;
       snapshot = game.snapshot;
-      press?.recognizer.cancel();
       alt = false;
       // A parked pointer or keyboard focus survives an admitted same-seat
       // frame, so separate key presses can keep acting on the same control.
@@ -373,66 +389,112 @@ export function createGestureSession(game: GestureGame) {
     options: false | RuntimeTargetOptions,
   ) {
     if (disposed || press || event.button !== 0) return;
-    const recognizer = createGestureRecognizer(event, {
-      hold() {
-        set({ inspect: { cardId, via: "hold" } });
+    // The card a press acts on; a sliding finger moves it, or leaves the row.
+    let card: {
+      cardId: string;
+      element: Element;
+      options: false | RuntimeTargetOptions;
+    } | null = { cardId, element, options };
+    const row =
+      event.pointerType === "mouse" ? null : element.closest("[data-card-row]");
+    const cardAt = rows.get(row?.getAttribute("data-card-row") ?? "");
+    const scrubbing = cardAt !== undefined;
+    const activate = (next: string | null) => {
+      if ((hover?.kind === "card" ? hover.value : null) === next) return;
+      hover = next === null ? null : { kind: "card", value: next };
+      inspectWithAlt();
+    };
+    // Resting places, not the raised face's, keep every card a strip's travel apart.
+    function scrubTo(at: Point) {
+      const next = cardAt!(at);
+      const control =
+        next === null
+          ? null
+          : row!.querySelector(`[data-card-gesture="${CSS.escape(next)}"]`);
+      const routes = controls.get(
+        control?.getAttribute("data-card-control") ?? "",
+      );
+      card =
+        next === null || !control || !routes
+          ? null
+          : { cardId: next, element: control, options: routes() };
+      activate(card?.cardId ?? null);
+    }
+    const recognizer = createGestureRecognizer(
+      event,
+      {
+        // A hold comes before any movement, so the pressed card is still chosen.
+        hold() {
+          set({ inspect: { cardId, via: "hold" } });
+        },
+        dragStart(origin) {
+          if (!card) return false;
+          const { cardId, element, options } = card;
+          if (options === false || !game.drag?.begin(cardId, options))
+            return false;
+          const box = element.getBoundingClientRect();
+          clearHover();
+          focused = null;
+          press!.dragging = true;
+          set({
+            drag: {
+              cardId,
+              grab: { x: origin.x - box.left, y: origin.y - box.top },
+              size: { width: box.width, height: box.height },
+              settling: false,
+            },
+            inspect: null,
+            activeTarget: null,
+          });
+          return true;
+        },
+        dragMove(at) {
+          pointer = retarget(at);
+          for (const follow of followers) follow(pointer);
+        },
+        browse: scrubTo,
+        end(kind, at) {
+          const dragging = press!.dragging;
+          const pointerType = press!.pointerType;
+          // A finger lifted from a scrub chooses the card under it, as a tap would.
+          const chosen = scrubbing && kind === "browse" ? card?.element : null;
+          if (dragging) retarget(at);
+          release();
+          // A finger leaves no hover behind.
+          if (scrubbing) activate(null);
+          // Clicked before the guard below, so the choice is never swallowed.
+          if (chosen instanceof HTMLElement) chosen.click();
+          if (kind !== "tap") swallowNextClick();
+          if (kind === "hold") set({ inspect: null });
+          if (!dragging) {
+            // A rejected drag or inspection-only mouse press may browse to a
+            // different face. Its final physical point becomes the canonical target.
+            if (kind === "browse" && pointerType === "mouse") hoverAt(at);
+            return;
+          }
+          const before = game.request;
+          game.drag?.drop();
+          // A submitted move keeps its overlay until the authoritative frame.
+          const drag = store.get().drag;
+          if (drag && game.request !== null && game.request !== before)
+            set({ drag: { ...drag, settling: true } });
+          else set({ drag: null });
+        },
+        cancel(kind) {
+          const dragging = press!.dragging;
+          release();
+          if (scrubbing) activate(null);
+          // Cancellation does not turn a non-tap into a selection on release.
+          if (kind !== "tap") swallowNextClick();
+          if (kind === "hold") set({ inspect: null });
+          if (dragging) {
+            game.drag?.cancel();
+            set({ drag: null });
+          }
+        },
       },
-      dragStart(origin) {
-        if (options === false || !game.drag?.begin(cardId, options))
-          return false;
-        const box = element.getBoundingClientRect();
-        clearHover();
-        focused = null;
-        press!.dragging = true;
-        set({
-          drag: {
-            cardId,
-            grab: { x: origin.x - box.left, y: origin.y - box.top },
-            size: { width: box.width, height: box.height },
-            settling: false,
-          },
-          inspect: null,
-          activeTarget: null,
-        });
-        return true;
-      },
-      dragMove(at) {
-        pointer = retarget(at);
-        for (const follow of followers) follow(pointer);
-      },
-      end(kind, at) {
-        const dragging = press!.dragging;
-        const pointerType = press!.pointerType;
-        if (dragging) retarget(at);
-        release();
-        if (kind !== "tap") swallowNextClick();
-        if (kind === "hold") set({ inspect: null });
-        if (!dragging) {
-          // A rejected drag or inspection-only mouse press may browse to a
-          // different face. Its final physical point becomes the canonical target.
-          if (kind === "browse" && pointerType === "mouse") hoverAt(at);
-          return;
-        }
-        const before = game.request;
-        game.drag?.drop();
-        // A submitted move keeps its overlay until the authoritative frame.
-        const drag = store.get().drag;
-        if (drag && game.request !== null && game.request !== before)
-          set({ drag: { ...drag, settling: true } });
-        else set({ drag: null });
-      },
-      cancel(kind) {
-        const dragging = press!.dragging;
-        release();
-        // Cancellation does not turn a non-tap into a selection on release.
-        if (kind !== "tap") swallowNextClick();
-        if (kind === "hold") set({ inspect: null });
-        if (dragging) {
-          game.drag?.cancel();
-          set({ drag: null });
-        }
-      },
-    });
+      { scrub: scrubbing },
+    );
     const move = (next: globalThis.PointerEvent) => recognizer.move(next);
     const up = (next: globalThis.PointerEvent) => recognizer.up(next);
     const cancel = (next: globalThis.PointerEvent) => recognizer.cancel(next);
@@ -466,6 +528,7 @@ export function createGestureSession(game: GestureGame) {
 
   function cardProps(
     cardId: string,
+    control: string,
     options: false | RuntimeTargetOptions,
     flags: { dragging: boolean; inspecting: "hold" | "hover" | null },
   ): CardGestureProps {
@@ -500,6 +563,7 @@ export function createGestureSession(game: GestureGame) {
       "data-dragging": flags.dragging || undefined,
       "data-inspecting": flags.inspecting ?? undefined,
       "data-card-gesture": cardId,
+      "data-card-control": control,
       "data-gesture-session": id,
     };
   }
@@ -578,6 +642,22 @@ export function createGestureSession(game: GestureGame) {
         areas.delete(area);
       };
     },
+    /** `read` returns a mounted card control's current drag routes. */
+    registerControl(control: string, read: () => false | RuntimeTargetOptions) {
+      controls.set(control, read);
+      return () => {
+        controls.delete(control);
+      };
+    },
+    registerRow(row: string, cardAt: CardRowLookup) {
+      rows.set(row, cardAt);
+      return () => {
+        rows.delete(row);
+      };
+    },
+    rowProps(row: string) {
+      return { "data-card-row": row, style: ROW_STYLE };
+    },
     dispose() {
       disposed = true;
       press?.recognizer.cancel();
@@ -590,6 +670,8 @@ export function createGestureSession(game: GestureGame) {
       unsubscribe();
       followers.clear();
       targets.clear();
+      rows.clear();
+      controls.clear();
       if (!guardingClicks) return;
       removeEventListener("click", swallow, true);
       removeEventListener("pointerdown", newPress, true);

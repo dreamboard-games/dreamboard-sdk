@@ -44,13 +44,25 @@ Spread them after the card's selection props. A press becomes:
 | Drag    | Move 8 px in any direction                       | Move 8 px upward                           |
 | Browse  | —                                                | Move sideways; native scrolling takes over |
 
-Cards use `touch-action: pan-x`, so a sideways swipe scrolls a hand natively. A
-card drags only when it has somewhere to land; otherwise the press browses. The
+Cards use `touch-action: pan-x`, so a sideways swipe scrolls their container
+natively. A row that fits uses `useCardRow` instead. A card drags only when it
+has somewhere to land; otherwise the press browses. The
 click the browser fires after a hold, drag or browse is not a selection. Keyboard
 activation always clicks. `inspecting` and `data-inspecting` tell the game to
 show a preview; haptics and preview presentation are the game's choice.
 `GESTURE_THRESHOLDS` holds the timings, and `createGestureRecognizer` is the
 framework-free classifier the hook uses.
+
+## Rows that fit
+
+`useCardRow(cardAt)` marks a row of cards that never scrolls, such as a hand.
+Spread its `props` on the element holding the cards. `cardAt(point)` names the
+card whose resting place is under a viewport point, or `null` off the row. A
+finger pressed on one of the row's cards slides along it: the card under the
+finger becomes active, as a hovered card does for a mouse; lifting there clicks
+it, and turning upward drags it. Answering from resting places rather than the
+raised face keeps each card one strip's travel from the next. Taps, holds and
+straight upward drags work as on any card.
 
 ## Where a card lands
 

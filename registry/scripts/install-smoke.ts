@@ -72,6 +72,7 @@ try {
       export declare const SDKGameProvider: Hooks["GameProvider"];
       export { GameProvider } from "./components/dreamboard/game-provider";
       export declare const useCardGesture: Hooks["useCardGesture"];
+      export declare const useCardRow: Hooks["useCardRow"];
       export declare const useActiveCard: Hooks["useActiveCard"];
       export declare const useGameShortcuts: Hooks["useGameShortcuts"];
       export declare const useShortcutTarget: Hooks["useShortcutTarget"];

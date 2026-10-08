@@ -54,15 +54,15 @@ between places and arrive from their origin.
 `fanLayout({ count, width, cardWidth, cardHeight })` lays cards on a circular
 arc. Each card gets `x` and `y`, its CSS `translate` from the fan's top-left
 corner, and `rotate` in degrees about its own centre. `width` and `height` are
-the fan's bounding box. Centre the fan with `margin-inline: auto` rather than
-`justify-content: center`, so an overflowing fan still scrolls to its first
-card, and leave room above it for a lifted card.
+the fan's bounding box. Centre the fan in its hand and leave room above it for
+a lifted card.
 
 - The spread grows by `angle` per card (default 5°) up to `maxSpread` (30°).
 - Cards sit `step` apart along the arc (60% of the card width) and tighten
-  continuously to fit `width`, down to `minStep` (25%). Past that the fan is
-  wider than `width`, and the hand should scroll sideways, which a finger's
-  sideways swipe already does.
+  continuously, so the fan always fits `width`. The layout's `step` is the
+  spacing it settled on, about how much of each covered card shows. The hand
+  decides when that is too thin to aim at; the registry's hand opens every card
+  in a sheet below 16 px.
 - There are no breakpoints: a card moves at most as far as the width changes.
 - `angle: 0` lays a straight row; with `step` larger than the card it leaves
   gaps until the row has to overlap.
@@ -104,8 +104,8 @@ const hand = handFan({
 - `push` lists the sideways shift of the first, second and third neighbour in
   card widths; the face's extra width tapers over the same neighbours.
 - `exposed` is the narrowest strip of each neighbour that stays visible.
-- `visible` is the scrolled window in fan coordinates; an end card's face stays
-  inside it.
+- `visible` is the part of the hand the viewer sees, in fan coordinates, such
+  as the fan plus gutters beside it; an end card's face stays inside it.
 
 `handFanPresets.open` keeps whole resting cards and doubles the focused one.
 `tucked` spaces larger cards like a dealt hand and hides 40% of each below the

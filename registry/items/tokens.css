@@ -13,6 +13,7 @@
   --card-w-opponent: clamp(2.25rem, min(9vw, 11dvh), 3.5rem);
   --card-w-pile: var(--card-w-table);
   --card-w-preview: min(64vw, 15rem, calc(60dvh * 5 / 7));
+  --card-w-sheet: clamp(5.5rem, 27vw, 8.5rem);
   --card-w: var(--card-w-table);
   --card-aspect: 5 / 7;
   --card-radius: 0.55rem;
@@ -393,26 +394,18 @@
 }
 
 @layer components {
-  /* A hand scrolls sideways when its fan is wider than the hand. */
+  /* A hand's fan always fits it; a crowded hand opens as a sheet instead. */
   .db-hand {
     position: relative;
     isolation: isolate;
     display: flow-root;
     --card-w: var(--card-w-hand);
   }
-  .db-hand-scroll {
+  /* Clips tucked cards without becoming something focus can scroll. */
+  .db-hand-clip {
     position: relative;
     pointer-events: none;
-    overflow-x: auto;
-    overflow-y: hidden;
-    overscroll-behavior-x: contain;
-    scrollbar-width: thin;
-    scrollbar-color: color-mix(
-        in srgb,
-        var(--table-foreground) 35%,
-        transparent
-      )
-      transparent;
+    overflow: clip;
   }
   .db-hand-fan {
     position: relative;
@@ -421,19 +414,115 @@
     overflow: clip;
   }
   /* The shared buffer rises above the logical hand without changing its size.
-     Empty buffer lets clicks reach the table; the fan and scrollbar can scroll. */
+     Empty buffer lets clicks reach the table. */
   .db-hand-layer {
     position: relative;
     pointer-events: auto;
   }
-  .db-hand-scroll::after {
-    content: "";
+  /* A crowded hand is one button, above every card including a focused one. */
+  .db-hand-open {
     position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 14px;
-    pointer-events: auto;
+    inset: 0;
+    z-index: 101;
+    display: grid;
+    place-items: start center;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .db-hand-open:focus-visible {
+    outline: 3px solid var(--table-foreground);
+    outline-offset: -3px;
+    border-radius: var(--card-radius);
+  }
+  .db-hand-count {
+    min-width: 2rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 999px;
+    background: var(--table-foreground);
+    color: #2a0e06;
+    box-shadow: var(--elevation-lift);
+    font:
+      700 var(--text-label) / 1.2 system-ui,
+      sans-serif;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+  .db-hand-sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 44;
+    background: #1a0a05;
+    opacity: calc(0.6 * (1 - var(--drawer-swipe-progress, 0)));
+    transition: opacity var(--duration-base) var(--ease-out);
+  }
+  .db-hand-sheet-viewport {
+    position: fixed;
+    inset: 0;
+    z-index: 45;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  /* Card menus (z-index 50), previews and inspection open above the sheet. */
+  .db-hand-sheet {
+    --card-w: var(--card-w-sheet);
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    width: min(100%, 48rem);
+    max-height: 85dvh;
+    padding: 0.5rem 1rem calc(1rem + env(safe-area-inset-bottom, 0px));
+    border-radius: 1rem 1rem 0 0;
+    background: var(--table);
+    color: var(--table-foreground);
+    box-shadow: var(--elevation-drag);
+    outline: none;
+    transform: translateY(var(--drawer-swipe-movement-y, 0px));
+    transition: transform var(--duration-base) var(--ease-out);
+  }
+  .db-hand-sheet[data-starting-style],
+  .db-hand-sheet[data-ending-style] {
+    transform: translateY(100%);
+  }
+  .db-hand-sheet-backdrop[data-starting-style],
+  .db-hand-sheet-backdrop[data-ending-style] {
+    opacity: 0;
+  }
+  .db-hand-sheet[data-swiping],
+  .db-hand-sheet-backdrop[data-swiping] {
+    transition-duration: 0ms;
+  }
+  .db-hand-sheet-handle {
+    justify-self: center;
+    width: 3rem;
+    height: 0.25rem;
+    margin-bottom: 0.5rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--table-foreground) 40%, transparent);
+  }
+  .db-hand-sheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+  }
+  .db-hand-sheet-title {
+    margin: 0;
+    font-size: var(--text-title);
+    font-weight: 600;
+  }
+  .db-hand-sheet-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(var(--card-w), 1fr));
+    justify-items: center;
+    gap: 0.75rem;
+    padding: 0.25rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
   .db-hand-empty {
     position: absolute;
@@ -740,7 +829,9 @@
     [data-game-ui] *,
     .db-drag-overlay *,
     .db-draw-overlay *,
-    .db-card-arrival * {
+    .db-card-arrival *,
+    .db-hand-sheet-viewport *,
+    .db-hand-sheet-backdrop {
       animation-duration: 0s !important;
       transition-duration: 0s !important;
     }

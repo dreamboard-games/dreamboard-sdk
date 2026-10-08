@@ -278,7 +278,7 @@
       "name": "hand",
       "type": "registry:component",
       "title": "Hand",
-      "description": "A fanned hand: tap for actions, hold or hover to preview, drag to a drop area.",
+      "description": "A fanned hand that always fits: tap for actions, slide to browse, hold or hover to preview, drag to a drop area. A crowded hand opens every card in a sheet.",
       "meta": {
         "binding": "workspace"
       },
@@ -292,6 +292,11 @@
           "path": "items/card-arrival.tsx",
           "type": "registry:component",
           "target": "@components/dreamboard/card-arrival.tsx"
+        },
+        {
+          "path": "items/hand-sheet.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/hand-sheet.tsx"
         }
       ],
       "registryDependencies": [
@@ -300,7 +305,7 @@
         "@dreamboard/game-provider",
         "@dreamboard/card-control"
       ],
-      "dependencies": ["motion@13.5.0"]
+      "dependencies": ["@base-ui/react@^1.8.0", "motion@13.5.0"]
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",

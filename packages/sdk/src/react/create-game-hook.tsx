@@ -34,6 +34,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  type CSSProperties,
   type ReactNode,
 } from "react";
 import { useSelector } from "@tanstack/react-store";
@@ -68,6 +69,14 @@ export interface CardGesture {
   readonly isActive: boolean;
   /** Held on touch, or rested on with a mouse. */
   readonly inspecting: "hold" | "hover" | null;
+}
+
+export interface CardRow {
+  /** Spread on the element holding the row's cards; touching them never scrolls. */
+  readonly props: {
+    readonly "data-card-row": string;
+    readonly style: CSSProperties;
+  };
 }
 
 export interface DropArea {
@@ -216,7 +225,16 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
       options: CardGestureOptions<Game>,
     ): CardGesture {
       const session = useGestureSession();
+      const control = `${session.id}${useId()}`;
       const routes = options.drag as false | RuntimeTargetOptions;
+      const latestRoutes = useRef(routes);
+      useLayoutEffect(() => {
+        latestRoutes.current = routes;
+      });
+      useLayoutEffect(
+        () => session.registerControl(control, () => latestRoutes.current),
+        [session, control],
+      );
       const canDrag = useGame(
         (snapshot) =>
           routes !== false &&
@@ -236,7 +254,10 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
           state.activeTarget.value === cardId,
       );
       return {
-        props: session.cardProps(cardId, routes, { dragging, inspecting }),
+        props: session.cardProps(cardId, control, routes, {
+          dragging,
+          inspecting,
+        }),
         canDrag,
         isDragging: dragging,
         isActive,
@@ -378,6 +399,32 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
         : null;
     }
 
+    /**
+     * Marks a row of cards that fits without scrolling, such as a hand. A
+     * finger pressed on one of its cards slides along the row: `cardAt`
+     * names the card whose resting place is under a viewport point, or null
+     * off the row. That card becomes active; lifting the finger there clicks
+     * it, and pulling up drags it.
+     */
+    function useCardRow(
+      cardAt: (point: {
+        readonly x: number;
+        readonly y: number;
+      }) => SeatCardId<Game> | null,
+    ): CardRow {
+      const session = useGestureSession();
+      const id = `${session.id}${useId()}`;
+      const latest = useRef(cardAt);
+      useLayoutEffect(() => {
+        latest.current = cardAt;
+      });
+      useLayoutEffect(
+        () => session.registerRow(id, (point) => latest.current(point)),
+        [session, id],
+      );
+      return { props: session.rowProps(id) };
+    }
+
     /** Presentation focus shared by the fan, inspection and pointer activation. */
     function useActiveCard(): SeatCardId<Game> | null {
       const session = useGestureSession();
@@ -395,6 +442,7 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
       useGame,
       Subscribe,
       useCardGesture,
+      useCardRow,
       useActiveCard,
       useGameShortcuts,
       useShortcutTarget,

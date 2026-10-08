@@ -5,9 +5,23 @@ import { gameDriver } from "../helpers/browser-game";
 
 async function activate(locator: Locator, touch: boolean) {
   if (touch) {
-    // A fanned card always shows at least its left quarter.
-    const box = (await locator.boundingBox())!;
-    await locator.tap({ position: { x: box.width * 0.2, y: box.height / 2 } });
+    // The fan fits the hand, so tap where this card actually shows.
+    await locator.scrollIntoViewIfNeeded();
+    const at = await locator.evaluate((element) => {
+      const { x, y, width, height } = element.getBoundingClientRect();
+      const points = [0.1, 0.2, 0.3, 0.5, 0.7, 0.9].map((share) => ({
+        x: x + width * share,
+        y: y + height / 2,
+      }));
+      return (
+        points.find(
+          (point) =>
+            document.elementFromPoint(point.x, point.y)?.closest("button") ===
+            element,
+        ) ?? points[3]
+      );
+    });
+    await locator.page().touchscreen.tap(at.x, at.y);
   } else {
     await locator.focus();
     await locator.press("Enter");

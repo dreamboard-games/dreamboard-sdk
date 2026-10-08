@@ -4,6 +4,7 @@ import {
   magneticDropPoint,
   GESTURE_THRESHOLDS,
   type GestureCallbacks,
+  type GestureOptions,
 } from "./gesture.js";
 
 const at = (pointerType: string, x: number, y: number, pointerId = 1) => ({
@@ -13,7 +14,11 @@ const at = (pointerType: string, x: number, y: number, pointerId = 1) => ({
   clientY: y,
 });
 
-function press(pointerType: string, { draggable = true } = {}) {
+function press(
+  pointerType: string,
+  { draggable = true } = {},
+  options?: GestureOptions,
+) {
   const log: string[] = [];
   const callbacks: GestureCallbacks = {
     hold: () => log.push("hold"),
@@ -22,12 +27,14 @@ function press(pointerType: string, { draggable = true } = {}) {
       return draggable;
     },
     dragMove: (point) => log.push(`dragMove ${point.x},${point.y}`),
+    browse: (point) => log.push(`browse ${point.x},${point.y}`),
     end: (kind, point) => log.push(`end ${kind} ${point.x},${point.y}`),
     cancel: (kind) => log.push(`cancel ${kind}`),
   };
   const recognizer = createGestureRecognizer(
     at(pointerType, 100, 100),
     callbacks,
+    options,
   );
   return { log, recognizer };
 }
@@ -73,6 +80,63 @@ describe("gesture recognizer", () => {
     recognizer.move(at("touch", 60, 40));
     recognizer.cancel(at("touch", 60, 40));
     expect(log).toEqual(["cancel browse"]);
+  });
+
+  it("scrubs a sideways finger along its row and reports every move", () => {
+    const { log, recognizer } = press("touch", {}, { scrub: true });
+    recognizer.move(at("touch", 80, 98));
+    recognizer.move(at("touch", 50, 101));
+    recognizer.up(at("touch", 50, 101));
+    vi.runAllTimers();
+    expect(log).toEqual(["browse 80,98", "browse 50,101", "end browse 50,101"]);
+  });
+
+  it("pulls the scrubbed card up from where the finger turned upward", () => {
+    const { log, recognizer } = press("touch", {}, { scrub: true });
+    recognizer.move(at("touch", 80, 100));
+    recognizer.move(at("touch", 60, 102));
+    recognizer.move(at("touch", 61, 97));
+    recognizer.move(at("touch", 62, 90));
+    recognizer.move(at("touch", 70, 40));
+    recognizer.up(at("touch", 70, 40));
+    expect(log).toEqual([
+      "browse 80,100",
+      "browse 60,102",
+      "browse 61,97",
+      "browse 62,90",
+      "dragStart 60,102",
+      "dragMove 62,90",
+      "dragMove 70,40",
+      "end drag 70,40",
+    ]);
+  });
+
+  it("keeps scrubbing while a sideways finger drifts upward", () => {
+    const { log, recognizer } = press("touch", {}, { scrub: true });
+    for (let step = 1; step <= 6; step++)
+      recognizer.move(at("touch", 100 - step * 12, 100 - step * 3));
+    expect(log.some((entry) => entry.startsWith("dragStart"))).toBe(false);
+  });
+
+  it("asks a card that cannot drag once per pull and keeps scrubbing", () => {
+    const { log, recognizer } = press(
+      "touch",
+      { draggable: false },
+      { scrub: true },
+    );
+    recognizer.move(at("touch", 80, 100));
+    recognizer.move(at("touch", 80, 90));
+    recognizer.move(at("touch", 80, 85));
+    recognizer.move(at("touch", 60, 85));
+    recognizer.up(at("touch", 60, 85));
+    expect(log).toEqual([
+      "browse 80,100",
+      "browse 80,90",
+      "dragStart 80,100",
+      "browse 80,85",
+      "browse 60,85",
+      "end browse 60,85",
+    ]);
   });
 
   it("browses a downward finger", () => {
