@@ -5,6 +5,7 @@ import type {
   ShortcutOptions,
   ShortcutTarget,
   ShortcutHint,
+  ShortcutActivity,
   ShortcutsController,
   RuntimeShortcutTarget,
 } from "../headless/features/shortcuts.js";
@@ -320,7 +321,10 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
         const next = right[index];
         return (
           hint.label === next.label &&
-          hint.interaction === next.interaction &&
+          hint.kind === next.kind &&
+          (hint.kind !== "interaction" ||
+            (next.kind === "interaction" &&
+              hint.interaction === next.interaction)) &&
           hint.keys.length === next.keys.length &&
           hint.keys.every((key, at) => key === next.keys[at])
         );
@@ -330,12 +334,29 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
       target: ShortcutTarget<Game> | null,
     ): readonly ShortcutHint<Game>[] {
       const controller = shortcutsOf(useInstance());
-      useGame((snapshot) => shortcutsOf(snapshot)?.getHints(target) ?? [], {
-        compare: sameHints,
+      const session = useGestureSession();
+      useSelector(session.store, () => session.getShortcutActivity(), {
+        compare: (left, right) =>
+          left.focusedTarget === right.focusedTarget &&
+          left.pointerActive === right.pointerActive,
       });
+      useGame(
+        (snapshot) =>
+          shortcutsOf(snapshot)?.getHints(
+            target,
+            session.getShortcutActivity() as ShortcutActivity<Game>,
+          ) ?? [],
+        {
+          compare: sameHints,
+        },
+      );
       return useSelector(
         controller?.configuration ?? noShortcutsConfiguration,
-        () => controller?.getHints(target) ?? [],
+        () =>
+          controller?.getHints(
+            target,
+            session.getShortcutActivity() as ShortcutActivity<Game>,
+          ) ?? [],
         { compare: sameHints },
       );
     }
@@ -355,12 +376,12 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
         );
       useShortcutsAdapter(instance, controller, session, options, (result) => {
         if (result instanceof Error) instance.getOptions().onError?.(result);
-        else if (!result.accepted)
-          instance
-            .getOptions()
-            .onError?.(
-              new Error(result.message ?? result.errorCode, { cause: result }),
-            );
+        else if (result.kind === "interaction" && !result.result.accepted)
+          instance.getOptions().onError?.(
+            new Error(result.result.message ?? result.result.errorCode, {
+              cause: result.result,
+            }),
+          );
       });
       const target = useGestureState(
         session,

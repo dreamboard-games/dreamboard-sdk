@@ -15,6 +15,10 @@ export * from "./headless/sources/index.js";
 export {
   shortcutsFeature,
   type ShortcutBinding,
+  type InteractionShortcutBinding,
+  type LocalShortcutBinding,
+  type ShortcutActivity,
+  type ShortcutResult,
   type ShortcutOptions,
   type ShortcutTarget,
   type ShortcutZoneTarget,

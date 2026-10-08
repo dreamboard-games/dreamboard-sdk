@@ -42,9 +42,13 @@ export interface RuntimeFeatureSnapshot {
     find(id: string, hostId: string): { readonly count: number } | undefined;
   };
   readonly cards: {
-    find(
-      id: string,
-    ): { getInteractions(): readonly RuntimeInteraction[] } | undefined;
+    find(id: string):
+      | {
+          readonly zone: string;
+          readonly hostId: string;
+          getInteractions(): readonly RuntimeInteraction[];
+        }
+      | undefined;
   };
 }
 export interface RuntimeFeatureGame extends RuntimeFeatureSnapshot {

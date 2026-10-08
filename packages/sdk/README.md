@@ -398,6 +398,7 @@ function AppShortcuts() {
   useGameShortcuts({
     bindings: [
       {
+        kind: "interaction",
         keys: ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
         label: "Draw cards",
         target: "zone",
@@ -406,6 +407,7 @@ function AppShortcuts() {
         inputs: ({ key }) => ({ count: Number(key) }),
       },
       {
+        kind: "interaction",
         keys: ["f"],
         label: "Flip card",
         target: "card",
@@ -413,17 +415,40 @@ function AppShortcuts() {
         interaction: "play.flip",
         inputs: ({ target }) => ({ card: target.value }),
       },
+      {
+        kind: "local",
+        keys: ["s"],
+        label: "Change hand order",
+        target: "zone",
+        zoneId: "hand",
+        getIsAvailable: ({ target }) => target.hostId === playerId,
+        run: ({ target }) => changeAuthoredOrder(target.hostId),
+      },
     ],
   });
   return null;
 }
 ```
 
-These interaction and input names are examples from an authored reducer. The
+These interaction and input names are examples from an authored reducer;
+`playerId` and `changeAuthoredOrder` are supplied by the game. The
 binding's discriminated types derive from that reducer: interaction names,
 input keys, target kinds, and every required payload field must match. A game
 that exposes a counted draw submits one `count` payload; shortcuts never repeat
 a draw-one action. No actions or keys are supplied by default.
+
+Local bindings run game-authored presentation callbacks for a focused zone
+control or a focused card in that zone. A focused card resolves its current
+containing zone and actual host, including opaque hidden card references. Local
+bindings always use real DOM focus, including focus acquired by clicking; hover
+alone never activates them. Mouse browsing can change the interaction target
+while local actions retain the focused control's zone. They are unavailable
+during a card pointer gesture or its settling drag overlay. Games own any
+further restrictions through the optional pure `getIsAvailable` predicate.
+They do not submit source commands, alter interaction drafts, or require the
+player's reducer turn; an interaction request does not block a local action.
+`run` returns `void` or `Promise<void>` and is never evaluated for hints.
+The SDK supplies no sorting modes or cycling policy.
 
 Card controls using `useCardGesture` share its canonical pointer and keyboard
 focus. Zone controls spread
@@ -434,19 +459,29 @@ board and tile controls can use the same hook with their canonical
 
 Keys are exact browser `event.key` strings. The adapter ignores held repeats,
 composition, editing controls, modifier combinations, and open modal or menu
-surfaces. It prevents the browser default only when a single eligible binding
+surfaces. Native radio inputs can carry a zone target for authored shortcuts;
+their ordinary arrow and space keys remain native unless explicitly bound.
+It prevents the browser default only when a single eligible binding
 handles the key. Source and seat changes clear the gesture target; unmounting
 removes the listener and binding hints.
 
 Input factories must be pure: eligibility and hints evaluate them against the
-current projected domains. `game.shortcuts.getHints(target)` returns only
-currently usable, unambiguous keys with their labels and typed interaction
-names, for menus or help. `useShortcutHints(target)` reads those hints reactively
+current projected domains. Availability predicates for local bindings must
+also be pure. `game.shortcuts.getHints(target, activity)` returns only
+currently usable, unambiguous keys with their labels and `kind`. Interaction
+hints also carry their typed interaction name; local hints do not. Both variants
+share key collision handling. Headless callers supply local focus explicitly as
+`activity: { focusedTarget, pointerActive }`; omitting activity admits only
+interaction bindings. `useShortcutHints(target)` reads those hints reactively
 and returns no hints when the feature is absent. The mounted
 `useGameShortcuts` hook returns `{ target, hints }` for a reserved help/status
 area. Rejected actions and transport failures use the binding's existing
 `onError` handler; callbacks from an old source, seat, or unmounted child are
-ignored. `game.shortcuts.handle(key, target)` uses the same
+ignored. `game.shortcuts.handle(key, target, activity)` returns `null` for an
+unhandled
+key, or a promise of `{ kind: "local" }` or
+`{ kind: "interaction", result: SubmitResult }`. Callback failures reject that
+promise and use the same `onError` path. Interaction bindings use the same
 atomic `interaction.submit(params)` path available to authored action buttons.
 Explicit params are validated against the current projected descriptor without
 mutating drafts. Existing `submit()` continues to submit the interaction draft

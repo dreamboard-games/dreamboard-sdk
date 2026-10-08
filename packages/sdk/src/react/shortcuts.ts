@@ -4,12 +4,15 @@ import type {
   ShortcutTarget,
   ShortcutsController,
   RuntimeShortcutTarget,
+  ShortcutActivity,
+  ShortcutResult,
 } from "../headless/features/shortcuts.js";
-import type { CoreInstance, SubmitResult } from "../headless/model.js";
+import type { CoreInstance } from "../headless/model.js";
 
 /** Browser adapter input; the gesture session owns the single active target. */
 export interface ShortcutSession {
   getActiveTarget(): RuntimeShortcutTarget | null;
+  getShortcutActivity(): ShortcutActivity<unknown>;
 }
 function canHandle(event: KeyboardEvent) {
   const target = event.target;
@@ -24,7 +27,7 @@ function canHandle(event: KeyboardEvent) {
     !(
       target instanceof Element &&
       target.closest(
-        "input, textarea, select, [contenteditable]:not([contenteditable='false']), [role='textbox']",
+        "input:not([type='radio']), textarea, select, [contenteditable]:not([contenteditable='false']), [role='textbox']",
       )
     ) &&
     !Array.from(
@@ -47,7 +50,7 @@ export function useShortcutsAdapter<G>(
   controller: ShortcutsController<G>,
   session: ShortcutSession,
   options: ShortcutOptions<G>,
-  onResult: (result: SubmitResult | Error) => void,
+  onResult: (result: ShortcutResult | Error) => void,
 ) {
   const latest = useRef({ options, onResult });
   const registration = useRef<ReturnType<
@@ -60,18 +63,26 @@ export function useShortcutsAdapter<G>(
     let mounted = true;
     const owned = controller.register(latest.current.options);
     registration.current = owned;
+    let source = game.getOptions().source;
+    let seat = game.snapshot?.me;
+    let lifetime = 0;
+    const unsubscribe = game.subscribe(() => {
+      const nextSource = game.getOptions().source;
+      const nextSeat = game.snapshot?.me;
+      if (source === nextSource && seat === nextSeat) return;
+      source = nextSource;
+      seat = nextSeat;
+      ++lifetime;
+    });
     function keydown(event: KeyboardEvent) {
       if (!canHandle(event)) return;
       // Bound game identity boundary; session targets originate from its own controls.
-      const source = game.getOptions().source;
-      const seat = game.snapshot?.me;
-      const active = () =>
-        mounted &&
-        game.getOptions().source === source &&
-        game.snapshot?.me === seat;
+      const started = lifetime;
+      const active = () => mounted && lifetime === started;
       const pending = controller.handle(
         event.key,
         session.getActiveTarget() as ShortcutTarget<G> | null,
+        session.getShortcutActivity() as ShortcutActivity<G>,
       );
       if (!pending) return;
       event.preventDefault();
@@ -90,6 +101,7 @@ export function useShortcutsAdapter<G>(
     window.addEventListener("keydown", keydown);
     return () => {
       mounted = false;
+      unsubscribe();
       window.removeEventListener("keydown", keydown);
       registration.current = null;
       owned.dispose();

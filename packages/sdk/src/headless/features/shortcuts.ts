@@ -45,6 +45,7 @@ type Binding<G, K extends InteractionKey<G>, Target, Filter> = Filter & {
   /** Exact browser event.key values; modifiers and held repeats are ignored. */
   readonly keys: readonly string[];
   readonly label: string;
+  readonly kind: "interaction";
   readonly interaction: K;
   readonly inputs: (context: {
     readonly key: string;
@@ -66,7 +67,7 @@ type SelectionBinding<G, K extends InteractionKey<G>> = {
   }[TargetKind];
 }[InputKey<G, K>];
 /** Correlated by interaction, input kind, and the selected target's value. */
-export type ShortcutBinding<G> = {
+export type InteractionShortcutBinding<G> = {
   [K in InteractionKey<G>]:
     | SelectionBinding<G, K>
     | {
@@ -78,13 +79,45 @@ export type ShortcutBinding<G> = {
         >;
       }[IdOf<G, "zoneId">];
 }[InteractionKey<G>];
+/** Local presentation actions run only from control focus, independent of reducer turns. */
+export type LocalShortcutBinding<G> = {
+  [Z in IdOf<G, "zoneId">]: {
+    readonly kind: "local";
+    readonly keys: readonly string[];
+    readonly label: string;
+    readonly target: "zone";
+    readonly zoneId: Z;
+    /** Pure applicability predicate, also evaluated for hints. */
+    readonly getIsAvailable?: (context: {
+      readonly key: string;
+      readonly target: Extract<ShortcutZoneTarget<G>, { readonly zoneId: Z }>;
+    }) => boolean;
+    readonly run: (context: {
+      readonly key: string;
+      readonly target: Extract<ShortcutZoneTarget<G>, { readonly zoneId: Z }>;
+    }) => void | Promise<void>;
+  };
+}[IdOf<G, "zoneId">];
+export type ShortcutBinding<G> =
+  InteractionShortcutBinding<G> | LocalShortcutBinding<G>;
 export interface ShortcutOptions<G> {
   readonly bindings: readonly ShortcutBinding<G>[];
 }
-export interface ShortcutHint<G = unknown> {
+export type ShortcutHint<G = unknown> = {
   readonly keys: readonly string[];
   readonly label: string;
-  readonly interaction: InteractionKey<G>;
+} & (
+  | { readonly kind: "interaction"; readonly interaction: InteractionKey<G> }
+  | { readonly kind: "local" }
+);
+export type ShortcutResult =
+  | { readonly kind: "interaction"; readonly result: SubmitResult }
+  | { readonly kind: "local" };
+/** Mounted control activity; explicit-target interaction menus need no focus. */
+export interface ShortcutActivity<G> {
+  readonly focusedTarget: ShortcutTarget<G> | null;
+  /** Card press, drag, or submitted drag overlay still settling. */
+  readonly pointerActive: boolean;
 }
 export interface ShortcutsController<G> {
   /** UI binding configuration has its own subscription, independent of reducer frames. */
@@ -97,12 +130,16 @@ export interface ShortcutsController<G> {
     update(options: ShortcutOptions<G>): void;
     dispose(): void;
   };
-  /** null means unhandled; a handled key submits exactly once. */
+  /** null means unhandled; a handled key runs or submits exactly once. */
   handle(
     key: string,
     target: ShortcutTarget<G> | null,
-  ): Promise<SubmitResult> | null;
-  getHints(target: ShortcutTarget<G> | null): readonly ShortcutHint<G>[];
+    activity?: ShortcutActivity<G>,
+  ): Promise<ShortcutResult> | null;
+  getHints(
+    target: ShortcutTarget<G> | null,
+    activity?: ShortcutActivity<G>,
+  ): readonly ShortcutHint<G>[];
 }
 export type RuntimeShortcutTarget =
   | RuntimeSelectionTarget
@@ -114,15 +151,30 @@ export type RuntimeShortcutTarget =
 type RuntimeBinding = {
   readonly keys: readonly string[];
   readonly label: string;
-  readonly interaction: string;
   readonly target: RuntimeShortcutTarget["kind"];
-  readonly input?: string;
   readonly zoneId?: string;
-  readonly inputs: (context: {
-    readonly key: string;
-    readonly target: RuntimeShortcutTarget;
-  }) => Readonly<Record<string, RuntimeJson>>;
-};
+} & (
+  | {
+      readonly kind: "interaction";
+      readonly interaction: string;
+      readonly input?: string;
+      readonly inputs: (context: {
+        readonly key: string;
+        readonly target: RuntimeShortcutTarget;
+      }) => Readonly<Record<string, RuntimeJson>>;
+    }
+  | {
+      readonly kind: "local";
+      readonly run: (context: {
+        readonly key: string;
+        readonly target: RuntimeShortcutTarget;
+      }) => void | Promise<void>;
+      readonly getIsAvailable?: (context: {
+        readonly key: string;
+        readonly target: RuntimeShortcutTarget;
+      }) => boolean;
+    }
+);
 
 /** Headless and opt-in: no names, bindings or browser listeners are installed by default. */
 export function shortcutsFeature<G>(
@@ -142,15 +194,32 @@ export function shortcutsFeature<G>(
     binding: RuntimeBinding,
     key: string,
     target: RuntimeShortcutTarget | null,
+    activity?: ShortcutActivity<G>,
   ) {
-    if (
-      disposed ||
-      !target ||
-      game.connection !== "ready" ||
-      game.request ||
-      target.kind !== binding.target
-    )
-      return null;
+    if (disposed || game.connection !== "ready") return null;
+    if (binding.kind === "local") {
+      if (!activity || activity.pointerActive) return null;
+      const focused = activity.focusedTarget as RuntimeShortcutTarget | null;
+      const card =
+        focused?.kind === "card" ? game.cards.find(focused.value) : undefined;
+      const zone =
+        focused?.kind === "zone"
+          ? focused
+          : card
+            ? { kind: "zone" as const, zoneId: card.zone, hostId: card.hostId }
+            : null;
+      if (
+        !zone ||
+        zone.zoneId !== binding.zoneId ||
+        !game.zones.find(zone.zoneId, zone.hostId)
+      )
+        return null;
+      const action = { key, target: zone };
+      return binding.getIsAvailable?.(action) === false
+        ? null
+        : { kind: "local" as const, binding, action };
+    }
+    if (!target || game.request || target.kind !== binding.target) return null;
     const routes =
       target.kind === "card"
         ? (game.cards.find(target.value)?.getInteractions() ?? [])
@@ -192,7 +261,7 @@ export function shortcutsFeature<G>(
     }
     const params = binding.inputs({ key, target });
     return interaction.getIsAvailable(params) && interaction.getIsReady(params)
-      ? { interaction, params }
+      ? { kind: "interaction" as const, interaction, params }
       : null;
   }
   const controller: ShortcutsController<G> = {
@@ -215,22 +284,35 @@ export function shortcutsFeature<G>(
         },
       };
     },
-    handle(key, target) {
+    handle(key, target, activity) {
       const candidates = bindings()
         .filter((binding) => binding.keys.includes(key))
         .flatMap((binding) => {
-          const resolved = resolve(binding, key, target);
+          const resolved = resolve(binding, key, target, activity);
           return resolved ? [resolved] : [];
         });
       // Ambiguous authored routes do not guess which action to run.
-      return candidates.length === 1
-        ? candidates[0].interaction.submit(candidates[0].params)
-        : null;
+      if (candidates.length !== 1) return null;
+      const candidate = candidates[0];
+      if (candidate.kind === "interaction")
+        return candidate.interaction
+          .submit(candidate.params)
+          .then((result) => ({ kind: "interaction", result }));
+      // Capture synchronous callback errors in the same promise path as async failures.
+      try {
+        return Promise.resolve(candidate.binding.run(candidate.action)).then(
+          () => ({ kind: "local" }),
+        );
+      } catch (cause) {
+        return Promise.reject(cause);
+      }
     },
-    getHints(target) {
+    getHints(target, activity) {
       const eligible = bindings().map((binding) => ({
         binding,
-        keys: binding.keys.filter((key) => resolve(binding, key, target)),
+        keys: binding.keys.filter((key) =>
+          resolve(binding, key, target, activity),
+        ),
       }));
       const counts = new Map<string, number>();
       for (const { keys } of eligible)
@@ -245,7 +327,12 @@ export function shortcutsFeature<G>(
               {
                 keys: unique,
                 label: binding.label,
-                interaction: binding.interaction,
+                ...(binding.kind === "interaction"
+                  ? {
+                      kind: "interaction" as const,
+                      interaction: binding.interaction,
+                    }
+                  : { kind: "local" as const }),
               },
             ]
           : [];

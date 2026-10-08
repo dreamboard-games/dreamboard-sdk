@@ -63,6 +63,7 @@ const game = model.assemble({
 });
 type Binding = ShortcutBinding<typeof game>;
 const draw: Binding = {
+  kind: "interaction" as const,
   keys: ["1"],
   label: "Draw",
   interaction: "play.draw",
@@ -75,6 +76,7 @@ const draw: Binding = {
   },
 };
 const flip: Binding = {
+  kind: "interaction" as const,
   keys: ["f"],
   label: "Flip",
   interaction: "play.flip",
@@ -83,6 +85,7 @@ const flip: Binding = {
   inputs: ({ target }) => ({ card: target.value }),
 };
 const move: Binding = {
+  kind: "interaction" as const,
   keys: ["m"],
   label: "Move",
   interaction: "play.move",
@@ -137,13 +140,14 @@ void [
   hooks,
 ];
 
-declare const hint: ShortcutHint<typeof game>;
+declare const hint: Extract<ShortcutHint<typeof game>, { kind: "interaction" }>;
 const interaction: "play.draw" | "play.flip" | "play.move" = hint.interaction;
 // @ts-expect-error Hints retain the game's authored interaction identity.
 const unknownHint: "play.unknown" = hint.interaction;
 hooks.useGameShortcuts({
   bindings: [
     {
+      kind: "interaction" as const,
       keys: ["2"],
       label: "Draw",
       target: "zone",
@@ -156,6 +160,7 @@ hooks.useGameShortcuts({
       },
     },
     {
+      kind: "interaction" as const,
       keys: ["f"],
       label: "Flip",
       target: "card",
@@ -182,3 +187,47 @@ hooks.useDropArea({ interaction: "play.draw", params: { count: 2 } });
 hooks.useDropArea({ interaction: "play.draw", params: { count: "two" } });
 // @ts-expect-error The gesture supplies the dropped card; an area cannot override it.
 hooks.useDropArea({ interaction: "play.flip", params: { card: "pawn" } });
+const local: Binding = {
+  kind: "local",
+  keys: ["s"],
+  label: "Change hand order",
+  target: "zone",
+  zoneId: "deck",
+  getIsAvailable: ({ target }) => {
+    const host: "pawn" = target.hostId;
+    return host === "pawn";
+  },
+  run: ({ key, target }) => {
+    const zone: "deck" = target.zoneId;
+    const host: "pawn" = target.hostId;
+    void [key, zone, host];
+  },
+};
+// @ts-expect-error Local bindings retain authored zone identities.
+const missingLocalZone: Binding = { ...local, zoneId: "unknown" };
+// @ts-expect-error Local bindings accept only focus-scoped zone actions.
+const localCard: Binding = { ...local, target: "card" };
+const submitResultLocal: Binding = {
+  ...local,
+  // @ts-expect-error Local callbacks do not impersonate reducer submit results.
+  run: () => ({ accepted: true }),
+};
+hooks.useGameShortcuts({
+  bindings: [
+    {
+      kind: "local",
+      keys: ["s"],
+      label: "Sort",
+      target: "zone",
+      zoneId: "deck",
+      run: ({ target }) => {
+        const host: "pawn" = target.hostId;
+        void host;
+      },
+    },
+  ],
+});
+declare const localHint: Extract<ShortcutHint<typeof game>, { kind: "local" }>;
+// @ts-expect-error Local hints have no reducer interaction.
+localHint.interaction;
+void [local, missingLocalZone, localCard, submitResultLocal];
