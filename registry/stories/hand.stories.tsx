@@ -270,6 +270,9 @@ function HandOrder({ hostId }: { hostId: GameCard["hostId"] }) {
   const hand = game.zones.get("hand", hostId);
   return (
     <div className="flex gap-2">
+      <Button onClick={() => game.interactions.get("play.draw").submit()}>
+        Draw card
+      </Button>
       {game.hand.getSortModes(hand).map((mode) => (
         <Button
           key={mode}

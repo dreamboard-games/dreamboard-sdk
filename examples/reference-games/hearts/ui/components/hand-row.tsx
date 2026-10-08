@@ -119,7 +119,7 @@ function HandOrder({ hostId }: { hostId: GamePlayer["id"] }) {
         ))}
       </div>
       <p className="text-sm text-slate-600">
-        Press S with a card focused to change order.
+        Press S with a card or sort option focused to change order.
       </p>
     </fieldset>
   );

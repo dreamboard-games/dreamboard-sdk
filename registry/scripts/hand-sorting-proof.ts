@@ -57,53 +57,138 @@ export async function proveHandSorting(
     ).toBe(true);
     await expect(hand.locator(".db-hand-scroll")).toHaveCSS(
       "overflow-y",
-      "clip",
+      "hidden",
     );
   }
   await activate(dealt);
   await expect.poll(order).toEqual(before);
 
-  // Reverse a new card while its face-down flight is already visible. Its final
-  // painted pose must match the newly sorted slot before revealing the control.
-  await page.getByRole("button", { name: "Deck actions", exact: true }).click();
-  await page.locator('[data-action="draw"]').click();
-  await expect(cards).toHaveCount(10);
-  const incoming = (await order()).find((id) => !before.includes(id))!;
-  const target = hand.locator(`[data-card=${JSON.stringify(incoming)}]`);
-  const arrival = page.locator("[data-card-arrival]");
-  await expect(arrival).toBeVisible();
-  const watch = await target.evaluateHandle((target) => {
-    let previous = { x: 0, y: 0 };
-    return {
-      result: new Promise<{ gap: number }>((resolve) => {
-        function sample() {
-          const arrival = document.querySelector("[data-card-arrival]");
-          if (arrival) {
-            const box = arrival.getBoundingClientRect();
-            previous = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
-            requestAnimationFrame(sample);
-          } else {
-            const box = target.getBoundingClientRect();
-            resolve({
-              gap: Math.hypot(
-                previous.x - box.x - box.width / 2,
-                previous.y - box.y - box.height / 2,
-              ),
-            });
+  // Cover ordinary origins, staged pile flights, and an already flipping face.
+  for (const phase of ["ordinary", "pending", "flip"] as const) {
+    await activate(dealt);
+    const source = await order();
+    if (phase === "ordinary") {
+      await page
+        .getByRole("button", { name: "Draw card", exact: true })
+        .click();
+    } else {
+      await page
+        .getByRole("button", { name: "Deck actions", exact: true })
+        .click();
+      await page.locator('[data-action="draw"]').click();
+    }
+    await expect(cards).toHaveCount(source.length + 1);
+    const incoming = (await order()).find((id) => !source.includes(id))!;
+    const target = hand.locator(`[data-card=${JSON.stringify(incoming)}]`);
+    if (phase === "pending")
+      await expect(page.locator('[data-draw-overlay="pending"]')).toBeVisible();
+    else
+      await expect
+        .poll(
+          () =>
+            page
+              .locator(
+                `[data-card-arrival="${phase === "ordinary" ? "flight" : "flip"}"]`,
+              )
+              .isVisible(),
+          { intervals: [16], message: `An arrival reaches ${phase}` },
+        )
+        .toBe(true);
+    const watch = await target.evaluateHandle((target) => {
+      let previous = { x: 0, y: 0 };
+      let previousKind: "draw" | "arrival" | null = null;
+      let handoff: number | null = null;
+      const observer = new MutationObserver((records) => {
+        for (const record of records)
+          for (const node of record.addedNodes) {
+            if (
+              !(node instanceof Element) ||
+              !node.matches("[data-card-arrival]")
+            )
+              continue;
+            if (previousKind !== "draw") continue;
+            const box = node.getBoundingClientRect();
+            handoff = Math.hypot(
+              previous.x - box.x - box.width / 2,
+              previous.y - box.y - box.height / 2,
+            );
           }
-        }
-        requestAnimationFrame(sample);
-      }),
-    };
-  });
-  await activate(reverse);
-  await expect.poll(order).toEqual([...before, incoming].reverse());
-  const reveal = await watch.evaluate((watch) => watch.result);
-  expect(
-    reveal.gap,
-    "An arriving face reveals at its newly sorted slot",
-  ).toBeLessThan(3);
-  await expect(target).toHaveCSS("visibility", "visible");
-  await watch.dispose();
+      });
+      observer.observe(document.body, { childList: true });
+      return {
+        result: new Promise<{ gap: number; handoff: number | null }>(
+          (resolve, reject) => {
+            const timeout = setTimeout(() => {
+              observer.disconnect();
+              reject(
+                new Error(
+                  `Arrival did not reveal: phase=${document.querySelector("[data-card-arrival]")?.getAttribute("data-card-arrival")}, visibility=${getComputedStyle(target).visibility}`,
+                ),
+              );
+            }, 5000);
+            function sample() {
+              if (getComputedStyle(target).visibility !== "hidden") {
+                clearTimeout(timeout);
+                observer.disconnect();
+                const box = target.getBoundingClientRect();
+                resolve({
+                  gap: Math.hypot(
+                    previous.x - box.x - box.width / 2,
+                    previous.y - box.y - box.height / 2,
+                  ),
+                  handoff,
+                });
+                return;
+              }
+              const arrival = document.querySelector("[data-card-arrival]");
+              const painted =
+                arrival ??
+                document.querySelector('[data-draw-overlay="pending"]');
+              if (painted) {
+                const box = painted.getBoundingClientRect();
+                const next = {
+                  x: box.x + box.width / 2,
+                  y: box.y + box.height / 2,
+                };
+                const kind = arrival ? "arrival" : "draw";
+                previous = next;
+                previousKind = kind;
+              }
+              requestAnimationFrame(sample);
+            }
+            requestAnimationFrame(sample);
+          },
+        ),
+      };
+    });
+    await activate(reverse);
+    const neighbor = hand.locator(
+      `[data-card=${JSON.stringify(source.at(-1))}]`,
+    );
+    if (phase === "ordinary") {
+      await page.keyboard.press("Tab");
+      await neighbor.focus();
+      await expect(neighbor).toHaveAttribute("data-hovered", "true");
+    }
+    await expect.poll(order).toEqual([...source, incoming].reverse());
+    const reveal = await watch.evaluate((watch) => watch.result);
+    if (phase === "pending") {
+      expect(
+        reveal.handoff,
+        "The draw-to-arrival handoff was captured",
+      ).not.toBeNull();
+      expect(
+        reveal.handoff,
+        "The pile flight continues from its painted destination",
+      ).toBeLessThan(3);
+    }
+    expect(
+      reveal.gap,
+      `${phase}: arriving face reveals at its newly sorted slot`,
+    ).toBeLessThan(3);
+    await expect(target).toHaveCSS("visibility", "visible");
+    await watch.dispose();
+    if (phase === "ordinary") await neighbor.blur();
+  }
   await original?.dispose();
 }

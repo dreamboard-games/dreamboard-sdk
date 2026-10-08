@@ -64,13 +64,13 @@ for (const reduced of [false, true]) {
     const rank = page.getByRole("radio", { name: "Rank", exact: true });
     await expect(suit).toBeChecked();
     await expect.poll(() => order(page)).toEqual(suitOrder);
-    const before = await frame(page);
     const selected = [driver.card("clubs-6"), driver.card("hearts-7")];
     for (const card of selected) {
       await card.focus();
       await card.press("Enter");
       await expect(card).toHaveAttribute("aria-pressed", "true");
     }
+    const before = await frame(page);
     const original = await selected[0].elementHandle();
     await choose(rank, isMobile);
     await expect(rank).toBeChecked();
