@@ -41,7 +41,7 @@ function DropZone({
       aria-label={`Drop for ${interaction}${destination ? ` ${destination}` : ""}`}
       className="my-3 grid min-h-24 place-items-center rounded-xl border-2 border-dashed data-drop-over:bg-muted data-[drop-target=true]:border-solid"
     >
-      Drop a card: {interaction}
+      Drop a card: {destination ?? interaction}
     </section>
   );
 }
@@ -91,14 +91,17 @@ function ScenarioModel({
       {dropZones.map((interaction) => (
         <DropZone key={interaction} interaction={interaction} />
       ))}
-      {dropZones.length > 0 &&
-        ["left", "right"].map((destination) => (
-          <DropZone
-            key={destination}
-            interaction="play.move"
-            destination={destination}
-          />
-        ))}
+      {dropZones.length > 0 && (
+        <div className="grid grid-cols-2 gap-3">
+          {["left", "right"].map((destination) => (
+            <DropZone
+              key={destination}
+              interaction="play.move"
+              destination={destination}
+            />
+          ))}
+        </div>
+      )}
       {model.me && model.interactions.find("play.draw") && (
         <DrawPile
           zoneId="deck"
