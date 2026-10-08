@@ -55,10 +55,7 @@ export async function proveHandSorting(
           bounds.y + bounds.height,
         ),
     ).toBe(true);
-    await expect(hand.locator(".db-hand-scroll")).toHaveCSS(
-      "overflow-y",
-      "hidden",
-    );
+    await expect(hand.locator(".db-hand-clip")).toHaveCSS("overflow-y", "clip");
   }
   await activate(dealt);
   await expect.poll(order).toEqual(before);
