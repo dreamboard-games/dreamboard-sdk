@@ -110,6 +110,7 @@ export const cardDropGame = model.assemble({
           },
         }),
         move: play.interaction({
+          commit: { mode: "manual" },
           inputs: {
             card: play.inputs.card({ from: ["table"] }),
             destination: play.inputs.form.choice({

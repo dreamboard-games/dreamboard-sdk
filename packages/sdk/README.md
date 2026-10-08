@@ -355,6 +355,8 @@ The SDK prescribes no layout. Headless `game.drag` remains browser-free and hand
 atomic domain routing. A drop area can bind typed inputs with
 `{ interaction: "play.move", params: { destination: "discard" } }`; the SDK
 adds the dragged card and admits the complete draft against current domains.
+A ready bound single-card drop submits the action even when its commit mode is
+manual; unbound drops and many-card drafts keep their normal commit behavior.
 `game.drag.getIsDropTarget(target)` uses the same admission as dropping.
 Interaction `getSubmitProps(params)` and `getSubmitHandler(params)` accept the
 same explicit params as `submit(params)`, retaining pending and connection gates.

@@ -1572,12 +1572,17 @@ class Controller {
         !interaction.getIsReady(next as Values))
     )
       return;
-    return { interaction, next, alreadyChosen };
+    return {
+      interaction,
+      next,
+      alreadyChosen,
+      submitBound: params !== undefined && !isManyInput(cardInput.descriptor),
+    };
   }
   routeCardDrop(cardId: string, target: RuntimeDropTarget) {
     const prepared = this.prepareCardDrop(cardId, target);
     if (!prepared) return;
-    const { interaction, next, alreadyChosen } = prepared;
+    const { interaction, next, alreadyChosen, submitBound } = prepared;
     if (
       !alreadyChosen ||
       (target.kind === "interaction" && target.params !== undefined)
@@ -1588,7 +1593,7 @@ class Controller {
     if (
       !alreadyChosen &&
       current &&
-      shouldAutoSubmitInteraction(current.descriptor) &&
+      (submitBound || shouldAutoSubmitInteraction(current.descriptor)) &&
       current.getIsReady()
     )
       this.handle(() => current.submit());

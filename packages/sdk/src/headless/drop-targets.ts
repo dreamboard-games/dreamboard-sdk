@@ -34,7 +34,7 @@ function sameParams(
   if (left === undefined || right === undefined) return left === right;
   const keys = Object.keys(left);
   return (
-    keys.length === Object.keys(right ?? {}).length &&
+    keys.length === Object.keys(right).length &&
     keys.every(
       (key) =>
         key in right && inputValueKey(left[key]) === inputValueKey(right[key]),

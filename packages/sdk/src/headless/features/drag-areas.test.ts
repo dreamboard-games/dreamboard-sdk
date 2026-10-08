@@ -43,6 +43,7 @@ const move: InteractionDescriptor = {
   ...discard,
   interactionId: "move",
   interactionKey: "play.move",
+  commit: { mode: "manual" },
   inputs: [
     discard.inputs[0],
     {
@@ -188,6 +189,15 @@ describe("bound drop areas", () => {
       card: "red",
       destination: "right",
     });
+    game.dispose();
+  });
+  it("keeps an unbound manual move as a draft", () => {
+    const { game, source } = setup([move]);
+    game.drag.begin("red");
+    game.drag.setDropTarget(game.drag.getDropTargets()[0]);
+    game.drag.drop();
+    expect(game.state.drafts["play.move"]).toEqual({ card: "red" });
+    expect(source.submissions).toEqual([]);
     game.dispose();
   });
   it("blocks incomplete, ineligible, and card-overriding bindings without writing a draft", () => {
