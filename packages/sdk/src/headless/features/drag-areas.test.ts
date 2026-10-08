@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createGameInstance } from "../instance.js";
 import type { InteractionDescriptor } from "../model.js";
 import { createTestSource } from "../../testing/sources/test-source.js";
@@ -266,6 +266,46 @@ describe("bound drop areas", () => {
     ).toBe(true);
     disconnected.game.dispose();
   });
+  it("closes a bound move whose accepted frame conceals the dropped card", async () => {
+    const { game, source } = setup([move]);
+    game.drag.begin("red");
+    game.drag.setDropTarget(target("left"));
+    game.drag.drop();
+    expect(game.state.activeInteraction).toBe("play.move");
+    source.submissions[0].resolve({ accepted: true });
+    // The card now lies face down elsewhere, so the hand no longer offers it.
+    const remaining = {
+      ...move,
+      inputs: [
+        {
+          ...move.inputs[0],
+          domain: { ...hand, eligibleTargets: ["blue", "green"] },
+        },
+        move.inputs[1],
+      ],
+    } satisfies InteractionDescriptor;
+    const hand0 = game.snapshot!.frame.zones.hand.alice;
+    source.emit({
+      ...game.snapshot!,
+      version: 2,
+      frame: {
+        ...game.snapshot!.frame,
+        availableInteractions: [remaining],
+        zones: {
+          hand: {
+            alice: {
+              ...hand0,
+              cardIds: ["blue", "green"],
+              playableByCardId: { blue: [remaining], green: [remaining] },
+            },
+          },
+        },
+      },
+    });
+    await vi.waitFor(() => expect(game.state.activeInteraction).toBeNull());
+    expect(game.state.drafts).toEqual({});
+    game.dispose();
+  });
   it("cancels a bound destination when the authoritative frame changes", () => {
     const { game, source } = setup([move]);
     game.drag.begin("red");
@@ -274,6 +314,108 @@ describe("bound drop areas", () => {
     game.drag.drop();
     expect(source.submissions).toEqual([]);
     expect(game.drag.active).toBeNull();
+    game.dispose();
+  });
+});
+
+describe("position targets", () => {
+  const reorder: InteractionDescriptor = {
+    ...move,
+    interactionId: "reorder",
+    interactionKey: "play.reorder",
+    inputs: [
+      discard.inputs[0],
+      {
+        key: "to",
+        kind: "position",
+        domain: {
+          type: "zonePosition",
+          zones: [{ zoneId: "hand", hostId: "alice", size: 3 }],
+        },
+      },
+    ],
+  };
+  const at = (index: number) => ({
+    kind: "position" as const,
+    interactionKey: "play.reorder",
+    cardInputKey: "card",
+    inputKey: "to",
+    value: { zoneId: "hand", hostId: "alice", index },
+  });
+  it("offers each insertion point beside the interaction's area", () => {
+    const { game } = setup([reorder]);
+    game.drag.begin("red");
+    expect(game.drag.getDropTargets()).toEqual([
+      {
+        kind: "interaction",
+        interactionKey: "play.reorder",
+        cardInputKey: "card",
+      },
+      at(0),
+      at(1),
+      at(2),
+      at(3),
+    ]);
+    expect(game.drag.getIsDropTarget(at(4))).toBe(false);
+    expect(
+      game.drag.getIsDropTarget({
+        ...at(0),
+        value: { zoneId: "hand", hostId: "bob", index: 0 },
+      }),
+    ).toBe(false);
+    game.dispose();
+  });
+  it("submits the card with the point it was dropped on", () => {
+    const { game, source } = setup([reorder]);
+    game.drag.begin("green");
+    game.drag.setDropTarget(at(1));
+    game.drag.drop();
+    expect(source.submissions[0]?.params).toEqual({
+      card: "green",
+      to: { zoneId: "hand", hostId: "alice", index: 1 },
+    });
+    game.dispose();
+  });
+  it("keeps position drop targets alongside a selected board destination", () => {
+    const space = { boardId: "map", spaceId: "a" };
+    const { game, source } = setup([
+      {
+        ...reorder,
+        inputs: [
+          ...reorder.inputs,
+          {
+            key: "space",
+            kind: "board-space",
+            domain: {
+              type: "boardTarget",
+              projection: "resolved",
+              targetKind: "space",
+              valueKind: "board-space",
+              boardBaseId: "map",
+              eligibleTargets: [space],
+            },
+          },
+        ],
+      },
+    ]);
+    game.interactions
+      .get("play.reorder")
+      .getInputs()
+      .find((input) => input.key === "space")!
+      .setValue(space);
+    game.drag.begin("red");
+    expect(game.drag.getDropTargets()).toContainEqual(
+      expect.objectContaining({ kind: "space", value: space }),
+    );
+    expect(game.drag.getDropTargets()).toContainEqual(at(1));
+    expect(game.drag.getIsDropTarget(at(1))).toBe(true);
+    game.drag.setDropTarget(at(1));
+    game.drag.drop();
+    expect(source.submissions[0]?.params).toEqual({
+      card: "red",
+      to: { zoneId: "hand", hostId: "alice", index: 1 },
+      space,
+    });
     game.dispose();
   });
 });

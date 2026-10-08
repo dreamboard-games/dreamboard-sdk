@@ -42,6 +42,12 @@ const source = {
     },
   ],
   zones: [
+    {
+      id: "cargo",
+      name: "Cargo",
+      attachedTo: { tileType: "terrain", cell: "cell" },
+      visibility: "public",
+    },
     { id: "bag", name: "Bag", scope: "shared", visibility: "hidden" },
     { id: "hand", name: "Hand", scope: "perPlayer", visibility: "ownerOnly" },
   ],
@@ -169,6 +175,111 @@ function descriptor(
 }
 
 describe("schema-aware seat interaction references", () => {
+  test("projects position hosts through disclosed zone inventories, including defaults", () => {
+    const f = fixture();
+    const to = {
+      zoneId: "cargo",
+      hostId: tileSpaceId("placed", "cell"),
+      index: 0,
+    };
+    const position = f.inputs.position({ zones: ["cargo"] });
+    const collectors = {
+      to: { ...position, defaultValue: to },
+      hidden: {
+        ...position,
+        defaultValue: { ...to, hostId: tileSpaceId("concealed", "cell") },
+      },
+    };
+    const projected = projectSeatDescriptor(
+      descriptor(collectors, f),
+      collectors,
+      f.disclosure,
+      f.cards,
+    )!;
+    const hostId = f.disclosure.boardTarget("space", "map", to.hostId)!;
+    expect(projected.inputs[0].domain).toEqual({
+      type: "zonePosition",
+      zones: [{ zoneId: "cargo", hostId, size: 0 }],
+    });
+    expect(projected.inputs[0].defaultValue).toEqual({ ...to, hostId });
+    expect(projected.inputs[1]).not.toHaveProperty("defaultValue");
+    for (const id of ["back", "omitted", "concealed", "placed"])
+      expect(JSON.stringify(projected)).not.toContain(
+        tileSpaceId(id, "cell").replaceAll('"', '\\"'),
+      );
+  });
+
+  test("round-trips position selections and rejects raw, stale and undisclosed hosts", () => {
+    const f = fixture();
+    const position = f.inputs.position({ zones: ["cargo", "hand"] });
+    const collectors = { to: position, points: many(position, { count: 2 }) };
+    const to = {
+      zoneId: "cargo",
+      hostId: tileSpaceId("placed", "cell"),
+      index: 0,
+    };
+    const hand = { zoneId: "hand", hostId: "north", index: 0 };
+    const original = { to, points: [to, hand] };
+    const encoded = encodeSeatParams(
+      original,
+      collectors,
+      f.disclosure,
+      f.cards,
+    );
+    expect(encoded.to).toEqual({
+      ...to,
+      hostId: f.disclosure.boardTarget("space", "map", to.hostId),
+    });
+    expect(
+      decodeSeatParams(encoded, collectors, f.disclosure, f.cards),
+    ).toEqual(original);
+    expect(
+      decodeSeatParams(original, collectors, f.disclosure, f.cards),
+    ).toBeNull();
+    const next = createSeatDisclosure(f.state.table, f.definitions, "north", {
+      sessionId: "session",
+      version: 2,
+    });
+    expect(decodeSeatParams(encoded, collectors, next, f.cards)).toBeNull();
+
+    const draft = {
+      ...descriptor(collectors, f),
+      step: { index: 1, total: 2, canCancel: true, selected: original },
+    };
+    expect(
+      projectSeatDescriptor(draft, collectors, f.disclosure, f.cards)?.step
+        ?.selected,
+    ).toEqual(encoded);
+    for (const inaccessible of [
+      ...["back", "omitted", "concealed"].map((id) => ({
+        ...to,
+        hostId: tileSpaceId(id, "cell"),
+      })),
+      { ...hand, hostId: "south" },
+    ]) {
+      const selected = { points: [to, inaccessible] };
+      expect(
+        decodeSeatParams(
+          { to: inaccessible },
+          collectors,
+          f.disclosure,
+          f.cards,
+        ),
+      ).toBeNull();
+      expect(
+        canDiscloseSelection(selected, collectors, f.disclosure, f.cards),
+      ).toBe(false);
+      expect(
+        projectSeatDescriptor(
+          { ...draft, step: { ...draft.step, selected } },
+          collectors,
+          f.disclosure,
+          f.cards,
+        ),
+      ).toBeNull();
+    }
+  });
+
   test("projects card/tile targets and defaults while omitting unauthorized defaults wholly", () => {
     const f = fixture();
     const collectors = {

@@ -1,4 +1,5 @@
 import { isBoardSpaceTarget, sameBoardSpaceTarget } from "./board-target";
+import { isPositionTarget } from "./position-target";
 import type {
   InputDomainDescriptor,
   InputSelectionDescriptor,
@@ -55,6 +56,7 @@ export function inputDomainErrors(
     case "tileTarget":
     case "cardTarget":
     case "boardTarget":
+    case "zonePosition":
       return inputTargetInDomain(domain, value)
         ? []
         : [ineligibleMessage(domain)];
@@ -122,6 +124,16 @@ export function inputTargetInDomain(
               sameBoardSpaceTarget(candidate, value),
             )
         : typeof value === "string" && domain.eligibleTargets.includes(value);
+    case "zonePosition":
+      return (
+        isPositionTarget(value) &&
+        domain.zones.some(
+          (zone) =>
+            zone.zoneId === value.zoneId &&
+            zone.hostId === value.hostId &&
+            value.index <= zone.size,
+        )
+      );
     default:
       return inputValueInDomain(domain, value);
   }
@@ -147,7 +159,8 @@ function ineligibleMessage(domain: InputDomainDescriptor): string {
     ? "Selected choice is not eligible."
     : domain.type === "cardTarget" ||
         domain.type === "tileTarget" ||
-        domain.type === "boardTarget"
+        domain.type === "boardTarget" ||
+        domain.type === "zonePosition"
       ? "Selected target is not eligible."
       : "Value is outside the current input domain.";
 }
@@ -157,6 +170,8 @@ export function inputValueKey(value: unknown): string {
   if (value === null) return "null";
   if (isBoardSpaceTarget(value))
     return `board-space:${JSON.stringify([value.boardId, value.spaceId])}`;
+  if (isPositionTarget(value))
+    return `position:${JSON.stringify([value.zoneId, value.hostId, value.index])}`;
   switch (typeof value) {
     case "string":
       return `string:${value}`;

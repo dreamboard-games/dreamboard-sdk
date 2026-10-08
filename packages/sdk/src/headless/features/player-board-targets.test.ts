@@ -316,7 +316,9 @@ describe("per-player board target identity through local sources", () => {
     });
     const targets = game.drag
       .getDropTargets()
-      .filter((target) => target.kind !== "interaction");
+      .filter(
+        (target) => target.kind !== "interaction" && target.kind !== "position",
+      );
     expect(targets.map((target) => target.value)).toEqual([
       ownTarget,
       opponentTarget,

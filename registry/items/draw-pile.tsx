@@ -81,15 +81,18 @@ export function DrawPile<K extends InteractionKey>(props: DrawPileProps<K>) {
       ),
   );
   const count = useGame((game) => game.zones.find(zoneId, hostId)?.count ?? 0);
-  const back = useGame((game) => {
-    const top = game.zones.find(zoneId, hostId)?.getCards()[0];
-    return top ? backImageOf(top) : null;
-  });
+  const backAt = (index: number) => (game: Model) => {
+    const card = game.zones.find(zoneId, hostId)?.getCards()[index];
+    return card ? backImageOf(card) : null;
+  };
+  const back = useGame(backAt(0));
+  const nextBack = useGame(backAt(1));
   const snapshot = useGame((game) => game.snapshot);
   const request = useGame((game) => game.request);
   const table = useCardMotion();
   const reduced = useReducedMotion();
   const control = useRef<HTMLButtonElement>(null);
+  const pile = useRef<HTMLElement>(null);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ghost, setGhost] = useState<{
@@ -153,7 +156,10 @@ export function DrawPile<K extends InteractionKey>(props: DrawPileProps<K>) {
   }
   function returnToPile() {
     clearTarget();
-    const home = control.current!.getBoundingClientRect();
+    // Lifting the last card empties the pile, so its outline is home.
+    const home = pile
+      .current!.querySelector(".db-pile-stack")!
+      .getBoundingClientRect();
     const landed = moveTo(
       {
         x: home.x,
@@ -367,10 +373,13 @@ export function DrawPile<K extends InteractionKey>(props: DrawPileProps<K>) {
     };
   }
 
+  // A lifted card has left the pile until the frame that draws it arrives.
+  const lifted = ghost !== null && ghost.snapshot === snapshot;
   return (
     <>
       <Pile
-        count={count}
+        ref={pile}
+        count={lifted ? count - 1 : count}
         label={label}
         data-zone={zoneId}
         data-zone-host={hostId}
@@ -386,7 +395,6 @@ export function DrawPile<K extends InteractionKey>(props: DrawPileProps<K>) {
           aria-haspopup="dialog"
           aria-expanded={open}
           data-draw-pile={zoneId}
-          data-picked-up={ghost !== null || undefined}
           onPointerDown={(event) => {
             shortcut.props.onPointerDown(event);
             start(event);
@@ -405,7 +413,7 @@ export function DrawPile<K extends InteractionKey>(props: DrawPileProps<K>) {
             setOpen((current) => !current);
           }}
         >
-          <CardBack image={back} />
+          <CardBack image={lifted ? nextBack : back} />
         </button>
       </Pile>
       {open && (

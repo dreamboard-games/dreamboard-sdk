@@ -32,3 +32,33 @@ space collector, and a player-space tuple rule must use `boardInput.playerSpace`
 Card input source zones must exist in the manifest. Attached-zone queries require
 the host ID selected by the zone's declared attachment; a component of another
 type or an absent host is rejected.
+
+### Positions in a zone
+
+`phase.inputs.position({ zones: ["hand"] })` collects an insertion point,
+`{ zoneId, hostId, index }`, in each host of those zones the player may reach:
+their own, shared ones and public ones. `index` counts the zone as it is now,
+so 0 is before its first component and the zone's size after its last. Its
+descriptor domain is `zonePosition`, listing each reachable host with its size.
+Pair it with a card input and move the card with `tx.moveComponentToPosition`,
+which places a card moved within its own zone between the two neighbours the
+point was between:
+
+```ts
+reorder: play.interaction({
+  inputs: {
+    cardId: play.inputs.card({ from: ["hand"] }),
+    to: play.inputs.position({ zones: ["hand"] }),
+  },
+  reduce({ tx, input }) {
+    tx.moveComponentToPosition({
+      componentId: input.params.cardId,
+      at: input.params.to,
+    });
+  },
+}),
+```
+
+A dragged card offers a `position` drop target for each insertion point. A drop
+there submits the card and the point together, whatever the commit mode. The
+registry `Hand` takes such an interaction as `reorder`.

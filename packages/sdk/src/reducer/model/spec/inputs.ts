@@ -27,7 +27,7 @@ export type TargetKind = Extract<
 >["targetKind"];
 export type BoardInputCollectorKind = Exclude<
   InputCollectorKind,
-  "form" | "card" | "tile" | "rng"
+  "form" | "card" | "tile" | "position" | "rng"
 >;
 
 export type CardInputCollectorMeta = {
@@ -49,6 +49,10 @@ export type BoardInputCollectorMeta = {
   | { readonly boardBaseId: string; readonly valueKind: "board-space" }
 );
 
+export type PositionInputCollectorMeta = {
+  readonly zoneIds: readonly string[];
+};
+
 export type RngInputCollectorMeta =
   { readonly rng: "d6"; readonly count: number } | { readonly rng: "coin" };
 
@@ -59,9 +63,11 @@ export type InputCollectorMetaForKind<Kind extends InputCollectorKind> =
       ? TileInputCollectorMeta
       : Kind extends BoardInputCollectorKind
         ? BoardInputCollectorMeta
-        : Kind extends "rng"
-          ? RngInputCollectorMeta
-          : never;
+        : Kind extends "position"
+          ? PositionInputCollectorMeta
+          : Kind extends "rng"
+            ? RngInputCollectorMeta
+            : never;
 
 export type InputSelectionDescriptor = InputSelection;
 /** Trusted domains retain authoritative tile IDs until seat projection. */
@@ -91,6 +97,10 @@ export type BoundedNumberDomainDescriptor = Extract<
   InputDomain,
   { type: "boundedNumber" }
 >;
+export type ZonePositionDomainDescriptor = Extract<
+  InputDomain,
+  { type: "zonePosition" }
+>;
 export type ChoiceDomainDescriptor = Extract<InputDomain, { type: "choice" }>;
 export type ChoiceListDomainDescriptor = Extract<
   InputDomain,
@@ -110,12 +120,15 @@ type InputDomainForCollectorKind<Kind extends InputCollectorKind> =
       ? TileTargetDomainDescriptor
       : Kind extends BoardInputCollectorKind
         ? BoardTargetDomainDescriptor
-        : Exclude<
-            InputDomainDescriptor,
-            | CardTargetDomainDescriptor
-            | BoardTargetDomainDescriptor
-            | TileTargetDomainDescriptor
-          >;
+        : Kind extends "position"
+          ? ZonePositionDomainDescriptor
+          : Exclude<
+              InputDomainDescriptor,
+              | CardTargetDomainDescriptor
+              | BoardTargetDomainDescriptor
+              | TileTargetDomainDescriptor
+              | ZonePositionDomainDescriptor
+            >;
 
 /**
  * Base state shape every collector is generic over. Collectors that need
@@ -214,7 +227,7 @@ type InputCollectorBase<
   ) => Value | undefined;
 } & (Kind extends "rng"
     ? { readonly domain?: never }
-    : Kind extends "card" | "tile" | BoardInputCollectorKind
+    : Kind extends "card" | "tile" | "position" | BoardInputCollectorKind
       ? { readonly domain: DomainProjector<InputDomainForCollectorKind<Kind>> }
       : {
           readonly domain?: DomainProjector<InputDomainForCollectorKind<Kind>>;

@@ -11,7 +11,11 @@ export interface HandFanOptions extends Pick<
 > {
   /** Distance between neighbouring cards when there is room, in card widths. Default 0.6, as `fanLayout`. */
   readonly spacing?: number;
-  /** Share of each resting card's height below the hand's bottom edge. 0 shows whole cards. */
+  /**
+   * Share of the middle resting card's height below the hand's bottom edge.
+   * Outer cards follow the arc lower, so they hide more; the edge stays put
+   * as cards come and go. 0 shows whole cards.
+   */
   readonly tuck?: number;
   /** Focused face width as a multiple of the resting card. */
   readonly focusScale?: number;
@@ -42,7 +46,7 @@ export const handFanPresets = {
    */
   tucked: {
     spacing: 0.75,
-    tuck: 0.4,
+    tuck: 0.15,
     focusScale: 1.4,
     focusMaxHeight: 0.4,
     push: [0.29, 0.19, 0.1],
@@ -51,7 +55,7 @@ export const handFanPresets = {
   /** Coarse pointers: a shallower tuck and wider strips to tap. */
   touch: {
     spacing: 0.75,
-    tuck: 0.2,
+    tuck: 0.1,
     focusScale: 1.6,
     focusMaxHeight: 0.5,
     push: [0.35, 0.2, 0.1],
@@ -122,7 +126,12 @@ export function handFan({
     maxSpread: o.maxSpread,
     step: o.spacing === undefined ? undefined : o.spacing * cardWidth,
   });
-  const band = Math.max(0, fan.height - o.tuck * cardHeight);
+  // The edge sits a fixed depth below the fan's top, where the middle card
+  // rests, so it never moves as cards come and go; deeper arcs sink only the
+  // outer cards.
+  const band = o.tuck
+    ? Math.min(fan.height, (1 - o.tuck) * cardHeight)
+    : fan.height;
   const view = visible ?? {
     left: (fan.width - width) / 2,
     width,

@@ -18,6 +18,7 @@ import {
   type GestureRecognizer,
 } from "../headless/gesture.js";
 import { isSameDropTarget } from "../headless/drop-targets.js";
+import type { PositionTarget } from "../shared/position-target.js";
 import type { Point } from "../headless/features/pointer-session.js";
 import type {
   RuntimeDropTarget,
@@ -55,6 +56,9 @@ export interface GestureState {
     readonly size: { readonly width: number; readonly height: number };
     /** Dropped and submitted; waiting for the authoritative frame. */
     readonly settling: boolean;
+    /** The area under the card and where it would land there, kept while settling. */
+    readonly area: string | null;
+    readonly target: RuntimeDropTarget | null;
   } | null;
   readonly inspect: {
     readonly cardId: string;
@@ -97,31 +101,42 @@ const px = (value: number) => `${value}px`;
 /** The card whose resting place in a row is under a viewport point, or null off the row. */
 export type CardRowLookup = (point: Point) => string | null;
 
-/** A resolved board destination, or the interaction an area runs. */
-export type DropAreaInput =
+/** A resolved destination, the interaction an area runs, or an insertion point it offers. */
+export type DropAreaValue =
   | RuntimeDropTarget
   | {
       readonly interaction: string;
       readonly input?: string;
       readonly params?: import("../headless/targets.js").RuntimeInteractionDropTarget["params"];
+      readonly position?: PositionTarget;
     }
   | null;
+/** A fixed binding, or one read at each dragged point, as for an insertion point under the pointer. */
+export type DropAreaInput = DropAreaValue | ((point: Point) => DropAreaValue);
 
 export function resolveDropArea(
   drag: GestureDrag | undefined,
-  binding: DropAreaInput,
+  binding: DropAreaValue,
 ): RuntimeDropTarget | null {
   if (!drag || !binding) return null;
   if ("interactionKey" in binding)
     return drag.getIsDropTarget(binding) ? binding : null;
+  const { position } = binding;
   const matches = drag
     .getDropTargets()
     .filter(
       (target) =>
-        target.kind === "interaction" &&
+        target.kind === (position ? "position" : "interaction") &&
         target.interactionKey === binding.interaction &&
-        (!binding.input || target.cardInputKey === binding.input),
+        (!binding.input || target.cardInputKey === binding.input) &&
+        (!position ||
+          (target.kind === "position" &&
+            inputValueKey(target.value) === inputValueKey(position))),
     );
+  if (position)
+    return matches.length === 1 && drag.getIsDropTarget(matches[0])
+      ? matches[0]
+      : null;
   // Two card inputs on one interaction need an explicit `input`.
   if (matches.length !== 1) return null;
   const target = {
@@ -162,7 +177,7 @@ export function createGestureSession(game: GestureGame) {
     left: RuntimeShortcutTarget | null,
     right: RuntimeShortcutTarget | null,
   ) => inputValueKey(left) === inputValueKey(right);
-  const areas = new Map<string, () => DropAreaInput>();
+  const areas = new Map<string, (point: Point) => DropAreaValue>();
   const rows = new Map<string, CardRowLookup>();
   // A slide can end on a control other than the pressed one; it drags with
   // that mounted control's own routes.
@@ -271,7 +286,7 @@ export function createGestureSession(game: GestureGame) {
     if (!press?.dragging) return at;
     let area = hitArea(at);
     const read = area === null ? undefined : areas.get(area);
-    let target = read ? resolveDropArea(game.drag, read()) : null;
+    let target = read ? resolveDropArea(game.drag, read(at)) : null;
     let point = at;
     // Direct hits win; outside a target retain its edge before looking for a new one.
     if (!target) {
@@ -280,7 +295,7 @@ export function createGestureSession(game: GestureGame) {
       );
       let distance = Infinity;
       for (const [id, binding] of candidates) {
-        const resolved = resolveDropArea(game.drag, binding());
+        const resolved = resolveDropArea(game.drag, binding(at));
         if (
           !resolved ||
           !game.drag
@@ -312,6 +327,8 @@ export function createGestureSession(game: GestureGame) {
       press.area = area;
       press.target = target;
       game.drag?.setDropTarget(target);
+      const drag = store.get().drag;
+      if (drag) set({ drag: { ...drag, area, target } });
     }
     return point;
   }
@@ -471,6 +488,8 @@ export function createGestureSession(game: GestureGame) {
               grab: { x: origin.x - box.left, y: origin.y - box.top },
               size: { width: box.width, height: box.height },
               settling: false,
+              area: null,
+              target: null,
             },
             inspect: null,
             activeTarget: null,
@@ -679,7 +698,7 @@ export function createGestureSession(game: GestureGame) {
     },
     overlayRef,
     /** `read` returns the area's current binding; targets resolve when hit. */
-    registerArea(area: string, read: () => DropAreaInput) {
+    registerArea(area: string, read: (point: Point) => DropAreaValue) {
       areas.set(area, read);
       return () => {
         areas.delete(area);

@@ -1,3 +1,4 @@
+import { zonePositions } from "../shared/position-target.js";
 import { BoardProjectionSchema } from "../shared/seat-topology-schema.js";
 import type { ProjectedTile } from "../shared/seat-topology-schema.js";
 import type { SeatTileRef } from "../shared/domain/seat-reference.js";
@@ -288,6 +289,23 @@ function createInputTargetLabels(
       );
     });
   }
+  // A point reads by the card it goes before, as players say it.
+  if (domain.type === "zonePosition")
+    for (const value of zonePositions(domain.zones)) {
+      const zone = snapshot?.frame.zones[value.zoneId]?.[value.hostId];
+      const id = zone?.cardIds[value.index];
+      const name = id === undefined ? undefined : zone?.cardViewsById[id]?.name;
+      const place =
+        id === undefined
+          ? "At the end"
+          : `Before ${name || `card ${value.index + 1}`}`;
+      targetLabels.set(
+        inputValueKey(value),
+        domain.zones.length === 1
+          ? place
+          : `${value.zoneId} (${value.hostId}): ${place}`,
+      );
+    }
   if (domain.type === "tileTarget" || domain.type === "boardTarget") {
     if (domain.type === "tileTarget") {
       const presentations = [
@@ -433,6 +451,7 @@ class InputObject {
       return domain.choices
         .filter((choice) => !choice.disabled)
         .map((choice) => choice.value);
+    if (domain.type === "zonePosition") return zonePositions(domain.zones);
     return [];
   }
   getIsEligible(value: RuntimeJson) {
@@ -1435,7 +1454,17 @@ class Controller {
       }
       if (fieldChanged) next[key] = immutableValues(kept);
     }
-    if (changed) this.writeDrafts(Object.freeze(next));
+    if (changed) {
+      // A frame that conceals a submitted card prunes it from the draft; that
+      // is not an edit, so the submission still resets its own draft.
+      const operation = this.pending;
+      const submitted =
+        operation?.draftRevision !== undefined &&
+        (this.revisions.get(operation.key) ?? 0) === operation.draftRevision;
+      this.writeDrafts(Object.freeze(next));
+      if (submitted)
+        operation.draftRevision = this.revisions.get(operation.key);
+    }
     const active = this.active();
     if (
       active &&
@@ -1522,7 +1551,9 @@ class Controller {
     if (
       target.kind !== "interaction" &&
       (!input ||
-        !matchesBoardTarget(input.descriptor, target) ||
+        !(target.kind === "position"
+          ? input.descriptor.domain.type === "zonePosition"
+          : matchesBoardTarget(input.descriptor, target)) ||
         !input.getIsEligible(target.value))
     )
       return;
@@ -1576,7 +1607,10 @@ class Controller {
       interaction,
       next,
       alreadyChosen,
-      submitBound: params !== undefined && !isManyInput(cardInput.descriptor),
+      // A bound area or an insertion point names the whole move of one card.
+      submitBound:
+        (params !== undefined || target.kind === "position") &&
+        !isManyInput(cardInput.descriptor),
     };
   }
   routeCardDrop(cardId: string, target: RuntimeDropTarget) {

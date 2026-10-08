@@ -74,6 +74,18 @@ export const InputDomainSchema = z.discriminatedUnion("type", [
     }),
   ]),
   z.strictObject({
+    type: z.literal("zonePosition"),
+    /** Each zone host a component may be placed in, and how many it holds now. */
+    zones: z.array(
+      z.strictObject({
+        zoneId: z.string(),
+        hostId: z.string(),
+        size: z.number().int().nonnegative(),
+      }),
+    ),
+    ...selection,
+  }),
+  z.strictObject({
     type: z.literal("resourceMap"),
     resources: z.array(
       z.strictObject({
@@ -119,6 +131,7 @@ export const InteractionInputDescriptorSchema = z
       "tile",
       "board-space",
       "card",
+      "position",
       "rng",
     ]),
     domain: InputDomainSchema,

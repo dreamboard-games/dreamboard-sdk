@@ -171,12 +171,15 @@ turning upward still drags; `useCardRow` uses it for a row that fits. Spread
 `CardGesture.props` on the card's own button after its selection props. The
 click that follows a hold, drag or browse is swallowed; keyboard clicks never are.
 
-`useDropArea` accepts a board `DropTarget` or `{ interaction, input? }` and
+`useDropArea` accepts a board `DropTarget`, `{ interaction, input?, params? }`,
+or a function of the dragged point returning one, such as
+`{ interaction, position }` for the insertion point under the card. It
 returns `props`, `isEligible` and `isOver`. The browser's `elementsFromPoint`
 finds the area under the pointer, so SVG, transformed and rotated areas need
 no geometry. `useDragOverlay` returns the dragged card, a `ref` that keeps a
-fixed copy under the pointer without rendering per move, and `settling` while a
-submitted drop awaits its frame. See [Gestures](../guides/ui/gestures.md).
+fixed copy under the pointer without rendering per move, `settling` while a
+submitted drop awaits its frame, and the `target` it would land on, kept while
+it settles. See [Gestures](../guides/ui/gestures.md).
 
 The copied `BoardTargets` accepts `dropRoute` with all three route keys when a
 visual destination could serve multiple inputs. It disables ambiguous drops

@@ -2,6 +2,7 @@ import type { SeatSpaceRef } from "../shared/domain/seat-reference.js";
 import type { TileSpaceId } from "../shared/domain/tile-space.js";
 import type { TopologyDefinitions } from "../shared/domain/topology-definitions.js";
 import type { BoardSpaceTarget } from "../shared/board-target.js";
+import type { PositionTarget } from "../shared/position-target.js";
 import type {
   BoardIdOfTable,
   BoardStateOfTable,
@@ -13,6 +14,7 @@ import type {
 import type {
   InputKey,
   InputKind,
+  InputTarget,
   InteractionKey,
   InteractionParams,
   SeatCardId,
@@ -54,8 +56,18 @@ export interface RuntimeInteractionDropTarget {
     Record<string, import("../shared/runtime-json.js").RuntimeJson>
   >;
 }
+/** An insertion point in a zone for an interaction with a position input. */
+export interface RuntimePositionDropTarget {
+  readonly kind: "position";
+  readonly interactionKey: string;
+  readonly cardInputKey: string;
+  readonly inputKey: string;
+  readonly value: PositionTarget;
+}
 export type RuntimeDropTarget =
-  RuntimeBoardDropTarget | RuntimeInteractionDropTarget;
+  | RuntimeBoardDropTarget
+  | RuntimeInteractionDropTarget
+  | RuntimePositionDropTarget;
 type SeatSpaceValue<Id> = Id extends TileSpaceId ? SeatSpaceRef : Id;
 type TargetOnBoard<
   Table,
@@ -160,13 +172,46 @@ export type InteractionDropTarget<G> = {
         readonly params?: DropAreaParams<G, K>;
       };
 }[InteractionKey<G>];
-export type DropTarget<G> = BoardDropTarget<G> | InteractionDropTarget<G>;
+type PositionValue<G, K extends InteractionKey<G>> = unknown extends G
+  ? PositionTarget
+  : {
+      [N in InputKey<G, K>]: InputKind<G, K, N> extends "position"
+        ? InputTarget<G, K, N>
+        : never;
+    }[InputKey<G, K>];
+/** A dragged card's insertion point in a zone, as a position input takes it. */
+export type PositionDropTarget<G> = {
+  [K in InteractionKey<G>]: [KeysOfKind<G, K, "position">] extends [never]
+    ? never
+    : {
+        readonly kind: "position";
+        readonly interactionKey: K;
+        readonly cardInputKey: KeysOfKind<G, K, "card">;
+        readonly inputKey: KeysOfKind<G, K, "position">;
+        readonly value: PositionValue<G, K>;
+      };
+}[InteractionKey<G>];
+export type DropTarget<G> =
+  BoardDropTarget<G> | InteractionDropTarget<G> | PositionDropTarget<G>;
 
-/** Bound inputs accompany the dropped card in one interaction draft. */
+/**
+ * Bound inputs accompany the dropped card in one interaction draft. A
+ * `position` instead names the insertion point the area offers now.
+ */
 export type DropAreaBinding<G> = {
-  [K in InteractionKey<G>]: {
-    readonly interaction: K;
-    readonly input?: KeysOfKind<G, K, "card">;
-    readonly params?: DropAreaParams<G, K>;
-  };
+  [K in InteractionKey<G>]:
+    | {
+        readonly interaction: K;
+        readonly input?: KeysOfKind<G, K, "card">;
+        readonly params?: DropAreaParams<G, K>;
+        readonly position?: never;
+      }
+    | ([KeysOfKind<G, K, "position">] extends [never]
+        ? never
+        : {
+            readonly interaction: K;
+            readonly input?: KeysOfKind<G, K, "card">;
+            readonly params?: never;
+            readonly position: PositionValue<G, K>;
+          });
 }[InteractionKey<G>];

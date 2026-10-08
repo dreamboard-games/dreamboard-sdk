@@ -10,6 +10,7 @@ import {
   useDragOverlay,
   useActiveCard,
   useCardRow,
+  useDropArea,
   useGame,
   type GameCard as Card,
   type CardId,
@@ -40,6 +41,12 @@ import {
 } from "./card-motion";
 import { cardDragScale, cardPickup } from "./card";
 import "./tokens.css";
+/** Bindings for interactions that take a position, such as a reorder. */
+type PositionBinding = Extract<
+  Parameters<typeof useDropArea>[0],
+  { readonly position: unknown }
+>;
+export type HandReorder = Pick<PositionBinding, "interaction" | "input">;
 export interface HandProps {
   zoneId: ZoneId;
   hostId: Card["hostId"];
@@ -51,6 +58,11 @@ export interface HandProps {
    * hand owns the card's `layoutId`.
    */
   renderCard(card: Card, state: CardState): ReactNode;
+  /**
+   * Draws the face that a hold or Alt/Option inspects, without table markers.
+   * Defaults to the idle card; keep it stable like `renderCard`.
+   */
+  renderPreview?(card: Card): ReactNode;
   getCardLabel?(card: Card): string;
   /**
    * How the fan rests and focuses a card. Spread a `handFanPresets` entry and
@@ -59,9 +71,24 @@ export interface HandProps {
    * hand on the bottom edge of the game.
    */
   options?: HandFanOptions;
+  /**
+   * An interaction with a card input and a position input on this zone, such
+   * as `{ interaction: "play.reorder" }`. Dragging a card along the hand opens
+   * a gap where it would land, and dropping there moves it. Name `input` when
+   * the interaction has two card inputs. It is off while a sort shows the
+   * hand in another order than the zone's own, and while the hand is too
+   * crowded to aim at.
+   */
+  reorder?: HandReorder;
 }
 
 const EMPTY: readonly CardId[] = [];
+/** The ids with one moved to `to`, as the hand will hold them. */
+const moved = (ids: readonly CardId[], from: number, to: number) => {
+  const next = ids.filter((_, index) => index !== from);
+  next.splice(to, 0, ids[from]);
+  return next;
+};
 /** Below this much of each covered card, in pixels, the hand opens as a sheet. */
 const CROWDED_STEP = 16;
 const sameIds = (left: readonly CardId[], right: readonly CardId[]) =>
@@ -84,8 +111,10 @@ export function Hand({
   label = "Hand",
   className = "",
   renderCard,
+  renderPreview,
   getCardLabel,
   options = handFanPresets.open,
+  reorder,
 }: HandProps) {
   const ids = useGame(
     (game) => {
@@ -103,6 +132,34 @@ export function Hand({
         .some((card) => card.getIsEligible()) ?? false,
   );
   const overlay = useDragOverlay();
+  // Positions count the zone's own order, which a sort may not show.
+  const zoneOrder = useGame(
+    (game) =>
+      game.zones
+        .find(zoneId, hostId)
+        ?.getCards()
+        .map((card) => card.id) ?? EMPTY,
+    { compare: sameIds },
+  );
+  // A card dragged along the hand opens the gap where it would land. The gap
+  // stays while the move settles, so no card jumps back before the frame.
+  const target = overlay?.target;
+  const gap =
+    reorder &&
+    target?.kind === "position" &&
+    target.interactionKey === reorder.interaction &&
+    target.value.zoneId === zoneId &&
+    target.value.hostId === hostId
+      ? target.value.index
+      : null;
+  const from = overlay ? ids.indexOf(overlay.cardId) : -1;
+  // A card from this hand moves its own slot to the gap; one from elsewhere
+  // opens a slot there.
+  const order =
+    gap === null || from < 0
+      ? ids
+      : moved(ids, from, gap > from ? gap - 1 : gap);
+  const opening = gap !== null && from < 0 ? gap : -1;
   const activeCardId = useActiveCard();
   const firstCard = useGame((game) =>
     ids.length ? game.cards.find(ids[0]) : undefined,
@@ -143,24 +200,18 @@ export function Hand({
         parseFloat(style.paddingLeft) -
         parseFloat(style.paddingRight);
       const settings = { ...handFanPresets.open, ...latestOptions.current };
-      const layout = fanLayout({
+      const band = handFan({
         count: ids.length + (drawOver ? 1 : 0),
         width: width - card * 0.7,
         cardWidth: card || 1,
         cardHeight: cardHeight || 1,
-        angle: settings.angle,
-        maxSpread: settings.maxSpread,
-        step:
-          settings.spacing === undefined
-            ? undefined
-            : settings.spacing * (card || 1),
-      });
+        options: latestOptions.current,
+      }).height;
       const bottom =
         clip.getBoundingClientRect().top +
         parseFloat(style.paddingTop) +
         cardHeight * 0.28 +
-        layout.height -
-        settings.tuck * cardHeight;
+        band;
       // A focused face may not rise past the window's top edge. Record that
       // limit only while it binds, so ordinary page scrolling re-renders nothing.
       const room = Math.max(0, bottom - 16);
@@ -215,8 +266,10 @@ export function Hand({
         ? undefined
         : options.spacing * (size.card || 1),
   };
+  // A draw or a card from elsewhere previews one more slot.
+  const extra = drawOver || opening >= 0 ? 1 : 0;
   const fan = fanLayout({
-    count: ids.length + (drawOver ? 1 : 0),
+    count: ids.length + extra,
     width: size.width - gutter * 2,
     cardWidth: size.card || 1,
     cardHeight: size.cardHeight || 1,
@@ -233,11 +286,20 @@ export function Hand({
   });
   // Reserve the same vertical space before pickup, during preview and on
   // arrival. Tucked cards hang below the hand's bottom edge, which clips them.
-  const tucked = (options.tuck ?? 0) * size.cardHeight;
+  const band = (count: number) =>
+    handFan({
+      count,
+      width: size.width - gutter * 2,
+      cardWidth: size.card || 1,
+      cardHeight: size.cardHeight || 1,
+      options,
+    }).height;
   const height =
-    Math.max(tucked ? 0 : size.cardHeight * 1.45, fan.height, nextFan.height) +
-    lift -
-    tucked;
+    Math.max(
+      options.tuck ? 0 : size.cardHeight * 1.45,
+      band(ids.length + extra),
+      band(ids.length + 1),
+    ) + lift;
   function placement(
     index: number,
     layout: Pick<typeof fan, "cards" | "width"> = fan,
@@ -301,7 +363,7 @@ export function Hand({
   // The fan sits centred between its gutters; handFan works in its coordinates.
   const inset = gutter + Math.max(0, (size.width - fan.width - gutter * 2) / 2);
   const focus = handFan({
-    count: ids.length + (drawOver ? 1 : 0),
+    count: ids.length + extra,
     width: size.width - gutter * 2,
     cardWidth: size.card || 1,
     cardHeight: size.cardHeight || 1,
@@ -337,10 +399,47 @@ export function Hand({
       .filter((card) => card.x <= x).length;
     return ids[Math.max(0, before - 1)];
   });
+  // The point a drop names is the slot nearest the pointer: one of this
+  // hand's own slots for its own card, a new one for a card from elsewhere.
+  const positionAt = ({ x }: { readonly x: number }): PositionBinding => {
+    const box = clip!.getBoundingClientRect();
+    const at = x - box.left - parseFloat(getComputedStyle(clip!).paddingLeft);
+    const slots = from >= 0 ? fan : nextFan;
+    const offset =
+      gutter + Math.max(0, (size.width - slots.width - gutter * 2) / 2);
+    const distance = (index: number) =>
+      Math.abs(at - (slots.cards[index].x + offset + size.card / 2));
+    let nearest = 0;
+    for (let index = 1; index < slots.cards.length; index++)
+      if (distance(index) < distance(nearest)) nearest = index;
+    // A game's own binding types each position by its input's zones, which
+    // this hand's zone may not prove; the drag feature admits only the points
+    // the interaction offers.
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- Needed when a game binding types its positions.
+    return {
+      ...reorder!,
+      position: {
+        zoneId,
+        hostId,
+        index: from >= 0 && nearest >= from ? nearest + 1 : nearest,
+      },
+    } as PositionBinding;
+  };
+  const area = useDropArea(
+    reorder && ready && !crowded && sameIds(ids, zoneOrder) ? positionAt : null,
+  );
+  const ghost = drawOver
+    ? ids.length
+    : opening >= 0
+      ? opening
+      : gap !== null && overlay
+        ? order.indexOf(overlay.cardId)
+        : -1;
 
   return (
     <>
       <section
+        {...area.props}
         aria-label={label}
         data-zone={zoneId}
         data-zone-host={hostId}
@@ -384,39 +483,48 @@ export function Hand({
                 )}
               </div>
               {ready &&
-                ids.map((id, index) => (
-                  <HandCard
-                    key={id}
-                    cardId={id}
-                    zoneId={zoneId}
-                    hostId={hostId}
-                    gameUI={clip?.closest("[data-game-ui]") ?? null}
-                    index={index}
-                    x={places[index].x}
-                    y={places[index].y}
-                    rotate={places[index].rotate}
-                    scale={places[index].scale}
-                    overlay={overlay?.cardId === id ? overlay : null}
-                    baseWidth={size.card}
-                    baseHeight={size.cardHeight}
-                    lift={lift}
-                    focused={index === active}
-                    crowded={crowded}
-                    choosing={choosing}
-                    renderCard={renderCard}
-                    getCardLabel={getCardLabel}
-                    destination={destination}
-                    onMenuChange={onMenuChange}
-                  />
-                ))}
-              {ready && drawOver && (
+                order.map((id, position) => {
+                  const index =
+                    opening >= 0 && position >= opening
+                      ? position + 1
+                      : position;
+                  return (
+                    <HandCard
+                      key={id}
+                      cardId={id}
+                      zoneId={zoneId}
+                      hostId={hostId}
+                      gameUI={clip?.closest("[data-game-ui]") ?? null}
+                      index={index}
+                      x={places[index].x}
+                      y={places[index].y}
+                      rotate={places[index].rotate}
+                      scale={places[index].scale}
+                      overlay={overlay?.cardId === id ? overlay : null}
+                      baseWidth={size.card}
+                      baseHeight={size.cardHeight}
+                      lift={lift}
+                      focused={index === active}
+                      crowded={crowded}
+                      choosing={choosing}
+                      renderCard={renderCard}
+                      renderPreview={renderPreview}
+                      getCardLabel={getCardLabel}
+                      destination={destination}
+                      onMenuChange={onMenuChange}
+                    />
+                  );
+                })}
+              {ready && ghost >= 0 && (
                 <div
-                  className="db-draw-insertion"
+                  className={
+                    drawOver ? "db-draw-insertion" : "db-hand-insertion"
+                  }
                   aria-hidden
                   style={{
                     width: size.card,
                     height: size.cardHeight,
-                    transform: `translate(${fan.cards[ids.length].x + inset}px, ${fan.cards[ids.length].y + lift}px) rotate(${fan.cards[ids.length].rotate}deg)`,
+                    transform: `translate(${fan.cards[ghost].x + inset}px, ${fan.cards[ghost].y + lift}px) rotate(${fan.cards[ghost].rotate}deg)`,
                   }}
                 />
               )}
@@ -443,6 +551,7 @@ export function Hand({
         label={label}
         choosing={choosing}
         renderCard={renderCard}
+        renderPreview={renderPreview}
         getCardLabel={getCardLabel}
       />
     </>
@@ -510,6 +619,7 @@ interface HandCardProps {
   lift: number;
   choosing: boolean;
   renderCard: HandProps["renderCard"];
+  renderPreview: HandProps["renderPreview"];
   getCardLabel: HandProps["getCardLabel"];
   focused: boolean;
   /** The hand opens as a sheet; its cards show without their own gestures. */
@@ -533,6 +643,7 @@ const HandCard = memo(function HandCard({
   lift,
   choosing,
   renderCard,
+  renderPreview,
   getCardLabel,
   focused,
   crowded,
@@ -575,6 +686,7 @@ const HandCard = memo(function HandCard({
         disabled={!!arrival}
         style={{ visibility: arrival ? "hidden" : undefined }}
         renderCard={renderCard}
+        renderPreview={renderPreview}
         getCardLabel={getCardLabel}
         onMenuChange={menuChanged}
       >

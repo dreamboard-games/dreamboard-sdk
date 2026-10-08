@@ -30,6 +30,8 @@ export type {
   TargetRuleBuilder,
 } from "./inputs/targetRule";
 export { cardInput } from "./inputs/cardInput";
+export { positionInput } from "./inputs/positionInput";
+export type { PositionTarget } from "../shared/position-target.js";
 export { rngInput } from "./inputs/rngInput";
 export { many, type ManyOptions } from "./inputs/many";
 

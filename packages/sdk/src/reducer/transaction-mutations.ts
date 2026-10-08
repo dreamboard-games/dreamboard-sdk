@@ -46,8 +46,10 @@ import type {
   TiledEdgeIdOfTable,
   TiledVertexIdOfTable,
 } from "./model";
+import type { PositionTarget } from "../shared/position-target.js";
 import {
   moveComponentToZoneInPlace,
+  moveComponentToPositionInPlace,
   dealComponentsInPlace,
   rotateZoneInPlace,
   type ZonePosition,
@@ -127,6 +129,15 @@ export type StatePatch<T> = Partial<T> | { update(prev: T): T }["update"];
 /**
  * Mutations available on a transaction-owned draft.
  */
+/** A position may name any of its zones, so the component must fit each. */
+type ComponentOfEveryZone<Table, Z extends ZoneIdOfTable<Table>> = (
+  Z extends unknown
+    ? (component: ZoneComponentsOfTable<Table, Z>) => void
+    : never
+) extends (component: infer Component) => void
+  ? Component
+  : never;
+
 export interface TransactionMutations<
   State extends { table: RuntimeTableRecord },
   Definitions extends TopologyDefinitions = TopologyDefinitions,
@@ -187,6 +198,16 @@ export interface TransactionMutations<
     componentId: ZoneComponentsOfTable<TableOfState<State>, NoInfer<Z>>;
     to: ZoneArg<TableOfState<State>, Z>;
     position?: ZonePosition;
+    playedBy?: PlayerIdOfState<State> | null;
+  }): State;
+  /**
+   * Moves a component to a position input's insertion point. The point
+   * counts the zone as it is now, so a card moved within its own zone lands
+   * between the two cards the point was between.
+   */
+  moveComponentToPosition<Z extends ZoneIdOfTable<TableOfState<State>>>(args: {
+    componentId: ComponentOfEveryZone<TableOfState<State>, NoInfer<Z>>;
+    at: PositionTarget<Z>;
     playedBy?: PlayerIdOfState<State> | null;
   }): State;
   deal<
@@ -484,6 +505,21 @@ export const transactionMutations = {
     definitions: ZoneDefinitions,
   ): S {
     moveComponentToZoneInPlace({ table: state.table, definitions, ...args });
+    return state;
+  },
+  moveComponentToPosition<S extends AnyState>(
+    state: S,
+    args: Omit<
+      Parameters<typeof moveComponentToPositionInPlace>[0],
+      "table" | "definitions"
+    >,
+    definitions: ZoneDefinitions,
+  ): S {
+    moveComponentToPositionInPlace({
+      table: state.table,
+      definitions,
+      ...args,
+    });
     return state;
   },
   deal<S extends AnyState>(

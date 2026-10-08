@@ -17,7 +17,7 @@ type Tile = ReturnType<Layout["getTiles"]>[number];
 type Edge = ReturnType<Layout["getEdges"]>[number];
 type DropTarget = Exclude<
   ReturnType<Model["drag"]["getDropTargets"]>[number],
-  { kind: "interaction" }
+  { kind: "interaction" | "position" }
 >;
 type DropRoute = Pick<
   DropTarget,
@@ -60,7 +60,7 @@ export function BoardTargets({
   const board = useGame((game) => game.boards.find(boardId));
   // Board destinations only; games without card-only interactions have no others.
   const dropTargets = useGame((game) => game.drag.getDropTargets()).filter(
-    (target): target is DropTarget => "inputKey" in target,
+    (target): target is DropTarget => "valueKind" in target,
   );
   const viewport = useGame((game) => game.viewport);
   const surface = useRef<SVGSVGElement>(null);

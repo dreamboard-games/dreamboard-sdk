@@ -1,3 +1,4 @@
+import { zonePositions } from "../../../shared/position-target.js";
 import { createStateQueries } from "../../table-queries";
 import type {
   AnyInteractionSpec,
@@ -440,6 +441,16 @@ function baseValuesForDomain(
         ),
       );
     }
+    case "zonePosition":
+      return finiteValueSource(
+        collector.eligibleTargets
+          ? collector.eligibleTargets(
+              context.domainState,
+              context.playerId,
+              context.queries(),
+            )
+          : zonePositions(domain.zones),
+      );
     case "choiceList":
       return choiceListValueSource(domain);
     case "boundedNumber":

@@ -217,6 +217,10 @@ export async function proveDraw(
   await expect(pile).toBeFocused();
 
   const from = await center(pile);
+  const remaining = page
+    .locator(".db-pile", { has: pile })
+    .locator(".db-pile-count");
+  const deckCount = Number(await remaining.textContent());
   const cdp = touch ? await page.context().newCDPSession(page) : null;
   const start = async () => {
     if (cdp)
@@ -258,7 +262,10 @@ export async function proveDraw(
     )
     .toBeGreaterThan(1.15);
   await expect(overlay.locator(".db-card")).not.toHaveCSS("box-shadow", "none");
-  await expect(pile).toHaveCSS("opacity", "0");
+  // The pile keeps showing the card beneath the one lifted from it.
+  await expect(pile).toBeVisible();
+  await expect(pile).toHaveCSS("opacity", "1");
+  await expect(remaining).toHaveText(String(deckCount - 1));
   const released = await center(overlay);
   const returning = await page.evaluateHandle((released) => {
     const watch = { sample: null as number | null };
@@ -278,7 +285,7 @@ export async function proveDraw(
   await end();
   expect(await readSample(returning)).toBeLessThan(2);
   await expect(overlay).toHaveCount(0);
-  await expect(pile).toHaveCSS("opacity", "1");
+  await expect(remaining).toHaveText(String(deckCount));
   await expect(menu).toHaveCount(0);
   await expect(cards).toHaveCount(initialCount);
 
@@ -520,5 +527,36 @@ export async function proveHostDraw(page: Page, touch: boolean) {
     await expect(page.locator("[data-draw-overlay]")).toHaveCount(0);
   } finally {
     await cdp?.detach();
+  }
+}
+
+/**
+ * A tucked hand keeps its edge and height as cards arrive, so nothing laid
+ * out around it moves, and a lone card reads.
+ */
+export async function proveSteadyTuckedHand(page: Page) {
+  const pile = page.getByRole("button", { name: "Deck actions" });
+  const hand = page.getByRole("region", { name: "Your hand" });
+  const cards = hand.locator(".db-hand-card");
+  await expect(cards).toHaveCount(0);
+  const handBox = (await hand.boundingBox())!;
+  for (let count = 1; count <= 8; count++) {
+    await pile.focus();
+    await pile.press("Enter");
+    await page.locator('[data-action="draw"]').press("Enter");
+    await expect(cards).toHaveCount(count);
+    await expect(page.locator("[data-card-arrival]")).toHaveCount(0);
+    const box = (await hand.boundingBox())!;
+    expect(box.y).toBeCloseTo(handBox.y, 0);
+    expect(box.height).toBeCloseTo(handBox.height, 0);
+    if (count === 1) {
+      // The lone card shows all but the tucked share of itself.
+      const shown = await cards.first().evaluate((element) => {
+        const clip = element.closest(".db-hand-clip")!.getBoundingClientRect();
+        const card = element.getBoundingClientRect();
+        return (clip.bottom - card.top) / card.height;
+      });
+      expect(shown).toBeGreaterThan(0.8);
+    }
   }
 }
