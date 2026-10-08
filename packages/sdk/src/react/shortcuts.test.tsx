@@ -606,7 +606,7 @@ test("local hooks use real card focus, retain its host while hovering elsewhere,
   host.remove();
 });
 
-test("local callback errors use onError and late failures cannot notify a new seat, source, or unmounted adapter", async () => {
+test("local callback errors use onError and cannot notify after lifetime changes, including seat and source round trips", async () => {
   const { createGameHook } = await import("./create-game-hook.js");
   const { GameProvider, useGameShortcuts, useShortcutTarget } =
     createGameHook()({
@@ -710,11 +710,27 @@ test("local callback errors use onError and late failures cannot notify a new se
     new Promise<void>((_, fail) => {
       reject = fail;
     });
-  for (const change of ["seat", "source", "unmount"] as const) {
+  for (const change of [
+    "seat-return",
+    "source-return",
+    "seat",
+    "source",
+    "unmount",
+  ] as const) {
     await focus();
     await key();
+    if (change === "seat-return") {
+      await act(async () => {
+        source.emit({ ...localSnapshot(2), me: "bob" });
+        source.emit(localSnapshot(3));
+      });
+    }
+    if (change === "source-return") {
+      await render(createSeatSource(localSnapshot()));
+      await render(source);
+    }
     if (change === "seat")
-      await act(async () => source.emit({ ...localSnapshot(2), me: "bob" }));
+      await act(async () => source.emit({ ...localSnapshot(4), me: "bob" }));
     if (change === "source") await render(createSeatSource(localSnapshot()));
     if (change === "unmount") await act(async () => root.unmount());
     await act(async () => reject(error));

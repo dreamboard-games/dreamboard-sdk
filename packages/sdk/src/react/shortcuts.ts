@@ -63,15 +63,22 @@ export function useShortcutsAdapter<G>(
     let mounted = true;
     const owned = controller.register(latest.current.options);
     registration.current = owned;
+    let source = game.getOptions().source;
+    let seat = game.snapshot?.me;
+    let lifetime = 0;
+    const unsubscribe = game.subscribe(() => {
+      const nextSource = game.getOptions().source;
+      const nextSeat = game.snapshot?.me;
+      if (source === nextSource && seat === nextSeat) return;
+      source = nextSource;
+      seat = nextSeat;
+      ++lifetime;
+    });
     function keydown(event: KeyboardEvent) {
       if (!canHandle(event)) return;
       // Bound game identity boundary; session targets originate from its own controls.
-      const source = game.getOptions().source;
-      const seat = game.snapshot?.me;
-      const active = () =>
-        mounted &&
-        game.getOptions().source === source &&
-        game.snapshot?.me === seat;
+      const started = lifetime;
+      const active = () => mounted && lifetime === started;
       const pending = controller.handle(
         event.key,
         session.getActiveTarget() as ShortcutTarget<G> | null,
@@ -94,6 +101,7 @@ export function useShortcutsAdapter<G>(
     window.addEventListener("keydown", keydown);
     return () => {
       mounted = false;
+      unsubscribe();
       window.removeEventListener("keydown", keydown);
       registration.current = null;
       owned.dispose();
