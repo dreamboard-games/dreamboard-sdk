@@ -97,8 +97,9 @@ const hand = handFan({
 
 - `spacing` sets the distance between resting cards in card widths when there
   is room; the fan still tightens to fit.
-- `tuck` hides that share of each resting card below the band's bottom edge.
-  `hand.height` is the visible band; clip the cards there.
+- `tuck` hides that share of the middle resting card below the band's bottom
+  edge. Outer cards follow the arc lower and hide more, so the band keeps its
+  height as cards arrive. `hand.height` is the visible band; clip the cards there.
 - `focusScale` sizes the focused face; `focusMaxHeight` caps it as a share of
   `windowHeight`, and `room` caps it in pixels when the hand sits near the top.
 - `push` lists the sideways shift of the first, second and third neighbour in
@@ -108,8 +109,9 @@ const hand = handFan({
   as the fan plus gutters beside it; an end card's face stays inside it.
 
 `handFanPresets.open` keeps whole resting cards and doubles the focused one.
-`tucked` spaces larger cards like a dealt hand and hides 40% of each below the
-edge, so focusing mostly reveals the card. `touch` suits coarse pointers.
+`tucked` spaces larger cards like a dealt hand and hides 15% of the middle card
+below the edge, so a lone card stays readable and focusing reveals the rest.
+`touch` suits coarse pointers with a shallower tuck.
 Spread one and override what differs.
 
 `handFanTiming.focus` and `handFanTiming.settle` are durations in seconds with

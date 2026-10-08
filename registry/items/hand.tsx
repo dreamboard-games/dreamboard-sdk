@@ -143,24 +143,18 @@ export function Hand({
         parseFloat(style.paddingLeft) -
         parseFloat(style.paddingRight);
       const settings = { ...handFanPresets.open, ...latestOptions.current };
-      const layout = fanLayout({
+      const band = handFan({
         count: ids.length + (drawOver ? 1 : 0),
         width: width - card * 0.7,
         cardWidth: card || 1,
         cardHeight: cardHeight || 1,
-        angle: settings.angle,
-        maxSpread: settings.maxSpread,
-        step:
-          settings.spacing === undefined
-            ? undefined
-            : settings.spacing * (card || 1),
-      });
+        options: latestOptions.current,
+      }).height;
       const bottom =
         clip.getBoundingClientRect().top +
         parseFloat(style.paddingTop) +
         cardHeight * 0.28 +
-        layout.height -
-        settings.tuck * cardHeight;
+        band;
       // A focused face may not rise past the window's top edge. Record that
       // limit only while it binds, so ordinary page scrolling re-renders nothing.
       const room = Math.max(0, bottom - 16);
@@ -233,11 +227,20 @@ export function Hand({
   });
   // Reserve the same vertical space before pickup, during preview and on
   // arrival. Tucked cards hang below the hand's bottom edge, which clips them.
-  const tucked = (options.tuck ?? 0) * size.cardHeight;
+  const band = (count: number) =>
+    handFan({
+      count,
+      width: size.width - gutter * 2,
+      cardWidth: size.card || 1,
+      cardHeight: size.cardHeight || 1,
+      options,
+    }).height;
   const height =
-    Math.max(tucked ? 0 : size.cardHeight * 1.45, fan.height, nextFan.height) +
-    lift -
-    tucked;
+    Math.max(
+      options.tuck ? 0 : size.cardHeight * 1.45,
+      band(ids.length + (drawOver ? 1 : 0)),
+      band(ids.length + 1),
+    ) + lift;
   function placement(
     index: number,
     layout: Pick<typeof fan, "cards" | "width"> = fan,
