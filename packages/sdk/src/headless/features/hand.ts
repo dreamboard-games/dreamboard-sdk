@@ -71,10 +71,14 @@ export function handFeature<G, const S extends Sorts<G> = Record<never, never>>(
       readonly sorts: ReadonlyMap<string, HandSort<G>["compare"]>;
     }
   >();
-  for (const [id, value] of Object.entries<{
-    readonly sorts: Record<string, HandSort<G>>;
-    readonly defaultSort?: string;
-  }>(options.zones ?? {})) {
+  for (const [id, value] of Object.entries<
+    | {
+        readonly sorts: Record<string, HandSort<G>>;
+        readonly defaultSort?: string;
+      }
+    | undefined
+  >(options.zones ?? {})) {
+    if (value === undefined) continue;
     const sorts = new Map(
       Object.entries(value.sorts).map(([mode, sort]) => [mode, sort.compare]),
     );

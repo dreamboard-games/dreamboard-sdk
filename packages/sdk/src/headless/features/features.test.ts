@@ -3,6 +3,7 @@ import { parseBoardElementId } from "../../shared/domain/board-element.js";
 import { perPlayerInstanceId } from "../../shared/domain/per-player-instance.js";
 import { RuntimeJsonSchema } from "../../shared/runtime-json.js";
 import { describe, expect, it, vi } from "vitest";
+import type { z } from "zod";
 import { createStore } from "@tanstack/store";
 import type { SourceState } from "../sources/types.js";
 import { createGameInstance, AmbiguousTargetError } from "../instance.js";
@@ -1020,6 +1021,29 @@ it("rejects overflowing finite viewport transforms while preserving valid tile t
 });
 
 describe("hand sort modes", () => {
+  it("treats an undefined optional zone configuration as unconfigured", () => {
+    type Game = {
+      contract: {
+        manifest: { ids: { zoneId: z.ZodLiteral<"hand"> } };
+      };
+    };
+    const options: HandOptions<Game> = {
+      zones: { hand: undefined },
+    };
+    const input = source();
+    const game = createGameInstance<Game>()({
+      source: input,
+      features: (core, context) => ({
+        hand: handFeature(core, context, options),
+      }),
+    });
+    const zone = game.zones.get("hand", "alice");
+    expect(game.hand.getSortModes(zone)).toEqual([]);
+    expect(game.hand.getSortMode(zone)).toBeNull();
+    expect(game.hand.getSortedCardIds(zone)).toEqual(["red", "blue", "hidden"]);
+    game.dispose();
+  });
+
   it("rejects unknown modes admitted by widened public controller types without notifying", () => {
     const { game } = setup();
     const zone = game.zones.get("hand", "alice");

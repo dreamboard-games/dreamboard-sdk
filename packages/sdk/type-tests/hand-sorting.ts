@@ -132,3 +132,11 @@ createGameInstance<Game>()({
     hand: handFeature(core, context, { sort: () => 0 }),
   }),
 });
+
+const unconfigured: HandOptions<Game> = { zones: { hand: undefined } };
+createGameInstance<Game>()({
+  source,
+  features: (core, context) => ({
+    hand: handFeature(core, context, unconfigured),
+  }),
+});
