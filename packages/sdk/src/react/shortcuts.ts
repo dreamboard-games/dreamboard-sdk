@@ -4,12 +4,15 @@ import type {
   ShortcutTarget,
   ShortcutsController,
   RuntimeShortcutTarget,
+  ShortcutActivity,
+  ShortcutResult,
 } from "../headless/features/shortcuts.js";
-import type { CoreInstance, SubmitResult } from "../headless/model.js";
+import type { CoreInstance } from "../headless/model.js";
 
 /** Browser adapter input; the gesture session owns the single active target. */
 export interface ShortcutSession {
   getActiveTarget(): RuntimeShortcutTarget | null;
+  getShortcutActivity(): ShortcutActivity<unknown>;
 }
 function canHandle(event: KeyboardEvent) {
   const target = event.target;
@@ -24,7 +27,7 @@ function canHandle(event: KeyboardEvent) {
     !(
       target instanceof Element &&
       target.closest(
-        "input, textarea, select, [contenteditable]:not([contenteditable='false']), [role='textbox']",
+        "input:not([type='radio']), textarea, select, [contenteditable]:not([contenteditable='false']), [role='textbox']",
       )
     ) &&
     !Array.from(
@@ -47,7 +50,7 @@ export function useShortcutsAdapter<G>(
   controller: ShortcutsController<G>,
   session: ShortcutSession,
   options: ShortcutOptions<G>,
-  onResult: (result: SubmitResult | Error) => void,
+  onResult: (result: ShortcutResult | Error) => void,
 ) {
   const latest = useRef({ options, onResult });
   const registration = useRef<ReturnType<
@@ -72,6 +75,7 @@ export function useShortcutsAdapter<G>(
       const pending = controller.handle(
         event.key,
         session.getActiveTarget() as ShortcutTarget<G> | null,
+        session.getShortcutActivity() as ShortcutActivity<G>,
       );
       if (!pending) return;
       event.preventDefault();

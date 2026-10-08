@@ -46,6 +46,8 @@ export interface GestureGame extends Pick<
 
 export interface GestureState {
   readonly activeTarget: RuntimeShortcutTarget | null;
+  readonly focusedTarget: RuntimeShortcutTarget | null;
+  readonly pointerActive: boolean;
   readonly drag: {
     readonly cardId: string;
     /** Pointer offset inside the card where it was picked up. */
@@ -150,6 +152,8 @@ export function createGestureSession(game: GestureGame) {
   const id = `g${++sessions}`;
   const store = createStore<GestureState>({
     activeTarget: null,
+    focusedTarget: null,
+    pointerActive: false,
     drag: null,
     inspect: null,
   });
@@ -175,6 +179,8 @@ export function createGestureSession(game: GestureGame) {
   let hover: RuntimeShortcutTarget | null = null;
   let hoverPoint: Point | null = null;
   let focused: RuntimeShortcutTarget | null = null;
+  // Real DOM focus remains a local-action scope when mouse browsing changes presentation focus.
+  let domFocused: RuntimeShortcutTarget | null = null;
   let alt = false;
   let pointer: Point = { x: 0, y: 0 };
   let swallowing = false;
@@ -182,7 +188,14 @@ export function createGestureSession(game: GestureGame) {
   let disposed = false;
 
   const set = (patch: Partial<GestureState>) =>
-    store.setState((previous) => ({ ...previous, ...patch }));
+    store.setState((previous) => {
+      const next = { ...previous, ...patch };
+      return {
+        ...next,
+        focusedTarget: domFocused,
+        pointerActive: press !== null || next.drag !== null,
+      };
+    });
 
   let snapshot = game.snapshot;
   let source = game.getOptions().source;
@@ -217,6 +230,7 @@ export function createGestureSession(game: GestureGame) {
       press?.recognizer.cancel();
       const nextHover = changedLifetime ? null : admitted(hover);
       const nextFocused = changedLifetime ? null : admitted(focused);
+      const nextDomFocused = changedLifetime ? null : admitted(domFocused);
       source = nextSource;
       snapshot = game.snapshot;
       alt = false;
@@ -224,6 +238,7 @@ export function createGestureSession(game: GestureGame) {
       // frame, so separate key presses can keep acting on the same control.
       hover = nextHover;
       focused = nextFocused;
+      domFocused = nextDomFocused;
       if (changedLifetime) hoverPoint = null;
       set({ activeTarget: hover ?? focused, inspect: null });
     }
@@ -318,22 +333,23 @@ export function createGestureSession(game: GestureGame) {
       inspect: alt && cardId && !press ? { cardId, via: "hover" } : null,
     });
   }
-  function hoverAt(at: Point) {
-    hoverPoint = at;
-    const wasFocused = focused !== null;
-    focused = null;
-    const hit = document
-      .elementFromPoint(at.x, at.y)
-      ?.closest("[data-card-gesture], [data-shortcut-target]");
+  function targetOf(element: Element | null): RuntimeShortcutTarget | null {
+    const hit = element?.closest("[data-card-gesture], [data-shortcut-target]");
     const control =
       hit?.getAttribute("data-gesture-session") === id ? hit : null;
     const targetId = control?.getAttribute("data-shortcut-target");
     const cardId = control?.getAttribute("data-card-gesture");
-    const next: RuntimeShortcutTarget | null = targetId
+    return targetId
       ? (targets.get(targetId)?.() ?? null)
       : cardId
         ? { kind: "card", value: cardId }
         : null;
+  }
+  function hoverAt(at: Point) {
+    hoverPoint = at;
+    const wasFocused = focused !== null;
+    focused = null;
+    const next = targetOf(document.elementFromPoint(at.x, at.y));
     if (sameTarget(hover, next) && !wasFocused) return;
     hover = next;
     inspectWithAlt();
@@ -362,6 +378,7 @@ export function createGestureSession(game: GestureGame) {
     clearHover();
     hoverPoint = null;
     focused = null;
+    domFocused = null;
     set({ activeTarget: null, inspect: null });
   };
   addEventListener("keydown", key);
@@ -380,6 +397,7 @@ export function createGestureSession(game: GestureGame) {
   function release() {
     press?.detach();
     press = null;
+    set({});
   }
 
   function start(
@@ -524,6 +542,7 @@ export function createGestureSession(game: GestureGame) {
         removeEventListener("blur", blur);
       },
     };
+    set({});
   }
 
   function cardProps(
@@ -545,12 +564,15 @@ export function createGestureSession(game: GestureGame) {
         focused = event.currentTarget.matches(":focus-visible")
           ? { kind: "card", value: cardId }
           : null;
+        domFocused = { kind: "card", value: cardId };
         if (focused) hover = null;
         inspectWithAlt();
       },
       onBlur() {
         if (focused?.kind === "card" && focused.value === cardId)
           focused = null;
+        if (domFocused?.kind === "card" && domFocused.value === cardId)
+          domFocused = null;
         inspectWithAlt();
       },
       onContextMenu(event) {
@@ -600,6 +622,13 @@ export function createGestureSession(game: GestureGame) {
       return target?.kind === "card" ? target.value : null;
     },
     getActiveTarget: () => store.get().activeTarget,
+    getShortcutActivity: () => ({
+      // Removal can change DOM focus without emitting blur. Admit the current mounted control.
+      focusedTarget: sameTarget(domFocused, targetOf(document.activeElement))
+        ? domFocused
+        : null,
+      pointerActive: store.get().pointerActive,
+    }),
     registerTarget(targetId: string, read: () => RuntimeShortcutTarget) {
       const target = read();
       targets.set(targetId, read);
@@ -607,6 +636,7 @@ export function createGestureSession(game: GestureGame) {
         targets.delete(targetId);
         if (sameTarget(hover, target)) hover = null;
         if (sameTarget(focused, target)) focused = null;
+        if (sameTarget(domFocused, target)) domFocused = null;
         inspectWithAlt();
       };
     },
@@ -624,12 +654,14 @@ export function createGestureSession(game: GestureGame) {
           focused = event.currentTarget.matches(":focus-visible")
             ? (targets.get(targetId)?.() ?? null)
             : null;
+          domFocused = targets.get(targetId)?.() ?? null;
           if (focused) hover = null;
           inspectWithAlt();
         },
         onBlur() {
           const target = targets.get(targetId)?.() ?? null;
           if (sameTarget(focused, target)) focused = null;
+          if (sameTarget(domFocused, target)) domFocused = null;
           inspectWithAlt();
         },
       };

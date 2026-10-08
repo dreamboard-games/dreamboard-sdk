@@ -97,7 +97,11 @@ export function CardActions({
                 >
                   {route.label}
                   {hints
-                    .filter((hint) => hint.interaction === route.key)
+                    .filter(
+                      (hint) =>
+                        hint.kind === "interaction" &&
+                        hint.interaction === route.key,
+                    )
                     .map((hint) => (
                       <kbd key={hint.label} className="ml-2 text-xs opacity-70">
                         {hint.keys.join(" / ")}

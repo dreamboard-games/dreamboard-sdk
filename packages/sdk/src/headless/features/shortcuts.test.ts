@@ -59,6 +59,7 @@ const target = { kind: "zone" as const, zoneId: "deck", hostId: "table" };
 const options = {
   bindings: [
     {
+      kind: "interaction" as const,
       keys: ["1", "3", "9"],
       label: "Draw cards",
       interaction: "play.draw",
@@ -75,7 +76,12 @@ test("unconfigured is inert; eligible authored draw count submits one atomic pay
   const drafts = game.state.drafts;
   const unregister = game.shortcuts.register(options);
   expect(game.shortcuts.getHints(target)).toEqual([
-    { keys: ["1", "3"], label: "Draw cards", interaction: "play.draw" },
+    {
+      kind: "interaction" as const,
+      keys: ["1", "3"],
+      label: "Draw cards",
+      interaction: "play.draw",
+    },
   ]);
   expect(game.shortcuts.handle("9", target)).toBeNull();
   expect(
@@ -197,6 +203,7 @@ test("card-specific availability and hidden seat references share canonical atom
   const unregister = game.shortcuts.register({
     bindings: [
       {
+        kind: "interaction" as const,
         keys: ["f"],
         label: "Flip",
         interaction: "play.flip",
@@ -205,6 +212,7 @@ test("card-specific availability and hidden seat references share canonical atom
         inputs: ({ target }) => ({ card: target.value }),
       },
       {
+        kind: "interaction" as const,
         keys: ["t"],
         label: "Flip top card",
         interaction: "play.flip",
@@ -221,7 +229,12 @@ test("card-specific availability and hidden seat references share canonical atom
     game.interactions.get("play.flip").getIsAvailable({ card: hidden }),
   ).toBe(true);
   expect(game.shortcuts.getHints(target)).toEqual([
-    { keys: ["t"], label: "Flip top card", interaction: "play.flip" },
+    {
+      kind: "interaction" as const,
+      keys: ["t"],
+      label: "Flip top card",
+      interaction: "play.flip",
+    },
   ]);
   const zonePending = game.shortcuts.handle("t", target)!;
   expect(source.submissions[0].params).toEqual({ card: hidden });
@@ -237,4 +250,222 @@ test("card-specific availability and hidden seat references share canonical atom
   expect(game.shortcuts.getHints(card)).toEqual([]);
   unregister.dispose();
   game.dispose();
+});
+
+test("local callbacks are focus-only, pure for hints, independent of turns and requests, and never submit", async () => {
+  const { game, source } = setup();
+  const calls: unknown[] = [];
+  let available = true;
+  const local = {
+    kind: "local" as const,
+    keys: ["s"],
+    label: "Change hand order",
+    target: "zone" as const,
+    zoneId: "deck",
+    getIsAvailable: () => available,
+    run: (context: unknown) => {
+      calls.push(context);
+    },
+  };
+  const registration = game.shortcuts.register({
+    bindings: [...options.bindings, local],
+  });
+  const activity = { focusedTarget: target, pointerActive: false };
+  expect(game.shortcuts.handle("s", target)).toBeNull();
+  expect(
+    game.shortcuts.handle("s", target, { ...activity, focusedTarget: null }),
+  ).toBeNull();
+  expect(
+    game.shortcuts.handle("s", target, { ...activity, pointerActive: true }),
+  ).toBeNull();
+  expect(game.shortcuts.getHints(target, activity)).toContainEqual({
+    kind: "local",
+    keys: ["s"],
+    label: "Change hand order",
+  });
+  expect(calls).toEqual([]);
+  available = false;
+  expect(game.shortcuts.handle("s", target, activity)).toBeNull();
+  expect(
+    game.shortcuts
+      .getHints(target, activity)
+      .some((hint) => hint.kind === "local"),
+  ).toBe(false);
+  available = true;
+  expect(await game.shortcuts.handle("s", target, activity)).toEqual({
+    kind: "local",
+  });
+  expect(source.submissions).toHaveLength(0);
+  const pending = game.shortcuts.handle("3", target)!;
+  expect(source.submissions).toHaveLength(1);
+  expect(await game.shortcuts.handle("s", target, activity)).toEqual({
+    kind: "local",
+  });
+  source.submissions[0].resolve({ accepted: true });
+  expect(await pending).toEqual({
+    kind: "interaction",
+    result: { accepted: true },
+  });
+  const blocked = snapshot(2);
+  await source.emit({
+    ...blocked,
+    frame: {
+      ...blocked.frame,
+      flow: { ...blocked.frame.flow, activePlayers: ["bob"] },
+      availableInteractions: [],
+    },
+  });
+  expect(await game.shortcuts.handle("s", target, activity)).toEqual({
+    kind: "local",
+  });
+  expect(calls).toHaveLength(3);
+  source.recovering();
+  expect(game.shortcuts.handle("s", target, activity)).toBeNull();
+  expect(game.shortcuts.getHints(target, activity)).toEqual([]);
+  registration.dispose();
+  expect(game.shortcuts.handle("s", target, activity)).toBeNull();
+  game.dispose();
+});
+
+test("focused cards resolve their own current containing zone and host without widening interaction targets", async () => {
+  const hidden = `card-ref:sha256:${"b".repeat(64)}`;
+  const initial = snapshot();
+  const contents = {
+    tiles: [],
+    cardIds: [hidden],
+    cardViewsById: {},
+    cardBacksById: {},
+    playableByCardId: {},
+  };
+  const projected = {
+    ...initial,
+    frame: {
+      ...initial.frame,
+      zones: { ...initial.frame.zones, hand: { alice: contents } },
+    },
+  };
+  const source = createTestSource(projected);
+  const game = createGameInstance()({
+    source,
+    features: (game, context) => ({
+      shortcuts: shortcutsFeature(game, context),
+    }),
+  });
+  const calls: unknown[] = [];
+  const registration = game.shortcuts.register({
+    bindings: [
+      ...options.bindings,
+      {
+        kind: "local",
+        keys: ["s"],
+        label: "Sort hand",
+        target: "zone",
+        zoneId: "hand",
+        run: ({ target }) => {
+          calls.push(target);
+        },
+      },
+      {
+        kind: "local",
+        keys: ["a"],
+        label: "My hand",
+        target: "zone",
+        zoneId: "hand",
+        getIsAvailable: ({ target }) => target.hostId === "alice",
+        run: ({ target }) => {
+          calls.push(target);
+        },
+      },
+    ],
+  });
+  const card = { kind: "card" as const, value: hidden };
+  const activity = { focusedTarget: card, pointerActive: false };
+  expect(await game.shortcuts.handle("s", target, activity)).toEqual({
+    kind: "local",
+  });
+  expect(calls).toEqual([{ kind: "zone", zoneId: "hand", hostId: "alice" }]);
+  expect(game.shortcuts.handle("3", card, activity)).toBeNull();
+  source.emit({
+    ...projected,
+    version: 2,
+    frame: {
+      ...projected.frame,
+      zones: { ...initial.frame.zones, hand: { bob: contents } },
+    },
+  });
+  expect(await game.shortcuts.handle("s", card, activity)).toEqual({
+    kind: "local",
+  });
+  expect(calls[1]).toEqual({ kind: "zone", zoneId: "hand", hostId: "bob" });
+  expect(game.shortcuts.handle("a", card, activity)).toBeNull();
+  source.emit({ ...initial, version: 3 });
+  expect(game.shortcuts.handle("s", card, activity)).toBeNull();
+  expect(game.shortcuts.getHints(card, activity)).toEqual([]);
+  expect(source.submissions).toEqual([]);
+  registration.dispose();
+  game.dispose();
+});
+
+test("collisions across local and interaction variants suppress behavior and hints; callback errors reject", async () => {
+  const { game, source } = setup();
+  let calls = 0;
+  const local = {
+    kind: "local" as const,
+    keys: ["3", "s"],
+    label: "Local",
+    target: "zone" as const,
+    zoneId: "deck",
+    run: () => {
+      calls++;
+    },
+  };
+  const registration = game.shortcuts.register({
+    bindings: [...options.bindings, local],
+  });
+  const activity = { focusedTarget: target, pointerActive: false };
+  expect(game.shortcuts.handle("3", target, activity)).toBeNull();
+  expect(game.shortcuts.getHints(target, activity)).toEqual([
+    {
+      kind: "interaction",
+      keys: ["1"],
+      label: "Draw cards",
+      interaction: "play.draw",
+    },
+    { kind: "local", keys: ["s"], label: "Local" },
+  ]);
+  expect(calls).toBe(0);
+  expect(source.submissions).toEqual([]);
+  registration.update({ bindings: [local, local] });
+  expect(game.shortcuts.handle("s", target, activity)).toBeNull();
+  expect(game.shortcuts.getHints(target, activity)).toEqual([]);
+  const error = new Error("Local failed");
+  registration.update({
+    bindings: [
+      {
+        ...local,
+        run: () => {
+          throw error;
+        },
+      },
+    ],
+  });
+  await expect(game.shortcuts.handle("s", target, activity)).rejects.toBe(
+    error,
+  );
+  registration.update({
+    bindings: [
+      {
+        ...local,
+        run: async () => {
+          throw error;
+        },
+      },
+    ],
+  });
+  await expect(game.shortcuts.handle("s", target, activity)).rejects.toBe(
+    error,
+  );
+  expect(source.submissions).toEqual([]);
+  game.dispose();
+  expect(game.shortcuts.handle("s", target, activity)).toBeNull();
 });
