@@ -17,6 +17,7 @@ export interface DragController<G> {
   getCanDrag(cardId: SeatCardId<G>, options?: TargetOptions<G>): boolean;
   begin(cardId: SeatCardId<G>, options?: TargetOptions<G>): boolean;
   getDropTargets(): readonly DropTarget<G>[];
+  getIsDropTarget(target: DropTarget<G>): boolean;
   setDropTarget(target: DropTarget<G> | null): void;
   drop(): void;
   cancel(): void;
@@ -31,6 +32,7 @@ interface RuntimeDragController {
   getCanDrag(cardId: string, options?: RuntimeTargetOptions): boolean;
   begin(cardId: string, options?: RuntimeTargetOptions): boolean;
   getDropTargets(): readonly RuntimeDropTarget[];
+  getIsDropTarget(target: RuntimeDropTarget): boolean;
   setDropTarget(target: RuntimeDropTarget | null): void;
   drop(): void;
   cancel(): void;
@@ -118,6 +120,15 @@ function createRuntimeDragFeature(context: RuntimeFeatureContext) {
     );
     return resolved;
   }
+  function isEligible(target: RuntimeDropTarget) {
+    if (!active || disposed) return false;
+    const route =
+      target.kind === "interaction" ? { ...target, params: undefined } : target;
+    return (
+      targets().some((candidate) => isSameDropTarget(candidate, route)) &&
+      context.getCanDropCard(active.cardId, target)
+    );
+  }
   function cancel() {
     if (active) update(null);
   }
@@ -135,12 +146,10 @@ function createRuntimeDragFeature(context: RuntimeFeatureContext) {
         return true;
       },
       getDropTargets: () => dropTargets,
+      getIsDropTarget: isEligible,
       setDropTarget(target: RuntimeDropTarget | null) {
         if (!active || disposed) return;
-        if (
-          target &&
-          !targets().some((candidate) => isSameDropTarget(candidate, target))
-        ) {
+        if (target && !isEligible(target)) {
           update({ ...active, target: null });
           return;
         }
@@ -148,11 +157,7 @@ function createRuntimeDragFeature(context: RuntimeFeatureContext) {
       },
       drop() {
         const finished = active;
-        const eligible =
-          finished?.target &&
-          targets().some((target) =>
-            isSameDropTarget(target, finished.target!),
-          );
+        const eligible = finished?.target && isEligible(finished.target);
         cancel();
         if (!disposed && finished?.target && eligible)
           context.routeCardDrop(finished.cardId, finished.target);

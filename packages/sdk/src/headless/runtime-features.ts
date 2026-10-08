@@ -70,6 +70,7 @@ export interface RuntimeFeatureContext {
     target: RuntimeSelectionTarget,
     options?: RuntimeTargetOptions,
   ): void;
+  getCanDropCard(cardId: string, target: RuntimeDropTarget): boolean;
   routeCardDrop(cardId: string, target: RuntimeDropTarget): void;
   invalidate(): void;
 }

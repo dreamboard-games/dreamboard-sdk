@@ -29,6 +29,7 @@ export interface GestureDrag {
   readonly active: { readonly target: RuntimeDropTarget | null } | null;
   getCanDrag(cardId: string, options?: RuntimeTargetOptions): boolean;
   getDropTargets(): readonly RuntimeDropTarget[];
+  getIsDropTarget(target: RuntimeDropTarget): boolean;
   begin(cardId: string, options?: RuntimeTargetOptions): boolean;
   setDropTarget(target: RuntimeDropTarget | null): void;
   drop(): void;
@@ -89,7 +90,11 @@ const px = (value: number) => `${value}px`;
 /** A resolved board destination, or the interaction an area runs. */
 export type DropAreaInput =
   | RuntimeDropTarget
-  | { readonly interaction: string; readonly input?: string }
+  | {
+      readonly interaction: string;
+      readonly input?: string;
+      readonly params?: import("../headless/targets.js").RuntimeInteractionDropTarget["params"];
+    }
   | null;
 
 export function resolveDropArea(
@@ -97,7 +102,8 @@ export function resolveDropArea(
   binding: DropAreaInput,
 ): RuntimeDropTarget | null {
   if (!drag || !binding) return null;
-  if ("interactionKey" in binding) return binding;
+  if ("interactionKey" in binding)
+    return drag.getIsDropTarget(binding) ? binding : null;
   const matches = drag
     .getDropTargets()
     .filter(
@@ -107,7 +113,12 @@ export function resolveDropArea(
         (!binding.input || target.cardInputKey === binding.input),
     );
   // Two card inputs on one interaction need an explicit `input`.
-  return matches.length === 1 ? matches[0] : null;
+  if (matches.length !== 1) return null;
+  const target = {
+    ...matches[0],
+    ...(binding.params === undefined ? {} : { params: binding.params }),
+  };
+  return drag.getIsDropTarget(target) ? target : null;
 }
 /** Targets are rebuilt with every drag update; compare what they route. */
 export const sameDropTarget = (

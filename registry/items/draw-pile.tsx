@@ -44,18 +44,25 @@ type DestinationZone = ShortcutZoneTarget extends infer Target
     ? { destinationZoneId: Zone; destinationHostId: Host }
     : never
   : never;
-export type DrawPileProps = SourceZone &
-  DestinationZone & {
-    interaction: InteractionKey;
-    label?: string;
-    className?: string;
-  };
+type BoundInteraction<
+  K extends InteractionKey,
+  I = ReturnType<Model["interactions"]["list"]>[number],
+> = I extends { readonly key: infer Key } ? (K extends Key ? I : never) : never;
+export type DrawPileProps<K extends InteractionKey = InteractionKey> =
+  SourceZone &
+    DestinationZone & {
+      interaction: K;
+      params?: Parameters<BoundInteraction<K>["submit"]>[0];
+      label?: string;
+      className?: string;
+    };
 
 /** A face-down draw action: tap for its menu or drop its visual copy into a hand. */
-export function DrawPile(props: DrawPileProps) {
+export function DrawPile<K extends InteractionKey>(props: DrawPileProps<K>) {
   const {
     destinationHostId,
     interaction: key,
+    params,
     destinationZoneId,
     label = "Draw pile",
     className,
@@ -65,7 +72,14 @@ export function DrawPile(props: DrawPileProps) {
   const shortcutTarget = { kind: "zone" as const, ...source };
   const shortcut = useShortcutTarget(shortcutTarget);
   const hints = useShortcutHints(shortcutTarget);
-  const draw = useGame((game) => game.interactions.find(key));
+  const draw = useGame((game) =>
+    game.interactions
+      .list()
+      .find(
+        (interaction): interaction is BoundInteraction<K> =>
+          interaction.key === key,
+      ),
+  );
   const count = useGame((game) => game.zones.find(zoneId, hostId)?.count ?? 0);
   const back = useGame((game) => {
     const top = game.zones.find(zoneId, hostId)?.getCards()[0];
@@ -97,9 +111,10 @@ export function DrawPile(props: DrawPileProps) {
     controls: ReturnType<typeof animate>[];
     finish(): void;
   } | null>(null);
-  const available = count > 0 && !!draw && !draw.getSubmitProps().disabled;
-  const latest = useRef({ draw, available, snapshot, table });
-  latest.current = { draw, available, snapshot, table };
+  const available =
+    count > 0 && !!draw && !draw.getSubmitProps(params).disabled;
+  const latest = useRef({ draw, params, available, snapshot, table });
+  latest.current = { draw, params, available, snapshot, table };
   const highlighted = useRef<HTMLElement | null>(null);
   const snapped = useRef(false);
   const sourceZone = { zoneId, hostId };
@@ -215,7 +230,7 @@ export function DrawPile(props: DrawPileProps) {
     current.table.setDrop(destinationZone, true);
     setGhost({ box, phase: "pending", snapshot: current.snapshot, landed });
     try {
-      const result = await current.draw.submit();
+      const result = await current.draw.submit(current.params);
       if (!result.accepted) {
         current.table.clearDraw();
         setError(result.message ?? result.errorCode);

@@ -24,12 +24,21 @@ import { cardDropGame } from "./card-drop-game";
 import { resourceGame, manyValueGame, numberStepGame } from "./resource-game";
 import { Inspector } from "../items/inspector";
 /** An area that runs `interaction` with whichever card is dropped on it. */
-function DropZone({ interaction }: { interaction: string }) {
-  const area = useDropArea({ interaction });
+function DropZone({
+  interaction,
+  destination,
+}: {
+  interaction: string;
+  destination?: string;
+}) {
+  const area = useDropArea({
+    interaction,
+    ...(destination ? { params: { destination } } : {}),
+  });
   return (
     <section
       {...area.props}
-      aria-label={`Drop for ${interaction}`}
+      aria-label={`Drop for ${interaction}${destination ? ` ${destination}` : ""}`}
       className="my-3 grid min-h-24 place-items-center rounded-xl border-2 border-dashed data-drop-over:bg-muted data-[drop-target=true]:border-solid"
     >
       Drop a card: {interaction}
@@ -82,6 +91,14 @@ function ScenarioModel({
       {dropZones.map((interaction) => (
         <DropZone key={interaction} interaction={interaction} />
       ))}
+      {dropZones.length > 0 &&
+        ["left", "right"].map((destination) => (
+          <DropZone
+            key={destination}
+            interaction="play.move"
+            destination={destination}
+          />
+        ))}
       {model.me && model.interactions.find("play.draw") && (
         <DrawPile
           zoneId="deck"
@@ -89,6 +106,7 @@ function ScenarioModel({
           destinationZoneId="hand"
           destinationHostId={model.me.id}
           interaction="play.draw"
+          params={{ source: "deck", destination: model.me.id }}
           label="Deck"
         />
       )}
