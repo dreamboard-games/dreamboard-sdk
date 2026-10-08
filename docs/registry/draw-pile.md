@@ -65,8 +65,9 @@ props retain that canonical zone/host correlation.
 Tap, click or Enter opens the action menu. Escape closes it and returns focus.
 The pile and its lifted copy show the top card's back art when the game has one.
 A pointer drag lifts the back to 120% size with a stronger shadow, highlights
-the hand and opens an insertion gap when over it. The original card is hidden
-while lifted. Touch drags hold the card above the finger. The hand reserves its
+the hand and opens an insertion gap when over it. While a card is lifted, the
+pile counts one card fewer and shows the back beneath it, or its empty outline
+after the last card. Touch drags hold the card above the finger. The hand reserves its
 height even when empty, so previewing a slot never moves the table or pile. Drop elsewhere or press Escape
 to glide back. Availability and submission failures use the game's reason.
 

@@ -217,6 +217,10 @@ export async function proveDraw(
   await expect(pile).toBeFocused();
 
   const from = await center(pile);
+  const remaining = page
+    .locator(".db-pile", { has: pile })
+    .locator(".db-pile-count");
+  const deckCount = Number(await remaining.textContent());
   const cdp = touch ? await page.context().newCDPSession(page) : null;
   const start = async () => {
     if (cdp)
@@ -258,7 +262,10 @@ export async function proveDraw(
     )
     .toBeGreaterThan(1.15);
   await expect(overlay.locator(".db-card")).not.toHaveCSS("box-shadow", "none");
-  await expect(pile).toHaveCSS("opacity", "0");
+  // The pile keeps showing the card beneath the one lifted from it.
+  await expect(pile).toBeVisible();
+  await expect(pile).toHaveCSS("opacity", "1");
+  await expect(remaining).toHaveText(String(deckCount - 1));
   const released = await center(overlay);
   const returning = await page.evaluateHandle((released) => {
     const watch = { sample: null as number | null };
@@ -278,7 +285,7 @@ export async function proveDraw(
   await end();
   expect(await readSample(returning)).toBeLessThan(2);
   await expect(overlay).toHaveCount(0);
-  await expect(pile).toHaveCSS("opacity", "1");
+  await expect(remaining).toHaveText(String(deckCount));
   await expect(menu).toHaveCount(0);
   await expect(cards).toHaveCount(initialCount);
 

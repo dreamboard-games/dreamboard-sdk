@@ -766,9 +766,6 @@
     -webkit-touch-callout: none;
     cursor: grab;
   }
-  .db-draw-pile-card[data-picked-up] {
-    opacity: 0;
-  }
   .db-draw-pile-card:focus-visible {
     outline: 3px solid var(--table-foreground);
     outline-offset: 3px;
