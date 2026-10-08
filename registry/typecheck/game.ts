@@ -51,6 +51,7 @@ export const {
   useGame,
   GameProvider: SDKGameProvider,
   useCardGesture,
+  useCardRow,
   useActiveCard,
   useGameShortcuts,
   useShortcutTarget,

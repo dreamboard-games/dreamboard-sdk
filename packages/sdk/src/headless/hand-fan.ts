@@ -84,9 +84,9 @@ export interface HandFanInput extends Pick<
   /** Index of the focused card, or -1 for none. */
   readonly focused?: number;
   /**
-   * The part of the fan the viewer can see after scrolling, in fan
-   * coordinates; a focused face stays inside it. Defaults to `width`,
-   * centred on the fan.
+   * The part of the fan the viewer can see, in fan coordinates, such as
+   * `width` plus gutters beside it; a focused face stays inside it. Defaults
+   * to `width`, centred on the fan.
    */
   readonly visible?: { readonly left: number; readonly width: number };
   /** Window height in pixels; `focusMaxHeight` is a share of it. */

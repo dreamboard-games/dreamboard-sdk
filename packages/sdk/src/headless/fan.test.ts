@@ -32,16 +32,18 @@ describe("fanLayout", () => {
       cards: [],
       width: 0,
       height: 0,
+      step: 0,
     });
     expect(fanLayout({ ...phone, count: 1 })).toEqual({
       cards: [{ x: 0, y: 0, rotate: 0 }],
       width: 72,
       height: 100,
+      step: 0,
     });
   });
 
   it("fits the width with every card inside its bounding box", () => {
-    for (let count = 2; count <= 15; count++) {
+    for (let count = 2; count <= 40; count++) {
       const fan = fanLayout({ ...phone, count });
       expect(fan.width).toBeLessThanOrEqual(phone.width + 1e-9);
       const points = fan.cards.flatMap(corners);
@@ -85,19 +87,28 @@ describe("fanLayout", () => {
   });
 
   it("overlaps at the preferred step when there is room", () => {
-    const { cards, width } = fanLayout({ ...card, width: 1200, count: 3 });
+    const { cards, width, step } = fanLayout({
+      ...card,
+      width: 1200,
+      count: 3,
+    });
     expect(distance(cards[0], cards[1])).toBeCloseTo(72 * 0.6, 1);
+    expect(step).toBeCloseTo(72 * 0.6, 9);
     expect(width).toBeLessThan(1200);
   });
 
-  it("keeps a minimum visible slice and overflows instead", () => {
-    const { cards, width } = fanLayout({ ...phone, count: 30 });
-    expect(width).toBeGreaterThan(phone.width);
+  it("tightens any number of cards into the width and reports the step", () => {
+    const { cards, width, step } = fanLayout({ ...phone, count: 30 });
+    expect(width).toBeCloseTo(phone.width, 9);
+    expect(step).toBeLessThan(72 * 0.25);
     for (let index = 1; index < cards.length; index++)
-      expect(distance(cards[index - 1], cards[index])).toBeCloseTo(
-        72 * 0.25,
-        2,
-      );
+      expect(distance(cards[index - 1], cards[index])).toBeCloseTo(step, 2);
+  });
+
+  it("overflows only when a single end card is wider than the space", () => {
+    const { width, step } = fanLayout({ ...card, width: 40, count: 6 });
+    expect(step).toBe(0);
+    expect(width).toBeGreaterThan(40);
   });
 
   it("moves every card by at most the width change", () => {

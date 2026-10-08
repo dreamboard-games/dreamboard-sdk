@@ -8,8 +8,6 @@ export interface FanOptions {
   readonly cardHeight: number;
   /** Distance between neighbouring cards along the arc when there is room. Default: 60% of the card width. */
   readonly step?: number;
-  /** The smallest visible slice of a covered card. Default: 25% of the card width. */
-  readonly minStep?: number;
   /** Degrees between neighbouring cards. Default 5; 0 lays a straight row. */
   readonly angle?: number;
   /** The most degrees between the two end cards. Default 30. */
@@ -26,15 +24,17 @@ export interface FanCard {
 
 export interface FanLayout {
   readonly cards: readonly FanCard[];
-  /** The fan's bounding box. It is wider than the available width only when the cards are at `minStep`. */
+  /** The fan's bounding box. It is wider than the available width only when a single end card is. */
   readonly width: number;
   readonly height: number;
+  /** Distance between neighbouring cards along the arc: about how much of each covered card shows. */
+  readonly step: number;
 }
 
 /**
  * Lays cards on a circular arc. The spread grows with the card count up to
- * `maxSpread`; the step shrinks continuously to fit the width, down to
- * `minStep`, past which the fan overflows and the hand should scroll.
+ * `maxSpread`; the step shrinks continuously so the fan always fits the
+ * width. A hand decides for itself when the step is too thin to aim at.
  */
 export function fanLayout({
   count,
@@ -42,11 +42,10 @@ export function fanLayout({
   cardWidth,
   cardHeight,
   step = cardWidth * 0.6,
-  minStep = cardWidth * 0.25,
   angle = 5,
   maxSpread = 30,
 }: FanOptions): FanLayout {
-  if (count < 1) return { cards: [], width: 0, height: 0 };
+  if (count < 1) return { cards: [], width: 0, height: 0, step: 0 };
   const gaps = count - 1;
   const delta = gaps ? Math.min(angle, maxSpread / gaps) * RADIANS : 0;
   const edge = (gaps * delta) / 2;
@@ -54,9 +53,7 @@ export function fanLayout({
   const span = delta ? (2 * Math.sin(edge)) / delta : gaps;
   // The end cards' outer halves, tilted by the edge angle.
   const ends = cardWidth * Math.cos(edge) + cardHeight * Math.sin(edge);
-  const spacing = span
-    ? Math.max(minStep, Math.min(step, (width - ends) / span))
-    : 0;
+  const spacing = span ? Math.max(0, Math.min(step, (width - ends) / span)) : 0;
   const radius = delta ? spacing / delta : 0;
   const centres = Array.from({ length: count }, (_, index) => {
     if (!delta) return { theta: 0, x: (index - gaps / 2) * spacing, y: 0 };
@@ -85,6 +82,7 @@ export function fanLayout({
     })),
     width: fanWidth,
     height: bottom - top,
+    step: spacing,
   };
 }
 

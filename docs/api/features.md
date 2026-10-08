@@ -115,10 +115,12 @@ board identity discriminated by `valueKind`. A `"board-id"` target has scalar
 redundant player or outer board ID. Pass a resolved target through unchanged.
 
 The React binding returns `useCardGesture(cardId, { drag: false | { interaction?, input? } })`,
-`useDropArea(binding)` and `useDragOverlay()`. `createGestureRecognizer`
+`useCardRow(cardAt)`, `useDropArea(binding)` and `useDragOverlay()`. `createGestureRecognizer`
 classifies each press as a tap, hold, drag or browse using `GESTURE_THRESHOLDS`:
 a mouse drags after 8 px in any direction and inspects after resting 250 ms; a
-finger drags upward, browses sideways and inspects after holding 350 ms. Spread
+finger drags upward, browses sideways and inspects after holding 350 ms. With
+`{ scrub: true }` a browsing finger reports each move through `browse`, and
+turning upward still drags; `useCardRow` uses it for a row that fits. Spread
 `CardGesture.props` on the card's own button after its selection props. The
 click that follows a hold, drag or browse is swallowed; keyboard clicks never are.
 

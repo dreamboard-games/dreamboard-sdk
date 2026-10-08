@@ -57,6 +57,8 @@ export const {
   GameProvider: SDKGameProvider,
   useGame,
   useCardGesture,
+  useCardRow,
+  useActiveCard,
   useDropArea,
   useDragOverlay,
 } = createGameHook<Game>()({

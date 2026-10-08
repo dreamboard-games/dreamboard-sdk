@@ -53,7 +53,7 @@ describe("handFan", () => {
     }
   });
 
-  it("keeps readable end faces inside the visible window after horizontal scrolling", () => {
+  it("keeps readable end faces inside a supplied visible window", () => {
     for (const focused of [0, 8]) {
       const pose = handFan({
         ...nine,
@@ -67,10 +67,10 @@ describe("handFan", () => {
     }
   });
 
-  it("centres the default viewport on an overflowing fan and keeps focused faces inside it", () => {
+  it("keeps focused faces of a crowded fan inside the default viewport", () => {
     const input = { ...card, count: 20, width: 260 };
     const fan = fanLayout(input);
-    expect(fan.width).toBeGreaterThan(input.width);
+    expect(fan.width).toBeCloseTo(input.width, 9);
     const left = (fan.width - input.width) / 2;
     for (let focused = 0; focused < input.count; focused++) {
       const pose = handFan({ ...input, focused }).cards[focused];

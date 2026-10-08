@@ -2,6 +2,7 @@ export { createGameHook } from "./react/create-game-hook.js";
 export type {
   CardGesture,
   CardGestureOptions,
+  CardRow,
   DragOverlay,
   DropArea,
   DropAreaBinding,

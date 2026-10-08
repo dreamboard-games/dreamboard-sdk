@@ -1,6 +1,6 @@
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
 import { afterAll, afterEach, beforeAll, expect, test, vi } from "vitest";
-import { act } from "react";
+import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { createGameHook } from "./create-game-hook.js";
 import { dragFeature } from "../headless/features/drag.js";
@@ -75,11 +75,17 @@ function snapshot(version = 1): SourceSnapshot {
   };
 }
 
-const { GameProvider, useGame, useCardGesture, useDropArea, useDragOverlay } =
-  createGameHook()({
-    features: (core, context) => ({ drag: dragFeature(core, context) }),
-    debug: false,
-  });
+const {
+  GameProvider,
+  useGame,
+  useCardGesture,
+  useCardRow,
+  useDropArea,
+  useDragOverlay,
+} = createGameHook()({
+  features: (core, context) => ({ drag: dragFeature(core, context) }),
+  debug: false,
+});
 function Card({ id, draggable }: { id: string; draggable: boolean }) {
   const card = useGame((game) => game.cards.find(id));
   const gesture = useCardGesture(id, { drag: draggable ? {} : false });
@@ -93,6 +99,17 @@ function Card({ id, draggable }: { id: string; draggable: boolean }) {
       {id}
     </button>
   ) : null;
+}
+/** Red rests left of x 20 and blue up to x 40, both above y 100. */
+function Row({ children }: { children: ReactNode }) {
+  const row = useCardRow(({ x, y }) =>
+    y > 100 || x < 0 || x >= 40 ? null : x < 20 ? "red" : "blue",
+  );
+  return (
+    <div {...row.props} data-testid="row">
+      {children}
+    </div>
+  );
 }
 let areaRenders = 0;
 function Discard() {
@@ -119,7 +136,7 @@ function Drafts() {
   );
 }
 
-async function mount(draggable = true) {
+async function mount(draggable = true, row = false) {
   const source = createTestSource(snapshot());
   const host = document.createElement("div");
   document.body.append(host);
@@ -128,8 +145,17 @@ async function mount(draggable = true) {
   await act(async () =>
     root.render(
       <GameProvider source={source}>
-        <Card id="red" draggable={draggable} />
-        <Card id="blue" draggable={draggable} />
+        {row ? (
+          <Row>
+            <Card id="red" draggable={draggable} />
+            <Card id="blue" draggable={draggable} />
+          </Row>
+        ) : (
+          <>
+            <Card id="red" draggable={draggable} />
+            <Card id="blue" draggable={draggable} />
+          </>
+        )}
         <Discard />
         <Overlay />
         <Drafts />
@@ -195,6 +221,70 @@ test("a tap leaves selection to the card's own click", async () => {
   await up(mouse);
   await click(get("red")!);
   expect(get("drafts")!.textContent).toContain('"card":"red"');
+});
+
+test("a finger sliding along a row raises the card resting under it and lifting there clicks that card", async () => {
+  const { get } = await mount(true, true);
+  expect(get("row")!.style.touchAction).toBe("none");
+  const touch = (x: number) => ({ pointerType: "touch", x, y: 10 }) as const;
+  await down(get("red")!, touch(10));
+  // A tap, hold or upward drag leaves the resting card alone; sliding raises.
+  expect(get("red")!.dataset.active).toBeUndefined();
+  await move(touch(19));
+  expect(get("red")!.dataset.active).toBe("true");
+  await move(touch(30));
+  expect(get("red")!.dataset.active).toBeUndefined();
+  expect(get("blue")!.dataset.active).toBe("true");
+  await up(touch(30));
+  // The browser's own click after the slide is swallowed.
+  await click(get("red")!);
+  expect(get("drafts")!.textContent).toContain('"card":"blue"');
+  expect(get("drafts")!.textContent).not.toContain('"card":"red"');
+  expect(get("blue")!.dataset.active).toBeUndefined();
+});
+
+test("a finger that slides off the row chooses nothing", async () => {
+  const { get } = await mount(true, true);
+  const touch = (x: number) => ({ pointerType: "touch", x, y: 10 }) as const;
+  await down(get("red")!, touch(10));
+  await move(touch(80));
+  expect(get("red")!.dataset.active).toBeUndefined();
+  await up(touch(80));
+  expect(get("drafts")!.textContent).toBe("{}");
+});
+
+test("a finger moving straight up from a card in a row drags that card", async () => {
+  const { get } = await mount(true, true);
+  hitTesting(() => null);
+  await down(get("red")!, { pointerType: "touch", x: 10, y: 50 });
+  await move({ pointerType: "touch", x: 10, y: 30 });
+  expect(get("overlay")!.dataset.card).toBe("red");
+  await act(async () =>
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })),
+  );
+});
+
+test("pulling up out of a row drags the card under the finger", async () => {
+  const { get } = await mount(true, true);
+  hitTesting(() => null);
+  await down(get("red")!, { pointerType: "touch", x: 10, y: 50 });
+  await move({ pointerType: "touch", x: 30, y: 50 });
+  await move({ pointerType: "touch", x: 31, y: 30 });
+  expect(get("overlay")!.dataset.card).toBe("blue");
+  expect(get("blue")!.dataset.dragging).toBe("true");
+  await act(async () =>
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })),
+  );
+  expect(get("overlay")).toBeNull();
+});
+
+test("a new frame ends a finger's slide without leaving a card raised", async () => {
+  const { get, source } = await mount(true, true);
+  await down(get("red")!, { pointerType: "touch", x: 0, y: 10 });
+  await move({ pointerType: "touch", x: 10, y: 10 });
+  expect(get("red")!.dataset.active).toBe("true");
+  await act(async () => source.emit(snapshot(2)));
+  expect(get("red")!.dataset.active).toBeUndefined();
 });
 
 test("holding a card inspects it and the following click does not select it", async () => {
