@@ -606,6 +606,111 @@ test("local hooks use real card focus, retain its host while hovering elsewhere,
   host.remove();
 });
 
+test("local card focus follows its current zone and host across frames and clears when the card disappears", async () => {
+  const { createGameHook } = await import("./create-game-hook.js");
+  const { GameProvider, useGameShortcuts, useCardGesture } = createGameHook()({
+    features: (game, context) => ({
+      shortcuts: shortcutsFeature(game, context),
+    }),
+  });
+  const cardId = `card-ref:sha256:${"d".repeat(64)}`;
+  const initial = localSnapshot();
+  const empty = initial.frame.zones.deck.table;
+  function projected(version: number, zoneId: string, hostId: string) {
+    return {
+      ...initial,
+      version,
+      frame: {
+        ...initial.frame,
+        zones: Object.fromEntries(
+          ["deck", "hand"].map((zone) => [
+            zone,
+            Object.fromEntries(
+              ["table", "alice"].map((host) => [
+                host,
+                {
+                  ...empty,
+                  cardIds: zone === zoneId && host === hostId ? [cardId] : [],
+                },
+              ]),
+            ),
+          ]),
+        ),
+      },
+    };
+  }
+  const source = createSeatSource(projected(1, "deck", "table"));
+  const calls = vi.fn();
+  function App() {
+    const shortcuts = useGameShortcuts({
+      bindings: ["deck", "hand"].map((zoneId) => ({
+        kind: "local",
+        keys: ["s"],
+        label: `Order ${zoneId}`,
+        target: "zone",
+        zoneId,
+        run: calls,
+      })),
+    });
+    const card = useCardGesture(cardId, { drag: false });
+    return (
+      <>
+        <button {...card.props}>Card</button>
+        <output>{JSON.stringify(shortcuts.hints)}</output>
+      </>
+    );
+  }
+  const host = document.createElement("div");
+  document.body.append(host);
+  const root = createRoot(host);
+  await act(async () =>
+    root.render(
+      <GameProvider source={source}>
+        <App />
+      </GameProvider>,
+    ),
+  );
+  const card = host.querySelector("button")!;
+  await act(async () => card.focus());
+  async function key() {
+    const event = new KeyboardEvent("keydown", {
+      key: "s",
+      cancelable: true,
+      bubbles: true,
+    });
+    await act(async () => card.dispatchEvent(event));
+    return event;
+  }
+  expect(host.querySelector("output")!.textContent).toContain("Order deck");
+  expect((await key()).defaultPrevented).toBe(true);
+  for (const [version, zoneId, hostId] of [
+    [2, "deck", "alice"],
+    [3, "hand", "alice"],
+  ] as const) {
+    await act(async () => source.emit(projected(version, zoneId, hostId)));
+    expect(document.activeElement).toBe(card);
+    expect(host.querySelector("output")!.textContent).toContain(
+      `Order ${zoneId}`,
+    );
+    expect((await key()).defaultPrevented).toBe(true);
+    expect(calls).toHaveBeenLastCalledWith({
+      key: "s",
+      target: { kind: "zone", zoneId, hostId },
+    });
+  }
+  await act(async () => source.emit(projected(4, "", "")));
+  expect(document.activeElement).toBe(card);
+  expect(host.querySelector("output")!.textContent).toBe("[]");
+  expect((await key()).defaultPrevented).toBe(false);
+  // Reappearing data must not restore focus scope without a new focus event.
+  await act(async () => source.emit(projected(5, "hand", "alice")));
+  expect((await key()).defaultPrevented).toBe(false);
+  expect(calls).toHaveBeenCalledTimes(3);
+  expect(source.submissions).toEqual([]);
+  await act(async () => root.unmount());
+  host.remove();
+});
+
 test("local callback errors use onError and cannot notify after lifetime changes, including seat and source round trips", async () => {
   const { createGameHook } = await import("./create-game-hook.js");
   const { GameProvider, useGameShortcuts, useShortcutTarget } =

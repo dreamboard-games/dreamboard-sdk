@@ -221,6 +221,17 @@ export function createGestureSession(game: GestureGame) {
       ? target
       : null;
   }
+  function admittedFocus(target: RuntimeShortcutTarget | null) {
+    if (!target || !sameTarget(target, targetOf(document.activeElement)))
+      return null;
+    if (target.kind !== "card") return admitted(target);
+    // A mounted focused card can move between zones without another focus event.
+    return Object.values(game.snapshot?.frame.zones ?? {}).some((hosts) =>
+      Object.values(hosts).some((zone) => zone.cardIds.includes(target.value)),
+    )
+      ? target
+      : null;
+  }
   const unsubscribe = game.subscribe(() => {
     const nextSource = game.getOptions().source;
     const changedLifetime =
@@ -230,7 +241,7 @@ export function createGestureSession(game: GestureGame) {
       press?.recognizer.cancel();
       const nextHover = changedLifetime ? null : admitted(hover);
       const nextFocused = changedLifetime ? null : admitted(focused);
-      const nextDomFocused = changedLifetime ? null : admitted(domFocused);
+      const nextDomFocused = changedLifetime ? null : admittedFocus(domFocused);
       source = nextSource;
       snapshot = game.snapshot;
       alt = false;
