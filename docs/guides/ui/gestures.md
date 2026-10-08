@@ -78,6 +78,12 @@ either a board `DropTarget` from `game.drag.getDropTargets()` or an interaction:
   card input, then submits when the interaction commits automatically. A
   many-card input never toggles a dropped card back out. Name `input` when the
   interaction has two card inputs.
+- An interaction with a position input lands on an insertion point. Bind the
+  area to a function of the dragged point, such as
+  `useDropArea(({ x }) => ({ interaction: "play.reorder", position: { zoneId, hostId, index: indexAt(x) } }))`.
+  The gesture reads it at every move and at release, so the drop always names
+  the point under the card; dropping submits the card and the point together.
+  Such an area is eligible and over while the card is over a point it offers.
 
 `data-drop-target` marks eligible areas during a drag and `data-drop-over` marks
 the one under the pointer. A release outside every area changes nothing. A new
@@ -89,8 +95,10 @@ frame, seat or source cancels the drag.
 copy of the card, usually portalled to `document.body`; it is positioned fixed
 and follows the pointer without rendering on each move. After a drop that
 submitted a move, `settling` stays true until the authoritative frame arrives,
-so the copy can animate into its new place instead of snapping back. The
-original card carries `data-dragging` meanwhile.
+so the copy can animate into its new place instead of snapping back. `target`
+is where the card lands if dropped now, and it stays the dropped target while
+settling, so a hand can hold the gap it opened. The original card carries
+`data-dragging` meanwhile.
 
 Keyboard players do not drag. They select the card and then its destination,
 through the card's own button, the interaction form or the board's target

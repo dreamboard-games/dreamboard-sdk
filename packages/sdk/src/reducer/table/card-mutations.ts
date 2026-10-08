@@ -1,3 +1,4 @@
+import type { PositionTarget } from "../../shared/position-target.js";
 import type { RuntimeTableRecord, ZoneDefinitions } from "../model";
 import { removeComponentFromCurrentLocation } from "./component-mutations";
 import { assertTileCanLeaveBoard } from "./tile-mutations";
@@ -94,6 +95,37 @@ export function moveComponentToZoneInPlace(options: {
   removeComponentFromCurrentLocation(table, componentId, definitions);
   destination.ids.splice(index, 0, componentId);
   place(table, definitions, componentId, destination.ref, playedBy);
+}
+
+/**
+ * Inserts at a position input's point. The point counts the zone as it is
+ * now, including the component itself when it is already there, so a later
+ * point within the same zone lands one place earlier once it is lifted out.
+ */
+export function moveComponentToPositionInPlace(options: {
+  table: RuntimeTableRecord;
+  definitions: ZoneDefinitions;
+  componentId: string;
+  at: PositionTarget;
+  playedBy?: string | null;
+}): void {
+  const { table, definitions, componentId, at, playedBy } = options;
+  const to = { zoneId: at.zoneId, hostId: at.hostId };
+  const source = table.componentLocations[componentId];
+  const from =
+    source?.type === "InZone" &&
+    source.zoneId === at.zoneId &&
+    source.hostId === at.hostId
+      ? resolveZone(table, definitions, to).ids.indexOf(componentId)
+      : -1;
+  moveComponentToZoneInPlace({
+    table,
+    definitions,
+    componentId,
+    to,
+    position: from >= 0 && from < at.index ? at.index - 1 : at.index,
+    playedBy,
+  });
 }
 
 export function dealComponentsInPlace(options: {

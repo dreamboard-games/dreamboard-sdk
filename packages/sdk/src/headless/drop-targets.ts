@@ -17,6 +17,13 @@ export function isSameDropTarget(
       right.kind === "interaction" &&
       sameParams(left.params, right.params)
     );
+  if (left.kind === "position" || right.kind === "position")
+    return (
+      left.kind === "position" &&
+      right.kind === "position" &&
+      left.inputKey === right.inputKey &&
+      inputValueKey(left.value) === inputValueKey(right.value)
+    );
   return (
     left.kind === right.kind &&
     left.valueKind === right.valueKind &&

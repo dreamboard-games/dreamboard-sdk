@@ -94,6 +94,8 @@ export interface DragOverlay<G> {
   readonly cardId: SeatCardId<G>;
   /** Dropped and submitted; the authoritative frame has not arrived yet. */
   readonly settling: boolean;
+  /** Where the card lands if dropped now; kept while it settles. */
+  readonly target: DropTarget<G> | null;
   /** Attach to a fixed-position copy of the card; it follows the pointer. */
   readonly ref: (element: HTMLElement | null) => (() => void) | undefined;
 }
@@ -268,38 +270,59 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
 
     /**
      * Marks an element where a dragged card can land: a board destination,
-     * or an area that runs an interaction with the dropped card.
+     * or an area that runs an interaction with the dropped card. A function
+     * is read at each dragged point, as for the insertion point under the
+     * pointer; that area is eligible and over while the card is over it.
      */
     function useDropArea(
-      binding: DropTarget<Game> | DropAreaBinding<Game> | null,
+      binding:
+        | DropTarget<Game>
+        | DropAreaBinding<Game>
+        | null
+        | ((point: {
+            readonly x: number;
+            readonly y: number;
+          }) => DropTarget<Game> | DropAreaBinding<Game> | null),
     ): DropArea {
       const session = useGestureSession();
       const id = `${session.id}${useId()}`;
       const erased = binding as DropAreaInput;
+      const fixed = typeof erased === "function" ? null : erased;
       const target = useGame(
-        (snapshot) => resolveDropArea(dragOf(snapshot), erased),
+        (snapshot) => resolveDropArea(dragOf(snapshot), fixed),
         { compare: sameDropTarget },
       );
       const isOver = useGame((snapshot) => {
         const active = dragOf(snapshot)?.active?.target;
         return !!target && sameDropTarget(active ?? null, target);
       });
+      const following = useGestureState(
+        session,
+        (state) =>
+          typeof erased === "function" &&
+          state.drag?.area === id &&
+          state.drag.target !== null,
+      );
       const latest = useRef(erased);
       useLayoutEffect(() => {
         latest.current = erased;
       });
       useLayoutEffect(
-        () => session.registerArea(id, () => latest.current),
+        () =>
+          session.registerArea(id, (point) => {
+            const current = latest.current;
+            return typeof current === "function" ? current(point) : current;
+          }),
         [session, id],
       );
       return {
         props: {
           "data-drop-area": id,
-          "data-drop-target": target ? "true" : undefined,
-          "data-drop-over": isOver || undefined,
+          "data-drop-target": target || following ? "true" : undefined,
+          "data-drop-over": isOver || following || undefined,
         },
-        isEligible: target !== null,
-        isOver,
+        isEligible: target !== null || following,
+        isOver: isOver || following,
       };
     }
 
@@ -415,6 +438,8 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
         ? {
             cardId: drag.cardId as SeatCardId<Game>,
             settling: drag.settling,
+            // The drag feature resolved this target from this game's routes.
+            target: drag.target as DropTarget<Game> | null,
             ref: session.overlayRef,
           }
         : null;

@@ -789,3 +789,105 @@ test("leaving the iframe clears card hover and Alt inspection", async () => {
   expect(get("red")!.dataset.active).toBeUndefined();
   expect(get("red")!.dataset.inspecting).toBeUndefined();
 });
+
+const reorder: InteractionDescriptor = {
+  ...discard,
+  interactionId: "reorder",
+  interactionKey: "play.reorder",
+  label: "Reorder",
+  commit: { mode: "manual" },
+  inputs: [
+    discard.inputs[0],
+    {
+      key: "to",
+      kind: "position",
+      domain: {
+        type: "zonePosition",
+        zones: [{ zoneId: "hand", hostId: "alice", size: 2 }],
+      },
+    },
+  ],
+};
+/** Insertion points every 20 px: before red, between the two, after blue. */
+function Slots() {
+  const area = useDropArea(({ x }) => ({
+    interaction: "play.reorder",
+    position: {
+      zoneId: "hand",
+      hostId: "alice",
+      index: Math.max(0, Math.min(2, Math.round(x / 20))),
+    },
+  }));
+  const target = useDragOverlay()?.target;
+  return (
+    <div
+      {...area.props}
+      data-testid="slots"
+      data-index={target?.kind === "position" ? target.value.index : undefined}
+    />
+  );
+}
+test("an area read at each point offers the insertion point under the card and keeps it while settling", async () => {
+  const base = snapshot();
+  const reordering = (version: number): SourceSnapshot => ({
+    ...base,
+    version,
+    frame: {
+      ...base.frame,
+      availableInteractions: [reorder],
+      zones: {
+        hand: {
+          alice: {
+            ...base.frame.zones.hand.alice,
+            playableByCardId: { red: [reorder], blue: [reorder] },
+          },
+        },
+      },
+    },
+  });
+  const source = createTestSource(reordering(1));
+  const host = document.createElement("div");
+  document.body.append(host);
+  const root = createRoot(host);
+  roots.push(root);
+  await act(async () =>
+    root.render(
+      <GameProvider source={source}>
+        <Card id="red" draggable />
+        <Card id="blue" draggable />
+        <Slots />
+        <Overlay />
+      </GameProvider>,
+    ),
+  );
+  const get = (id: string) =>
+    document.querySelector<HTMLElement>(`[data-testid="${id}"]`);
+  hitTesting(() => get("slots"));
+  const at = (x: number, y: number) =>
+    ({ pointerType: "touch", x, y }) as const;
+  await down(get("red")!, at(10, 200));
+  await move(at(10, 180));
+  expect(get("slots")!.dataset.dropOver).toBe("true");
+  expect(get("slots")!.dataset.index).toBe("1");
+  await move(at(44, 180));
+  expect(get("slots")!.dataset.index).toBe("2");
+  await up(at(44, 180));
+  // The point names the whole move, so it submits despite a manual commit.
+  expect(source.submissions).toEqual([
+    expect.objectContaining({
+      interactionId: "reorder",
+      params: {
+        card: "red",
+        to: { zoneId: "hand", hostId: "alice", index: 2 },
+      },
+    }),
+  ]);
+  expect(get("overlay")!.dataset.settling).toBe("true");
+  expect(get("slots")!.dataset.index).toBe("2");
+  await act(async () => {
+    source.submissions[0].resolve({ accepted: true });
+    source.emit(reordering(2));
+  });
+  expect(get("overlay")).toBeNull();
+  expect(get("slots")!.dataset.index).toBeUndefined();
+});

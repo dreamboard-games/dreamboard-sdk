@@ -6,6 +6,7 @@ import type { RuntimeDropTarget, RuntimeTargetOptions } from "../targets.js";
 import type { DropTarget, TargetOptions } from "../targets.js";
 export type { DropTarget } from "../targets.js";
 import { isSameDropTarget } from "../drop-targets.js";
+import { zonePositions } from "../../shared/position-target.js";
 import type { CoreInstance, FeatureContext, SeatCardId } from "../model.js";
 export interface DragState<G> {
   readonly cardId: SeatCardId<G>;
@@ -74,15 +75,37 @@ function createRuntimeDragFeature(context: RuntimeFeatureContext) {
             (!options?.input || input.key === options.input) &&
             input.getIsEligible(cardId),
         );
+        // Each insertion point a position input offers is its own target.
+        const positions = cardInputs.flatMap((cardInput) =>
+          inputs.flatMap((input): RuntimeDropTarget[] => {
+            const domain = input.getDomain();
+            return domain.type === "zonePosition"
+              ? zonePositions(domain.zones)
+                  .filter((value) => !input.getTargetProps(value).disabled)
+                  .map((value) =>
+                    Object.freeze({
+                      kind: "position",
+                      interactionKey: candidate.key,
+                      cardInputKey: cardInput.key,
+                      inputKey: input.key,
+                      value,
+                    }),
+                  )
+              : [];
+          }),
+        );
         // Without a board input, the card lands on an area that runs the interaction.
         if (!inputs.some((input) => input.getDomain().type === "boardTarget"))
-          return cardInputs.map((cardInput): RuntimeDropTarget =>
-            Object.freeze({
-              kind: "interaction",
-              interactionKey: candidate.key,
-              cardInputKey: cardInput.key,
-            }),
-          );
+          return [
+            ...cardInputs.map((cardInput): RuntimeDropTarget =>
+              Object.freeze({
+                kind: "interaction",
+                interactionKey: candidate.key,
+                cardInputKey: cardInput.key,
+              }),
+            ),
+            ...positions,
+          ];
         return cardInputs.flatMap((cardInput) =>
           inputs.flatMap((input): RuntimeDropTarget[] => {
             const domain = input.getDomain();

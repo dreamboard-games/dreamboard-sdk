@@ -29,7 +29,12 @@ import type {
   ViewOfContract,
 } from "../model";
 import type { ScopedPhaseState } from "../model/spec/runtime-args";
-import type { BoardSpaceTarget, BoardSpaceInputSchema } from "../inputs";
+import type {
+  BoardSpaceTarget,
+  BoardSpaceInputSchema,
+  PositionTarget,
+} from "../inputs";
+import type { PositionTargetSchema } from "../../shared/position-target.js";
 import type {
   TargetPredicate,
   TargetRule,
@@ -43,6 +48,7 @@ import {
   boardTarget,
   cardInput,
   cardTarget,
+  positionInput,
   tileInput,
   tileTarget,
   formInput,
@@ -253,6 +259,21 @@ type BoundTileInput<Contract extends ContractWithPhases> = (
   TileIdOfTable<BoundTable<Contract>>
 >;
 
+/**
+ * An insertion point in one of the zones, in each host the player may reach.
+ * `tx.moveComponentToPosition` places a card there.
+ */
+type BoundPositionInput<Contract extends ContractWithPhases> = <
+  const ZoneIds extends readonly ZoneIdOfTable<BoundTable<Contract>>[],
+>(options: {
+  zones: ZoneIds;
+}) => InputCollector<
+  typeof PositionTargetSchema,
+  BoundState<Contract>,
+  "position",
+  PositionTarget<ZoneIds[number]>
+> & { readonly meta: { readonly zoneIds: ZoneIds } };
+
 type BoundRngInputs<Contract extends ContractWithPhases> = {
   d6(count?: number): ReturnType<typeof rngInput.d6<BoundState<Contract>>>;
   coin(): ReturnType<typeof rngInput.coin<BoundState<Contract>>>;
@@ -261,6 +282,7 @@ type BoundRngInputs<Contract extends ContractWithPhases> = {
 export type BoundInputBuilders<Contract extends ContractWithPhases> = {
   readonly board: BoundBoardInputs<Contract>;
   readonly card: BoundCardInput<Contract>;
+  readonly position: BoundPositionInput<Contract>;
   readonly tile: BoundTileInput<Contract>;
   readonly form: BoundFormInputs<Contract>;
   readonly rng: BoundRngInputs<Contract>;
@@ -587,6 +609,8 @@ function createBoundInputBuilders<Contract extends ContractWithPhases>(
   return {
     board: createFusedBoardInputs<Contract>(),
     card: createFusedCardInput(contract),
+    position: (options) =>
+      positionInput({ zones: options.zones, definitions: contract.manifest }),
     tile: createFusedTileInput(contract),
     form: formInput.forState<BoundState<Contract>>(),
     rng: rngInput,

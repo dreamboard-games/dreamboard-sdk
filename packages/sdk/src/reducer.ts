@@ -30,6 +30,7 @@ export {
   type ChoiceTargetPredicate,
   type ManyOptions,
   type BoardSpaceTarget,
+  type PositionTarget,
   type TargetContext,
   type TargetPredicate,
   type TargetPredicateArgs,

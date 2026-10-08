@@ -1,3 +1,4 @@
+import { zonePositions } from "../shared/position-target.js";
 import { BoardProjectionSchema } from "../shared/seat-topology-schema.js";
 import type { ProjectedTile } from "../shared/seat-topology-schema.js";
 import type { SeatTileRef } from "../shared/domain/seat-reference.js";
@@ -288,6 +289,14 @@ function createInputTargetLabels(
       );
     });
   }
+  if (domain.type === "zonePosition")
+    for (const value of zonePositions(domain.zones))
+      targetLabels.set(
+        inputValueKey(value),
+        domain.zones.length === 1
+          ? `Position ${value.index + 1}`
+          : `${value.zoneId} (${value.hostId}) position ${value.index + 1}`,
+      );
   if (domain.type === "tileTarget" || domain.type === "boardTarget") {
     if (domain.type === "tileTarget") {
       const presentations = [
@@ -433,6 +442,7 @@ class InputObject {
       return domain.choices
         .filter((choice) => !choice.disabled)
         .map((choice) => choice.value);
+    if (domain.type === "zonePosition") return zonePositions(domain.zones);
     return [];
   }
   getIsEligible(value: RuntimeJson) {
@@ -1443,7 +1453,8 @@ class Controller {
         operation?.draftRevision !== undefined &&
         (this.revisions.get(operation.key) ?? 0) === operation.draftRevision;
       this.writeDrafts(Object.freeze(next));
-      if (submitted) operation.draftRevision = this.revisions.get(operation.key);
+      if (submitted)
+        operation.draftRevision = this.revisions.get(operation.key);
     }
     const active = this.active();
     if (
@@ -1531,7 +1542,9 @@ class Controller {
     if (
       target.kind !== "interaction" &&
       (!input ||
-        !matchesBoardTarget(input.descriptor, target) ||
+        !(target.kind === "position"
+          ? input.descriptor.domain.type === "zonePosition"
+          : matchesBoardTarget(input.descriptor, target)) ||
         !input.getIsEligible(target.value))
     )
       return;
@@ -1585,7 +1598,10 @@ class Controller {
       interaction,
       next,
       alreadyChosen,
-      submitBound: params !== undefined && !isManyInput(cardInput.descriptor),
+      // A bound area or an insertion point names the whole move of one card.
+      submitBound:
+        (params !== undefined || target.kind === "position") &&
+        !isManyInput(cardInput.descriptor),
     };
   }
   routeCardDrop(cardId: string, target: RuntimeDropTarget) {
