@@ -14,6 +14,8 @@ import type { CardState } from "./card";
 export interface CardControlProps {
   cardId: CardId;
   drag: CardDrag;
+  /** Shows the face without its own gestures, menu or preview, as in a hand too crowded to aim at. */
+  inert?: boolean;
   renderCard(card: GameCard, state: CardState): ReactNode;
   getCardLabel?(card: GameCard): string;
   choosing?: boolean;
@@ -22,11 +24,13 @@ export interface CardControlProps {
   className?: string;
   /** Reports the action menu opening and closing, so a hand can hold the card still. */
   onMenuChange?(open: boolean): void;
+  /** An action was chosen from the menu, as when a sheet should get out of the way. */
+  onAction?(): void;
   /** A hand can position the control and animate its arrival. */
   children?(slot: {
     raised: boolean;
     hovered: boolean;
-    anchor: HTMLButtonElement | null;
+    anchor: HTMLElement | null;
     control: ReactNode;
   }): ReactNode;
 }
@@ -35,6 +39,7 @@ export interface CardControlProps {
 export function CardControl({
   cardId,
   drag,
+  inert = false,
   renderCard,
   getCardLabel,
   choosing = false,
@@ -42,12 +47,13 @@ export function CardControl({
   style,
   className = "db-hand-card",
   onMenuChange,
+  onAction,
   children,
 }: CardControlProps) {
   const card = useGame((game) => game.cards.find(cardId));
   const gesture = useCardGesture(cardId, { drag });
   const overlay = useDragOverlay();
-  const [anchor, setAnchor] = useState<HTMLButtonElement | null>(null);
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const [inspecting, setInspecting] = useState(false);
   const [open, setOpen] = useState(false);
   const [shake, setShake] = useState(0);
@@ -79,7 +85,11 @@ export function CardControl({
       : choosing
         ? "dimmed"
         : "idle";
-  const control = (
+  const control = inert ? (
+    <div ref={setAnchor} className={className} data-card={card.id} aria-hidden>
+      {renderCard(card, state)}
+    </div>
+  ) : (
     <button
       {...gesture.props}
       ref={setAnchor}
@@ -136,10 +146,11 @@ export function CardControl({
             control,
           })
         : control}
-      {open && !dragging && anchor && (
+      {open && !inert && !dragging && anchor && (
         <CardActions
           cardId={cardId}
           anchor={anchor}
+          onAction={onAction}
           onClose={() => setOpen(false)}
           onInspect={
             card.hidden
@@ -151,7 +162,7 @@ export function CardControl({
           }
         />
       )}
-      {(inspecting || gesture.inspecting) && !card.hidden && (
+      {(inspecting || gesture.inspecting) && !inert && !card.hidden && (
         <CardPreview
           via={inspecting ? "action" : gesture.inspecting!}
           anchor={anchor}

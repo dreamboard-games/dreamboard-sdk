@@ -15,7 +15,6 @@ async function pose(card: Locator) {
       height,
       scale: Math.hypot(matrix.a, matrix.b),
       rotate: (Math.atan2(matrix.b, matrix.a) * 180) / Math.PI,
-      scroll: element.closest(".db-hand-scroll")?.scrollLeft ?? 0,
     };
   });
 }
@@ -47,7 +46,6 @@ function flight(card: Locator, returning: boolean, count = 24) {
           height,
           scale: Math.hypot(matrix.a, matrix.b),
           rotate: (Math.atan2(matrix.b, matrix.a) * 180) / Math.PI,
-          scroll: element.closest(".db-hand-scroll")?.scrollLeft ?? 0,
         });
       }
       return frames;
@@ -63,7 +61,7 @@ export async function proveHandPickup(
   capturePrefix: string,
 ) {
   for (const scenario of touch
-    ? ["first", "last", "scrolled", "regrab"]
+    ? ["first", "last", "regrab"]
     : ["quick", "held", "regrab"]) {
     await page.reload();
     const cards = page
@@ -81,50 +79,6 @@ export async function proveHandPickup(
       await expect(cards).toHaveCount(7);
       for (const card of await cards.all()) await expect(card).toBeVisible();
       await expect(page.locator("[data-card-arrival]")).toHaveCount(0);
-    }
-    if (scenario === "scrolled") {
-      const hand = page.getByRole("region", { name: "Your hand" });
-      await hand.evaluate((element) => {
-        (element as HTMLElement).style.width = "260px";
-      });
-      const at = await cardSurface(cards.first());
-      const tracking = cards.first().evaluate(async (element) => {
-        const scroll = element.closest(".db-hand-scroll") as HTMLElement;
-        const before = element.getBoundingClientRect();
-        const centre = before.x + before.width / 2 + scroll.scrollLeft;
-        const frames = [];
-        for (let frame = 0; frame < 16; frame++) {
-          await new Promise(requestAnimationFrame);
-          const box = element.getBoundingClientRect();
-          frames.push(box.x + box.width / 2 + scroll.scrollLeft);
-        }
-        return { centre, frames };
-      });
-      const pan = await page.context().newCDPSession(page);
-      await pan.send("Input.dispatchTouchEvent", {
-        type: "touchStart",
-        touchPoints: [{ ...at, id: 1 }],
-      });
-      for (let step = 1; step <= 8; step++)
-        await pan.send("Input.dispatchTouchEvent", {
-          type: "touchMove",
-          touchPoints: [{ x: at.x - step * 12, y: at.y, id: 1 }],
-        });
-      await pan.send("Input.dispatchTouchEvent", {
-        type: "touchEnd",
-        touchPoints: [],
-      });
-      await pan.detach();
-      const tracked = await tracking;
-      for (const centre of tracked.frames)
-        expect(centre).toBeCloseTo(tracked.centre, 0);
-      await expect
-        .poll(() =>
-          hand
-            .locator(".db-hand-scroll")
-            .evaluate((element) => element.scrollLeft),
-        )
-        .toBeGreaterThan(20);
     }
     await page.waitForTimeout(650);
     const card = touch
@@ -270,24 +224,6 @@ export async function proveHandPickup(
         type: "touchCancel",
         touchPoints: [],
       });
-      if (scenario === "scrolled") {
-        // Pan back while the tilted card is returning: native offset must carry
-        // its viewport centre without a counteracting layout animation.
-        const at = await cardSurface(cards.first(), undefined, false);
-        await cdp.send("Input.dispatchTouchEvent", {
-          type: "touchStart",
-          touchPoints: [{ ...at, id: 1 }],
-        });
-        for (let step = 1; step <= 8; step++)
-          await cdp.send("Input.dispatchTouchEvent", {
-            type: "touchMove",
-            touchPoints: [{ x: at.x + step * 12, y: at.y, id: 1 }],
-          });
-        await cdp.send("Input.dispatchTouchEvent", {
-          type: "touchEnd",
-          touchPoints: [],
-        });
-      }
       await cdp.detach();
     } else {
       await page.keyboard.press("Escape");
@@ -299,10 +235,7 @@ export async function proveHandPickup(
     for (const frame of returning) {
       // These straight-up grabs share the fan's horizontal centre. A return
       // projection must not multiply its ancestor's hand translation by scale.
-      expect(frame.x + frame.width / 2 + frame.scroll).toBeCloseTo(
-        rest.x + rest.width / 2 + rest.scroll,
-        0,
-      );
+      expect(frame.x + frame.width / 2).toBeCloseTo(rest.x + rest.width / 2, 0);
       expect(frame.scale).toBeGreaterThanOrEqual(0.999);
       expect(frame.width).toBeLessThanOrEqual(
         Math.max(clone.width, rest.width) + 1,
@@ -326,10 +259,7 @@ export async function proveHandPickup(
         returning[index - 1].scale + 0.003,
       );
     const final = returning.at(-1)!;
-    expect(final.x + final.scroll).toBeCloseTo(
-      returnPose.x + returnPose.scroll,
-      0,
-    );
+    expect(final.x).toBeCloseTo(returnPose.x, 0);
     for (const key of ["y", "width", "height"] as const)
       expect(final[key]).toBeCloseTo(returnPose[key], 0);
     if (!touch) {

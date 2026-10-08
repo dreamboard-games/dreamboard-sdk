@@ -3,54 +3,53 @@ import { createGame } from "@dreamboard-games/sdk/reducer";
 import { z } from "zod";
 const suits = ["hearts", "spades", "clubs", "diamonds"] as const;
 const ranks = ["2", "3", "4", "5"] as const;
-const model = createGame({
-  manifest: compileManifest({
-    players: { minPlayers: 2, maxPlayers: 2 },
-    cardSets: [
-      {
-        id: "cards",
-        name: "Cards",
-        cardSchema: z.object({
-          suit: z.enum([...suits]),
-          rank: z.enum([...ranks]),
-        }),
-        cards: suits.flatMap((suit) =>
-          ranks.map((rank) => ({
-            id: `${suit}-${rank}`,
-            cardType: "card",
-            name: `${rank} of ${suit}`,
-            count: 1,
-            properties: { suit, rank },
-          })),
-        ),
-        defaultHome: { type: "zone", zoneId: "deck" },
-      },
-    ],
-    zones: [
-      { id: "deck", name: "Deck", scope: "shared", visibility: "hidden" },
-      { id: "hand", name: "Hand", scope: "perPlayer", visibility: "ownerOnly" },
-      { id: "table", name: "Table", scope: "shared", visibility: "public" },
-      { id: "discard", name: "Discard", scope: "shared", visibility: "public" },
-    ],
-  }),
-  phases: { play: z.object({}) },
-  state: {
-    public: z.object({}),
-    private: z.object({}),
-    hidden: z.object({}),
-  },
-});
-const play = model.phase("play");
-/** A hand card of these suits. */
-const handCard = (accepted: readonly string[]) =>
-  play.inputs.card({
-    from: ["hand"],
-    where: {
-      id: `suit-${accepted.join("-")}`,
-      errorCode: "WRONG_SUIT",
-      message: "That suit cannot go there.",
-      test: ({ q, targetId }) =>
-        accepted.includes(String(q.card.get(targetId).properties.suit)),
+/** Each suit and rank `copies` times. */
+const createHandModel = (copies: number) =>
+  createGame({
+    manifest: compileManifest({
+      players: { minPlayers: 2, maxPlayers: 2 },
+      cardSets: [
+        {
+          id: "cards",
+          name: "Cards",
+          cardSchema: z.object({
+            suit: z.enum([...suits]),
+            rank: z.enum([...ranks]),
+          }),
+          cards: suits.flatMap((suit) =>
+            ranks.map((rank) => ({
+              id: `${suit}-${rank}`,
+              cardType: "card",
+              name: `${rank} of ${suit}`,
+              count: copies,
+              properties: { suit, rank },
+            })),
+          ),
+          defaultHome: { type: "zone", zoneId: "deck" },
+        },
+      ],
+      zones: [
+        { id: "deck", name: "Deck", scope: "shared", visibility: "hidden" },
+        {
+          id: "hand",
+          name: "Hand",
+          scope: "perPlayer",
+          visibility: "ownerOnly",
+        },
+        { id: "table", name: "Table", scope: "shared", visibility: "public" },
+        {
+          id: "discard",
+          name: "Discard",
+          scope: "shared",
+          visibility: "public",
+        },
+      ],
+    }),
+    phases: { play: z.object({}) },
+    state: {
+      public: z.object({}),
+      private: z.object({}),
+      hidden: z.object({}),
     },
   });
 /**
@@ -58,7 +57,21 @@ const handCard = (accepted: readonly string[]) =>
  * discard and diamonds do nothing: one card per action-menu case. Ending the
  * turn passes it to the other player.
  */
-export function createHandGame(handSize: number) {
+export function createHandGame(handSize: number, copies = 1) {
+  const model = createHandModel(copies);
+  const play = model.phase("play");
+  /** A hand card of these suits. */
+  const handCard = (accepted: readonly string[]) =>
+    play.inputs.card({
+      from: ["hand"],
+      where: {
+        id: `suit-${accepted.join("-")}`,
+        errorCode: "WRONG_SUIT",
+        message: "That suit cannot go there.",
+        test: ({ q, targetId }) =>
+          accepted.includes(String(q.card.get(targetId).properties.suit)),
+      },
+    });
   return model.assemble({
     initial: { public: () => ({}) },
     initialPhase: "play",
@@ -155,3 +168,5 @@ export function createHandGame(handSize: number) {
   });
 }
 export const handGame = createHandGame(9);
+/** More cards than a phone's hand can show: the hand opens as a sheet. */
+export const crowdedHandGame = createHandGame(24, 2);

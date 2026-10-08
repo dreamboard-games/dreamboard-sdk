@@ -8,7 +8,7 @@ export async function proveHandChoreography(
 ) {
   const hand = page.getByRole("region", { name: "Your hand" });
   const cards = hand.locator(".db-hand-card");
-  const scroll = hand.locator(".db-hand-scroll");
+  const clip = hand.locator(".db-hand-clip");
   await expect(cards).toHaveCount(9);
   const before = (await hand.boundingBox())!;
   if (!touch) {
@@ -238,48 +238,37 @@ export async function proveHandChoreography(
     await cards.nth(2).blur();
   }
 
-  // Crowding inside a transformed authored layout retains native scrolling.
+  // Crowding inside a transformed authored layout still fits the hand, which
+  // becomes one button that opens every card in a sheet.
   await hand.evaluate((element) =>
     Object.assign((element as HTMLElement).style, {
       width: "260px",
       transform: "translateZ(0)",
     }),
   );
-  await expect
-    .poll(() =>
-      scroll.evaluate((element) => element.scrollWidth - element.clientWidth),
-    )
-    .toBeGreaterThan(0);
+  const open = hand.getByRole("button", { name: "Your hand: 9 cards" });
+  await expect(open).toBeVisible();
+  await expect(hand.getByRole("button")).toHaveCount(1);
   await page.waitForTimeout(650);
-  if (touch) {
-    const at = await surface(cards.first());
-    const cdp = await page.context().newCDPSession(page);
-    await cdp.send("Input.dispatchTouchEvent", {
-      type: "touchStart",
-      touchPoints: [{ ...at, id: 1 }],
-    });
-    for (let step = 1; step <= 8; step++)
-      await cdp.send("Input.dispatchTouchEvent", {
-        type: "touchMove",
-        touchPoints: [{ x: at.x - step * 12, y: at.y, id: 1 }],
-      });
-    await cdp.send("Input.dispatchTouchEvent", {
-      type: "touchEnd",
-      touchPoints: [],
-    });
-    await cdp.detach();
-  } else {
-    const at = await surface(cards.first());
-    await page.mouse.move(at.x, at.y);
-    await page.mouse.wheel(100, 0);
+  const fan = (await clip.boundingBox())!;
+  for (const card of await cards.all()) {
+    const box = (await card.boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(fan.x - 1);
+    expect(box.x + box.width).toBeLessThanOrEqual(fan.x + fan.width + 1);
   }
-  await expect
-    .poll(() => scroll.evaluate((element) => element.scrollLeft))
-    .toBeGreaterThan(20);
-  await expect(page.locator("[data-drag-overlay]")).toHaveCount(0);
-  await scroll.evaluate((element) => {
-    element.scrollLeft = 0;
+  if (touch) await open.tap();
+  else await open.click();
+  const sheet = page.getByRole("dialog", { name: "Your hand · 9" });
+  await expect(sheet.locator(".db-hand-card")).toHaveCount(9);
+  await page.screenshot({ path: `${capturePrefix}-sheet.png` });
+  await page.keyboard.press("Escape");
+  await expect(sheet).toHaveCount(0);
+  // A narrow hand with room to aim keeps its cards.
+  await hand.evaluate((element) => {
+    (element as HTMLElement).style.width = "340px";
   });
+  await expect(open).toHaveCount(0);
+  await page.waitForTimeout(650);
   if (!touch) {
     const first = cards.first();
     const at = await surface(first);
@@ -292,12 +281,12 @@ export async function proveHandChoreography(
     expect(face.x + face.width).toBeLessThanOrEqual(
       bounds.x + bounds.width + 1,
     );
-    const top = await scroll.boundingBox();
+    const top = await clip.boundingBox();
     expect(face.y).toBeGreaterThan(top!.y);
     // Returning faces remain inside the same shared, padded viewport.
     await page.mouse.move(1, 1);
     expect(
-      await first.evaluate((e) => e.closest(".db-hand-scroll") !== null),
+      await first.evaluate((e) => e.closest(".db-hand-clip") !== null),
     ).toBe(true);
   }
   // Normal fan z-order must leave each immediate neighbour physically
@@ -330,9 +319,6 @@ export async function proveHandChoreography(
   await cards.nth(8).blur();
   await page.mouse.move(1, 1);
   await hand.evaluate((element) => element.removeAttribute("style"));
-  await scroll.evaluate((element) => {
-    element.scrollLeft = 0;
-  });
 }
 
 /** Real text and a landscape face preserve authored geometry during inspection. */

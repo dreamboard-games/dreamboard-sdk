@@ -28,6 +28,8 @@ export interface CardActionsProps {
   cardId: CardId;
   /** The card's own control; the menu opens above it and returns focus to it. */
   anchor: HTMLElement;
+  /** An action was chosen; the menu then closes. */
+  onAction?(): void;
   onClose(): void;
   onInspect?(): void;
 }
@@ -40,6 +42,7 @@ export interface CardActionsProps {
 export function CardActions({
   cardId,
   anchor,
+  onAction,
   onClose,
   onInspect,
 }: CardActionsProps) {
@@ -88,6 +91,7 @@ export function CardActions({
                   data-interaction={route.key}
                   onClick={() => {
                     card.select({ interaction: route.key });
+                    onAction?.();
                     onClose();
                   }}
                 >

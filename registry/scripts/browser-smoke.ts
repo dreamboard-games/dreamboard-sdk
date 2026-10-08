@@ -13,7 +13,7 @@ import {
   proveReducedCardMotion,
 } from "./draw-proof.ts";
 import { proveCardControl } from "./card-control-proof.ts";
-import { proveHand } from "./hand-proof.ts";
+import { proveCrowdedHand, proveHand, proveHandSlide } from "./hand-proof.ts";
 import { proveHandPickup } from "./hand-pickup-proof.ts";
 import {
   proveHandChoreography,
@@ -320,9 +320,15 @@ try {
         await page.reload();
         await proveHand(page, touch);
         await page.reload();
+        if (touch) {
+          await proveHandSlide(page);
+          await page.reload();
+        }
         await proveDraw(page, touch, false);
         if (!touch) await proveReducedCardMotion(page);
       }
+      if (story.id.endsWith("crowded-hand"))
+        await proveCrowdedHand(page, touch, name === "phone");
       if (story.id.endsWith("pending-draw") && name !== "landscape")
         await proveDraw(page, touch, true);
       if (story.id.endsWith("draw-lifecycle") && name !== "landscape")
