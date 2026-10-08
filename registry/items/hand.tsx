@@ -45,7 +45,6 @@ export interface HandProps {
   hostId: Card["hostId"];
   label?: string;
   className?: string;
-  sort?(left: Card, right: Card): number;
   /**
    * Draws a card in the state the hand gives it. Keep it stable, at module
    * scope or in `useCallback`, so a drag renders only the dragged card. The
@@ -84,17 +83,15 @@ export function Hand({
   hostId,
   label = "Hand",
   className = "",
-  sort,
   renderCard,
   getCardLabel,
   options = handFanPresets.open,
 }: HandProps) {
   const ids = useGame(
-    (game) =>
-      game.zones
-        .find(zoneId, hostId)
-        ?.getCards({ sort })
-        .map((card) => card.id) ?? EMPTY,
+    (game) => {
+      const zone = game.zones.find(zoneId, hostId);
+      return zone ? game.hand.getSortedCardIds(zone) : EMPTY;
+    },
     { compare: sameIds },
   );
   // Unplayable cards dim only while another card here is playable.
