@@ -228,7 +228,10 @@ export function Hand({
     Math.max(tucked ? 0 : size.cardHeight * 1.45, fan.height, nextFan.height) +
     lift -
     tucked;
-  function placement(index: number, layout = fan): CardPlacement {
+  function placement(
+    index: number,
+    layout: Pick<typeof fan, "cards" | "width"> = fan,
+  ): CardPlacement {
     const box = scroller!.getBoundingClientRect();
     const style = getComputedStyle(scroller!);
     const card = layout.cards[index];
