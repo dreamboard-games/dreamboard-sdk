@@ -200,7 +200,7 @@ export function CardControl({
           onAction={onAction}
           onClose={() => setOpen(false)}
           onInspect={
-            card.hidden
+            presentation.hidden
               ? undefined
               : () => {
                   setOpen(false);
@@ -209,7 +209,7 @@ export function CardControl({
           }
         />
       )}
-      {(inspecting || gesture.inspecting) && !inert && !card.hidden && (
+      {(inspecting || gesture.inspecting) && !inert && !presentation.hidden && (
         <CardPreview
           via={inspecting ? "action" : gesture.inspecting!}
           anchor={anchor}

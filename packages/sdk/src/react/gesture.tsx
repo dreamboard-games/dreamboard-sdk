@@ -385,9 +385,16 @@ export function createGestureSession(game: GestureGame) {
   function inspectWithAlt() {
     const target = hover ?? focused;
     const cardId = target?.kind === "card" ? target.value : null;
+    const pending = store.get().drag;
     set({
       activeTarget: target,
-      inspect: alt && cardId && !press ? { cardId, via: "hover" } : null,
+      inspect:
+        alt &&
+        cardId &&
+        !press &&
+        !(pending?.settling && pending.cardIds.includes(cardId))
+          ? { cardId, via: "hover" }
+          : null,
     });
   }
   function targetOf(element: Element | null): RuntimeShortcutTarget | null {

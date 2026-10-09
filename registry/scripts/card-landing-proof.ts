@@ -94,10 +94,28 @@ export async function proveCardLandings(page: Page, touch: boolean) {
   ).toBeVisible();
   await expect(deck.locator(selector)).not.toContainText("Moving card");
   await expect(authority).toHaveText(returned);
+  if (!touch) {
+    await deck.locator(selector).hover();
+    await page.keyboard.down("Alt");
+    await expect(deck.locator(selector)).not.toHaveAttribute(
+      "data-inspecting",
+      "hover",
+    );
+    await expect(page.locator("[data-card-preview]")).toHaveCount(0);
+    await page.keyboard.up("Alt");
+  }
   await page.getByRole("button", { name: "Reject move" }).click();
   await expect(hand.locator(selector)).toBeVisible();
   await expect(deck.locator(selector)).toHaveCount(0);
   await expect(authority).toHaveText(returned);
+
+  if (!touch) {
+    await hand.locator(selector).hover();
+    await page.keyboard.down("Alt");
+    await expect(page.locator('[data-card-preview="hover"]')).toBeVisible();
+    await page.keyboard.up("Alt");
+    await expect(page.locator("[data-card-preview]")).toHaveCount(0);
+  }
 
   // A pending in-hand reorder shows the actual card, rather than a held empty gap.
   await carry(hand.locator(selector), hand.locator(".db-hand"), true);

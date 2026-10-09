@@ -1084,6 +1084,32 @@ test("a pending card cannot start another press", async () => {
   expect(get("red")!.dataset.pending).toBe("true");
 });
 
+test("Alt inspection skips pending cards and resumes after rejection", async () => {
+  const { source, get } = await mountLanding("hidden");
+  hitTesting(() => get("red"));
+  await move({ pointerType: "mouse", x: 10, y: 40 });
+  await act(async () => {
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Alt" }));
+  });
+  expect(get("red")!.dataset.inspecting).toBeUndefined();
+  // Other cards remain inspectable while this card is pending.
+  hitTesting(() => get("blue"));
+  await move({ pointerType: "mouse", x: 30, y: 200 });
+  await act(async () => {
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Alt" }));
+  });
+  expect(get("blue")!.dataset.inspecting).toBe("hover");
+  await act(async () =>
+    source.submissions[0].resolve({ accepted: false, errorCode: "REJECTED" }),
+  );
+  hitTesting(() => get("red"));
+  await move({ pointerType: "mouse", x: 10, y: 200 });
+  await act(async () => {
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Alt" }));
+  });
+  expect(get("red")!.dataset.inspecting).toBe("hover");
+});
+
 test("a selected group lands atomically in selection order", async () => {
   const initial = landingSnapshot();
   const many: InteractionDescriptor = {
