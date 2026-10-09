@@ -14,9 +14,10 @@ import type { CardState } from "./card";
 import {
   CardBack,
   backImageOf,
-  cardDragScale,
   cardPickup,
   cardSettle,
+  dragCopyScale,
+  useSnapTick,
 } from "./card";
 import { motion } from "motion/react";
 import { createPortal } from "react-dom";
@@ -86,6 +87,8 @@ export function CardControl({
       setInspecting(false);
     }
   }, [dragging]);
+  const copied = !children && overlay?.cardId === cardId;
+  useSnapTick(copied && overlay.fit.snapped);
   const menu = open && !dragging;
   useEffect(() => {
     if (!menu) return;
@@ -176,8 +179,7 @@ export function CardControl({
           {control}
         </motion.div>
       )}
-      {!children &&
-        overlay?.cardId === cardId &&
+      {copied &&
         (!overlay.settling || !overlay.landing) &&
         anchor &&
         createPortal(
@@ -185,10 +187,14 @@ export function CardControl({
             <motion.div
               layoutId={card.id}
               initial={false}
-              animate={{ scale: cardDragScale }}
-              transition={cardPickup}
+              animate={{ scale: dragCopyScale(overlay.fit) }}
+              transition={overlay.fit.scale === null ? cardPickup : cardSettle}
             >
-              {renderCard(card, "selected")}
+              {overlay.fit.concealed ? (
+                <CardBack image={backImageOf(card)} />
+              ) : (
+                renderCard(card, "selected")
+              )}
             </motion.div>
           </motion.div>,
           document.body,

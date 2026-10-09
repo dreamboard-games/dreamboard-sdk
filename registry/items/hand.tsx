@@ -31,12 +31,18 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-import { backImageOf, type CardState } from "./card";
+import {
+  backImageOf,
+  CardBack,
+  dragCopyScale,
+  useSnapTick,
+  type CardState,
+} from "./card";
 import { CardControl } from "./card-control";
 import { CardArrival } from "./card-arrival";
 import { HandSheet } from "./hand-sheet";
 import { cardEntry, useCardMotion, type CardPlacement } from "./card-motion";
-import { cardDragScale, cardPickup } from "./card";
+import { cardDragScale, cardPickup, cardSettle } from "./card";
 import "./tokens.css";
 /** Bindings for interactions that take a position, such as a reorder. */
 type PositionBinding = Extract<
@@ -529,6 +535,8 @@ export function Hand({
                   className={
                     drawOver ? "db-draw-insertion" : "db-hand-insertion"
                   }
+                  // A dragged card takes the size of the gap it would land in.
+                  data-drop-landing={drawOver ? undefined : "gap"}
                   aria-hidden
                   style={{
                     width: size.card,
@@ -644,6 +652,7 @@ const HandCard = memo(function HandCard({
     (open: boolean) => onMenuChange(cardId, open),
     [onMenuChange, cardId],
   );
+  useSnapTick(!!overlay?.fit.snapped);
   if (!card) return null;
   return (
     <>
@@ -696,12 +705,17 @@ const HandCard = memo(function HandCard({
                     className="db-hand-pose"
                     initial={false}
                     animate={{
-                      scale: pickup?.scale ?? scale,
+                      scale:
+                        pickup && overlay
+                          ? dragCopyScale(overlay.fit, pickup.scale)
+                          : scale,
                       rotate: pickup ? 0 : place.rotate,
                     }}
                     transition={
                       pickup
-                        ? cardPickup
+                        ? overlay?.fit.scale
+                          ? cardSettle
+                          : cardPickup
                         : focused
                           ? handFanTiming.focus
                           : handFanTiming.settle
@@ -752,7 +766,9 @@ const HandCard = memo(function HandCard({
               cardId={cardId}
               scale={presentedScale}
               rotate={presentedRotation}
-              lift={pickup!.y}
+              // A card in a pile sits on it, not above the finger.
+              lift={overlay.fit.snapped ? 0 : pickup!.y}
+              concealed={overlay.fit.concealed}
               baseWidth={baseWidth}
               baseHeight={baseHeight}
               renderCard={renderCard}
@@ -770,6 +786,7 @@ function DragCopy({
   scale,
   rotate,
   lift,
+  concealed,
   baseWidth,
   baseHeight,
   renderCard,
@@ -778,6 +795,8 @@ function DragCopy({
   scale: MotionValue<number>;
   rotate: MotionValue<number>;
   lift: number;
+  /** It would land face down where it is. */
+  concealed: boolean;
   baseWidth: number;
   baseHeight: number;
   renderCard: HandProps["renderCard"];
@@ -793,7 +812,11 @@ function DragCopy({
       style={{ width: baseWidth, height: baseHeight }}
     >
       <motion.div className="db-hand-pose" style={{ scale, rotate }}>
-        {renderCard(card, "selected")}
+        {concealed ? (
+          <CardBack image={backImageOf(card)} />
+        ) : (
+          renderCard(card, "selected")
+        )}
       </motion.div>
     </motion.div>
   ) : null;

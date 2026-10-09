@@ -28,5 +28,8 @@ game binding alongside the existing gesture hooks.
 
 Without a custom `children` slot, the control owns its Motion `layoutId` and
 drag overlay automatically. Its `renderCard` should supply the face without
-another `layoutId`. A custom slot, such as the hand's fan, owns its placement
-and moving overlay.
+another `layoutId`. The overlay draws at the size of the place the card would
+land, flat on a pile, and as its back over a zone that hides it; on touch,
+settling into a pile ticks. A custom slot, such as the hand's fan, owns its
+placement and moving overlay; `dragCopyScale(overlay.fit)` and `useSnapTick`
+from the copied `card` give it the same behaviour.

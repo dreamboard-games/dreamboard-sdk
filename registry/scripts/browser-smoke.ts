@@ -21,6 +21,7 @@ import { proveHandSorting } from "./hand-sorting-proof.ts";
 import { proveCardRow } from "./card-row-proof.ts";
 import { proveHandReorder } from "./hand-reorder-proof.ts";
 import { proveCardLandings } from "./card-landing-proof.ts";
+import { proveCardSnapping } from "./card-snap-proof.ts";
 import { proveHandPickup } from "./hand-pickup-proof.ts";
 import {
   proveHandChoreography,
@@ -362,6 +363,11 @@ try {
           await page.emulateMedia({ reducedMotion: "no-preference" });
         }
       }
+      if (
+        story.id.endsWith("card-snapping--piles-and-zones") &&
+        name !== "landscape"
+      )
+        await proveCardSnapping(page, touch);
       if (story.id.endsWith("--reordering-open-hand") && name === "desktop")
         await proveHandReorder(page, touch);
       if (story.id.endsWith("pending-draw") && name !== "landscape")

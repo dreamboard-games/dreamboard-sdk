@@ -16,3 +16,5 @@ are authoritative; there is no separate SDK component import.
 ## Props and behavior
 
 `Pile` takes `count`, `label` and the top card as children. Below the top card, one edge shows for every six cards, up to four, so a full deck looks thicker than a short one. A badge on the corner shows the count. An empty pile is a dashed outline the size of a card. The caption names the pile and tells screen readers how many cards it holds. Cards are sized with `--card-w-pile`. Add `data-zone` so cards drawn from the pile start there.
+
+The stack is marked `data-drop-landing="slot"`. Inside a [DropArea](drop-area.md), a dragged card that comes near snaps onto the stack at its size, and the badge previews the cards that would land, such as `12 +1`.

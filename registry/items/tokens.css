@@ -204,6 +204,11 @@
   .db-pile figcaption {
     font-size: var(--text-label);
   }
+  /* A drop area previews how many cards would land on its pile. */
+  .db-drop-area[data-drop-over] .db-pile-count::after {
+    counter-reset: incoming var(--drop-incoming);
+    content: " +" counter(incoming);
+  }
   .db-seat {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;

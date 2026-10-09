@@ -6,7 +6,10 @@ export type PileProps = Omit<ComponentProps<"figure">, "children"> & {
   /** The top card. */
   children?: ReactNode;
 };
-/** A stack of cards: edges below the top card grow with the count, an outline when empty. */
+/**
+ * A stack of cards: edges below the top card grow with the count, an outline
+ * when empty. Inside a drop area, a dragged card snaps onto the stack.
+ */
 export function Pile({
   count,
   label,
@@ -23,7 +26,7 @@ export function Pile({
       className={`db-pile ${className}`}
       style={{ "--depth": depth, ...props.style } as CSSProperties}
     >
-      <div className="db-pile-stack">
+      <div className="db-pile-stack" data-drop-landing="slot">
         {Array.from({ length: depth }, (_, index) => (
           <span
             key={index}

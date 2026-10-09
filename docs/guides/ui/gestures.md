@@ -90,14 +90,44 @@ either a board `DropTarget` from `game.drag.getDropTargets()` or an interaction:
   Such an area is eligible and over while the card is over a point it offers.
 
 `data-drop-target` marks eligible areas during a drag and `data-drop-over` marks
-the one under the pointer. A release outside every area changes nothing. A new
-frame, seat or source cancels the drag.
+the one the card would land on. A release outside every area changes nothing. A
+new frame, seat or source cancels the drag.
+
+### Snapping
+
+Rectangular areas also catch a card the pointer has not reached, measured as
+far as their scrolling ancestors show them:
+
+- **Piles.** Mark the card-sized box a dropped card shows in with
+  `data-drop-landing="slot"`, as the registry's `Pile` does with its stack. A
+  card whose centre comes near the slot snaps into it, sized to it, and stays
+  until pulled well clear; between two piles it passes to the other only when
+  clearly closer. A pointer over the pile's label also lands on it.
+- **Zones.** Other areas take a card under the pointer, a card that covers a
+  third of them, or one the pointer nearly reaches. Pulled out over empty
+  table, the card is held inside the zone's edge, giving a little toward the
+  pointer, until most of it is clear. Mark an insertion gap with
+  `data-drop-landing="gap"` and the card takes that gap's size.
+
+A finger reaches further than a mouse. The innermost covered zone wins over
+the zones around it. SVG and transformed board targets keep the browser's own
+hit testing. Dragging near the edge of a scroller the pointer has been well
+inside scrolls it, so lifting a card out of a hand does not scroll the table
+it crosses. The area a card would land on is announced through a polite
+status region, by its `aria-label`.
 
 ## The dragged card
 
 `useDragOverlay()` returns the dragged `cardId` and a `ref`. Attach the ref to a
 copy of the card, usually portalled to `document.body`; it is positioned fixed
-and follows the pointer without rendering on each move. After a drop that
+and follows the pointer without rendering on each move. It moves into a pile's
+slot or holds at a zone's edge by itself, gliding over about 150 ms rather than
+jumping; with reduced motion it jumps. `fit` says how to draw the copy where it
+would land: `scale` is the landing box's width relative to the picked-up
+card's layout width, `snapped` is true in a pile's slot, and `concealed` is
+true over a zone that would hide the card, so the copy can show its back.
+`fit.scale` is null until the card has been over a landing box, and between
+areas it keeps the last one's. After a drop that
 submitted a move, `settling` stays true until the authoritative frame arrives,
 so the copy can animate into its new place instead of snapping back. `target`
 is where the card lands if dropped now, and it stays the dropped target while

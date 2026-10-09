@@ -17,6 +17,7 @@ afterAll(() => GlobalRegistrator.unregister());
 const roots: Root[] = [];
 afterEach(async () => {
   vi.useRealTimers();
+  vi.restoreAllMocks();
   await act(async () => roots.splice(0).forEach((root) => root.unmount()));
   document.body.replaceChildren();
 });
@@ -1212,4 +1213,318 @@ test("revealing a pending concealed card does not restart its arrival", async ()
   });
   expect(get("red")!.dataset.hidden).toBe("false");
   expect(get("table")!.dataset.arriving).toBe("[]");
+});
+
+/** Lays an element out at a box, with its own untransformed layout width. */
+function layout(element: Element, box: DOMRect, width = box.width) {
+  vi.spyOn(element, "getBoundingClientRect").mockReturnValue(box);
+  Object.defineProperty(element, "offsetWidth", {
+    configurable: true,
+    value: width,
+  });
+}
+/** Where the overlay's top-left corner is drawn. */
+const drawnAt = (overlay: HTMLElement) =>
+  `${overlay.style.left} ${overlay.style.top}`;
+function reduceMotion() {
+  vi.spyOn(window, "matchMedia").mockReturnValue({
+    matches: true,
+  } as MediaQueryList);
+}
+function FitOverlay() {
+  const overlay = useDragOverlay();
+  return overlay ? (
+    <div
+      ref={overlay.ref}
+      data-testid="overlay"
+      data-fit={JSON.stringify(overlay.fit)}
+    />
+  ) : null;
+}
+function DiscardPile() {
+  const area = useDropArea({ interaction: "play.discard" });
+  return (
+    <figure {...area.props} aria-label="Discard pile" data-testid="pile">
+      <div data-drop-landing="slot" data-testid="slot" />
+    </figure>
+  );
+}
+async function mountSnapping(children: ReactNode) {
+  const source = createTestSource(snapshot());
+  const host = document.createElement("div");
+  document.body.append(host);
+  const root = createRoot(host);
+  roots.push(root);
+  await act(async () =>
+    root.render(
+      <GameProvider source={source}>
+        <Card id="red" draggable />
+        {children}
+        <FitOverlay />
+      </GameProvider>,
+    ),
+  );
+  const get = (id: string) =>
+    document.querySelector<HTMLElement>(`[data-testid="${id}"]`);
+  const fit = () => JSON.parse(get("overlay")!.dataset.fit!) as unknown;
+  // A 60 × 90 card resting at 0,300, picked up by its centre unless told otherwise.
+  layout(get("red")!, new DOMRect(0, 300, 60, 90));
+  const mouse = (x: number, y: number) =>
+    ({ pointerType: "mouse", x, y }) as const;
+  async function lift(at = mouse(30, 345)) {
+    await down(get("red")!, at);
+    await move({ ...at, y: at.y - 20 });
+    expect(get("overlay")).not.toBeNull();
+  }
+  return { source, get, fit, mouse, lift };
+}
+
+test.each(["area", "inner"] as const)(
+  "a pile slot clipped by its %s scroller cannot catch a card",
+  async (scroller) => {
+    reduceMotion();
+    function ScrolledPile() {
+      const area = useDropArea({ interaction: "play.discard" });
+      return (
+        <section
+          {...area.props}
+          data-testid="pile"
+          style={{ overflowY: scroller === "area" ? "auto" : "visible" }}
+        >
+          <div
+            data-testid="scroller"
+            style={{ overflowY: scroller === "inner" ? "auto" : "visible" }}
+          >
+            <div data-drop-landing="slot" data-testid="slot" />
+          </div>
+        </section>
+      );
+    }
+    const { source, get, mouse, lift } = await mountSnapping(<ScrolledPile />);
+    layout(get("pile")!, new DOMRect(200, 200, 100, 100));
+    layout(get("scroller")!, new DOMRect(200, 200, 100, 100));
+    // The slot has scrolled completely above its visible scrollport.
+    layout(get("slot")!, new DOMRect(200, 0, 40, 60));
+    hitTesting(() => null);
+    await lift();
+    await move(mouse(220, 30));
+    expect(get("pile")!.dataset.dropOver).toBeUndefined();
+    await up(mouse(220, 30));
+    expect(source.submissions).toEqual([]);
+    // The same slot becomes reachable when it scrolls back into view.
+    layout(get("slot")!, new DOMRect(200, 210, 40, 60));
+    await lift();
+    await move(mouse(220, 240));
+    expect(get("pile")!.dataset.dropOver).toBe("true");
+    await up(mouse(220, 240));
+    expect(source.submissions).toHaveLength(1);
+  },
+);
+
+test("a slot mounted on entering an area snaps on the next frame without another pointer move", async () => {
+  reduceMotion();
+  vi.useFakeTimers({
+    toFake: ["requestAnimationFrame", "cancelAnimationFrame", "performance"],
+  });
+  function DynamicPile() {
+    const area = useDropArea({ interaction: "play.discard" });
+    return (
+      <section {...area.props} data-testid="pile">
+        {area.isOver && <div data-drop-landing="slot" data-testid="slot" />}
+      </section>
+    );
+  }
+  const { get, fit, mouse, lift } = await mountSnapping(<DynamicPile />);
+  layout(get("pile")!, new DOMRect(200, 0, 100, 100));
+  hitTesting(() => null);
+  await lift();
+  hitTesting(() => get("pile"));
+  await move(mouse(220, 30));
+  expect(get("slot")).not.toBeNull();
+  layout(get("slot")!, new DOMRect(200, 0, 40, 60));
+  await act(async () => vi.advanceTimersByTime(20));
+  expect(fit()).toEqual({ scale: 40 / 60, snapped: true, concealed: false });
+  expect(drawnAt(get("overlay")!)).toBe("190px -15px");
+  await up(mouse(220, 30));
+});
+
+test("replacing a slot during a drag refreshes its size and clipping ancestors", async () => {
+  reduceMotion();
+  function ReplacedPile() {
+    const area = useDropArea({ interaction: "play.discard" });
+    const [replaced, setReplaced] = useState(false);
+    return (
+      <>
+        <button data-testid="replace" onClick={() => setReplaced(true)} />
+        <section {...area.props} data-testid="pile">
+          {replaced ? (
+            <div
+              key="scroller"
+              style={{ overflowY: "auto" }}
+              data-testid="scroller"
+            >
+              <div data-drop-landing="slot" data-testid="slot" />
+            </div>
+          ) : (
+            <div key="original" data-drop-landing="slot" data-testid="slot" />
+          )}
+        </section>
+      </>
+    );
+  }
+  const { get, fit, mouse, lift } = await mountSnapping(<ReplacedPile />);
+  layout(get("pile")!, new DOMRect(200, 200, 100, 100));
+  const original = get("slot")!;
+  layout(original, new DOMRect(200, 0, 40, 60));
+  hitTesting(() => null);
+  await lift();
+  await move(mouse(220, 30));
+  expect(fit()).toMatchObject({ scale: 40 / 60, snapped: true });
+  await act(async () => get("replace")!.click());
+  expect(original.isConnected).toBe(false);
+  layout(get("scroller")!, new DOMRect(200, 200, 100, 100));
+  layout(get("slot")!, new DOMRect(200, 0, 50, 75));
+  await move(mouse(225, 30));
+  expect(get("pile")!.dataset.dropOver).toBeUndefined();
+  expect(fit()).toMatchObject({ snapped: false });
+  layout(get("slot")!, new DOMRect(200, 210, 50, 75));
+  await move(mouse(225, 247.5));
+  expect(fit()).toMatchObject({ scale: 50 / 60, snapped: true });
+  await up(mouse(225, 247.5));
+});
+
+test("a pile catches a card near its slot, draws it there at the slot's size and drops into it", async () => {
+  reduceMotion();
+  const { source, get, fit, mouse, lift } = await mountSnapping(
+    <DiscardPile />,
+  );
+  layout(get("slot")!, new DOMRect(200, 0, 40, 60));
+  hitTesting(() => null);
+  await lift();
+  // The card's centre comes within reach of the slot's centre at 220,30.
+  await move(mouse(215, 40));
+  expect(get("pile")!.dataset.dropOver).toBe("true");
+  expect(fit()).toEqual({ scale: 40 / 60, snapped: true, concealed: false });
+  // Drawn in the slot, still giving a little toward the pointer.
+  expect(drawnAt(get("overlay")!)).toBe(
+    `${220 - 5 * 0.15 - 30}px ${30 + 10 * 0.15 - 45}px`,
+  );
+  await move(mouse(215, 120));
+  expect(get("pile")!.dataset.dropOver).toBeUndefined();
+  // Between areas the card keeps the size it last had.
+  expect(fit()).toEqual({ scale: 40 / 60, snapped: false, concealed: false });
+  await move(mouse(215, 40));
+  await up(mouse(215, 40));
+  expect(source.submissions).toEqual([
+    expect.objectContaining({
+      interactionId: "discard",
+      params: { card: "red" },
+    }),
+  ]);
+});
+
+test("a snapping card glides into place instead of jumping", async () => {
+  vi.useFakeTimers({
+    toFake: ["requestAnimationFrame", "cancelAnimationFrame", "performance"],
+  });
+  const { get, mouse, lift } = await mountSnapping(<DiscardPile />);
+  layout(get("slot")!, new DOMRect(200, 0, 40, 60));
+  hitTesting(() => null);
+  await lift();
+  await move(mouse(215, 40));
+  // Still where the pointer drew it a moment ago.
+  expect(drawnAt(get("overlay")!)).toBe(`${215 - 30}px ${40 - 45}px`);
+  await act(async () => vi.advanceTimersByTime(500));
+  expect(drawnAt(get("overlay")!)).toBe(
+    `${220 - 5 * 0.15 - 30}px ${30 + 10 * 0.15 - 45}px`,
+  );
+  await act(async () =>
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })),
+  );
+});
+
+test("a zone takes a card that covers enough of it and holds it inside its edge until pulled clear", async () => {
+  reduceMotion();
+  function Mat() {
+    // Bound parameters used to keep an area from snapping at all.
+    const area = useDropArea({ interaction: "play.discard", params: {} });
+    return <section {...area.props} aria-label="Mat" data-testid="mat" />;
+  }
+  const { get, mouse, lift } = await mountSnapping(<Mat />);
+  layout(get("mat")!, new DOMRect(0, 0, 300, 120));
+  hitTesting(() => null);
+  // Held by its bottom edge, the card hangs 44 px above the pointer.
+  await lift(mouse(30, 389));
+  await move(mouse(100, 185));
+  expect(get("mat")!.dataset.dropOver).toBeUndefined();
+  // Half the card covers the mat: it enters, held just inside the edge.
+  await move(mouse(100, 165));
+  expect(get("mat")!.dataset.dropOver).toBe("true");
+  expect(drawnAt(get("overlay")!)).toBe(`70px ${120 + 0.25 - 45}px`);
+  // A fifth of the card is too little to enter but enough to stay.
+  await move(mouse(100, 190));
+  expect(get("mat")!.dataset.dropOver).toBe("true");
+  await move(mouse(100, 215));
+  expect(get("mat")!.dataset.dropOver).toBeUndefined();
+  expect(drawnAt(get("overlay")!)).toBe(`70px ${215 - 89}px`);
+  await act(async () =>
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })),
+  );
+});
+
+test("a card over a concealing zone is previewed face down and its area is announced", async () => {
+  function Deck() {
+    const area = useDropArea(
+      { interaction: "play.discard" },
+      { zone: { zoneId: "deck", hostId: "table" }, visibility: "hidden" },
+    );
+    return <section {...area.props} aria-label="Deck" data-testid="deck" />;
+  }
+  const { get, fit, mouse, lift } = await mountSnapping(<Deck />);
+  hitTesting(() => null);
+  await lift();
+  expect(fit()).toMatchObject({ concealed: false });
+  hitTesting(() => get("deck"));
+  await move(mouse(30, 200));
+  expect(fit()).toMatchObject({ concealed: true });
+  expect(document.querySelector('[role="status"]')!.textContent).toBe("Deck");
+  hitTesting(() => null);
+  await move(mouse(30, 600));
+  expect(fit()).toMatchObject({ concealed: false });
+  expect(document.querySelector('[role="status"]')!.textContent).toBe("");
+  await act(async () =>
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })),
+  );
+});
+
+test("dragging near a scroller's edge scrolls it once the pointer has been well inside", async () => {
+  vi.useFakeTimers({
+    toFake: ["requestAnimationFrame", "cancelAnimationFrame", "performance"],
+  });
+  const { mouse, lift } = await mountSnapping(null);
+  const scroller = document.createElement("div");
+  scroller.style.overflowY = "auto";
+  const inside = document.createElement("div");
+  scroller.append(inside);
+  document.body.append(scroller);
+  layout(scroller, new DOMRect(0, 0, 300, 200));
+  Object.defineProperty(scroller, "scrollHeight", { value: 1000 });
+  Object.defineProperty(scroller, "clientHeight", { value: 200 });
+  const scrollBy = vi.fn();
+  scroller.scrollBy = scrollBy as typeof scroller.scrollBy;
+  hitTesting(() => inside);
+  // Entering at the edge, as from a hand below, scrolls nothing.
+  await lift(mouse(100, 230));
+  await move(mouse(100, 190));
+  await act(async () => vi.advanceTimersByTime(100));
+  expect(scrollBy).not.toHaveBeenCalled();
+  await move(mouse(100, 100));
+  await act(async () => vi.advanceTimersByTime(20));
+  await move(mouse(100, 190));
+  await act(async () => vi.advanceTimersByTime(100));
+  expect(scrollBy).toHaveBeenCalled();
+  expect(scrollBy.mock.calls[0][1]).toBeGreaterThan(0);
+  await act(async () =>
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })),
+  );
 });

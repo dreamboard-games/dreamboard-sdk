@@ -15,9 +15,9 @@ import {
 } from "react";
 import {
   createGestureRecognizer,
-  magneticDropPoint,
   type GestureRecognizer,
 } from "../headless/gesture.js";
+import { snapDrop, type Box, type SnapArea } from "../headless/drop-snap.js";
 import { isSameDropTarget } from "../headless/drop-targets.js";
 import type { PositionTarget } from "../shared/position-target.js";
 import type { Point } from "../headless/features/pointer-session.js";
@@ -59,6 +59,9 @@ export interface GestureState {
     /** Pointer offset inside the card where it was picked up. */
     readonly grab: Point;
     readonly size: { readonly width: number; readonly height: number };
+    /** The card's layout width, before the transforms it was drawn with when picked up. */
+    readonly width: number;
+    readonly fit: DragFit;
     /** Dropped and submitted; waiting for the authoritative frame. */
     readonly settling: boolean;
     /** The area under the card and where it would land there, kept while settling. */
@@ -77,6 +80,108 @@ export interface GestureState {
     readonly cardId: string;
     readonly via: "hold" | "hover";
   } | null;
+}
+
+/** How the dragged card would show where it lands if dropped now. */
+export interface DragFit {
+  /**
+   * The width of the card-sized box marked `data-drop-landing` there,
+   * relative to the picked-up card's layout width. Null until the card has
+   * been over such a box; between areas it keeps the last one's.
+   */
+  readonly scale: number | null;
+  /** Drawn in a pile's slot. */
+  readonly snapped: boolean;
+  /** The area's zone would conceal the card. */
+  readonly concealed: boolean;
+}
+const UNFIT: DragFit = Object.freeze({
+  scale: null,
+  snapped: false,
+  concealed: false,
+});
+/** How long, in ms, the drawn card takes to make up two thirds of a jump. */
+const CATCH_UP_MS = 50;
+/** Dragging within this many CSS pixels of a scroller's edge scrolls it, faster nearer the edge. */
+const SCROLL_EDGE = { fine: 48, coarse: 64 };
+/** Pixels per 60 Hz frame at the very edge. */
+const SCROLL_SPEED = 16;
+const VISUALLY_HIDDEN: Partial<CSSStyleDeclaration> = {
+  position: "fixed",
+  width: "1px",
+  height: "1px",
+  overflow: "hidden",
+  clipPath: "inset(50%)",
+  whiteSpace: "nowrap",
+};
+
+/** A drop area's element and geometry owners, refreshed when its landing slot changes. */
+interface LocatedArea {
+  readonly element: Element | null;
+  readonly clips: readonly Element[];
+  readonly slot: HTMLElement | null;
+  readonly depth: number;
+}
+/** The card-sized box a dropped card shows in, marked inside the area that owns it. */
+function landingIn(area: Element | null): HTMLElement | null {
+  for (const element of area?.querySelectorAll("[data-drop-landing]") ?? [])
+    if (
+      element instanceof HTMLElement &&
+      element.closest("[data-drop-area]") === area
+    )
+      return element;
+  return null;
+}
+/** An element's box as far as its scrolling ancestors show it, or null when hidden. */
+function visibleBox(element: Element, clips: readonly Element[]): Box | null {
+  let { left, top, right, bottom } = element.getBoundingClientRect();
+  for (const clip of clips) {
+    const box = clip.getBoundingClientRect();
+    left = Math.max(left, box.left);
+    top = Math.max(top, box.top);
+    right = Math.min(right, box.right);
+    bottom = Math.min(bottom, box.bottom);
+  }
+  return right > left && bottom > top
+    ? { x: left, y: top, width: right - left, height: bottom - top }
+    : null;
+}
+/** How far to scroll `node` this frame for a pointer near its edges. */
+function scrollStep(node: Element, at: Point, edge: number, frames: number) {
+  const root = node === document.scrollingElement;
+  const { overflowX, overflowY } = getComputedStyle(node);
+  const box = root
+    ? { left: 0, top: 0, right: innerWidth, bottom: innerHeight }
+    : node.getBoundingClientRect();
+  const speed = (gap: number) =>
+    gap < edge ? SCROLL_SPEED * frames * (1 - Math.max(0, gap) / edge) ** 2 : 0;
+  const axis = (
+    overflow: string,
+    position: number,
+    room: number,
+    before: number,
+    after: number,
+  ) =>
+    (root || overflow === "auto" || overflow === "scroll") && room > 0
+      ? (position < room ? speed(after) : 0) -
+        (position > 0 ? speed(before) : 0)
+      : 0;
+  return {
+    x: axis(
+      overflowX,
+      node.scrollLeft,
+      node.scrollWidth - node.clientWidth,
+      at.x - box.left,
+      box.right - at.x,
+    ),
+    y: axis(
+      overflowY,
+      node.scrollTop,
+      node.scrollHeight - node.clientHeight,
+      at.y - box.top,
+      box.bottom - at.y,
+    ),
+  };
 }
 
 /** A renderer's destination identity and its existing disclosure policy. */
@@ -222,6 +327,24 @@ export function createGestureSession(game: GestureGame) {
   let domFocused: RuntimeShortcutTarget | null = null;
   let alt = false;
   let pointer: Point = { x: 0, y: 0 };
+  // The dragged card's centre is drawn at `goal` plus a `lag` that decays
+  // after a jump, such as snapping into a pile, so it glides there instead.
+  // A jump is a change in where the card sits relative to the pointer.
+  let goal: Point = { x: 0, y: 0 };
+  let offset: Point = { x: 0, y: 0 };
+  let lag: Point = { x: 0, y: 0 };
+  let shown: Point = { x: 0, y: 0 };
+  let held = false;
+  let reduced = false;
+  let frame = 0;
+  let lastFrame = 0;
+  // A changed target may mount a landing box or move the areas; measure again next frame.
+  let remeasure = false;
+  const located = new Map<string, LocatedArea>();
+  // Scrollers the pointer has been well inside; only these scroll at their edges,
+  // so a card lifted out of a hand does not scroll the table it crosses into.
+  const engaged = new Set<Element>();
+  let announcer: HTMLElement | null = null;
   let swallowing = false;
   let guardingClicks = false;
   let disposed = false;
@@ -303,63 +426,241 @@ export function createGestureSession(game: GestureGame) {
       set({ drag: null });
   });
 
-  function hitArea(at: Point): string | null {
+  /** The drop areas around the topmost element under the pointer, innermost first. */
+  function hitAreas(at: Point): string[] {
     for (const element of document.elementsFromPoint(at.x, at.y)) {
       if (element.closest("[data-drag-overlay]")) continue;
-      const area = element.closest("[data-drop-area]");
-      if (area) return area.getAttribute("data-drop-area");
+      const ids: string[] = [];
+      for (
+        let area = element.closest("[data-drop-area]");
+        area;
+        area = area.parentElement?.closest("[data-drop-area]") ?? null
+      )
+        ids.push(area.getAttribute("data-drop-area")!);
+      if (ids.length) return ids;
     }
-    return null;
+    return [];
   }
-  function retarget(at: Point): Point {
-    if (!press?.dragging) return at;
-    let area = hitArea(at);
-    const read = area === null ? undefined : areas.get(area);
-    let target = read ? resolveDropArea(game.drag, read(at)) : null;
-    let point = at;
-    // Direct hits win; outside a target retain its edge before looking for a new one.
-    if (!target) {
-      const candidates = [...areas].sort(([left], [right]) =>
-        left === press?.area ? -1 : right === press?.area ? 1 : 0,
-      );
-      let distance = Infinity;
-      for (const [id, binding] of candidates) {
-        const resolved = resolveDropArea(game.drag, binding(at));
-        if (
-          !resolved ||
-          !game.drag
-            ?.getDropTargets()
-            .some((item) => sameDropTarget(item, resolved))
-        )
-          continue;
-        const element = document.querySelector(
-          `[data-drop-area="${CSS.escape(id)}"]`,
-        );
-        if (!(element instanceof HTMLElement)) continue;
-        const snapped = magneticDropPoint(
-          at,
-          element.getBoundingClientRect(),
-          id === press.area,
-          press.pointerType === "touch",
-        );
-        if (!snapped) continue;
-        const nextDistance = Math.hypot(at.x - snapped.x, at.y - snapped.y);
-        if (nextDistance >= distance) continue;
-        area = id;
-        target = resolved;
-        point = snapped;
-        distance = nextDistance;
-        if (id === press.area) break;
-      }
+  function locate(id: string): LocatedArea {
+    const known = located.get(id);
+    const element = known?.element?.isConnected
+      ? known.element
+      : document.querySelector(`[data-drop-area="${CSS.escape(id)}"]`);
+    // Landing content can mount or be replaced after an area becomes eligible or over.
+    const landing = landingIn(element);
+    const slot = landing?.dataset.dropLanding === "slot" ? landing : null;
+    if (known && known.element === element && known.slot === slot) return known;
+    const clips: Element[] = [];
+    for (
+      let node = (slot ?? element)?.parentElement;
+      node;
+      node = node.parentElement
+    ) {
+      const { overflowX, overflowY } = getComputedStyle(node);
+      if (/auto|scroll|hidden|clip/.test(overflowX + overflowY))
+        clips.push(node);
     }
-    if (area !== press.area || !sameDropTarget(target, press.target)) {
+    let depth = 0;
+    for (let node = element?.parentElement; node; node = node.parentElement) {
+      if (node.hasAttribute("data-drop-area")) depth++;
+    }
+    const next = {
+      element,
+      clips,
+      slot,
+      depth,
+    };
+    located.set(id, next);
+    return next;
+  }
+  /** Where a drop on `area` lands, and the presentation registered for that zone. */
+  function destinationOf(
+    area: string | null,
+    target: RuntimeDropTarget | null,
+  ) {
+    const areaPresentation = area ? presentations.get(area)?.() : undefined;
+    const position = target?.kind === "position" ? target.value : null;
+    const zone = position ?? areaPresentation?.zone;
+    // Hand insertion areas carry a canonical position; inherit the
+    // enclosing zone's disclosure policy when they have no metadata.
+    const presentation = zone
+      ? [
+          areaPresentation,
+          ...Array.from(presentations.values(), (read) => read()),
+        ].find(
+          (candidate) =>
+            candidate?.zone.zoneId === zone.zoneId &&
+            candidate.zone.hostId === zone.hostId,
+        )
+      : undefined;
+    return { zone, position, presentation };
+  }
+  const conceals = (
+    presentation: RuntimeDropPresentation,
+    hostId: string,
+  ): boolean =>
+    presentation.visibility === "hidden" ||
+    (presentation.visibility === "ownerOnly" && hostId !== game.me?.id);
+  function announce(area: string | null) {
+    const element = area === null ? null : locate(area).element;
+    const label =
+      element?.getAttribute("aria-label") ??
+      element
+        ?.getAttribute("aria-labelledby")
+        ?.split(/\s+/)
+        .map((labelId) => document.getElementById(labelId)?.textContent)
+        .join(" ") ??
+      "";
+    if (!announcer?.isConnected) {
+      announcer = document.createElement("div");
+      announcer.setAttribute("role", "status");
+      Object.assign(announcer.style, VISUALLY_HIDDEN);
+      document.body.append(announcer);
+    }
+    announcer.textContent = label;
+  }
+  /**
+   * Chooses the target for the pointer at `at` and where the card is drawn:
+   * snapped into a pile, held inside a zone's edge, or under the pointer.
+   */
+  function retarget(at: Point) {
+    const drag = store.get().drag;
+    if (!press?.dragging || !drag) return;
+    pointer = at;
+    const ids = [...areas.keys()];
+    const found = ids.map((id) => {
+      const target = resolveDropArea(game.drag, areas.get(id)!(at));
+      if (!target) return null;
+      const { element, clips, slot, depth } = locate(id);
+      // SVG and transformed board targets keep the browser's own hit testing.
+      const box =
+        element instanceof HTMLElement
+          ? visibleBox(slot ?? element, clips)
+          : null;
+      return { target, box, slot: slot !== null, depth } satisfies SnapArea & {
+        target: RuntimeDropTarget;
+      };
+    });
+    // A card shrunk to fit its last landing keeps the same point under the pointer.
+    const pickup =
+      drag.width > 0 && drag.size.width > 0 ? drag.size.width / drag.width : 1;
+    const ratio = drag.fit.scale === null ? 1 : drag.fit.scale / pickup;
+    const width = drag.size.width * ratio;
+    const height = drag.size.height * ratio;
+    const free = {
+      x: at.x - (drag.grab.x - drag.size.width / 2) * ratio,
+      y: at.y - (drag.grab.y - drag.size.height / 2) * ratio,
+    };
+    const snap = snapDrop({
+      pointer: at,
+      card: { x: free.x - width / 2, y: free.y - height / 2, width, height },
+      areas: found,
+      hit: ids.indexOf(hitAreas(at).find((id) => found[ids.indexOf(id)]) ?? ""),
+      retained: press.area === null ? -1 : ids.indexOf(press.area),
+      coarse: press.pointerType === "touch",
+    });
+    const area = snap.index < 0 ? null : ids[snap.index];
+    const target = snap.index < 0 ? null : found[snap.index]!.target;
+    const changed =
+      area !== press.area || !sameDropTarget(target, press.target);
+    if (changed) {
       press.area = area;
       press.target = target;
       game.drag?.setDropTarget(target);
-      const drag = store.get().drag;
-      if (drag) set({ drag: { ...drag, area, target } });
+      announce(area);
+      remeasure = true;
     }
-    return point;
+    const { zone, presentation } = destinationOf(area, target);
+    const place = area === null ? null : locate(area);
+    const landing = place && (place.slot ?? landingIn(place.element));
+    const fit: DragFit = {
+      scale:
+        landing && drag.width > 0
+          ? landing.offsetWidth / drag.width
+          : drag.fit.scale,
+      snapped: snap.held && !!found[snap.index]?.slot,
+      concealed:
+        !!presentation && !!zone && conceals(presentation, zone.hostId),
+    };
+    const refit =
+      Math.abs((fit.scale ?? 0) - (drag.fit.scale ?? 0)) > 0.01 ||
+      fit.snapped !== drag.fit.snapped ||
+      fit.concealed !== drag.fit.concealed;
+    if (changed || refit)
+      set({
+        drag: {
+          ...drag,
+          area,
+          target,
+          fit: refit ? fit : drag.fit,
+        },
+      });
+    draw(snap.center, changed || refit || snap.held !== held);
+    held = snap.held;
+    // Each move gives the frame loop a chance to scroll and remeasure.
+    schedule();
+  }
+  /** Draws the card centred at `next`, gliding there after a jump. */
+  function draw(next: Point, jump: boolean) {
+    const nextOffset = { x: next.x - pointer.x, y: next.y - pointer.y };
+    if (jump && !reduced)
+      lag = {
+        x: lag.x + offset.x - nextOffset.x,
+        y: lag.y + offset.y - nextOffset.y,
+      };
+    offset = nextOffset;
+    goal = next;
+    show();
+    if (lag.x || lag.y) schedule();
+  }
+  function show() {
+    shown = { x: goal.x + lag.x, y: goal.y + lag.y };
+    for (const follow of followers) follow(shown);
+  }
+  function schedule() {
+    if (frame || disposed) return;
+    lastFrame = performance.now();
+    frame = requestAnimationFrame(tick);
+  }
+  function tick(now: number) {
+    frame = 0;
+    if (!store.get().drag) return;
+    const elapsed = Math.min(64, Math.max(0, now - lastFrame));
+    const decay = Math.exp(-elapsed / CATCH_UP_MS);
+    lag =
+      Math.hypot(lag.x, lag.y) * decay < 0.5
+        ? { x: 0, y: 0 }
+        : { x: lag.x * decay, y: lag.y * decay };
+    const scrolling = press?.dragging ? autoScroll(elapsed / 16.7) : false;
+    if (scrolling || remeasure) {
+      remeasure = false;
+      retarget(pointer);
+    } else show();
+    if (lag.x || lag.y || scrolling) schedule();
+  }
+  /** Scrolls the innermost engaged scroller under the pointer that it is near the edge of. */
+  function autoScroll(frames: number): boolean {
+    const edge =
+      SCROLL_EDGE[press?.pointerType === "touch" ? "coarse" : "fine"];
+    const top = document
+      .elementsFromPoint(pointer.x, pointer.y)
+      .find((element) => !element.closest("[data-drag-overlay]"));
+    for (let node = top ?? null; node; node = node.parentElement) {
+      const step = scrollStep(node, pointer, edge, frames);
+      if (!step.x && !step.y) {
+        if (
+          node.scrollHeight > node.clientHeight ||
+          node.scrollWidth > node.clientWidth
+        )
+          engaged.add(node);
+        continue;
+      }
+      if (!engaged.has(node)) return false;
+      node.scrollBy(step.x, step.y);
+      // Rects change as the content moves.
+      return true;
+    }
+    return false;
   }
   // Keyboard clicks (detail 0) and clicks from a new press are never swallowed.
   function swallow(event: globalThis.MouseEvent) {
@@ -520,12 +821,27 @@ export function createGestureSession(game: GestureGame) {
           clearHover();
           focused = null;
           press!.dragging = true;
+          located.clear();
+          engaged.clear();
+          // A screen reader announces the same area again on the next drag.
+          if (announcer) announcer.textContent = "";
+          reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+          held = false;
+          remeasure = false;
+          lag = { x: 0, y: 0 };
+          goal = shown = {
+            x: box.left + box.width / 2,
+            y: box.top + box.height / 2,
+          };
+          offset = { x: goal.x - origin.x, y: goal.y - origin.y };
           set({
             drag: {
               cardIds: game.drag?.active?.cardIds ?? [cardId],
               cardId,
               grab: { x: origin.x - box.left, y: origin.y - box.top },
               size: { width: box.width, height: box.height },
+              width: element instanceof HTMLElement ? element.offsetWidth : 0,
+              fit: UNFIT,
               settling: false,
               area: null,
               target: null,
@@ -536,10 +852,7 @@ export function createGestureSession(game: GestureGame) {
           });
           return true;
         },
-        dragMove(at) {
-          pointer = retarget(at);
-          for (const follow of followers) follow(pointer);
-        },
+        dragMove: retarget,
         browse: scrubTo,
         end(kind, at) {
           const dragging = press!.dragging;
@@ -562,24 +875,10 @@ export function createGestureSession(game: GestureGame) {
           }
           const before = game.request;
           const drag = store.get().drag;
-          const areaPresentation = drag?.area
-            ? presentations.get(drag.area)?.()
-            : undefined;
-          const position =
-            drag?.target?.kind === "position" ? drag.target.value : null;
-          const zone = position ?? areaPresentation?.zone;
-          // Hand insertion areas carry a canonical position; inherit the
-          // enclosing zone's disclosure policy when they have no metadata.
-          const presentation = zone
-            ? [
-                areaPresentation,
-                ...Array.from(presentations.values(), (read) => read()),
-              ].find(
-                (candidate) =>
-                  candidate?.zone.zoneId === zone.zoneId &&
-                  candidate.zone.hostId === zone.hostId,
-              )
-            : undefined;
+          const { zone, position, presentation } = destinationOf(
+            drag?.area ?? null,
+            drag?.target ?? null,
+          );
           const destination = zone && game.zones.find(zone.zoneId, zone.hostId);
           const cards =
             drag?.cardIds.flatMap((id) => {
@@ -596,9 +895,7 @@ export function createGestureSession(game: GestureGame) {
                     presentation?.index ??
                     destination.getCards().length,
                   concealed: presentation
-                    ? presentation.visibility === "hidden" ||
-                      (presentation.visibility === "ownerOnly" &&
-                        zone.hostId !== game.me?.id)
+                    ? conceals(presentation, zone.hostId)
                     : cards.some(
                         (card) =>
                           card.zone !== zone.zoneId ||
@@ -707,7 +1004,11 @@ export function createGestureSession(game: GestureGame) {
     };
   }
 
-  /** Positions the dragged card's overlay without rendering on each move. */
+  /**
+   * Positions the dragged card's overlay without rendering on each move. It
+   * moves by `left` and `top`: Motion's shared layout inside it measures
+   * against the overlay's layout box, which a transform would leave behind.
+   */
   function overlayRef(element: HTMLElement | null) {
     const drag = store.get().drag;
     if (!element || !drag) return;
@@ -719,11 +1020,11 @@ export function createGestureSession(game: GestureGame) {
       width: px(drag.size.width),
       height: px(drag.size.height),
     });
-    const follow = (at: Point) => {
-      element.style.left = px(at.x - drag.grab.x);
-      element.style.top = px(at.y - drag.grab.y);
+    const follow = (center: Point) => {
+      element.style.left = px(center.x - drag.size.width / 2);
+      element.style.top = px(center.y - drag.size.height / 2);
     };
-    follow(pointer);
+    follow(shown);
     followers.add(follow);
     return () => {
       followers.delete(follow);
@@ -816,6 +1117,8 @@ export function createGestureSession(game: GestureGame) {
     dispose() {
       disposed = true;
       press?.recognizer.cancel();
+      cancelAnimationFrame(frame);
+      announcer?.remove();
       clearHover();
       removeEventListener("keydown", key);
       removeEventListener("keyup", key);
