@@ -18,6 +18,7 @@ import {
 import { proveCardControl } from "./card-control-proof.ts";
 import { proveCrowdedHand, proveHand, proveHandSlide } from "./hand-proof.ts";
 import { proveHandSorting } from "./hand-sorting-proof.ts";
+import { proveCardRow } from "./card-row-proof.ts";
 import { proveHandReorder } from "./hand-reorder-proof.ts";
 import { proveCardLandings } from "./card-landing-proof.ts";
 import { proveHandPickup } from "./hand-pickup-proof.ts";
@@ -82,6 +83,8 @@ try {
       await page.goto(`${base}/iframe.html?id=${story.id}&viewMode=story`);
       await expect(page.locator("#storybook-root > *").first()).toBeVisible();
       await expect(page.locator(".sb-errordisplay")).not.toBeVisible();
+      if (story.id === "registry-card-row--ordered-positions")
+        await proveCardRow(page, touch);
       if (story.id === "registry-zone-actions--authored-actions")
         await proveZoneActions(page, touch);
       if (story.id === "card-selection--marquee-and-group-drop" && !touch)

@@ -85,7 +85,8 @@ access to its owner-only zone even when a contained component has another owner.
 
 A `"hidden"` zone shows card backs instead of faces. A face-down card also has
 no face unless the seat has explicit access. Moving a card applies the destination
-zone's visibility; `tx.flipCard({ cardId, faceUp })` changes its face state within
+zone's visibility when the zone or host changes. Reordering within the same zone
+and host preserves the card's face state. `tx.flipCard({ cardId, faceUp })` changes its face state within
 that boundary. Public per-player zones are visible across seats; another player's
 owner-only zone is omitted from the seat's zone collection and target domain.
 Concealed cards in an accessible zone use opaque positional seat IDs with a
