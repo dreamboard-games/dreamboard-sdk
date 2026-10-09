@@ -473,9 +473,14 @@ export function DrawPile<K extends InteractionKey>(props: DrawPileProps<K>) {
                       (hint) =>
                         hint.kind === "interaction" && hint.interaction === key,
                     )
-                    .map((hint) => (
-                      <kbd key={hint.label} className="ml-2 text-xs opacity-70">
-                        {hint.keys.join(" / ")}
+                    .flatMap((hint) => hint.keys)
+                    .map((name) => (
+                      <kbd
+                        key={name}
+                        aria-hidden="true"
+                        className="db-kbd ml-2"
+                      >
+                        {name}
                       </kbd>
                     ))}
                 </Button>

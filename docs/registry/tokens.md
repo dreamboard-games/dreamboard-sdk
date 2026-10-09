@@ -24,5 +24,6 @@ The stylesheet defines the game's visual tokens and scoped `db-*` classes; compo
 - Motion: `--duration-quick`, `--duration-base`, `--duration-shake` and `--ease-out`; `cardSpring` in `card.tsx` is the matching Motion spring.
 - Type: `--text-caption` to `--text-display`.
 - Seats: `--seat-1` to `--seat-6`, each at least 3:1 against the table, selected with `data-seat`.
+- Keys: `.db-kbd` draws a `<kbd>` as a keycap in the surrounding text colour, so it reads on menus and on the table. Keep the `event.key` text, such as `f` or `Enter`; a letter shows in capitals. Action menus and draw piles mark their shortcut keys with it.
 
 State styling uses the separate `translate`, `rotate` and `scale` properties, so it never fights a Motion transform. With reduced motion, shakes and transitions stop.

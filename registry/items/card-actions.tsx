@@ -154,13 +154,14 @@ export function CardActions({
                         hint.kind === "interaction" &&
                         hint.interaction === route.key,
                     )
-                    .map((hint) => (
+                    .flatMap((hint) => hint.keys)
+                    .map((name) => (
                       <kbd
-                        key={hint.label}
+                        key={name}
                         aria-hidden="true"
-                        className="ml-2 text-xs opacity-70"
+                        className="db-kbd ml-2"
                       >
-                        {hint.keys.join(" / ")}
+                        {name}
                       </kbd>
                     ))}
                 </Button>
