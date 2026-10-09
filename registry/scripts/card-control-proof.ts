@@ -105,9 +105,17 @@ export async function proveCardControl(page: Page, touch: boolean) {
   await expect(card).toBeFocused();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await card.press("Enter");
-  await page.getByRole("button", { name: "Flip", exact: true }).click();
+  const flip = page.getByRole("button", { name: "Flip", exact: true });
+  await expect(flip).toHaveAttribute("aria-keyshortcuts", "f");
+  await expect(flip).toBeFocused();
+  await page.keyboard.press("Control+f");
+  await expect(flip).toBeVisible();
+  await flip.dispatchEvent("keydown", { key: "f", repeat: true });
+  await expect(flip).toBeVisible();
+  await page.keyboard.press("f");
   const hidden = table.locator('button[data-value^="card-ref:"]');
   await expect(hidden).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.getByRole("button", { name: "End turn", exact: true }).click();
   await hidden.click();
   await expect(page.getByRole("dialog").getByRole("status")).toBeVisible();
