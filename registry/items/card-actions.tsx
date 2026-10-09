@@ -78,6 +78,48 @@ export function CardActions({
             finalFocus={() => anchor}
             aria-label="Card actions"
             className="db-card-actions"
+            onKeyDown={(event) => {
+              if (
+                event.defaultPrevented ||
+                event.repeat ||
+                event.nativeEvent.isComposing ||
+                event.altKey ||
+                event.ctrlKey ||
+                event.metaKey ||
+                event.shiftKey
+              )
+                return;
+              const route = actions.find((route) =>
+                hints.some(
+                  (hint) =>
+                    hint.kind === "interaction" &&
+                    hint.interaction === route.key &&
+                    hint.keys.includes(event.key),
+                ),
+              );
+              if (!route) return;
+              const pending = card.game.shortcuts.handle(event.key, {
+                kind: "card",
+                value: cardId,
+              });
+              if (!pending) return;
+              event.preventDefault();
+              onAction?.();
+              onClose();
+              void pending
+                .then((result) => {
+                  if (result.kind === "interaction" && !result.result.accepted)
+                    card.game
+                      .getOptions()
+                      .onError?.(
+                        new Error(
+                          result.result.message ?? result.result.errorCode,
+                          { cause: result.result },
+                        ),
+                      );
+                })
+                .catch((error) => card.game.getOptions().onError?.(error));
+            }}
           >
             <Popover.Arrow className="db-card-action-arrow" />
             {actions.length ? (
@@ -89,6 +131,16 @@ export function CardActions({
                   className="min-h-11 px-4"
                   data-action="card-action"
                   data-interaction={route.key}
+                  aria-keyshortcuts={
+                    hints
+                      .filter(
+                        (hint) =>
+                          hint.kind === "interaction" &&
+                          hint.interaction === route.key,
+                      )
+                      .flatMap((hint) => hint.keys)
+                      .join(" ") || undefined
+                  }
                   onClick={() => {
                     card.select({ interaction: route.key });
                     onAction?.();
@@ -103,7 +155,11 @@ export function CardActions({
                         hint.interaction === route.key,
                     )
                     .map((hint) => (
-                      <kbd key={hint.label} className="ml-2 text-xs opacity-70">
+                      <kbd
+                        key={hint.label}
+                        aria-hidden="true"
+                        className="ml-2 text-xs opacity-70"
+                      >
                         {hint.keys.join(" / ")}
                       </kbd>
                     ))}

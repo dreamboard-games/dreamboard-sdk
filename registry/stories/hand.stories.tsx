@@ -9,7 +9,7 @@ import { z } from "zod";
 import { localSource } from "@dreamboard-games/sdk/testing";
 import { handFanPresets, type CommandSource } from "@dreamboard-games/sdk";
 import { Button } from "@/components/ui/button";
-import { GameProvider, useGame } from "../typecheck/game";
+import { GameProvider, useGame, useGameShortcuts } from "../typecheck/game";
 import { CardControl } from "../items/card-control";
 import { Hand } from "../items/hand";
 import { Card, CardBack, type CardState } from "../items/card";
@@ -196,6 +196,19 @@ function Table({
   reorder?: boolean;
 }) {
   const [showPile, setShowPile] = useState(true);
+  useGameShortcuts({
+    bindings: [
+      {
+        kind: "interaction",
+        keys: ["f"],
+        label: "Flip card",
+        target: "card",
+        input: "card",
+        interaction: "play.flip",
+        inputs: ({ target }) => ({ card: target.value }),
+      },
+    ],
+  });
   const hostId = useGame((game) => game.me?.id);
   const endTurn = useGame((game) => game.interactions.find("play.endTurn"));
   const zones = useGame((game) =>
