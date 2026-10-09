@@ -1,3 +1,4 @@
+import { proveCardSelection } from "./card-selection-proof.ts";
 import { provePrivateTiles } from "./private-tiles-proof.ts";
 import {
   perPlayerInstanceId,
@@ -79,6 +80,8 @@ try {
       await page.goto(`${base}/iframe.html?id=${story.id}&viewMode=story`);
       await expect(page.locator("#storybook-root > *").first()).toBeVisible();
       await expect(page.locator(".sb-errordisplay")).not.toBeVisible();
+      if (story.id === "card-selection--marquee-and-group-drop" && !touch)
+        await proveCardSelection(page);
       if (story.id.startsWith("actual-scenarios--")) {
         await expect(page.getByTestId("scenario-view")).toBeAttached();
         const phases: Record<string, string> = {

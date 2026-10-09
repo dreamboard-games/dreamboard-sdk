@@ -9,3 +9,5 @@ export type {
   SelectionOptions,
 } from "./react/create-game-hook.js";
 export type { CardGestureProps } from "./react/gesture.js";
+export { useMarqueeSelection } from "./react/marquee.js";
+export type { MarqueeBounds } from "./react/marquee.js";

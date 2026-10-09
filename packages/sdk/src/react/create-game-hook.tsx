@@ -92,6 +92,7 @@ export interface DropArea {
 
 export interface DragOverlay<G> {
   readonly cardId: SeatCardId<G>;
+  readonly cardIds: readonly SeatCardId<G>[];
   /** Dropped and submitted; the authoritative frame has not arrived yet. */
   readonly settling: boolean;
   /** Where the card lands if dropped now; kept while it settles. */
@@ -245,7 +246,7 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
       );
       const dragging = useGestureState(
         session,
-        (state) => state.drag?.cardId === cardId,
+        (state) => state.drag?.cardIds.includes(cardId) ?? false,
       );
       const inspecting = useGestureState(session, (state) =>
         state.inspect?.cardId === cardId ? state.inspect.via : null,
@@ -437,6 +438,7 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
       return drag
         ? {
             cardId: drag.cardId as SeatCardId<Game>,
+            cardIds: drag.cardIds as readonly SeatCardId<Game>[],
             settling: drag.settling,
             // The drag feature resolved this target from this game's routes.
             target: drag.target as DropTarget<Game> | null,

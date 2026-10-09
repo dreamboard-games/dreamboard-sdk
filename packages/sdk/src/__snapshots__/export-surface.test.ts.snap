@@ -3,6 +3,7 @@
 exports[`public export surface > react export names are stable 1`] = `
 [
   "createGameHook",
+  "useMarqueeSelection",
 ]
 `;
 
@@ -100,6 +101,7 @@ exports[`public export surface > root export names are stable 1`] = `
   "boardSpaceHostId",
   "boardVertexId",
   "canonicalizePluginRuntimeJson",
+  "cardSelectionFeature",
   "computePluginActionSetVersion",
   "createGameInstance",
   "createGestureRecognizer",
