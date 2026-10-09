@@ -27,7 +27,10 @@ import type {
 
 /** The runtime surface of `dragFeature` that a gesture needs. */
 export interface GestureDrag {
-  readonly active: { readonly target: RuntimeDropTarget | null } | null;
+  readonly active: {
+    readonly target: RuntimeDropTarget | null;
+    readonly cardIds?: readonly string[];
+  } | null;
   getCanDrag(cardId: string, options?: RuntimeTargetOptions): boolean;
   getDropTargets(): readonly RuntimeDropTarget[];
   getIsDropTarget(target: RuntimeDropTarget): boolean;
@@ -51,6 +54,7 @@ export interface GestureState {
   readonly pointerActive: boolean;
   readonly drag: {
     readonly cardId: string;
+    readonly cardIds: readonly string[];
     /** Pointer offset inside the card where it was picked up. */
     readonly grab: Point;
     readonly size: { readonly width: number; readonly height: number };
@@ -484,6 +488,7 @@ export function createGestureSession(game: GestureGame) {
           press!.dragging = true;
           set({
             drag: {
+              cardIds: game.drag?.active?.cardIds ?? [cardId],
               cardId,
               grab: { x: origin.x - box.left, y: origin.y - box.top },
               size: { width: box.width, height: box.height },

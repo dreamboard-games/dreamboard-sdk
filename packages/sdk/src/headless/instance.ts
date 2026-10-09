@@ -995,6 +995,10 @@ class Controller {
       getCanDropCard: (cardId, target) =>
         this.prepareCardDrop(cardId, target) !== undefined,
       routeCardDrop: (cardId, target) => this.routeCardDrop(cardId, target),
+      getCanDropCardGroup: (cardIds, target) =>
+        !!this.prepareCardDrop(cardIds, target),
+      routeCardGroupDrop: (cardIds, target) =>
+        this.routeCardDrop(cardIds, target),
       invalidate: () => {
         if (!this.disposed) this.refresh();
       },
@@ -1523,7 +1527,10 @@ class Controller {
     if (match)
       this.select(match.interaction.key, match.input.key, target.value);
   }
-  prepareCardDrop(cardId: string, target: RuntimeDropTarget) {
+  prepareCardDrop(
+    cards: string | readonly string[],
+    target: RuntimeDropTarget,
+  ) {
     if (
       this.disposed ||
       this.sourceState.request ||
@@ -1531,6 +1538,10 @@ class Controller {
       this.sourceState.connection !== "ready"
     )
       return;
+    const group = typeof cards !== "string";
+    const cardIds = group ? cards : [cards];
+    const cardId = cardIds[0];
+    if (!cardId || new Set(cardIds).size !== cardIds.length) return;
     const card = this.store.get().cards.find(cardId);
     const interaction = card?.routes.find(
       (route) => route.key === target.interactionKey,
@@ -1541,7 +1552,8 @@ class Controller {
     if (
       !cardInput ||
       cardInput.descriptor.domain.type !== "cardTarget" ||
-      !cardInput.getIsEligible(cardId)
+      !cardIds.every((id) => cardInput.getIsEligible(id)) ||
+      (group && !isManyInput(cardInput.descriptor))
     )
       return;
     const input =
@@ -1576,7 +1588,11 @@ class Controller {
       isManyInput(cardInput.descriptor) &&
       Array.isArray(chosen) &&
       chosen.includes(cardId);
-    if (!alreadyChosen)
+    if (group) {
+      next[cardInput.key] = [...cardIds];
+      if (input && target.kind !== "interaction")
+        next[input.key] = target.value;
+    } else if (!alreadyChosen)
       routeCardInputIntent(
         {
           getDraft: () => next,
@@ -1598,7 +1614,7 @@ class Controller {
         },
       );
     if (
-      params &&
+      (params || group) &&
       (!interaction.getIsAvailable(next as Values) ||
         !interaction.getIsReady(next as Values))
     )
@@ -1606,14 +1622,15 @@ class Controller {
     return {
       interaction,
       next,
-      alreadyChosen,
+      alreadyChosen: group ? false : alreadyChosen,
       // A bound area or an insertion point names the whole move of one card.
       submitBound:
-        (params !== undefined || target.kind === "position") &&
-        !isManyInput(cardInput.descriptor),
+        group ||
+        ((params !== undefined || target.kind === "position") &&
+          !isManyInput(cardInput.descriptor)),
     };
   }
-  routeCardDrop(cardId: string, target: RuntimeDropTarget) {
+  routeCardDrop(cardId: string | readonly string[], target: RuntimeDropTarget) {
     const prepared = this.prepareCardDrop(cardId, target);
     if (!prepared) return;
     const { interaction, next, alreadyChosen, submitBound } = prepared;

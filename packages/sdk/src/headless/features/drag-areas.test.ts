@@ -4,6 +4,7 @@ import type { InteractionDescriptor } from "../model.js";
 import { createTestSource } from "../../testing/sources/test-source.js";
 import { isSameDropTarget } from "../drop-targets.js";
 import { dragFeature } from "./drag.js";
+import { cardSelectionFeature } from "./card-selection.js";
 
 const hand = {
   type: "cardTarget",
@@ -59,7 +60,7 @@ const move: InteractionDescriptor = {
     },
   ],
 };
-function setup(interactions = [discard, pass]) {
+function setup(interactions = [discard, pass], selectionEnabled = false) {
   const source = createTestSource({
     me: "alice",
     players: [{ playerId: "alice", displayName: "Alice" }],
@@ -96,7 +97,18 @@ function setup(interactions = [discard, pass]) {
   });
   const game = createGameInstance()({
     source,
-    features: (core, context) => ({ drag: dragFeature(core, context) }),
+    features: (core, context) => {
+      const selection = cardSelectionFeature(core, context);
+      return {
+        selection,
+        drag: dragFeature(core, context, {
+          getSelection: (id) => {
+            const ids = selection.root.cardSelection.cardIds;
+            return selectionEnabled && ids.includes(id) ? ids : undefined;
+          },
+        }),
+      };
+    },
   });
   return { game, source };
 }
@@ -417,5 +429,85 @@ describe("position targets", () => {
       space,
     });
     game.dispose();
+  });
+});
+
+describe("local card groups", () => {
+  const groupMove: InteractionDescriptor = {
+    ...move,
+    inputs: [{ ...pass.inputs[0], key: "card" }, move.inputs[1]],
+  };
+  const destination = {
+    kind: "interaction" as const,
+    interactionKey: "play.move",
+    cardInputKey: "card",
+    params: { destination: "right" },
+  };
+  it("submits the selected group once, preserving selection order and replacing stale drafts", () => {
+    const { game, source } = setup([groupMove], true);
+    game.cardSelection.set(["blue", "red", "blue", "missing"]);
+    expect(game.cardSelection.cardIds).toEqual(["blue", "red"]);
+    expect(game.state.drafts).toEqual({});
+    game.drag.begin("red");
+    expect(game.drag.active?.cardIds).toEqual(["blue", "red"]);
+    expect(game.drag.getIsDropTarget(destination)).toBe(true);
+    game.drag.setDropTarget(destination);
+    game.drag.drop();
+    expect(source.submissions).toHaveLength(1);
+    expect(source.submissions[0]?.params).toEqual({
+      card: ["blue", "red"],
+      destination: "right",
+    });
+    game.dispose();
+  });
+  it("never falls back to moving one selected card when the group violates cardinality or the route is single-card", () => {
+    for (const interaction of [groupMove, move]) {
+      const { game, source } = setup([interaction], true);
+      game.cardSelection.set(["red"]);
+      game.drag.begin("red");
+      expect(game.drag.getIsDropTarget(destination)).toBe(false);
+      game.drag.setDropTarget(destination);
+      game.drag.drop();
+      expect(source.submissions).toEqual([]);
+      expect(game.state.drafts).toEqual({});
+      game.dispose();
+    }
+  });
+  it("rejects the entire group when one member is no longer eligible", () => {
+    const restricted: InteractionDescriptor = {
+      ...groupMove,
+      inputs: [
+        {
+          ...pass.inputs[0],
+          key: "card",
+          domain: {
+            ...hand,
+            eligibleTargets: ["red"],
+            selection: { mode: "many", min: 1 },
+          },
+        },
+        move.inputs[1],
+      ],
+    };
+    const { game, source } = setup([restricted], true);
+    game.cardSelection.set(["red", "blue"]);
+    game.drag.begin("red");
+    expect(game.drag.getIsDropTarget(destination)).toBe(false);
+    game.drag.setDropTarget(destination);
+    game.drag.drop();
+    expect(source.submissions).toEqual([]);
+    game.dispose();
+  });
+  it("clears local selection on a new authoritative frame and keeps captured snapshots immutable", () => {
+    const { game, source } = setup([groupMove], true);
+    game.cardSelection.toggle("red");
+    const captured = game.cardSelection;
+    game.cardSelection.toggle("blue");
+    expect(captured.cardIds).toEqual(["red"]);
+    source.emit({ ...game.snapshot!, version: 2 });
+    expect(game.cardSelection.cardIds).toEqual([]);
+    game.dispose();
+    captured.toggle("blue");
+    expect(captured.cardIds).toEqual(["red"]);
   });
 });

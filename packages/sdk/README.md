@@ -553,3 +553,41 @@ fits uses `{ scrub: true }`: a sliding finger reports each move through
 `{ dragDirection: "any" }` with `touch-action: none` to drag toward a hand below
 or beside them. This classifies pointer intent only; submit an authored interaction
 through the bound game to enforce its rules, without selecting a hidden card ID.
+
+### Local card groups and marquee selection
+
+`cardSelectionFeature` holds a local list of projected card IDs, separate from
+interaction drafts. Authors decide which zones allow selection and how to draw
+it. Selection clears on an authoritative frame or source/perspective change.
+
+```ts
+features(core, context) {
+  const selection = cardSelectionFeature(core, context);
+  return {
+    selection,
+    drag: dragFeature(core, context, {
+      getSelection(cardId) {
+        const ids = selection.root.cardSelection.cardIds;
+        return ids.includes(cardId) ? ids : undefined;
+      },
+    }),
+  };
+}
+```
+
+Use `game.cardSelection.set(ids)`, `.toggle(id)` and `.clear()` for authored
+controls. A selected group can drop only onto an interaction with a `many(...)`
+card input that admits the entire group. Dropping submits that input once in
+selection order, replacing its draft; it never submits a sequence of single-card
+moves. The reducer remains responsible for validating and applying the group
+atomically. An unselected card retains ordinary single-card draft behavior.
+`useDragOverlay().cardIds` identifies all lifted cards; `cardId` is the anchor.
+
+`useMarqueeSelection` from `/react` is an opt-in mouse/pen background gesture.
+Pass `enabled`, `getCards: () => [{ id, element }]`, and
+`onSelect: (ids, additive) => ...`; spread its `props` on the selectable area.
+It reports intersecting cards on release and viewport `bounds` for an authored
+fixed-position overlay. Shift requests additive selection; Escape, pointer
+cancellation, blur or disabling the area cancels. Buttons, inputs and card
+controls keep their own gestures, and touch retains scrolling. A background
+click reports an empty selection. The hook supplies no styling or bulk-action UI.

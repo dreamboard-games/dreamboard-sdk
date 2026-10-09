@@ -159,3 +159,5 @@ export type {
   BoardEdgeId,
   BoardVertexId,
 } from "./shared/domain/board-identities.js";
+
+export * from "./headless/features/card-selection.js";

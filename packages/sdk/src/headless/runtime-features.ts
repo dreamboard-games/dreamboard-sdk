@@ -76,5 +76,13 @@ export interface RuntimeFeatureContext {
   ): void;
   getCanDropCard(cardId: string, target: RuntimeDropTarget): boolean;
   routeCardDrop(cardId: string, target: RuntimeDropTarget): void;
+  getCanDropCardGroup(
+    cardIds: readonly string[],
+    target: RuntimeDropTarget,
+  ): boolean;
+  routeCardGroupDrop(
+    cardIds: readonly string[],
+    target: RuntimeDropTarget,
+  ): void;
   invalidate(): void;
 }

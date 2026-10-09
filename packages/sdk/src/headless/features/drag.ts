@@ -10,6 +10,7 @@ import { zonePositions } from "../../shared/position-target.js";
 import type { CoreInstance, FeatureContext, SeatCardId } from "../model.js";
 export interface DragState<G> {
   readonly cardId: SeatCardId<G>;
+  readonly cardIds: readonly SeatCardId<G>[];
   readonly target: DropTarget<G> | null;
 }
 
@@ -26,6 +27,8 @@ export interface DragController<G> {
 
 interface RuntimeDragState {
   readonly cardId: string;
+  readonly cardIds: readonly string[];
+  readonly group: boolean;
   readonly target: RuntimeDropTarget | null;
 }
 interface RuntimeDragController {
@@ -38,7 +41,13 @@ interface RuntimeDragController {
   drop(): void;
   cancel(): void;
 }
-function createRuntimeDragFeature(context: RuntimeFeatureContext) {
+function createRuntimeDragFeature(
+  context: RuntimeFeatureContext,
+  getSelection?: (
+    cardId: string,
+    options?: RuntimeTargetOptions,
+  ) => readonly string[] | undefined,
+) {
   const game = context.game;
   let active: RuntimeDragState | null = null;
   let selection: RuntimeTargetOptions | undefined;
@@ -150,7 +159,9 @@ function createRuntimeDragFeature(context: RuntimeFeatureContext) {
       target.kind === "interaction" ? { ...target, params: undefined } : target;
     return (
       targets().some((candidate) => isSameDropTarget(candidate, route)) &&
-      context.getCanDropCard(active.cardId, target)
+      (active.group
+        ? context.getCanDropCardGroup(active.cardIds, target)
+        : context.getCanDropCard(active.cardId, target))
     );
   }
   function cancel() {
@@ -166,7 +177,15 @@ function createRuntimeDragFeature(context: RuntimeFeatureContext) {
       begin(cardId, options) {
         if (disposed || !targets(cardId, options).length) return false;
         selection = options;
-        update({ cardId, target: null });
+        const selected = getSelection?.(cardId, options);
+        const cardIds = Object.freeze(selected ? [...selected] : [cardId]);
+        if (!cardIds.includes(cardId)) return false;
+        update({
+          cardId,
+          cardIds,
+          group: selected !== undefined,
+          target: null,
+        });
         return true;
       },
       getDropTargets: () => dropTargets,
@@ -184,7 +203,9 @@ function createRuntimeDragFeature(context: RuntimeFeatureContext) {
         const eligible = finished?.target && isEligible(finished.target);
         cancel();
         if (!disposed && finished?.target && eligible)
-          context.routeCardDrop(finished.cardId, finished.target);
+          if (finished.group)
+            context.routeCardGroupDrop(finished.cardIds, finished.target);
+          else context.routeCardDrop(finished.cardId, finished.target);
       },
       cancel,
     });
@@ -235,10 +256,24 @@ function createRuntimeDragFeature(context: RuntimeFeatureContext) {
 export function dragFeature<G>(
   _game: CoreInstance<G>,
   context: FeatureContext<G>,
+  options?: {
+    readonly getSelection: (
+      cardId: SeatCardId<G>,
+      options?: TargetOptions<G>,
+    ) => readonly SeatCardId<G>[] | undefined;
+  },
 ): { readonly root: { readonly drag: DragController<G> }; dispose(): void } {
   // Game-binding boundary: routes come from this instance's admitted descriptors.
   // The runtime implementation revalidates both inputs atomically on drop.
-  return createRuntimeDragFeature(context[runtimeFeatures]) as {
+  return createRuntimeDragFeature(
+    context[runtimeFeatures],
+    options?.getSelection as
+      | ((
+          cardId: string,
+          options?: RuntimeTargetOptions,
+        ) => readonly string[] | undefined)
+      | undefined,
+  ) as {
     readonly root: { readonly drag: DragController<G> };
     dispose(): void;
   };
