@@ -78,6 +78,10 @@ either a board `DropTarget` from `game.drag.getDropTargets()` or an interaction:
   card input, then submits when the interaction commits automatically. A
   many-card input never toggles a dropped card back out. Name `input` when the
   interaction has two card inputs.
+- Binding `params`, such as `{ interaction: "play.move", params: { destination } }`,
+  completes the drop and submits it immediately when ready. The card input contains
+  only the dragged card or selected group, replacing any earlier draft selection.
+  A many-card input receives an array even when only one card is dragged.
 - An interaction with a position input lands on an insertion point. Bind the
   area to a function of the dragged point, such as
   `useDropArea(({ x }) => ({ interaction: "play.reorder", position: { zoneId, hostId, index: indexAt(x) } }))`.

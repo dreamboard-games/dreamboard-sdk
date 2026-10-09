@@ -41,4 +41,23 @@ export async function proveCardSelection(page: Page) {
   await expect(page.getByTestId("group-drop")).toHaveText("Discard: 2");
   await expect(page.getByTestId("group-selection")).toHaveText("0");
   await expect(page.getByTestId("group-overlay")).toHaveCount(0);
+
+  // An unselected card uses the same many-card Move without opening a draft.
+  const remaining = (await cards.first().boundingBox())!;
+  await page.mouse.move(
+    remaining.x + remaining.width / 2,
+    remaining.y + remaining.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(destination.x + 30, destination.y + 30, { steps: 10 });
+  await expect(page.getByTestId("group-overlay")).toHaveText("1 cards");
+  await expect(page.getByTestId("group-drop")).toHaveAttribute(
+    "data-drop-over",
+    "true",
+  );
+  await page.mouse.up();
+  await expect(cards).toHaveCount(0);
+  await expect(page.getByTestId("group-moves")).toHaveText("2");
+  await expect(page.getByTestId("group-drop")).toHaveText("Discard: 3");
+  await expect(page.getByTestId("group-overlay")).toHaveCount(0);
 }

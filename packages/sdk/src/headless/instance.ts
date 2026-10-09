@@ -1576,6 +1576,8 @@ class Controller {
     )
       return;
     const params = target.kind === "interaction" ? target.params : undefined;
+    const submitBound =
+      group || params !== undefined || target.kind === "position";
     if (
       params &&
       Object.keys(params).some(
@@ -1588,14 +1590,17 @@ class Controller {
       ...params,
     };
     const chosen = next[cardInput.key];
-    // Dropping adds a card; it never toggles an already chosen card back out.
+    // Unbound drops add a card without toggling an already chosen card back out.
     const alreadyChosen =
+      !submitBound &&
       !input &&
       isManyInput(cardInput.descriptor) &&
       Array.isArray(chosen) &&
       chosen.includes(cardId);
-    if (group) {
-      next[cardInput.key] = [...cardIds];
+    if (submitBound) {
+      next[cardInput.key] = isManyInput(cardInput.descriptor)
+        ? [...cardIds]
+        : cardId;
       if (input && target.kind !== "interaction")
         next[input.key] = target.value;
     } else if (!alreadyChosen)
@@ -1620,7 +1625,7 @@ class Controller {
         },
       );
     if (
-      (params || group) &&
+      submitBound &&
       (!interaction.getIsAvailable(next as Values) ||
         !interaction.getIsReady(next as Values))
     )
@@ -1628,12 +1633,8 @@ class Controller {
     return {
       interaction,
       next,
-      alreadyChosen: group ? false : alreadyChosen,
-      // A bound area or an insertion point names the whole move of one card.
-      submitBound:
-        group ||
-        ((params !== undefined || target.kind === "position") &&
-          !isManyInput(cardInput.descriptor)),
+      alreadyChosen,
+      submitBound,
     };
   }
   routeCardDrop(cardId: string | readonly string[], target: RuntimeDropTarget) {

@@ -212,6 +212,34 @@ describe("bound drop areas", () => {
     expect(source.submissions).toEqual([]);
     game.dispose();
   });
+  it.each([undefined, ["blue"], ["red", "blue"]])(
+    "submits only the dropped card through a bound many-card move with draft %j",
+    (draft) => {
+      const manyMove: InteractionDescriptor = {
+        ...move,
+        inputs: [
+          {
+            ...move.inputs[0],
+            domain: { ...hand, selection: { mode: "many", min: 1, max: 3 } },
+          },
+          move.inputs[1],
+        ],
+      };
+      const { game, source } = setup([manyMove]);
+      if (draft)
+        game.interactions.get("play.move").getInput("card").setValue(draft);
+      game.drag.begin("red");
+      expect(game.drag.getIsDropTarget(target("right"))).toBe(true);
+      game.drag.setDropTarget(target("right"));
+      game.drag.drop();
+      expect(source.submissions).toHaveLength(1);
+      expect(source.submissions[0]?.params).toEqual({
+        card: ["red"],
+        destination: "right",
+      });
+      game.dispose();
+    },
+  );
   it("blocks incomplete, ineligible, and card-overriding bindings without writing a draft", () => {
     const { game, source } = setup([move]);
     game.drag.begin("red");
@@ -231,7 +259,7 @@ describe("bound drop areas", () => {
     expect(game.state.drafts).toEqual({});
     game.dispose();
   });
-  it("validates bound params when a many-card draft already contains the dropped card", () => {
+  it("rejects a bound single-card drop below the minimum without reusing a many-card draft", () => {
     const boundPass = { ...pass, inputs: [...pass.inputs, move.inputs[1]] };
     const { game, source } = setup([boundPass]);
     for (const cardId of ["red", "blue"])
@@ -246,11 +274,12 @@ describe("bound drop areas", () => {
     expect(game.drag.getIsDropTarget(invalid)).toBe(false);
     game.drag.setDropTarget(invalid);
     expect(game.state.drafts["play.pass"]).toEqual({ cards: ["red", "blue"] });
-    game.drag.setDropTarget({ ...route, params: { destination: "right" } });
+    const incomplete = { ...route, params: { destination: "right" } };
+    expect(game.drag.getIsDropTarget(incomplete)).toBe(false);
+    game.drag.setDropTarget(incomplete);
     game.drag.drop();
     expect(game.state.drafts["play.pass"]).toEqual({
       cards: ["red", "blue"],
-      destination: "right",
     });
     expect(source.submissions).toEqual([]);
     game.dispose();
