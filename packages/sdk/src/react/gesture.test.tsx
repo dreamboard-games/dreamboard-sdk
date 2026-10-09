@@ -1279,6 +1279,120 @@ async function mountSnapping(children: ReactNode) {
   return { source, get, fit, mouse, lift };
 }
 
+test.each(["area", "inner"] as const)(
+  "a pile slot clipped by its %s scroller cannot catch a card",
+  async (scroller) => {
+    reduceMotion();
+    function ScrolledPile() {
+      const area = useDropArea({ interaction: "play.discard" });
+      return (
+        <section
+          {...area.props}
+          data-testid="pile"
+          style={{ overflowY: scroller === "area" ? "auto" : "visible" }}
+        >
+          <div
+            data-testid="scroller"
+            style={{ overflowY: scroller === "inner" ? "auto" : "visible" }}
+          >
+            <div data-drop-landing="slot" data-testid="slot" />
+          </div>
+        </section>
+      );
+    }
+    const { source, get, mouse, lift } = await mountSnapping(<ScrolledPile />);
+    layout(get("pile")!, new DOMRect(200, 200, 100, 100));
+    layout(get("scroller")!, new DOMRect(200, 200, 100, 100));
+    // The slot has scrolled completely above its visible scrollport.
+    layout(get("slot")!, new DOMRect(200, 0, 40, 60));
+    hitTesting(() => null);
+    await lift();
+    await move(mouse(220, 30));
+    expect(get("pile")!.dataset.dropOver).toBeUndefined();
+    await up(mouse(220, 30));
+    expect(source.submissions).toEqual([]);
+    // The same slot becomes reachable when it scrolls back into view.
+    layout(get("slot")!, new DOMRect(200, 210, 40, 60));
+    await lift();
+    await move(mouse(220, 240));
+    expect(get("pile")!.dataset.dropOver).toBe("true");
+    await up(mouse(220, 240));
+    expect(source.submissions).toHaveLength(1);
+  },
+);
+
+test("a slot mounted on entering an area snaps on the next frame without another pointer move", async () => {
+  reduceMotion();
+  vi.useFakeTimers({
+    toFake: ["requestAnimationFrame", "cancelAnimationFrame", "performance"],
+  });
+  function DynamicPile() {
+    const area = useDropArea({ interaction: "play.discard" });
+    return (
+      <section {...area.props} data-testid="pile">
+        {area.isOver && <div data-drop-landing="slot" data-testid="slot" />}
+      </section>
+    );
+  }
+  const { get, fit, mouse, lift } = await mountSnapping(<DynamicPile />);
+  layout(get("pile")!, new DOMRect(200, 0, 100, 100));
+  hitTesting(() => null);
+  await lift();
+  hitTesting(() => get("pile"));
+  await move(mouse(220, 30));
+  expect(get("slot")).not.toBeNull();
+  layout(get("slot")!, new DOMRect(200, 0, 40, 60));
+  await act(async () => vi.advanceTimersByTime(20));
+  expect(fit()).toEqual({ scale: 40 / 60, snapped: true, concealed: false });
+  expect(drawnAt(get("overlay")!)).toBe("190px -15px");
+  await up(mouse(220, 30));
+});
+
+test("replacing a slot during a drag refreshes its size and clipping ancestors", async () => {
+  reduceMotion();
+  function ReplacedPile() {
+    const area = useDropArea({ interaction: "play.discard" });
+    const [replaced, setReplaced] = useState(false);
+    return (
+      <>
+        <button data-testid="replace" onClick={() => setReplaced(true)} />
+        <section {...area.props} data-testid="pile">
+          {replaced ? (
+            <div
+              key="scroller"
+              style={{ overflowY: "auto" }}
+              data-testid="scroller"
+            >
+              <div data-drop-landing="slot" data-testid="slot" />
+            </div>
+          ) : (
+            <div key="original" data-drop-landing="slot" data-testid="slot" />
+          )}
+        </section>
+      </>
+    );
+  }
+  const { get, fit, mouse, lift } = await mountSnapping(<ReplacedPile />);
+  layout(get("pile")!, new DOMRect(200, 200, 100, 100));
+  const original = get("slot")!;
+  layout(original, new DOMRect(200, 0, 40, 60));
+  hitTesting(() => null);
+  await lift();
+  await move(mouse(220, 30));
+  expect(fit()).toMatchObject({ scale: 40 / 60, snapped: true });
+  await act(async () => get("replace")!.click());
+  expect(original.isConnected).toBe(false);
+  layout(get("scroller")!, new DOMRect(200, 200, 100, 100));
+  layout(get("slot")!, new DOMRect(200, 0, 50, 75));
+  await move(mouse(225, 30));
+  expect(get("pile")!.dataset.dropOver).toBeUndefined();
+  expect(fit()).toMatchObject({ snapped: false });
+  layout(get("slot")!, new DOMRect(200, 210, 50, 75));
+  await move(mouse(225, 247.5));
+  expect(fit()).toMatchObject({ scale: 50 / 60, snapped: true });
+  await up(mouse(225, 247.5));
+});
+
 test("a pile catches a card near its slot, draws it there at the slot's size and drops into it", async () => {
   reduceMotion();
   const { source, get, fit, mouse, lift } = await mountSnapping(

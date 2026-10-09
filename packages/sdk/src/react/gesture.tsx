@@ -115,7 +115,7 @@ const VISUALLY_HIDDEN: Partial<CSSStyleDeclaration> = {
   whiteSpace: "nowrap",
 };
 
-/** A drop area's element, the scrollers that clip it, and a pile's slot inside it, found once per drag. */
+/** A drop area's element and geometry owners, refreshed when its landing slot changes. */
 interface LocatedArea {
   readonly element: Element | null;
   readonly clips: readonly Element[];
@@ -443,23 +443,31 @@ export function createGestureSession(game: GestureGame) {
   }
   function locate(id: string): LocatedArea {
     const known = located.get(id);
-    if (known?.element?.isConnected) return known;
-    const element = document.querySelector(
-      `[data-drop-area="${CSS.escape(id)}"]`,
-    );
+    const element = known?.element?.isConnected
+      ? known.element
+      : document.querySelector(`[data-drop-area="${CSS.escape(id)}"]`);
+    // Landing content can mount or be replaced after an area becomes eligible or over.
+    const landing = landingIn(element);
+    const slot = landing?.dataset.dropLanding === "slot" ? landing : null;
+    if (known && known.element === element && known.slot === slot) return known;
     const clips: Element[] = [];
-    let depth = 0;
-    for (let node = element?.parentElement; node; node = node.parentElement) {
+    for (
+      let node = (slot ?? element)?.parentElement;
+      node;
+      node = node.parentElement
+    ) {
       const { overflowX, overflowY } = getComputedStyle(node);
       if (/auto|scroll|hidden|clip/.test(overflowX + overflowY))
         clips.push(node);
+    }
+    let depth = 0;
+    for (let node = element?.parentElement; node; node = node.parentElement) {
       if (node.hasAttribute("data-drop-area")) depth++;
     }
-    const landing = landingIn(element);
     const next = {
       element,
       clips,
-      slot: landing?.dataset.dropLanding === "slot" ? landing : null,
+      slot,
       depth,
     };
     located.set(id, next);
