@@ -35,11 +35,7 @@ import { backImageOf, type CardState } from "./card";
 import { CardControl } from "./card-control";
 import { CardArrival } from "./card-arrival";
 import { HandSheet } from "./hand-sheet";
-import {
-  useCardMotion,
-  type CardPlacement,
-  type CardZone,
-} from "./card-motion";
+import { cardEntry, useCardMotion, type CardPlacement } from "./card-motion";
 import { cardDragScale, cardPickup } from "./card";
 import "./tokens.css";
 /** Bindings for interactions that take a position, such as a reorder. */
@@ -103,8 +99,9 @@ const sameIds = (left: readonly CardId[], right: readonly CardId[]) =>
  * sliding along the hand raises the card under it, and lifting there taps it.
  * The fan always fits the hand; once its cards are too thin to aim at, the
  * hand is one button that opens every card in a sheet. Cards arriving with an
- * origin come from the element marked `data-zone` and `data-zone-host`, or
- * `data-player`, for it.
+ * origin fly from where they were last seen: their released drag copy, their
+ * control in the zone marked `data-zone` and `data-zone-host`, or that zone or
+ * the seat marked `data-player`.
  */
 export function Hand({
   zoneId,
@@ -570,51 +567,6 @@ export function Hand({
   );
 }
 
-/** A card arriving from elsewhere starts there, turning face up if it was hidden. */
-function entryFrom(
-  card: Card | undefined,
-  zone: CardZone,
-  table: ReturnType<typeof useCardMotion>,
-  gameUI: Element | null,
-): {
-  box: CardPlacement | null;
-  hidden: boolean;
-  landed?: Promise<unknown>;
-} | null {
-  const origin = card?.getOrigin();
-  if (!origin) return null;
-  if (
-    "zone" in origin &&
-    origin.zone === zone.zoneId &&
-    origin.hostId === zone.hostId
-  )
-    return origin.hidden ? { box: null, hidden: true } : null;
-  const released =
-    "zone" in origin
-      ? table.getDrawOrigin(
-          { zoneId: origin.zone, hostId: origin.hostId },
-          zone,
-        )
-      : null;
-  // The pile owns the first flight; this origin continues from its release slot.
-  if (released)
-    return {
-      box: released.to,
-      landed: released.landed,
-      hidden: origin.hidden,
-    };
-  const from = gameUI?.querySelector(
-    "zone" in origin
-      ? `[data-zone="${CSS.escape(origin.zone)}"][data-zone-host="${CSS.escape(origin.hostId)}"]`
-      : `[data-player="${CSS.escape(origin.player)}"]`,
-  );
-  if (from) {
-    const { x, y, width, height } = from.getBoundingClientRect();
-    return { box: { x, y, width, height, rotate: 0 }, hidden: origin.hidden };
-  }
-  return origin.hidden ? { box: null, hidden: true } : null;
-}
-
 interface HandCardProps {
   arriving: boolean;
   cardId: CardId;
@@ -666,8 +618,11 @@ const HandCard = memo(function HandCard({
 }: HandCardProps) {
   const card = useGame((game) => game.cards.find(cardId));
   const table = useCardMotion();
+  // A card arriving from elsewhere starts there, turning face up if it was hidden.
   const [arrival, setArrival] = useState(() =>
-    arriving ? entryFrom(card, { zoneId, hostId }, table, gameUI) : null,
+    arriving && card
+      ? cardEntry(card, { zoneId, hostId }, table, gameUI)
+      : null,
   );
   const finishArrival = useCallback(() => setArrival(null), []);
   // Keep pose out of shared layout's size/scroll projection. The source owns
@@ -784,6 +739,7 @@ const HandCard = memo(function HandCard({
             layoutRoot
             layoutScroll
             ref={overlay.ref}
+            data-drag-card={cardId}
             className="db-drag-overlay"
             style={
               {
