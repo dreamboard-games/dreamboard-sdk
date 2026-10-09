@@ -44,6 +44,7 @@
 <!-- api: react DropArea -->
 <!-- api: react DropAreaBinding -->
 <!-- api: react DragOverlay -->
+<!-- api: react DragFit -->
 <!-- api: root ViewportTransform -->
 <!-- api: root PanZoomOptions -->
 
@@ -176,10 +177,14 @@ or a function of the dragged point returning one, such as
 `{ interaction, position }` for the insertion point under the card. It
 returns `props`, `isEligible` and `isOver`. The browser's `elementsFromPoint`
 finds the area under the pointer, so SVG, transformed and rotated areas need
-no geometry. `useDragOverlay` returns the dragged card, a `ref` that keeps a
-fixed copy under the pointer without rendering per move, `settling` while a
-submitted drop awaits its frame, and the `target` it would land on, kept while
-it settles. See [Gestures](../guides/ui/gestures.md).
+no geometry. Rectangular areas also snap: a box marked
+`data-drop-landing="slot"` catches a card by its centre and draws it there,
+and other areas hold a card inside their edge. `useDragOverlay` returns the
+dragged card, a `ref` that keeps a fixed copy under the pointer, in its slot or
+at a zone's edge without rendering per move, its `DragFit` (landing scale,
+`snapped`, `concealed`), `settling` while a submitted drop awaits its frame, and
+the `target` it would land on, kept while it settles. See
+[Gestures](../guides/ui/gestures.md#snapping).
 
 The copied `BoardTargets` accepts `dropRoute` with all three route keys when a
 visual destination could serve multiple inputs. It disables ambiguous drops

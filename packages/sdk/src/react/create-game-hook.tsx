@@ -17,6 +17,7 @@ import {
   useGestureSession,
   useGestureState,
   type CardGestureProps,
+  type DragFit,
   type DropAreaInput,
   type GestureGame,
   type GestureSession,
@@ -131,6 +132,12 @@ export interface DragOverlay<G> {
         ZoneHostId<G>
       >
     | null;
+  /**
+   * Draw the copy at `fit.scale` once it is known, in place of its lifted
+   * size, and as its back while `fit.concealed`. The ref already moves it
+   * into a pile's slot while `fit.snapped`.
+   */
+  readonly fit: DragFit;
   /** Attach to a fixed-position copy of the card; it follows the pointer. */
   readonly ref: (element: HTMLElement | null) => (() => void) | undefined;
 }
@@ -617,6 +624,7 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
                   index: drag.landing.index,
                 }
               : null,
+            fit: drag.fit,
             ref: session.overlayRef,
           }
         : null;

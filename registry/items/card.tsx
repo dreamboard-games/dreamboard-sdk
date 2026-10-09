@@ -1,6 +1,6 @@
 import "./tokens.css";
 import { motion, type HTMLMotionProps } from "motion/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 /** The spring every card movement uses, matching the tokens' timings. */
 export const cardSpring = {
@@ -13,6 +13,27 @@ export const cardSpring = {
 export const cardSettle = { duration: 0.22, ease: [0.2, 0.8, 0.2, 1] } as const;
 export const cardPickup = { duration: 0.1, ease: "easeOut" } as const;
 export const cardDragScale = 1.2;
+/**
+ * A dragged copy's scale: lifted until it nears a landing, then that
+ * landing's size, still a little raised until it sits in a pile.
+ */
+export function dragCopyScale(
+  fit: { readonly scale: number | null; readonly snapped: boolean },
+  lifted = cardDragScale,
+) {
+  return fit.scale === null
+    ? lifted
+    : fit.snapped
+      ? fit.scale
+      : fit.scale * 1.08;
+}
+/** A short tick on touch devices as a dragged card settles into a pile. */
+export function useSnapTick(snapped: boolean) {
+  useEffect(() => {
+    if (snapped && matchMedia("(pointer: coarse)").matches)
+      navigator.vibrate?.(8);
+  }, [snapped]);
+}
 
 export type CardState = "idle" | "eligible" | "selected" | "dimmed";
 export type CardProps = HTMLMotionProps<"div"> & {
