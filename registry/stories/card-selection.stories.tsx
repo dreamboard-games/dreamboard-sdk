@@ -62,12 +62,16 @@ const game = model.assemble({
               min: 1,
               distinct: true,
             }),
+            destination: play.inputs.form.choice({
+              choices: [{ value: "discard", label: "Discard" }],
+              defaultValue: "discard",
+            }),
           },
           reduce({ tx, state, input }) {
             for (const id of input.params.cards)
               tx.moveComponentToZone({
                 componentId: id,
-                to: { zoneId: "discard" },
+                to: { zoneId: input.params.destination },
               });
             tx.patchPublicState({ moves: state.publicState.moves + 1 });
           },
@@ -86,7 +90,7 @@ const { GameProvider, useGame, useCardGesture, useDropArea, useDragOverlay } =
         drag: dragFeature(core, context, {
           getSelection: (id) => {
             const ids = selection.root.cardSelection.cardIds;
-            return ids.includes(id) ? ids : [id];
+            return ids.includes(id) ? ids : undefined;
           },
         }),
       };
@@ -127,7 +131,10 @@ function Table() {
         additive ? [...game.cardSelection.cardIds, ...ids] : ids,
       ),
   });
-  const area = useDropArea({ interaction: "play.move" });
+  const area = useDropArea({
+    interaction: "play.move",
+    params: { destination: "discard" },
+  });
   const overlay = useDragOverlay();
   return (
     <div style={{ padding: 12 }}>
