@@ -107,6 +107,7 @@ export async function proveCardControl(page: Page, touch: boolean) {
   await card.press("Enter");
   const flip = page.getByRole("button", { name: "Flip", exact: true });
   await expect(flip).toHaveAttribute("aria-keyshortcuts", "f");
+  await expect(flip).toBeFocused();
   await page.keyboard.press("Control+f");
   await expect(flip).toBeVisible();
   await flip.dispatchEvent("keydown", { key: "f", repeat: true });
