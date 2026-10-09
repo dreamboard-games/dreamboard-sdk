@@ -308,34 +308,76 @@ function valueSourceForCollector(
   inputKey: string,
   collector: InputCollector,
 ): ValueSource {
-  const resolved = resolveCollectorValueSource(context, collector);
-  if (!Object.prototype.hasOwnProperty.call(context.initialValues, inputKey)) {
-    return resolved;
+  const hasFixedValue = Object.prototype.hasOwnProperty.call(
+    context.initialValues,
+    inputKey,
+  );
+  const fixedValue = context.initialValues[inputKey];
+  if (!collector.domain) {
+    return hasFixedValue
+      ? fixedCollectorValueSource(context, collector, fixedValue)
+      : incompleteValueSource();
   }
 
-  const fixedValue = context.initialValues[inputKey];
+  const domain = collector.domain(
+    context.domainState,
+    context.playerId,
+    context.queries(),
+  );
+  const base = baseValuesForDomain(domain, collector, context);
+  const selection = collector.selection ?? domain.selection;
+  const selected = applySelection(base, selection);
+  const resolved = collector.schema.safeParse(undefined).success
+    ? withAbsentCollectorValue(selected)
+    : selected;
+  if (!hasFixedValue) return resolved;
+
+  // A complete selection is checked against its members, not the power set.
+  if (
+    selection?.mode === "many" &&
+    Array.isArray(fixedValue) &&
+    base.complete
+  ) {
+    const keys = fixedValue.map(canonicalJson);
+    const valid =
+      collector.schema.safeParse(fixedValue).success &&
+      fixedValue.length >= selection.min &&
+      (selection.max === undefined || fixedValue.length <= selection.max) &&
+      (!selection.distinct || new Set(keys).size === keys.length) &&
+      fixedValue.every((value) => sourceContainsValue(base, value));
+    return { complete: true, values: () => (valid ? [fixedValue] : []) };
+  }
   if (!resolved.complete) {
     return fixedCollectorValueSource(context, collector, fixedValue);
   }
-  if (collector.selection?.mode === "many" && !Array.isArray(fixedValue)) {
-    const matchingSelections = [...resolved.values()].filter(
-      (candidate): candidate is readonly unknown[] =>
-        Array.isArray(candidate) &&
-        candidate.some(
-          (selected) => canonicalJson(selected) === canonicalJson(fixedValue),
-        ),
-    );
-    return finiteValueSource(matchingSelections);
+  if (selection?.mode === "many" && !Array.isArray(fixedValue)) {
+    const eligible = sourceContainsValue(base, fixedValue);
+    return {
+      complete: true,
+      values: function* () {
+        if (!eligible) return;
+        for (const candidate of resolved.values()) {
+          if (
+            Array.isArray(candidate) &&
+            candidate.some(
+              (value) => canonicalJson(value) === canonicalJson(fixedValue),
+            )
+          )
+            yield candidate;
+        }
+      },
+    };
   }
-  const matches = [...resolved.values()].some(
-    (candidate) => canonicalJson(candidate) === canonicalJson(fixedValue),
-  );
-  return {
-    complete: true,
-    values: function* () {
-      if (matches) yield fixedValue;
-    },
-  };
+  const matches = sourceContainsValue(resolved, fixedValue);
+  return { complete: true, values: () => (matches ? [fixedValue] : []) };
+}
+
+function sourceContainsValue(source: ValueSource, value: unknown): boolean {
+  const key = canonicalJson(value);
+  for (const candidate of source.values()) {
+    if (canonicalJson(candidate) === key) return true;
+  }
+  return false;
 }
 
 function fixedCollectorValueSource(
@@ -364,27 +406,6 @@ function fixedCollectorValueSource(
       if (schemaResult.success && targetValid) yield fixedValue;
     },
   };
-}
-
-function resolveCollectorValueSource(
-  context: SolverContext,
-  collector: InputCollector,
-): ValueSource {
-  if (!collector.domain) return incompleteValueSource();
-
-  const domain = collector.domain(
-    context.domainState,
-    context.playerId,
-    context.queries(),
-  );
-  const base = baseValuesForDomain(domain, collector, context);
-  const selected = applySelection(
-    base,
-    collector.selection ?? domain.selection,
-  );
-  return collector.schema.safeParse(undefined).success
-    ? withAbsentCollectorValue(selected)
-    : selected;
 }
 
 function withAbsentCollectorValue(source: ValueSource): ValueSource {
