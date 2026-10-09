@@ -146,6 +146,27 @@
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "zone-actions",
+      "type": "registry:component",
+      "title": "Zone Actions",
+      "description": "A clickable zone title with an accessible action popup and zone highlighting. Games supply the actions. No SDK dependency.",
+      "files": [
+        {
+          "path": "items/zone-actions.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/zone-actions.tsx"
+        },
+        {
+          "path": "items/zone-actions.css",
+          "type": "registry:file",
+          "target": "@components/dreamboard/zone-actions.css"
+        }
+      ],
+      "registryDependencies": ["@dreamboard/tokens"],
+      "dependencies": ["@base-ui/react@^1.8.0"]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
       "name": "square-grid",
       "type": "registry:component",
       "title": "Square Grid",

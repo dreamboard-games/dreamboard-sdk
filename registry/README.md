@@ -52,6 +52,10 @@ import { Pile } from "@/components/dreamboard/pile";
 </Pile>;
 ```
 
+`ZoneActions` supplies a clickable zone title, accessible popup and hover/focus
+highlight. Games supply the menu contents and keep local presentation state such
+as Spread/Gather. See [zone actions](../docs/registry/zone-actions.md).
+
 ## Component boundaries
 
 | Item           | Supplied data / composition                                                                                                          |

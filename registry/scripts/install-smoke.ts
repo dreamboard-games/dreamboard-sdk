@@ -202,11 +202,16 @@ try {
     `
     import { createRoot } from "react-dom/client";
     import { PlayingCard } from "./components/dreamboard/playing-card";
+    import { ZoneActions } from "./components/dreamboard/zone-actions";
+    import { Popover } from "@base-ui/react/popover";
     ${bound ? 'import { ScenarioControls } from "./components/dreamboard/scenario-controls";' : ""}
     import "./style.css";
     createRoot(document.getElementById("root")!).render(<main>
       <div data-testid="theme-proof" className="flex h-11 w-[173px] bg-primary text-primary-foreground">Tailwind</div>
-      <PlayingCard rank="A" suit="hearts" />
+      <div data-zone-actions-root>
+        <PlayingCard rank="A" suit="hearts" />
+        <ZoneActions label="Discard"><Popover.Close>Done</Popover.Close></ZoneActions>
+      </div>
       ${bound ? '<ScenarioControls scenarios={["opening"]} players={[{ playerId: "one" }]} me="one" onSeatChange={() => {}} onCheckpoint={() => ({ turn: 1 })} onRestore={() => {}} />' : ""}
     </main>);
   `,
@@ -232,6 +237,15 @@ try {
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(host.resolvedUrls!.local[0]);
+    const zoneTitle = page.getByRole("button", { name: "Discard actions" });
+    await zoneTitle.hover();
+    await expect(page.locator("[data-zone-actions-root]")).toHaveCSS(
+      "outline-style",
+      "solid",
+    );
+    await zoneTitle.click();
+    await page.getByRole("button", { name: "Done", exact: true }).click();
+    await expect(zoneTitle).toBeFocused();
     const proof = page.getByTestId("theme-proof");
     await expect(proof).toHaveCSS("display", "flex");
     await expect(proof).toHaveCSS("height", "44px");
