@@ -4,7 +4,12 @@ import {
   magneticDropPoint,
   type GestureRecognizer,
 } from "@dreamboard-games/sdk";
-import { useGame, useShortcutTarget, useShortcutHints } from "@game";
+import {
+  useGame,
+  useShortcutTarget,
+  useShortcutHints,
+  useZonePresentation,
+} from "@game";
 import {
   animate,
   motion,
@@ -80,7 +85,7 @@ export function DrawPile<K extends InteractionKey>(props: DrawPileProps<K>) {
           interaction.key === key,
       ),
   );
-  const count = useGame((game) => game.zones.find(zoneId, hostId)?.count ?? 0);
+  const { count } = useZonePresentation(zoneId, hostId);
   const backAt = (index: number) => (game: Model) => {
     const card = game.zones.find(zoneId, hostId)?.getCards()[index];
     return card ? backImageOf(card) : null;

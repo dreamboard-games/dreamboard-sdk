@@ -9,7 +9,12 @@ import { z } from "zod";
 import { localSource } from "@dreamboard-games/sdk/testing";
 import { handFanPresets, type CommandSource } from "@dreamboard-games/sdk";
 import { Button } from "@/components/ui/button";
-import { GameProvider, useGame, useGameShortcuts } from "../typecheck/game";
+import {
+  GameProvider,
+  useGame,
+  useGameShortcuts,
+  useZonePresentation,
+} from "../typecheck/game";
 import { CardControl } from "../items/card-control";
 import { Hand } from "../items/hand";
 import { Card, CardBack, type CardState } from "../items/card";
@@ -141,9 +146,7 @@ function Area({
   interaction: string;
   top?: boolean;
 }) {
-  const cards = useGame(
-    (game) => game.zones.find(zoneId, "table")?.getCards() ?? [],
-  );
+  const { cards } = useZonePresentation(zoneId, "table");
   const shown = top ? cards.slice(-1) : cards;
   const canDrag = useGame(
     (game) =>
@@ -155,6 +158,8 @@ function Area({
   return (
     <DropArea
       binding={{ interaction }}
+      zone={{ zoneId, hostId: "table" }}
+      visibility="public"
       label={label}
       data-zone={zoneId}
       className="grid min-h-36 min-w-28 content-center justify-items-center gap-2 p-3"

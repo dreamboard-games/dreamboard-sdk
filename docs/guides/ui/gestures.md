@@ -105,3 +105,50 @@ through the card's own button, the interaction form or the board's target
 buttons.
 
 Use `{ drag: false }` for inspection-only controls such as table cards. Use `{ drag: {} }` to discover eligible drop routes, or put `interaction` and `input` inside `drag` to restrict them. Drag support is explicit; hover and hold inspection remain available when dragging is disabled.
+
+## Pending zone landings
+
+A submitted zone drop lands immediately in the SDK's presentation layer. This
+behavior is automatic when the destination has a position input or registers
+its zone and disclosure policy:
+
+```tsx
+const area = useDropArea(
+  { interaction: "play.move", params: { destination } },
+  { zone: { zoneId, hostId }, visibility: zone.visibility },
+);
+const { cards, count, arrivingIds } = useZonePresentation(zoneId, hostId);
+```
+
+Use the manifest's existing visibility (`public`, `ownerOnly`, or `hidden`).
+The default landing index is the end; a pile whose top is first can supply
+`index: 0`. A position input supplies its own canonical index and zone. Without
+explicit disclosure metadata, a same-zone position drop retains its face;
+an incoming card stays concealed until the authoritative frame arrives.
+
+`useZonePresentation` removes departing cards, inserts incoming cards in drag
+selection order, and adjusts the displayed count. An optional `{ order }` uses
+an authored display order, such as the hand's local sort. `arrivingIds` marks
+new authoritative arrivals, excluding confirmed provisional cards and rejected
+returns. `useCardPresentation(cardId)` supplies the card, `isPending`, and its
+presentation `hidden` state. The card's own location, the snapshot, and
+`game.zones` remain authoritative.
+
+`useCardGesture().isPending` blocks another press on a submitted card. The
+registry's `Hand`, `CardControl`, and `DrawPile` consume these hooks by default;
+there is no per-card preview flag. Custom renderers use the same hooks and render
+a back when the presentation is hidden. The registry's `DropArea` accepts the
+same `zone`, `visibility`, and `index` metadata as props.
+
+An ACK alone retains the landing until a new authoritative frame. An accepted
+frame replaces it without another arrival; rejection restores the source.
+New frames, seats, sources, and disposal discard retained pending faces. A
+non-zone interaction continues to use its pointer overlay while settling;
+`useDragOverlay().landing` is null in that case. Render a moving overlay while
+`!overlay.settling || !overlay.landing`; a registered pending zone already
+renders the landing itself.
+
+When installing these registry items, export `useZonePresentation` and
+`useCardPresentation` from the game's `createGameHook` binding alongside the
+existing gesture hooks. Draw flights remain face down until their authoritative
+arrival and use the same registered hand geometry and reduced-motion policy.

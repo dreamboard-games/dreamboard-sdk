@@ -13,6 +13,8 @@ export async function proveCardControl(page: Page, touch: boolean) {
   await expect(card).toHaveCSS("touch-action", "manipulation");
   await expect(page.getByTestId("table-can-drag")).toHaveText("true");
   const before = await page.getByTestId("table-cards").textContent();
+  // Shared layout now carries the played card here; measure after it settles.
+  await card.click({ trial: true });
   const box = (await card.boundingBox())!;
   const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
   const cdp = touch ? await page.context().newCDPSession(page) : null;
@@ -40,9 +42,17 @@ export async function proveCardControl(page: Page, touch: boolean) {
   else await page.mouse.up();
   await expect(page.getByTestId("table-cards")).toHaveText(before!);
   if (cdp) {
+    await card.click({ trial: true });
+    const inspect = (await card.boundingBox())!;
     await cdp.send("Input.dispatchTouchEvent", {
       type: "touchStart",
-      touchPoints: [{ ...from, id: 1 }],
+      touchPoints: [
+        {
+          x: inspect.x + inspect.width / 2,
+          y: inspect.y + inspect.height / 2,
+          id: 1,
+        },
+      ],
     });
     await expect(page.locator('[data-card-preview="hold"]')).toBeVisible();
     await cdp.send("Input.dispatchTouchEvent", {
@@ -52,7 +62,7 @@ export async function proveCardControl(page: Page, touch: boolean) {
     await cdp.detach();
     await expect(page.locator('[data-card-preview="hold"]')).toHaveCount(0);
   } else {
-    await page.mouse.move(from.x, from.y);
+    await card.hover();
     await page.keyboard.down("Alt");
     await expect(page.locator('[data-card-preview="hover"]')).toBeVisible();
     await page.mouse.move(1, 1);

@@ -18,6 +18,7 @@ import { proveCardControl } from "./card-control-proof.ts";
 import { proveCrowdedHand, proveHand, proveHandSlide } from "./hand-proof.ts";
 import { proveHandSorting } from "./hand-sorting-proof.ts";
 import { proveHandReorder } from "./hand-reorder-proof.ts";
+import { proveCardLandings } from "./card-landing-proof.ts";
 import { proveHandPickup } from "./hand-pickup-proof.ts";
 import {
   proveHandChoreography,
@@ -343,6 +344,18 @@ try {
         await proveSteadyTuckedHand(page);
       if (story.id.endsWith("--reordering-hand") && name !== "landscape")
         await proveHandReorder(page, touch);
+      if (
+        story.id.endsWith("card-landings--pending-drop") &&
+        name !== "landscape"
+      ) {
+        await proveCardLandings(page, touch);
+        if (!touch) {
+          await page.emulateMedia({ reducedMotion: "reduce" });
+          await page.reload();
+          await proveCardLandings(page, false);
+          await page.emulateMedia({ reducedMotion: "no-preference" });
+        }
+      }
       if (story.id.endsWith("--reordering-open-hand") && name === "desktop")
         await proveHandReorder(page, touch);
       if (story.id.endsWith("pending-draw") && name !== "landscape")

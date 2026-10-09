@@ -6,6 +6,9 @@ export type {
   DragOverlay,
   DropArea,
   DropAreaBinding,
+  DropAreaOptions,
+  ZonePresentation,
+  CardPresentation,
   SelectionOptions,
 } from "./react/create-game-hook.js";
 export type { CardGestureProps } from "./react/gesture.js";

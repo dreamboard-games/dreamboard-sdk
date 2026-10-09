@@ -20,3 +20,13 @@ A hold, Alt/Option or the menu's Inspect opens `renderPreview(card)`, which defa
 Use `drag={false}` for table cards that only tap and inspect. Use `drag={{}}` for automatic eligible routes, or `drag={{ interaction: "play.discard" }}` for a specific route. Inspection-only controls allow native scrolling in both directions. `Hand` uses this same control with automatic drag routes and provides the fan/arrival layout through its `children` slot.
 
 The opener remains enabled when no action is available, so players can inspect a card and see the reason. It does not spread `card.getProps()` or inherit direct selection activation. Choosing an action calls `card.select`; a sole multi-card action toggles selection directly. A drag closes the menu, and Escape/outside press dismiss it and restore focus to the card. `disabled` is reserved for a transient arrival animation.
+
+`CardControl` reads the SDK's `useCardPresentation` and pending gesture state. A
+provisional landing stays visible and disabled without a preview prop. Concealed
+landings use a back and a face-down label. Export `useCardPresentation` from the
+game binding alongside the existing gesture hooks.
+
+Without a custom `children` slot, the control owns its Motion `layoutId` and
+drag overlay automatically. Its `renderCard` should supply the face without
+another `layoutId`. A custom slot, such as the hand's fan, owns its placement
+and moving overlay.

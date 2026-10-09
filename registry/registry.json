@@ -271,7 +271,8 @@
         "@dreamboard/card",
         "@dreamboard/card-actions",
         "@dreamboard/card-preview"
-      ]
+      ],
+      "dependencies": ["motion@13.5.0"]
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",

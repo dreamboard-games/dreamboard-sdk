@@ -82,8 +82,29 @@ const {
   useCardRow,
   useDropArea,
   useDragOverlay,
+  useZonePresentation,
+  useCardPresentation,
 } = createGameHook()({
-  features: (core, context) => ({ drag: dragFeature(core, context) }),
+  features: (core, context) => ({
+    drag: dragFeature(core, context, {
+      // Test-owned selection order for the many-card fixture below.
+      getSelection(cardId) {
+        const many = core.cards
+          .find(cardId)
+          ?.getInteractions()
+          .some((interaction) =>
+            interaction.getInputs().some((input) => {
+              const domain = input.getDomain();
+              return (
+                domain.type === "cardTarget" &&
+                domain.selection?.mode === "many"
+              );
+            }),
+          );
+        return many ? ["blue", "red"] : undefined;
+      },
+    }),
+  }),
   debug: false,
 });
 function Card({ id, draggable }: { id: string; draggable: boolean }) {
@@ -890,4 +911,279 @@ test("an area read at each point offers the insertion point under the card and k
   });
   expect(get("overlay")).toBeNull();
   expect(get("slots")!.dataset.index).toBeUndefined();
+});
+
+function PresentedZone({
+  zoneId,
+  visibility = "public",
+}: {
+  zoneId: string;
+  visibility?: "public" | "hidden";
+}) {
+  const zone = useZonePresentation(
+    zoneId,
+    zoneId === "hand" ? "alice" : "table",
+  );
+  const area = useDropArea(
+    { interaction: "play.discard" },
+    {
+      zone: { zoneId, hostId: zoneId === "hand" ? "alice" : "table" },
+      visibility,
+    },
+  );
+  return (
+    <section
+      {...area.props}
+      data-testid={zoneId}
+      data-count={zone.count}
+      data-arriving={JSON.stringify(zone.arrivingIds)}
+    >
+      {zone.cards.map((card) => (
+        <PresentedCard key={card.id} id={card.id} />
+      ))}
+    </section>
+  );
+}
+function PresentedCard({ id }: { id: string }) {
+  const { card, isPending, hidden } = useCardPresentation(id);
+  const gesture = useCardGesture(id, { drag: {} });
+  return card ? (
+    <button
+      {...gesture.props}
+      disabled={gesture.isPending}
+      data-testid={id}
+      data-pending={isPending}
+      data-hidden={hidden}
+    >
+      {id}
+    </button>
+  ) : null;
+}
+function landingSnapshot(version = 1, moved = false): SourceSnapshot {
+  const original = snapshot(version);
+  const hand = original.frame.zones.hand.alice;
+  return {
+    ...original,
+    frame: {
+      ...original.frame,
+      zones: {
+        hand: { alice: { ...hand, cardIds: moved ? ["blue"] : hand.cardIds } },
+        table: {
+          table: {
+            tiles: [],
+            cardIds: moved ? ["red"] : [],
+            cardViewsById: moved ? { red: hand.cardViewsById.red } : {},
+            cardBacksById: {},
+            playableByCardId: {},
+          },
+        },
+      },
+    },
+  };
+}
+async function mountLanding(
+  visibility: "public" | "hidden" = "public",
+  initial = landingSnapshot(),
+  cardId = "red",
+) {
+  const source = createTestSource(initial);
+  const host = document.createElement("div");
+  document.body.append(host);
+  const root = createRoot(host);
+  roots.push(root);
+  await act(async () =>
+    root.render(
+      <GameProvider source={source}>
+        <PresentedZone zoneId="hand" />
+        <PresentedZone zoneId="table" visibility={visibility} />
+        <Overlay />
+      </GameProvider>,
+    ),
+  );
+  const get = (id: string) =>
+    document.querySelector<HTMLElement>(`[data-testid="${id}"]`);
+  hitTesting(() => get("table"));
+  const at = (y: number) => ({ pointerType: "touch", x: 10, y }) as const;
+  await down(get(cardId)!, at(200));
+  await move(at(180));
+  await up(at(40));
+  return { source, get };
+}
+
+test("a submitted drop presents its landing without changing authoritative zone contents", async () => {
+  const { source, get } = await mountLanding();
+  expect(get("table")!.querySelector('[data-testid="red"]')).not.toBeNull();
+  expect(get("hand")!.querySelector('[data-testid="red"]')).toBeNull();
+  expect(get("table")!.dataset.count).toBe("1");
+  expect(get("hand")!.dataset.count).toBe("1");
+  expect(get("red")!.dataset.pending).toBe("true");
+  expect(get("red")!.hasAttribute("disabled")).toBe(true);
+  expect(source.store.get().snapshot!.frame.zones.hand.alice.cardIds).toEqual([
+    "red",
+    "blue",
+  ]);
+  expect(source.store.get().snapshot!.frame.zones.table.table.cardIds).toEqual(
+    [],
+  );
+  expect(get("table")!.dataset.arriving).toBe("[]");
+  await act(async () => {
+    source.submissions[0].resolve({ accepted: true });
+  });
+  // An ACK alone must not end the presentation.
+  expect(get("red")!.dataset.pending).toBe("true");
+  await act(async () => source.emit(landingSnapshot(2, true)));
+  expect(get("red")!.dataset.pending).toBe("false");
+  expect(get("table")!.dataset.count).toBe("1");
+  expect(get("table")!.dataset.arriving).toBe("[]");
+});
+
+test("rejecting a landing restores the source without replaying an arrival", async () => {
+  const { source, get } = await mountLanding();
+  await act(async () =>
+    source.submissions[0].resolve({ accepted: false, errorCode: "REJECTED" }),
+  );
+  expect(get("hand")!.querySelector('[data-testid="red"]')).not.toBeNull();
+  expect(get("table")!.querySelector('[data-testid="red"]')).toBeNull();
+  expect(get("hand")!.dataset.count).toBe("2");
+  expect(get("hand")!.dataset.arriving).toBe("[]");
+  expect(get("red")!.hasAttribute("disabled")).toBe(false);
+});
+
+test("a concealed destination presents a back during confirmation", async () => {
+  const { get } = await mountLanding("hidden");
+  expect(get("red")!.dataset.hidden).toBe("true");
+  expect(get("red")!.dataset.pending).toBe("true");
+});
+
+test("a source/seat replacement discards the previous pending face", async () => {
+  const { source, get } = await mountLanding();
+  await act(async () => source.emit({ ...landingSnapshot(2), me: "bob" }));
+  expect(get("table")!.querySelector('[data-testid="red"]')).toBeNull();
+  expect(get("red")!.dataset.pending).toBe("false");
+  expect(get("overlay")).toBeNull();
+});
+
+test("an authoritative frame arriving before the ACK replaces the provisional landing", async () => {
+  const { source, get } = await mountLanding();
+  await act(async () => source.emit(landingSnapshot(2, true)));
+  expect(get("red")!.dataset.pending).toBe("false");
+  expect(get("table")!.dataset.count).toBe("1");
+  expect(get("table")!.dataset.arriving).toBe("[]");
+  expect(get("overlay")).toBeNull();
+  await act(async () => source.submissions[0].resolve({ accepted: true }));
+  expect(get("table")!.querySelectorAll("button")).toHaveLength(1);
+});
+
+test("a pending card cannot start another press", async () => {
+  const { source, get } = await mountLanding();
+  const at = (y: number) => ({ pointerType: "touch", x: 10, y }) as const;
+  await down(get("red")!, at(200));
+  await move(at(180));
+  await up(at(40));
+  expect(source.submissions).toHaveLength(1);
+  expect(get("red")!.dataset.pending).toBe("true");
+});
+
+test("a selected group lands atomically in selection order", async () => {
+  const initial = landingSnapshot();
+  const many: InteractionDescriptor = {
+    ...discard,
+    commit: { mode: "manual" },
+    inputs: [
+      {
+        ...discard.inputs[0],
+        domain: {
+          ...discard.inputs[0].domain,
+          type: "cardTarget",
+          projection: "resolved",
+          targetKind: "card",
+          zoneIds: ["hand"],
+          eligibleTargets: ["red", "blue"],
+          selection: { mode: "many", min: 2, max: 2 },
+        },
+      },
+    ],
+  };
+  const { source, get } = await mountLanding("public", {
+    ...initial,
+    frame: {
+      ...initial.frame,
+      availableInteractions: [many],
+      zones: {
+        ...initial.frame.zones,
+        hand: {
+          alice: {
+            ...initial.frame.zones.hand.alice,
+            playableByCardId: { red: [many], blue: [many] },
+          },
+        },
+      },
+    },
+  });
+  expect(source.submissions).toHaveLength(1);
+  expect(source.submissions[0].params).toEqual({ card: ["blue", "red"] });
+  expect(
+    [...get("table")!.querySelectorAll("button")].map(
+      (card) => card.dataset.testid,
+    ),
+  ).toEqual(["blue", "red"]);
+  expect(get("hand")!.dataset.count).toBe("0");
+  expect(get("table")!.dataset.count).toBe("2");
+  await act(async () =>
+    source.submissions[0].resolve({ accepted: false, errorCode: "REJECTED" }),
+  );
+  expect(
+    [...get("hand")!.querySelectorAll("button")].map(
+      (card) => card.dataset.testid,
+    ),
+  ).toEqual(["red", "blue"]);
+});
+
+test("revealing a pending concealed card does not restart its arrival", async () => {
+  const id = `card-ref:sha256:${"1".repeat(64)}`;
+  const initial = landingSnapshot();
+  const concealed: InteractionDescriptor = {
+    ...discard,
+    inputs: [
+      {
+        ...discard.inputs[0],
+        domain: {
+          type: "cardTarget",
+          projection: "resolved",
+          targetKind: "card",
+          zoneIds: ["hand"],
+          eligibleTargets: [id, "blue"],
+        },
+      },
+    ],
+  };
+  const hidden = {
+    ...initial,
+    frame: {
+      ...initial.frame,
+      availableInteractions: [concealed],
+      zones: {
+        ...initial.frame.zones,
+        hand: {
+          alice: {
+            ...initial.frame.zones.hand.alice,
+            cardIds: [id, "blue"],
+            cardViewsById: {
+              blue: initial.frame.zones.hand.alice.cardViewsById.blue,
+            },
+            cardBacksById: { [id]: "https://example.com/back.png" },
+            playableByCardId: { [id]: [concealed], blue: [concealed] },
+          },
+        },
+      },
+    },
+  };
+  const { source, get } = await mountLanding("public", hidden, id);
+  expect(get(id)!.dataset.hidden).toBe("true");
+  await act(async () => {
+    source.submissions[0].resolve({ accepted: true });
+    source.emit(landingSnapshot(2, true));
+  });
+  expect(get("red")!.dataset.hidden).toBe("false");
+  expect(get("table")!.dataset.arriving).toBe("[]");
 });

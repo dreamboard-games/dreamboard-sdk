@@ -1,5 +1,6 @@
 import type { RuntimeShortcutTarget } from "../headless/features/shortcuts.js";
-import type { CoreInstance, InstanceOptions } from "../headless/model.js";
+import type { CoreInstance, InstanceOptions, Card } from "../headless/model.js";
+import type { ZoneVisibility } from "../shared/domain/contracts.js";
 import { inputValueKey } from "../shared/input-domain.js";
 import { createStore } from "@tanstack/store";
 import { useSelector } from "@tanstack/react-store";
@@ -41,7 +42,7 @@ export interface GestureDrag {
 }
 export interface GestureGame extends Pick<
   CoreInstance<unknown>,
-  "snapshot" | "subscribe"
+  "snapshot" | "subscribe" | "cards" | "zones" | "me"
 > {
   readonly drag?: GestureDrag;
   readonly request: unknown;
@@ -63,11 +64,26 @@ export interface GestureState {
     /** The area under the card and where it would land there, kept while settling. */
     readonly area: string | null;
     readonly target: RuntimeDropTarget | null;
+    readonly landing: {
+      readonly zoneId: string;
+      readonly hostId: string;
+      readonly index: number;
+      readonly concealed: boolean;
+      readonly cards: readonly Card<unknown, Record<never, never>>[];
+      readonly snapshot: GestureGame["snapshot"];
+    } | null;
   } | null;
   readonly inspect: {
     readonly cardId: string;
     readonly via: "hold" | "hover";
   } | null;
+}
+
+/** A renderer's destination identity and its existing disclosure policy. */
+export interface RuntimeDropPresentation {
+  readonly zone: { readonly zoneId: string; readonly hostId: string };
+  readonly visibility: ZoneVisibility;
+  readonly index?: number;
 }
 
 export interface CardGestureProps {
@@ -182,6 +198,10 @@ export function createGestureSession(game: GestureGame) {
     right: RuntimeShortcutTarget | null,
   ) => inputValueKey(left) === inputValueKey(right);
   const areas = new Map<string, (point: Point) => DropAreaValue>();
+  const presentations = new Map<
+    string,
+    () => RuntimeDropPresentation | undefined
+  >();
   const rows = new Map<string, CardRowLookup>();
   // A slide can end on a control other than the pressed one; it drags with
   // that mounted control's own routes.
@@ -255,6 +275,7 @@ export function createGestureSession(game: GestureGame) {
     const nextSource = game.getOptions().source;
     const changedLifetime =
       source !== nextSource || snapshot?.me !== game.snapshot?.me;
+    const changedSnapshot = snapshot !== game.snapshot;
     if (changedLifetime || snapshot !== game.snapshot) {
       // Cancelling first lets a scrubbing finger take its activity with it.
       press?.recognizer.cancel();
@@ -275,7 +296,11 @@ export function createGestureSession(game: GestureGame) {
     // New frames, seats and sources cancel the semantic drag; end the press with it.
     if (press?.dragging && !game.drag?.active) press.recognizer.cancel();
     const drag = store.get().drag;
-    if (drag?.settling && game.request === null) set({ drag: null });
+    if (
+      drag?.settling &&
+      (game.request === null || changedSnapshot || changedLifetime)
+    )
+      set({ drag: null });
   });
 
   function hitArea(at: Point): string | null {
@@ -439,6 +464,8 @@ export function createGestureSession(game: GestureGame) {
     options: false | RuntimeTargetOptions,
   ) {
     if (disposed || press || event.button !== 0) return;
+    const pending = store.get().drag;
+    if (pending?.settling && pending.cardIds.includes(cardId)) return;
     // The card a press acts on; a sliding finger moves it, or leaves the row.
     let card: {
       cardId: string;
@@ -495,6 +522,7 @@ export function createGestureSession(game: GestureGame) {
               settling: false,
               area: null,
               target: null,
+              landing: null,
             },
             inspect: null,
             activeTarget: null,
@@ -526,11 +554,58 @@ export function createGestureSession(game: GestureGame) {
             return;
           }
           const before = game.request;
+          const drag = store.get().drag;
+          const areaPresentation = drag?.area
+            ? presentations.get(drag.area)?.()
+            : undefined;
+          const position =
+            drag?.target?.kind === "position" ? drag.target.value : null;
+          const zone = position ?? areaPresentation?.zone;
+          // Hand insertion areas carry a canonical position; inherit the
+          // enclosing zone's disclosure policy when they have no metadata.
+          const presentation = zone
+            ? [
+                areaPresentation,
+                ...Array.from(presentations.values(), (read) => read()),
+              ].find(
+                (candidate) =>
+                  candidate?.zone.zoneId === zone.zoneId &&
+                  candidate.zone.hostId === zone.hostId,
+              )
+            : undefined;
+          const destination = zone && game.zones.find(zone.zoneId, zone.hostId);
+          const cards =
+            drag?.cardIds.flatMap((id) => {
+              const card = game.cards.find(id);
+              return card ? [card] : [];
+            }) ?? [];
+          const landing =
+            destination && zone && cards.length
+              ? Object.freeze({
+                  zoneId: zone.zoneId,
+                  hostId: zone.hostId,
+                  index:
+                    position?.index ??
+                    presentation?.index ??
+                    destination.getCards().length,
+                  concealed: presentation
+                    ? presentation.visibility === "hidden" ||
+                      (presentation.visibility === "ownerOnly" &&
+                        zone.hostId !== game.me?.id)
+                    : cards.some(
+                        (card) =>
+                          card.zone !== zone.zoneId ||
+                          card.hostId !== zone.hostId ||
+                          card.hidden,
+                      ),
+                  cards: Object.freeze(cards),
+                  snapshot: game.snapshot,
+                })
+              : null;
           game.drag?.drop();
           // A submitted move keeps its overlay until the authoritative frame.
-          const drag = store.get().drag;
           if (drag && game.request !== null && game.request !== before)
-            set({ drag: { ...drag, settling: true } });
+            set({ drag: { ...drag, settling: true, landing } });
           else set({ drag: null });
         },
         cancel(kind) {
@@ -703,10 +778,16 @@ export function createGestureSession(game: GestureGame) {
     },
     overlayRef,
     /** `read` returns the area's current binding; targets resolve when hit. */
-    registerArea(area: string, read: (point: Point) => DropAreaValue) {
+    registerArea(
+      area: string,
+      read: (point: Point) => DropAreaValue,
+      presentation: () => RuntimeDropPresentation | undefined,
+    ) {
       areas.set(area, read);
+      presentations.set(area, presentation);
       return () => {
         areas.delete(area);
+        presentations.delete(area);
       };
     },
     /** `read` returns a mounted card control's current drag routes. */
@@ -737,6 +818,8 @@ export function createGestureSession(game: GestureGame) {
       unsubscribe();
       followers.clear();
       targets.clear();
+      areas.clear();
+      presentations.clear();
       rows.clear();
       controls.clear();
       if (!guardingClicks) return;
