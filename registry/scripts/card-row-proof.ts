@@ -89,6 +89,7 @@ export async function proveCardRow(page: Page, touch: boolean) {
     .toEqual([moved[0], incomingId, moved[1], moved[2]]);
   await expect(page.locator(".db-drag-overlay")).toHaveCount(0);
   const empty = page.getByTestId("empty");
+  await empty.scrollIntoViewIfNeeded();
   const target = (await empty.boundingBox())!;
   await carry(cards.first(), {
     x: target.x + target.width / 2,
@@ -97,6 +98,23 @@ export async function proveCardRow(page: Page, touch: boolean) {
   await expect(empty.locator(".db-card-row-insertion")).toBeVisible();
   await release();
   await expect.poll(() => order("empty")).toEqual([moved[0]]);
+  await expect(page.locator(".db-drag-overlay")).toHaveCount(0);
+  // A constrained route without a position input reaches the surrounding area.
+  await page.getByRole("button", { name: "Toggle whole-zone moves" }).click();
+  const supply = page.getByTestId("supply");
+  await supply.scrollIntoViewIfNeeded();
+  const supplyBox = (await supply.boundingBox())!;
+  const lastId = await cards.last().getAttribute("data-card");
+  await carry(cards.last(), {
+    x: supplyBox.x + supplyBox.width / 2,
+    y: supplyBox.y + supplyBox.height / 2,
+  });
+  await expect(supply.locator(".db-card-row-insertion")).toHaveCount(0);
+  await expect(
+    page.getByRole("region", { name: "supply drop area" }),
+  ).toHaveAttribute("data-drop-over", "true");
+  await release();
+  await expect.poll(() => order("supply")).toEqual([lastId]);
   await expect(page.locator(".db-drag-overlay")).toHaveCount(0);
   await cdp?.detach();
 }

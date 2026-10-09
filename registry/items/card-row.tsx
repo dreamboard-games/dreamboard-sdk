@@ -110,7 +110,7 @@ export function CardRow({
   return (
     <div
       {...props}
-      {...area.props}
+      {...(eligible ? area.props : {})}
       ref={row}
       className={`db-card-row ${className}`}
       data-zone={zoneId}

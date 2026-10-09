@@ -5,6 +5,8 @@ import { localSource } from "@dreamboard-games/sdk/testing";
 import type { CommandSource } from "@dreamboard-games/sdk";
 import { z } from "zod";
 import { GameProvider, useGame, type GameCard } from "../typecheck/game";
+import { DropArea } from "../items/drop-area";
+import { Button } from "@/components/ui/button";
 import { CardRow } from "../items/card-row";
 import { CardControl } from "../items/card-control";
 import { Card, type CardState } from "../items/card";
@@ -53,6 +55,24 @@ const game = model.assemble({
         });
       },
       interactions: {
+        append: play.interaction({
+          inputs: {
+            card: play.inputs.card({ from: ["table", "supply", "empty"] }),
+            destination: play.inputs.form.choice({
+              defaultValue: "table",
+              choices: ["table", "supply", "empty"].map((value) => ({
+                value,
+                label: value,
+              })),
+            }),
+          },
+          reduce({ tx, input }) {
+            tx.moveComponentToZone({
+              componentId: input.params.card,
+              to: { zoneId: input.params.destination },
+            });
+          },
+        }),
         place: play.interaction({
           inputs: {
             card: play.inputs.card({ from: ["table", "supply", "empty"] }),
@@ -73,10 +93,8 @@ const game = model.assemble({
 function face(card: GameCard, state: CardState) {
   return <Card state={state}>{card.view?.name}</Card>;
 }
-function control(card: GameCard) {
-  return <CardControl cardId={card.id} drag={{}} renderCard={face} />;
-}
 function Rows() {
+  const [wholeZone, setWholeZone] = useState(false);
   const authority = useGame((game) =>
     JSON.stringify(
       game.zones
@@ -85,12 +103,23 @@ function Rows() {
     ),
   );
   return (
-    <main className="db-table grid min-h-dvh content-start gap-6 p-4">
+    <main className="db-table grid grid-cols-2 min-h-dvh content-start gap-3 p-4">
       <output hidden data-testid="row-authority">
         {authority}
       </output>
+      <Button className="col-span-2" onClick={() => setWholeZone(!wholeZone)}>
+        Toggle whole-zone moves
+      </Button>
       {["table", "supply", "empty"].map((zoneId) => (
-        <section key={zoneId} className="min-w-0">
+        <DropArea
+          key={zoneId}
+          className={zoneId === "table" ? "col-span-2 min-w-0" : "min-w-0"}
+          label={`${zoneId} drop area`}
+          binding={{
+            interaction: "play.append",
+            params: { destination: zoneId },
+          }}
+        >
           <h2>{zoneId}</h2>
           <CardRow
             zoneId={zoneId}
@@ -98,9 +127,19 @@ function Rows() {
             aria-label={zoneId}
             data-testid={zoneId}
             reorder={{ interaction: "play.place" }}
-            renderCard={control}
+            renderCard={(card) => (
+              <CardControl
+                cardId={card.id}
+                drag={
+                  wholeZone
+                    ? { interaction: "play.append" }
+                    : { interaction: "play.place" }
+                }
+                renderCard={face}
+              />
+            )}
           />
-        </section>
+        </DropArea>
       ))}
     </main>
   );
