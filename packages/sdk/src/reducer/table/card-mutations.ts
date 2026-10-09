@@ -94,7 +94,12 @@ export function moveComponentToZoneInPlace(options: {
   });
   removeComponentFromCurrentLocation(table, componentId, definitions);
   destination.ids.splice(index, 0, componentId);
-  place(table, definitions, componentId, destination.ref, playedBy);
+  if (same) {
+    // Reordering keeps the existing face; only entering a zone applies its default.
+    table.componentLocations[componentId] = { ...source, playedBy };
+  } else {
+    place(table, definitions, componentId, destination.ref, playedBy);
+  }
 }
 
 /**

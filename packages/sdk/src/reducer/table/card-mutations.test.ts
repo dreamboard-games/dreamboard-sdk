@@ -7,6 +7,7 @@ import { compileManifest } from "../manifest/compiler";
 import { createTestTransaction } from "../transaction-test-fixtures";
 import {
   flipCardInPlace,
+  moveComponentToPositionInPlace,
   moveComponentToZoneInPlace,
   dealComponentsInPlace,
   rotateZoneInPlace,
@@ -212,6 +213,42 @@ describe("canonical zone mutations", () => {
       hostId: "table",
       playedBy: null,
     });
+    consistent(table);
+  });
+
+  test.each([false, true])(
+    "same-zone moves preserve faceUp=%s through both movement APIs",
+    (faceUp) => {
+      const table = createTable();
+      flipCardInPlace(table, "card-1", faceUp);
+      move(table, "card-1", { zoneId: "draw" }, 2);
+      expect(table.zones.draw.table).toEqual(["card-2", "card-3", "card-1"]);
+      expect(table.visibility["card-1"].faceUp).toBe(faceUp);
+      moveComponentToPositionInPlace({
+        table,
+        definitions: manifest,
+        componentId: "card-1",
+        at: { zoneId: "draw", hostId: "table", index: 0 },
+      });
+      expect(table.zones.draw.table).toEqual(["card-1", "card-2", "card-3"]);
+      expect(table.visibility["card-1"].faceUp).toBe(faceUp);
+      consistent(table);
+    },
+  );
+
+  test("changing a zone or its host still applies destination visibility", () => {
+    const table = createTable();
+    flipCardInPlace(table, "card-1", false);
+    move(table, "card-1", { zoneId: "hand", hostId: "alice" });
+    expect(table.visibility["card-1"].faceUp).toBe(true);
+    flipCardInPlace(table, "card-1", false);
+    moveComponentToPositionInPlace({
+      table,
+      definitions: manifest,
+      componentId: "card-1",
+      at: { zoneId: "hand", hostId: "bob", index: 0 },
+    });
+    expect(table.visibility["card-1"].faceUp).toBe(true);
     consistent(table);
   });
 

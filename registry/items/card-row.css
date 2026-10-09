@@ -1,0 +1,45 @@
+@layer components {
+  .db-card-row {
+    position: relative;
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: safe center;
+    gap: 0.625rem;
+    min-width: 0;
+    overflow-x: auto;
+    padding: 0.375rem;
+  }
+  .db-card-row-card {
+    position: relative;
+    flex: none;
+  }
+  .db-card-row-probe {
+    position: absolute;
+    width: var(--card-w);
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .db-card-row-insertion {
+    flex: none;
+    width: var(--card-w);
+    aspect-ratio: var(--card-aspect);
+    border: 2px dashed var(--brand);
+    border-radius: var(--card-radius);
+    background: color-mix(in srgb, var(--brand) 18%, transparent);
+    pointer-events: none;
+  }
+  .db-card-row-card > .db-card-row-insertion {
+    position: absolute;
+    inset: 0;
+  }
+  .db-card-row:has(> .db-card-row-probe:only-child)::before {
+    content: "";
+    flex: none;
+    width: var(--card-w);
+    aspect-ratio: var(--card-aspect);
+    border: 1px dashed currentColor;
+    border-radius: var(--card-radius);
+    opacity: 0.4;
+  }
+}

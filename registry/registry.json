@@ -297,6 +297,29 @@
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "card-row",
+      "type": "registry:component",
+      "title": "Card Row",
+      "description": "An ordered row with insertion previews for an authored position interaction.",
+      "meta": {
+        "binding": "workspace"
+      },
+      "files": [
+        {
+          "path": "items/card-row.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/card-row.tsx"
+        },
+        {
+          "path": "items/card-row.css",
+          "type": "registry:file",
+          "target": "@components/dreamboard/card-row.css"
+        }
+      ],
+      "registryDependencies": ["@dreamboard/tokens"]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
       "name": "hand",
       "type": "registry:component",
       "title": "Hand",
