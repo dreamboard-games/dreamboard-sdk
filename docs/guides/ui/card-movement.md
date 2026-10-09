@@ -162,3 +162,10 @@ as the zone with that id or the player's seat:
 ```tsx
 const origin = useGame((game) => game.cards.get(cardId).getOrigin());
 ```
+
+The registry's `cardEntry`, in `card-motion`, resolves that element for `Hand`
+and for any other place a card lands. It prefers the drag copy the card was
+released from (marked `data-drag-card`), then the card's own control in the zone
+it left, and only then that zone or seat. Draw the flight with `CardArrival`,
+which renders above the page, so a scrolling or clipped zone never hides the
+card on its way in; an origin wider than the card never enlarges it.

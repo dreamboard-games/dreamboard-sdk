@@ -97,7 +97,8 @@ export function CardArrival({
       initial={{
         x: from.x + from.width / 2 - width / 2,
         y: from.y + from.height / 2 - height / 2,
-        scale: origin && !landed ? origin.width / width : 1,
+        // A zone or seat can be wider than the card; an origin never enlarges it.
+        scale: origin && !landed ? Math.min(1, origin.width / width) : 1,
         rotate: from.rotate,
       }}
       animate={{

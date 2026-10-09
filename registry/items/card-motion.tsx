@@ -138,3 +138,62 @@ export function useCardMotion() {
     throw new Error("Hand and DrawPile require the UI binding's GameProvider.");
   return table;
 }
+
+export type CardEntry = {
+  box: CardPlacement | null;
+  hidden: boolean;
+  /** The draw overlay owns the flight until this settles. */
+  landed?: Promise<unknown>;
+};
+
+/**
+ * Where a card arriving in `zone` with this frame was last seen, so its
+ * `CardArrival` starts there: the drag copy it was released from (marked
+ * `data-drag-card`), its own control in the zone it left, or that zone or
+ * seat. Read it while rendering the arrival, before the frame removes the old
+ * place. A hidden card turns face up on the way.
+ */
+export function cardEntry(
+  card: Card,
+  zone: CardZone,
+  table: ReturnType<typeof useCardMotion>,
+  gameUI: ParentNode | null,
+): CardEntry | null {
+  const origin = card.getOrigin();
+  if (!origin) return null;
+  if (
+    "zone" in origin &&
+    origin.zone === zone.zoneId &&
+    origin.hostId === zone.hostId
+  )
+    return origin.hidden ? { box: null, hidden: true } : null;
+  const released =
+    "zone" in origin
+      ? table.getDrawOrigin(
+          { zoneId: origin.zone, hostId: origin.hostId },
+          zone,
+        )
+      : null;
+  // The pile owns the first flight; this origin continues from its release slot.
+  if (released)
+    return {
+      box: released.to,
+      landed: released.landed,
+      hidden: origin.hidden,
+    };
+  const id = CSS.escape(String(card.id));
+  const from = gameUI?.querySelector(
+    "zone" in origin
+      ? `[data-zone="${CSS.escape(origin.zone)}"][data-zone-host="${CSS.escape(origin.hostId)}"]`
+      : `[data-player="${CSS.escape(origin.player)}"]`,
+  );
+  const place =
+    document.querySelector(`[data-drag-card="${id}"]`) ??
+    from?.querySelector(`[data-card="${id}"]`) ??
+    from;
+  if (place) {
+    const { x, y, width, height } = place.getBoundingClientRect();
+    return { box: { x, y, width, height, rotate: 0 }, hidden: origin.hidden };
+  }
+  return origin.hidden ? { box: null, hidden: true } : null;
+}
