@@ -435,7 +435,14 @@ describe("position targets", () => {
 describe("local card groups", () => {
   const groupMove: InteractionDescriptor = {
     ...move,
-    inputs: [{ ...pass.inputs[0], key: "card" }, move.inputs[1]],
+    inputs: [
+      {
+        ...pass.inputs[0],
+        key: "card",
+        domain: { ...hand, selection: { mode: "many", min: 2, max: 2 } },
+      },
+      move.inputs[1],
+    ],
   };
   const destination = {
     kind: "interaction" as const,
@@ -448,6 +455,10 @@ describe("local card groups", () => {
     game.cardSelection.set(["blue", "red", "blue", "missing"]);
     expect(game.cardSelection.cardIds).toEqual(["blue", "red"]);
     expect(game.state.drafts).toEqual({});
+    game.interactions
+      .get("play.move")
+      .getInput("card")
+      .setValue(["red", "green"]);
     game.drag.begin("red");
     expect(game.drag.active?.cardIds).toEqual(["blue", "red"]);
     expect(game.drag.getIsDropTarget(destination)).toBe(true);

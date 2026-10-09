@@ -1552,8 +1552,14 @@ class Controller {
     if (
       !cardInput ||
       cardInput.descriptor.domain.type !== "cardTarget" ||
-      !cardIds.every((id) => cardInput.getIsEligible(id)) ||
-      (group && !isManyInput(cardInput.descriptor))
+      (group
+        ? !isManyInput(cardInput.descriptor) ||
+          !inputValueInDomain(
+            cardInput.descriptor.domain,
+            cardIds,
+            cardInput.descriptor.domain.selection,
+          )
+        : !cardInput.getIsEligible(cardId))
     )
       return;
     const input =

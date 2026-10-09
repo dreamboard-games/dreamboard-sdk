@@ -1,3 +1,4 @@
+import { inputValueInDomain } from "../../shared/input-domain.js";
 import {
   runtimeFeatures,
   type RuntimeFeatureContext,
@@ -70,6 +71,10 @@ function createRuntimeDragFeature(
   ): readonly RuntimeDropTarget[] {
     if (!cardId || game.connection !== "ready") return [];
     const options = selected;
+    const group =
+      active?.cardId === cardId && active.group
+        ? active.cardIds
+        : getSelection?.(cardId, options);
     const resolved = (game.cards.find(cardId)?.getInteractions() ?? []).flatMap(
       (candidate) => {
         if (
@@ -78,12 +83,17 @@ function createRuntimeDragFeature(
         )
           return [];
         const inputs = candidate.getInputs();
-        const cardInputs = inputs.filter(
-          (input) =>
-            input.getDomain().type === "cardTarget" &&
+        const cardInputs = inputs.filter((input) => {
+          const domain = input.getDomain();
+          return (
+            domain.type === "cardTarget" &&
             (!options?.input || input.key === options.input) &&
-            input.getIsEligible(cardId),
-        );
+            (group
+              ? domain.selection?.mode === "many" &&
+                inputValueInDomain(domain, group, domain.selection)
+              : input.getIsEligible(cardId))
+          );
+        });
         // Each insertion point a position input offers is its own target.
         const positions = cardInputs.flatMap((cardInput) =>
           inputs.flatMap((input): RuntimeDropTarget[] => {
