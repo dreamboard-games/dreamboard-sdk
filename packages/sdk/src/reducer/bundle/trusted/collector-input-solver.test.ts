@@ -209,6 +209,166 @@ describe("trusted collector input solver", () => {
     });
   });
 
+  function selectionInteraction(
+    options: Parameters<typeof many>[1] = {
+      min: 1,
+      distinct: true,
+    },
+  ) {
+    return {
+      reduce: () => undefined,
+      inputs: {
+        cards: many(
+          formInput.choice({
+            defaultValue: "card-01",
+            choices: Array.from({ length: 36 }, (_, index) => ({
+              value: `card-${String(index + 1).padStart(2, "0")}`,
+              label: `Card ${index + 1}`,
+            })),
+          }),
+          options,
+        ),
+      },
+    };
+  }
+
+  test("finds a selected card in a full deck without materializing every group", () => {
+    expect(
+      hasAnyCollectorInputAssignment({
+        interaction: selectionInteraction(),
+        domainState,
+        definitions: inputDefinitions,
+        playerId: "player-1",
+        initialValues: { cards: "card-36" },
+        acceptsAssignment: ({ cards }) =>
+          Array.isArray(cards) && cards.includes("card-36"),
+      }),
+    ).toEqual({ status: "yes" });
+  });
+
+  test("rejects a missing selected card without traversing the full deck power set", () => {
+    expect(
+      hasAnyCollectorInputAssignment({
+        interaction: selectionInteraction(),
+        domainState,
+        definitions: inputDefinitions,
+        playerId: "player-1",
+        initialValues: { cards: "missing-card" },
+      }),
+    ).toEqual({ status: "no", inputKey: "cards" });
+  });
+
+  test("validates a complete full-deck selection directly and preserves its order", () => {
+    const cards = Array.from(
+      { length: 36 },
+      (_, index) => `card-${String(36 - index).padStart(2, "0")}`,
+    );
+    const options = {
+      interaction: selectionInteraction(),
+      domainState,
+      definitions: inputDefinitions,
+      playerId: "player-1",
+      initialValues: { cards },
+    };
+    expect(hasAnyCollectorInputAssignment(options)).toEqual({ status: "yes" });
+    expect(
+      enumerateCollectorInputAssignments({ ...options, maxEvaluations: 2 }),
+    ).toEqual({ status: "enumerated", assignments: [{ cards }], evaluated: 2 });
+    expect(
+      hasAnyCollectorInputAssignment({
+        ...options,
+        acceptsAssignment: () => false,
+      }),
+    ).toEqual({ status: "no", inputKey: "cards" });
+  });
+
+  test.each([
+    { cards: [], selection: { min: 1, distinct: true } },
+    { cards: ["card-01", "card-01"], selection: { min: 1, distinct: true } },
+    { cards: ["card-01", "missing-card"], selection: { min: 1 } },
+    { cards: ["card-01"], selection: { count: 2 } },
+    { cards: ["card-01", "card-02", "card-03"], selection: { min: 1, max: 2 } },
+    { cards: [42], selection: { min: 1 } },
+  ])(
+    "rejects invalid fixed selections: $cards with $selection",
+    ({ cards, selection }) => {
+      expect(
+        hasAnyCollectorInputAssignment({
+          interaction: selectionInteraction(selection),
+          domainState,
+          definitions: inputDefinitions,
+          playerId: "player-1",
+          initialValues: { cards },
+        }),
+      ).toEqual({ status: "no", inputKey: "cards" });
+    },
+  );
+
+  test("accepts repeated fixed values when the selection permits them", () => {
+    expect(
+      hasAnyCollectorInputAssignment({
+        interaction: selectionInteraction({ min: 2 }),
+        domainState,
+        definitions: inputDefinitions,
+        playerId: "player-1",
+        initialValues: { cards: ["card-01", "card-01"] },
+      }),
+    ).toEqual({ status: "yes" });
+  });
+
+  test("rejects fixed values excluded by current collector eligibility", () => {
+    const interaction = {
+      reduce: () => undefined,
+      inputs: {
+        cards: many(
+          cardInput({
+            target: cardTarget
+              .zones(["hand"] as const, inputDefinitions)
+              .where({
+                id: "playable-card",
+                errorCode: "CARD_BLOCKED",
+                test: ({ targetId }) => targetId === "card-a",
+              })
+              .build(),
+          }),
+          { min: 1, distinct: true },
+        ),
+      },
+    };
+    const options = {
+      interaction,
+      domainState,
+      definitions: inputDefinitions,
+      playerId: "player-1",
+    };
+    expect(
+      hasAnyCollectorInputAssignment({
+        ...options,
+        initialValues: { cards: ["card-a"] },
+      }),
+    ).toEqual({ status: "yes" });
+    expect(
+      hasAnyCollectorInputAssignment({
+        ...options,
+        initialValues: { cards: ["card-b"] },
+      }),
+    ).toEqual({ status: "no", inputKey: "cards" });
+  });
+
+  test("keeps all matching group witnesses available after the first is rejected", () => {
+    expect(
+      hasAnyCollectorInputAssignment({
+        interaction: selectionInteraction({ count: 2, distinct: true }),
+        domainState,
+        definitions: inputDefinitions,
+        playerId: "player-1",
+        initialValues: { cards: "card-36" },
+        acceptsAssignment: ({ cards }) =>
+          JSON.stringify(cards) === JSON.stringify(["card-02", "card-36"]),
+      }),
+    ).toEqual({ status: "yes" });
+  });
+
   test("rejects invalid evaluation budgets before touching collector state", () => {
     expect(() =>
       enumerateCollectorInputAssignments({
