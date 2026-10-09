@@ -12,6 +12,7 @@ import {
   useCardRow,
   useDropArea,
   useGame,
+  useZonePresentation,
   type GameCard as Card,
   type CardId,
   type ZoneId,
@@ -116,13 +117,17 @@ export function Hand({
   options = handFanPresets.open,
   reorder,
 }: HandProps) {
-  const ids = useGame(
+  const projectedIds = useGame(
     (game) => {
       const zone = game.zones.find(zoneId, hostId);
       return zone ? game.hand.getSortedCardIds(zone) : EMPTY;
     },
     { compare: sameIds },
   );
+  const presentation = useZonePresentation(zoneId, hostId, {
+    order: projectedIds,
+  });
+  const ids = presentation.cards.map((card) => card.id);
   // Unplayable cards dim only while another card here is playable.
   const choosing = useGame(
     (game) =>
@@ -145,6 +150,7 @@ export function Hand({
   // stays while the move settles, so no card jumps back before the frame.
   const target = overlay?.target;
   const gap =
+    !(overlay?.settling && overlay.landing) &&
     reorder &&
     target?.kind === "position" &&
     target.interactionKey === reorder.interaction &&
@@ -492,6 +498,7 @@ export function Hand({
                     <HandCard
                       key={id}
                       cardId={id}
+                      arriving={presentation.arrivingIds.includes(id)}
                       zoneId={zoneId}
                       hostId={hostId}
                       gameUI={clip?.closest("[data-game-ui]") ?? null}
@@ -500,7 +507,12 @@ export function Hand({
                       y={places[index].y}
                       rotate={places[index].rotate}
                       scale={places[index].scale}
-                      overlay={overlay?.cardId === id ? overlay : null}
+                      overlay={
+                        overlay?.cardId === id &&
+                        (!overlay.settling || !overlay.landing)
+                          ? overlay
+                          : null
+                      }
                       baseWidth={size.card}
                       baseHeight={size.cardHeight}
                       lift={lift}
@@ -604,6 +616,7 @@ function entryFrom(
 }
 
 interface HandCardProps {
+  arriving: boolean;
   cardId: CardId;
   zoneId: ZoneId;
   hostId: Card["hostId"];
@@ -628,6 +641,7 @@ interface HandCardProps {
   onMenuChange(cardId: CardId, open: boolean): void;
 }
 const HandCard = memo(function HandCard({
+  arriving,
   cardId,
   zoneId,
   hostId,
@@ -653,7 +667,7 @@ const HandCard = memo(function HandCard({
   const card = useGame((game) => game.cards.find(cardId));
   const table = useCardMotion();
   const [arrival, setArrival] = useState(() =>
-    entryFrom(card, { zoneId, hostId }, table, gameUI),
+    arriving ? entryFrom(card, { zoneId, hostId }, table, gameUI) : null,
   );
   const finishArrival = useCallback(() => setArrival(null), []);
   // Keep pose out of shared layout's size/scroll projection. The source owns

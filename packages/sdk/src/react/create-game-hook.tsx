@@ -21,7 +21,8 @@ import {
   type GestureGame,
   type GestureSession,
 } from "./gesture.js";
-import type { SeatCardId } from "../headless/model.js";
+import type { SeatCardId, IdOf, ZoneHostId, Card } from "../headless/model.js";
+import type { ZoneVisibility } from "../shared/domain/contracts.js";
 import type {
   DropAreaBinding,
   DropTarget,
@@ -35,6 +36,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  useMemo,
   type CSSProperties,
   type ReactNode,
 } from "react";
@@ -67,9 +69,34 @@ export interface CardGesture {
   readonly props: CardGestureProps;
   readonly canDrag: boolean;
   readonly isDragging: boolean;
+  /** Submitted and waiting for the authoritative frame; cannot start another gesture. */
+  readonly isPending: boolean;
   readonly isActive: boolean;
   /** Held on touch, or rested on with a mouse. */
   readonly inspecting: "hold" | "hover" | null;
+}
+
+export interface DropAreaOptions<Game> {
+  readonly zone: import("../headless/features/shortcuts.js").ShortcutZoneTarget<Game> extends infer Target
+    ? Target extends { readonly kind: "zone" }
+      ? Omit<Target, "kind">
+      : never
+    : never;
+  readonly visibility: ZoneVisibility;
+  /** Defaults to the end of the zone; piles can land on their top at index 0. */
+  readonly index?: number;
+}
+
+export interface ZonePresentation<Game, Enabled extends Features> {
+  readonly cards: readonly Card<Game, Enabled>[];
+  readonly count: number;
+  readonly arrivingIds: readonly SeatCardId<Game>[];
+}
+
+export interface CardPresentation<Game, Enabled extends Features> {
+  readonly card: Card<Game, Enabled> | undefined;
+  readonly isPending: boolean;
+  readonly hidden: boolean;
 }
 
 export interface CardRow {
@@ -97,6 +124,13 @@ export interface DragOverlay<G> {
   readonly settling: boolean;
   /** Where the card lands if dropped now; kept while it settles. */
   readonly target: DropTarget<G> | null;
+  /** A registered zone landing; absent for interactions with no zone destination. */
+  readonly landing:
+    | import("../shared/position-target.js").PositionTarget<
+        IdOf<G, "zoneId">,
+        ZoneHostId<G>
+      >
+    | null;
   /** Attach to a fixed-position copy of the card; it follows the pointer. */
   readonly ref: (element: HTMLElement | null) => (() => void) | undefined;
 }
@@ -142,7 +176,8 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
           const instance = createGameInstance<Game>()(options);
           current = {
             instance,
-            session: createGestureSession(instance),
+            // One bound game crosses into the framework adapter's erased runtime.
+            session: createGestureSession(instance as GestureGame),
             generation: 0,
           };
           lifetime.current = current;
@@ -248,6 +283,11 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
         session,
         (state) => state.drag?.cardIds.includes(cardId) ?? false,
       );
+      const pending = useGestureState(
+        session,
+        (state) =>
+          !!state.drag?.settling && state.drag.cardIds.includes(cardId),
+      );
       const inspecting = useGestureState(session, (state) =>
         state.inspect?.cardId === cardId ? state.inspect.via : null,
       );
@@ -264,6 +304,7 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
         }),
         canDrag,
         isDragging: dragging,
+        isPending: pending,
         isActive,
         inspecting,
       };
@@ -284,6 +325,7 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
             readonly x: number;
             readonly y: number;
           }) => DropTarget<Game> | DropAreaBinding<Game> | null),
+      options?: DropAreaOptions<Game>,
     ): DropArea {
       const session = useGestureSession();
       const id = `${session.id}${useId()}`;
@@ -305,15 +347,21 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
           state.drag.target !== null,
       );
       const latest = useRef(erased);
+      const latestPresentation = useRef(options);
       useLayoutEffect(() => {
         latest.current = erased;
+        latestPresentation.current = options;
       });
       useLayoutEffect(
         () =>
-          session.registerArea(id, (point) => {
-            const current = latest.current;
-            return typeof current === "function" ? current(point) : current;
-          }),
+          session.registerArea(
+            id,
+            (point) => {
+              const current = latest.current;
+              return typeof current === "function" ? current(point) : current;
+            },
+            () => latestPresentation.current,
+          ),
         [session, id],
       );
       return {
@@ -324,6 +372,126 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
         },
         isEligible: target !== null || following,
         isOver: isOver || following,
+      };
+    }
+
+    /** Presentation-only zone contents. The source snapshot and domain models stay authoritative. */
+    function useZonePresentation<Z extends IdOf<Game, "zoneId">>(
+      zoneId: Z,
+      hostId: ZoneHostId<Game, Z>,
+      options?: { readonly order: readonly SeatCardId<Game>[] },
+    ): ZonePresentation<Game, Enabled> {
+      const game = useGame();
+      const session = useGestureSession();
+      const landing = useGestureState(session, (state) =>
+        state.drag?.settling ? state.drag.landing : null,
+      );
+      const zone = game.zones.find(zoneId, hostId);
+      const actual = useMemo(
+        () => (zone?.getCards() ?? []) as readonly Card<Game, Enabled>[],
+        [zone],
+      );
+      const active = landing?.snapshot === game.snapshot ? landing : null;
+      const incoming = active?.zoneId === zoneId && active.hostId === hostId;
+      const outgoing =
+        active?.cards.filter(
+          (card) => card.zone === zoneId && card.hostId === hostId,
+        ) ?? [];
+      const cards = useMemo(() => {
+        const ordered = options
+          ? options.order.flatMap((id) => {
+              const card = actual.find((card) => card.id === id);
+              return card ? [card] : [];
+            })
+          : actual;
+        if (!active) return ordered;
+        const moving = new Set(active.cards.map((card) => card.id));
+        const remaining = ordered.filter((card) => !moving.has(card.id));
+        if (incoming) {
+          const before = ordered
+            .slice(0, active.index)
+            .filter((card) => moving.has(card.id)).length;
+          const index = Math.max(
+            0,
+            Math.min(remaining.length, active.index - before),
+          );
+          // This hook belongs to the same bound game as the captured drag.
+          remaining.splice(
+            index,
+            0,
+            ...(active.cards as readonly Card<Game, Enabled>[]),
+          );
+        }
+        return remaining;
+      }, [actual, active, incoming, options]);
+      const source = game.getOptions().source;
+      const me = game.me?.id;
+      const count =
+        (zone?.count ?? 0) -
+        outgoing.length +
+        (incoming ? active.cards.length : 0);
+      const previous = useRef({
+        source,
+        me,
+        ids: new Set(actual.map((card) => card.id)),
+        incoming: 0,
+        count: zone?.count ?? 0,
+      });
+      const newlyArriving =
+        previous.current.source === source && previous.current.me === me
+          ? cards
+              .filter(
+                (card) =>
+                  !previous.current.ids.has(card.id) &&
+                  !active?.cards.some((pending) => pending.id === card.id),
+              )
+              .map((card) => card.id as SeatCardId<Game>)
+          : [];
+      // A concealed source can reveal a different ID on acceptance. Suppress
+      // a second flight when the already-filled destination is replaced by
+      // exactly that many new cards; never invent a persistent hidden identity.
+      const arrivingIds =
+        previous.current.incoming > 0 &&
+        newlyArriving.length === previous.current.incoming &&
+        count === previous.current.count
+          ? []
+          : newlyArriving;
+      useLayoutEffect(() => {
+        // Include authority as well as the display list so rejection cannot replay an old arrival.
+        previous.current = {
+          source,
+          me,
+          ids: new Set([...actual, ...cards].map((card) => card.id)),
+          incoming: incoming ? active.cards.length : 0,
+          count,
+        };
+      });
+      return {
+        cards,
+        count,
+        arrivingIds,
+      };
+    }
+
+    /** One card's face and pending status, shared by every standard card control. */
+    function useCardPresentation(
+      cardId: SeatCardId<Game>,
+    ): CardPresentation<Game, Enabled> {
+      const game = useGame();
+      const session = useGestureSession();
+      const landing = useGestureState(session, (state) =>
+        state.drag?.settling ? state.drag.landing : null,
+      );
+      const active = landing?.snapshot === game.snapshot ? landing : null;
+      const captured = active?.cards.find((card) => card.id === cardId);
+      const card =
+        game.cards.find(cardId) ??
+        (captured as Card<Game, Enabled> | undefined);
+      return {
+        card,
+        isPending: !!captured,
+        hidden:
+          card?.hidden === true || (!!captured && active?.concealed === true),
       };
     }
 
@@ -442,6 +610,13 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
             settling: drag.settling,
             // The drag feature resolved this target from this game's routes.
             target: drag.target as DropTarget<Game> | null,
+            landing: drag.landing
+              ? {
+                  zoneId: drag.landing.zoneId as IdOf<Game, "zoneId">,
+                  hostId: drag.landing.hostId as ZoneHostId<Game>,
+                  index: drag.landing.index,
+                }
+              : null,
             ref: session.overlayRef,
           }
         : null;
@@ -497,6 +672,8 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
       useShortcutHints,
       useDropArea,
       useDragOverlay,
+      useZonePresentation,
+      useCardPresentation,
     };
   };
 }

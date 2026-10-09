@@ -2,6 +2,7 @@ import {
   useCardGesture,
   useDragOverlay,
   useGame,
+  useCardPresentation,
   type CardDrag,
   type CardId,
   type GameCard,
@@ -10,6 +11,15 @@ import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { CardActions, getCardActions } from "./card-actions";
 import { CardPreview } from "./card-preview";
 import type { CardState } from "./card";
+import {
+  CardBack,
+  backImageOf,
+  cardDragScale,
+  cardPickup,
+  cardSettle,
+} from "./card";
+import { motion } from "motion/react";
+import { createPortal } from "react-dom";
 
 export interface CardControlProps {
   cardId: CardId;
@@ -56,7 +66,8 @@ export function CardControl({
   onAction,
   children,
 }: CardControlProps) {
-  const card = useGame((game) => game.cards.find(cardId));
+  const presentation = useCardPresentation(cardId);
+  const card = presentation.card;
   const gesture = useCardGesture(cardId, { drag });
   const overlay = useDragOverlay();
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
@@ -91,9 +102,15 @@ export function CardControl({
       : choosing
         ? "dimmed"
         : "idle";
+  const face =
+    presentation.isPending && presentation.hidden ? (
+      <CardBack image={backImageOf(card)} />
+    ) : (
+      renderCard(card, state)
+    );
   const control = inert ? (
     <div ref={setAnchor} className={className} data-card={card.id} aria-hidden>
-      {renderCard(card, state)}
+      {face}
     </div>
   ) : (
     <button
@@ -101,11 +118,14 @@ export function CardControl({
       ref={setAnchor}
       type="button"
       className={className}
-      disabled={disabled}
+      disabled={disabled || gesture.isPending}
+      data-pending-move={gesture.isPending || undefined}
       style={{
         ...gesture.props.style,
         ...style,
-        ...(overlay?.cardId === cardId ? { visibility: "hidden" } : {}),
+        ...(overlay?.cardId === cardId && !presentation.isPending
+          ? { visibility: "hidden" }
+          : {}),
       }}
       data-value={card.id}
       data-card={card.id}
@@ -116,7 +136,7 @@ export function CardControl({
       aria-expanded={open}
       aria-pressed={selected}
       aria-label={
-        getCardLabel?.(card) ??
+        (presentation.hidden ? "Face-down card" : getCardLabel?.(card)) ??
         (card.hidden ? "Face-down card" : String(card.id))
       }
       data-shake={shake ? (shake % 2 ? "a" : "b") : undefined}
@@ -139,19 +159,40 @@ export function CardControl({
         if (!actions.length) setShake((value) => value + 1);
       }}
     >
-      {renderCard(card, state)}
+      {face}
     </button>
   );
   return (
     <>
-      {children
-        ? children({
-            raised,
-            hovered: gesture.isActive && !dragging,
-            anchor,
-            control,
-          })
-        : control}
+      {children ? (
+        children({
+          raised,
+          hovered: gesture.isActive && !dragging,
+          anchor,
+          control,
+        })
+      ) : (
+        <motion.div layoutId={card.id} initial={false} transition={cardSettle}>
+          {control}
+        </motion.div>
+      )}
+      {!children &&
+        overlay?.cardId === cardId &&
+        (!overlay.settling || !overlay.landing) &&
+        anchor &&
+        createPortal(
+          <motion.div ref={overlay.ref} className="db-drag-overlay">
+            <motion.div
+              layoutId={card.id}
+              initial={false}
+              animate={{ scale: cardDragScale }}
+              transition={cardPickup}
+            >
+              {renderCard(card, "selected")}
+            </motion.div>
+          </motion.div>,
+          document.body,
+        )}
       {open && !inert && !dragging && anchor && (
         <CardActions
           cardId={cardId}

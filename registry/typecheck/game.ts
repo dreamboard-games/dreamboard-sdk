@@ -68,6 +68,8 @@ export const {
   useShortcutHints,
   useDropArea,
   useDragOverlay,
+  useZonePresentation,
+  useCardPresentation,
 } = createGameHook<unknown>()({
   features,
   debug: false,
