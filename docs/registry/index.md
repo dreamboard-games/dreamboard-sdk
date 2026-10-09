@@ -7,6 +7,7 @@ is separate from the locally verified installation workflow.
 - [card](card.md)
 - [playing-card](playing-card.md)
 - [pile](pile.md)
+- [zone-actions](zone-actions.md)
 - [square-grid](square-grid.md)
 - [seat](seat.md)
 - [resources](resources.md)
