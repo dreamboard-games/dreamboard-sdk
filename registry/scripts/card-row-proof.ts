@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 /** Mouse/touch positions, cancellation, cross-zone insertion and an empty row. */
 export async function proveCardRow(page: Page, touch: boolean) {
@@ -13,10 +13,8 @@ export async function proveCardRow(page: Page, touch: boolean) {
       ][]
     ).find(([id]) => id === zone)![1];
   const cdp = touch ? await page.context().newCDPSession(page) : null;
-  const carry = async (
-    card: import("@playwright/test").Locator,
-    to: { x: number; y: number },
-  ) => {
+  const carry = async (card: Locator, to: { x: number; y: number }) => {
+    await expect(card.locator("..")).toHaveCSS("transform", "none");
     const box = (await card.boundingBox())!;
     const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
     if (cdp)
@@ -104,10 +102,77 @@ export async function proveCardRow(page: Page, touch: boolean) {
   await expect(page.locator(".db-drag-overlay")).toHaveCount(0);
   const incoming = page.getByTestId("supply").locator("button[data-card]");
   const incomingId = await incoming.getAttribute("data-card");
-  const middle = (await row.locator(".db-card-row-card").nth(1).boundingBox())!;
-  await carry(incoming, { x: middle.x - 5, y: middle.y + 20 });
-  await expect(ghost).toBeVisible();
-  await release();
+  const proveIncoming = async (
+    destination: Locator,
+    source: Locator,
+    indices: number[],
+    commitLast: boolean,
+  ) => {
+    const existing = destination.locator("button[data-card]");
+    const count = await existing.count();
+    await expect(existing.first().locator("..")).toHaveCSS("transform", "none");
+    const width = (await existing.first().boundingBox())!.width;
+    // Allow one full card plus overlapping slots above the minimum pitch.
+    await destination.evaluate(
+      (element, { width, count }) => {
+        const style = getComputedStyle(element);
+        const slot = element.querySelector(".db-card-row-card")!;
+        const pitch =
+          parseFloat(getComputedStyle(slot).minWidth) +
+          parseFloat(style.columnGap) +
+          4;
+        element.style.flex = "none";
+        element.style.width = `${width + count * pitch + parseFloat(style.paddingLeft) * 2}px`;
+      },
+      { width, count },
+    );
+    for (const [attempt, index] of indices.entries()) {
+      const bounds = (await destination.boundingBox())!;
+      const padding = await destination.evaluate((element) =>
+        parseFloat(getComputedStyle(element).paddingLeft),
+      );
+      const step = (bounds.width - padding * 2 - width) / count;
+      const left = bounds.x + padding;
+      await carry(source, {
+        x: left + index * step + width / 2,
+        y: bounds.y + bounds.height / 2,
+      });
+      const opening = destination.locator(".db-card-row-insertion");
+      await expect(opening).toBeVisible();
+      await expect
+        .poll(() => destination.evaluate((element) => element.scrollWidth))
+        .toBeLessThanOrEqual(
+          await destination.evaluate((element) => element.clientWidth),
+        );
+      expect((await opening.boundingBox())!.width).toBeCloseTo(width, 0);
+      await expect
+        .poll(async () =>
+          Math.abs((await opening.boundingBox())!.x - left - index * step),
+        )
+        .toBeLessThan(2);
+      for (let cardIndex = 0; cardIndex < count; cardIndex++) {
+        const slotIndex = cardIndex < index ? cardIndex : cardIndex + 1;
+        await expect
+          .poll(async () => {
+            const box = (await existing.nth(cardIndex).boundingBox())!;
+            const preview = (await opening.boundingBox())!;
+            return Math.max(
+              Math.abs(box.x - left - slotIndex * step),
+              Math.abs(box.y - preview.y),
+            );
+          })
+          .toBeLessThan(2);
+      }
+      await release(!commitLast || attempt < indices.length - 1);
+      await expect(opening).toHaveCount(0);
+      await expect(page.locator(".db-drag-overlay")).toHaveCount(0);
+    }
+    await destination.evaluate((element) => {
+      element.style.flex = "";
+      element.style.width = "";
+    });
+  };
+  await proveIncoming(row, incoming, [0, 3, 1], true);
   await expect
     .poll(() => order())
     .toEqual([moved[0], incomingId, moved[1], moved[2]]);
@@ -123,6 +188,8 @@ export async function proveCardRow(page: Page, touch: boolean) {
   await release();
   await expect.poll(() => order("empty")).toEqual([moved[0]]);
   await expect(page.locator(".db-drag-overlay")).toHaveCount(0);
+  await proveIncoming(empty, cards.last(), [0, 1], false);
+  expect(await order("empty")).toEqual([moved[0]]);
   // A constrained route without a position input reaches the surrounding area.
   await page.getByRole("button", { name: "Toggle whole-zone moves" }).click();
   const supply = page.getByTestId("supply");

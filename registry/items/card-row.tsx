@@ -132,7 +132,9 @@ export function CardRow({
       {order.map((card, index) => (
         <Fragment key={card.id}>
           {from < 0 && ghost === index ? (
-            <div className="db-card-row-insertion" aria-hidden />
+            <div className="db-card-row-card" aria-hidden>
+              <div className="db-card-row-insertion" />
+            </div>
           ) : null}
           <div className="db-card-row-card">
             {renderCard(card, arrivingIds.includes(card.id))}
@@ -143,7 +145,9 @@ export function CardRow({
         </Fragment>
       ))}
       {from < 0 && ghost === cards.length ? (
-        <div className="db-card-row-insertion" aria-hidden />
+        <div className="db-card-row-card" aria-hidden>
+          <div className="db-card-row-insertion" />
+        </div>
       ) : null}
     </div>
   );

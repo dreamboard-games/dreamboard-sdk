@@ -10,9 +10,8 @@
     overflow-x: auto;
     padding: 0.375rem;
   }
-  /* Slots shrink evenly and their cards overflow onto the next one, so a
-     crowded row overlaps to fit. The last card and an opening keep a whole
-     card's width. */
+  /* Card and incoming-opening slots shrink evenly. Their contents overflow
+     onto the next slot; only the last slot keeps a whole card's width. */
   .db-card-row-card {
     position: relative;
     flex: 0 1 var(--card-w);
@@ -40,7 +39,7 @@
     background: color-mix(in srgb, var(--brand) 18%, transparent);
     pointer-events: none;
   }
-  .db-card-row-card > .db-card-row-insertion {
+  .db-card-row-card > .db-card-row-insertion:not(:only-child) {
     position: absolute;
     top: 0;
     left: 0;
