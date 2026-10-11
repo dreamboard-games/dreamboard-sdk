@@ -5,6 +5,9 @@ pnpm dlx shadcn@4.21.0 add @dreamboard/card-row
 ```
 
 An ordered horizontal row with insertion previews. Copied source owned by the game.
+A crowded row overlaps its cards evenly to fit its width, like a hand, so every
+card stays on screen; it scrolls only once each covered card is down to its
+slot's `min-width`.
 
 ```tsx
 <CardRow
@@ -38,7 +41,8 @@ authored interaction. A group drag without an eligible position input can fall
 through to an enclosing `DropArea` bound to the game's group move.
 
 The row uses one `--card-w` and `--card-aspect` for its cards. Customize those
-variables, gap and padding; keep its single horizontal, centred flex layout for
-position hit testing. Normal div props and `ref` support authored selection and
+variables, gap, padding and the card slot's `min-width`; keep its single
+horizontal, centred flex layout, where card slots shrink evenly and the last
+keeps a whole card, for position hit testing. Normal div props and `ref` support authored selection and
 accessibility. The component includes `data-zone` and `data-zone-host` for landing
 geometry. Styling lives in the copied `card-row.css`.

@@ -10,9 +10,20 @@
     overflow-x: auto;
     padding: 0.375rem;
   }
+  /* Slots shrink evenly and their cards overflow onto the next one, so a
+     crowded row overlaps to fit. The last card and an opening keep a whole
+     card's width. */
   .db-card-row-card {
     position: relative;
-    flex: none;
+    flex: 0 1 var(--card-w);
+    min-width: 1rem;
+  }
+  .db-card-row-card:last-child {
+    flex-shrink: 0;
+  }
+  /* An overlapped card comes forward to be read. */
+  .db-card-row-card:is(:hover, :focus-within) {
+    z-index: 1;
   }
   .db-card-row-probe {
     position: absolute;
@@ -31,7 +42,8 @@
   }
   .db-card-row-card > .db-card-row-insertion {
     position: absolute;
-    inset: 0;
+    top: 0;
+    left: 0;
   }
   .db-card-row:has(> .db-card-row-probe:only-child)::before {
     content: "";

@@ -61,6 +61,30 @@ export async function proveCardRow(page: Page, touch: boolean) {
     }
   };
   await expect(cards).toHaveCount(3);
+  // A narrow row overlaps its cards to fit rather than scrolling.
+  const card = (await cards.first().boundingBox())!.width;
+  const padding = await row.evaluate(
+    (element) => parseFloat(getComputedStyle(element).paddingLeft) * 2,
+  );
+  await row.evaluate(
+    (element, width) => {
+      element.style.flex = "none";
+      element.style.width = `${width}px`;
+    },
+    card * 2 + padding,
+  );
+  await expect
+    .poll(() => row.evaluate((element) => element.scrollWidth))
+    .toBeLessThanOrEqual(await row.evaluate((element) => element.clientWidth));
+  const [left, right] = [
+    (await cards.nth(0).boundingBox())!,
+    (await cards.nth(1).boundingBox())!,
+  ];
+  expect(right.x).toBeLessThan(left.x + left.width);
+  await row.evaluate((element) => {
+    element.style.flex = "";
+    element.style.width = "";
+  });
   const before = await order();
   const end = (await cards.last().boundingBox())!;
   await carry(cards.first(), { x: end.x + end.width / 2, y: end.y + 20 });

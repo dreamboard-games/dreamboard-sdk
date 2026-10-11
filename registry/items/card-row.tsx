@@ -29,7 +29,10 @@ export type CardRowProps = Omit<ComponentProps<"div">, "children"> & {
   renderCard(card: GameCard, arriving: boolean): ReactNode;
 };
 
-/** An ordered, horizontally scrolling row with position-aware drop previews. */
+/**
+ * An ordered row with position-aware drop previews. Cards overlap to fit its
+ * width; once each covered card shows only its slot's min-width, it scrolls.
+ */
 export function CardRow({
   zoneId,
   hostId,
@@ -85,16 +88,25 @@ export function CardRow({
           const spacing = parseFloat(style.columnGap);
           const padding = parseFloat(style.paddingLeft);
           const count = cards.length + (from < 0 ? 1 : 0);
-          const total = count * width + Math.max(0, count - 1) * spacing;
+          // The slot pitch card-row.css settles on: whole cards when they fit,
+          // otherwise an even overlap, never below a slot's min-width.
+          const slot = element.querySelector(".db-card-row-card");
+          const fewest = slot ? parseFloat(getComputedStyle(slot).minWidth) : 0;
+          const room = element.clientWidth - padding * 2;
+          const step =
+            count > 1
+              ? Math.max(
+                  fewest + spacing,
+                  Math.min(width + spacing, (room - width) / (count - 1)),
+                )
+              : width + spacing;
+          const total = width + Math.max(0, count - 1) * step;
           const inset = Math.max(padding, (element.clientWidth - total) / 2);
           const at =
             x - element.getBoundingClientRect().left + element.scrollLeft;
           const nearest = Math.max(
             0,
-            Math.min(
-              count - 1,
-              Math.round((at - inset - width / 2) / (width + spacing)),
-            ),
+            Math.min(count - 1, Math.round((at - inset - width / 2) / step)),
           );
           return {
             ...reorder,
