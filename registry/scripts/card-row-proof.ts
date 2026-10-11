@@ -108,25 +108,27 @@ export async function proveCardRow(page: Page, touch: boolean) {
     source: Locator,
     indices: number[],
     commitLast: boolean,
+    tight = false,
   ) => {
     const existing = destination.locator("button[data-card]");
     const count = await existing.count();
     await expect(existing.first().locator("..")).toHaveCSS("transform", "none");
     const width = (await existing.first().boundingBox())!.width;
-    // Allow one full card plus overlapping slots above the minimum pitch.
+    // The tight case fits existing cards but needs smaller slots for an arrival.
     await destination.evaluate(
-      (element, { width, count }) => {
+      (element, { width, count, tight }) => {
         const style = getComputedStyle(element);
         const slot = element.querySelector(".db-card-row-card")!;
         const pitch =
           parseFloat(getComputedStyle(slot).minWidth) +
-          parseFloat(style.columnGap) +
-          4;
+          parseFloat(style.columnGap);
         element.style.flex = "none";
-        element.style.width = `${width + count * pitch + parseFloat(style.paddingLeft) * 2}px`;
+        const slots = tight ? (count - 1) * pitch + 4 : count * (pitch + 4);
+        element.style.width = `${width + slots + parseFloat(style.paddingLeft) * 2}px`;
       },
-      { width, count },
+      { width, count, tight },
     );
+    await expect(destination).not.toHaveAttribute("data-crowded");
     for (const [attempt, index] of indices.entries()) {
       const bounds = (await destination.boundingBox())!;
       const padding = await destination.evaluate((element) =>
@@ -140,6 +142,8 @@ export async function proveCardRow(page: Page, touch: boolean) {
       });
       const opening = destination.locator(".db-card-row-insertion");
       await expect(opening).toBeVisible();
+      if (tight)
+        await expect(destination).toHaveAttribute("data-crowded", "true");
       await expect
         .poll(() =>
           destination.evaluate(
@@ -176,12 +180,15 @@ export async function proveCardRow(page: Page, touch: boolean) {
       await release(!commitLast || attempt < indices.length - 1);
       await expect(opening).toHaveCount(0);
       await expect(page.locator(".db-drag-overlay")).toHaveCount(0);
+      if (tight && !commitLast)
+        await expect(destination).not.toHaveAttribute("data-crowded");
     }
     await destination.evaluate((element) => {
       element.style.flex = "";
       element.style.width = "";
     });
   };
+  await proveIncoming(row, incoming, [0, 3, 1], false, true);
   await proveIncoming(row, incoming, [0, 3, 1], true);
   await expect
     .poll(() => order())

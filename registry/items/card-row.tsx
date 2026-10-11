@@ -55,26 +55,6 @@ export function CardRow({
   const overlay = useDragOverlay();
   const browsing = useCardBrowsing();
   const [crowded, setCrowded] = useState(false);
-  useLayoutEffect(() => {
-    const element = row.current!;
-    const measure = () => {
-      const style = getComputedStyle(element);
-      const slot = element.querySelector<HTMLElement>(".db-card-row-card");
-      const minimum = parseFloat(getComputedStyle(probe.current!).minWidth);
-      const needed =
-        probe.current!.offsetWidth +
-        Math.max(0, cards.length - 1) *
-          (minimum + parseFloat(style.columnGap)) +
-        parseFloat(style.paddingLeft) +
-        parseFloat(style.paddingRight);
-      setCrowded(!!slot && needed > element.clientWidth);
-    };
-    const observer = new ResizeObserver(measure);
-    observer.observe(element);
-    observer.observe(probe.current!);
-    measure();
-    return () => observer.disconnect();
-  }, [cards.length]);
   const sliding = useCardRow(({ x, y }) => {
     const element = row.current!;
     const box = element.getBoundingClientRect();
@@ -122,6 +102,26 @@ export function CardRow({
       : null;
   const from = cards.findIndex((card) => card.id === overlay?.cardId);
   const ghost = gap === null ? -1 : from >= 0 && gap > from ? gap - 1 : gap;
+  const slotCount = cards.length + (gap !== null && from < 0 ? 1 : 0);
+  useLayoutEffect(() => {
+    const element = row.current!;
+    const measure = () => {
+      const style = getComputedStyle(element);
+      const slot = element.querySelector<HTMLElement>(".db-card-row-card");
+      const minimum = parseFloat(getComputedStyle(probe.current!).minWidth);
+      const needed =
+        probe.current!.offsetWidth +
+        Math.max(0, slotCount - 1) * (minimum + parseFloat(style.columnGap)) +
+        parseFloat(style.paddingLeft) +
+        parseFloat(style.paddingRight);
+      setCrowded(!!slot && needed > element.clientWidth);
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    observer.observe(probe.current!);
+    measure();
+    return () => observer.disconnect();
+  }, [slotCount]);
   const order = [...cards];
   if (gap !== null && from >= 0) {
     order.splice(ghost, 0, ...order.splice(from, 1));
