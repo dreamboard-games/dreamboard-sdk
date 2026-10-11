@@ -15,6 +15,7 @@ export async function proveCardRow(page: Page, touch: boolean) {
   const cdp = touch ? await page.context().newCDPSession(page) : null;
   const carry = async (card: Locator, to: { x: number; y: number }) => {
     await expect(card.locator("..")).toHaveCSS("transform", "none");
+    await card.click({ trial: true });
     const box = (await card.boundingBox())!;
     const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
     if (cdp)
