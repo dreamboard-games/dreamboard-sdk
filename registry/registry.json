@@ -291,7 +291,8 @@
       "registryDependencies": [
         "@dreamboard/card",
         "@dreamboard/card-actions",
-        "@dreamboard/card-preview"
+        "@dreamboard/card-preview",
+        "@dreamboard/card-browsing"
       ],
       "dependencies": ["motion@13.5.0"]
     },
@@ -316,7 +317,10 @@
           "target": "@components/dreamboard/card-row.css"
         }
       ],
-      "registryDependencies": ["@dreamboard/tokens"]
+      "registryDependencies": [
+        "@dreamboard/tokens",
+        "@dreamboard/card-browsing"
+      ]
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",
@@ -337,18 +341,14 @@
           "path": "items/card-arrival.tsx",
           "type": "registry:component",
           "target": "@components/dreamboard/card-arrival.tsx"
-        },
-        {
-          "path": "items/hand-sheet.tsx",
-          "type": "registry:component",
-          "target": "@components/dreamboard/hand-sheet.tsx"
         }
       ],
       "registryDependencies": [
         "@dreamboard/tokens",
         "@dreamboard/card",
         "@dreamboard/game-provider",
-        "@dreamboard/card-control"
+        "@dreamboard/card-control",
+        "@dreamboard/card-browsing"
       ],
       "dependencies": ["@base-ui/react@^1.8.0", "motion@13.5.0"]
     },
@@ -637,6 +637,25 @@
         "button"
       ],
       "dependencies": ["@base-ui/react@^1.8.0", "motion@13.5.0"]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "card-browsing",
+      "type": "registry:component",
+      "title": "Card Browsing",
+      "description": "Shared touch positioning and an explicit card browser for hands and rows.",
+      "meta": {
+        "binding": "workspace"
+      },
+      "dependencies": ["@base-ui/react@^1.8.0", "@floating-ui/dom@1.8.0"],
+      "registryDependencies": ["@dreamboard/tokens"],
+      "files": [
+        {
+          "path": "items/card-browsing.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/card-browsing.tsx"
+        }
+      ]
     }
   ]
 }

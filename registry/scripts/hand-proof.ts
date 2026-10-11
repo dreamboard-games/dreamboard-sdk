@@ -112,13 +112,13 @@ export async function proveHand(page: Page, touch: boolean) {
       type: "touchStart",
       touchPoints: [{ ...at, id: 1 }],
     });
-    await expect(page.locator('[data-card-preview="hold"]')).toBeVisible();
+    await expect(page.locator("[data-touch-preview]")).toBeVisible();
     await cdp.send("Input.dispatchTouchEvent", {
       type: "touchEnd",
       touchPoints: [],
     });
     await cdp.detach();
-    await expect(page.locator('[data-card-preview="hold"]')).toHaveCount(0);
+    await expect(page.locator("[data-touch-preview]")).toHaveCount(0);
   } else {
     await page.mouse.move(at.x, at.y);
     await page.keyboard.down("Alt");
@@ -312,7 +312,7 @@ export async function proveCrowdedHand(
 ) {
   const hand = page.getByRole("region", { name: "Your hand" });
   const faces = hand.locator(".db-hand-card");
-  const open = hand.getByRole("button", { name: "Your hand: 24 cards" });
+  const open = hand.getByRole("button", { name: "Browse 24 cards" });
   await expect(faces).toHaveCount(24);
   await page.waitForTimeout(650);
   const bounds = (await hand.boundingBox())!;
@@ -322,11 +322,11 @@ export async function proveCrowdedHand(
     expect(box.x + box.width).toBeLessThanOrEqual(bounds.x + bounds.width + 1);
   }
   if (!crowded) {
-    await expect(open).toHaveCount(0);
-    await expect(hand.getByRole("button")).toHaveCount(24);
+    await expect(open).toBeVisible();
+    await expect(hand.getByRole("button")).toHaveCount(25);
     return;
   }
-  // Too thin to aim at, the hand is one button.
+  // Too thin to aim at, Browse is the hand's only button.
   await expect(hand.getByRole("button")).toHaveCount(1);
   const activate = (locator: Locator) =>
     touch ? locator.tap() : locator.click();
@@ -340,6 +340,7 @@ export async function proveCrowdedHand(
 
   // A held card previews once, above the sheet.
   if (touch) {
+    await cards.nth(4).scrollIntoViewIfNeeded();
     const box = (await cards.nth(4).boundingBox())!;
     const at = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
     const cdp = await page.context().newCDPSession(page);
@@ -348,6 +349,7 @@ export async function proveCrowdedHand(
       touchPoints: [{ ...at, id: 1 }],
     });
     await expect(page.locator('[data-card-preview="hold"]')).toHaveCount(1);
+    await expect(page.locator("[data-touch-preview]")).toHaveCount(0);
     await cdp.send("Input.dispatchTouchEvent", {
       type: "touchEnd",
       touchPoints: [],
@@ -359,6 +361,7 @@ export async function proveCrowdedHand(
   // Choosing an action closes the sheet so the table shows the move.
   const spade = cards.and(page.locator('[data-value^="spades-"]')).first();
   const spadeId = (await spade.getAttribute("data-value"))!;
+  await spade.scrollIntoViewIfNeeded();
   await activate(spade);
   const actions = page.locator('[data-action="card-action"]');
   await expect(actions).toHaveText(["Play", "Discard"]);
@@ -371,7 +374,7 @@ export async function proveCrowdedHand(
       ),
     )
     .toContainEqual(["discard", [spadeId]]);
-  const reopen = hand.getByRole("button", { name: "Your hand: 23 cards" });
+  const reopen = hand.getByRole("button", { name: "Browse 23 cards" });
   await expect(reopen).toBeVisible();
   await activate(reopen);
   await activate(page.getByRole("button", { name: "Done" }));

@@ -1,4 +1,5 @@
 import {
+  useCardRow,
   useDragOverlay,
   useDropArea,
   useGame,
@@ -9,10 +10,13 @@ import {
 import {
   Fragment,
   useImperativeHandle,
+  useLayoutEffect,
+  useState,
   useRef,
   type ComponentProps,
   type ReactNode,
 } from "react";
+import { CardBrowser, useCardBrowsing } from "./card-browsing";
 import "./tokens.css";
 import "./card-row.css";
 
@@ -23,6 +27,7 @@ type PositionBinding = Extract<
 export type CardRowProps = Omit<ComponentProps<"div">, "children"> & {
   zoneId: ZoneId;
   hostId: GameCard["hostId"];
+  label?: string;
   /** The authored card/position interaction. Omit for a display-only row. */
   reorder?: Pick<PositionBinding, "interaction" | "input">;
   /** Render the card control, including the game's selection and drag policy. */
@@ -31,11 +36,12 @@ export type CardRowProps = Omit<ComponentProps<"div">, "children"> & {
 
 /**
  * An ordered row with position-aware drop previews. Cards overlap to fit its
- * width; once each covered card shows only its slot's min-width, it scrolls.
+ * width; a row too crowded to target exposes its cards through Browse.
  */
 export function CardRow({
   zoneId,
   hostId,
+  label = "Cards",
   reorder,
   renderCard,
   className = "",
@@ -47,6 +53,48 @@ export function CardRow({
   useImperativeHandle(ref, () => row.current!, []);
   const { cards, arrivingIds } = useZonePresentation(zoneId, hostId);
   const overlay = useDragOverlay();
+  const browsing = useCardBrowsing();
+  const [crowded, setCrowded] = useState(false);
+  useLayoutEffect(() => {
+    const element = row.current!;
+    const measure = () => {
+      const style = getComputedStyle(element);
+      const slot = element.querySelector<HTMLElement>(".db-card-row-card");
+      const minimum = parseFloat(getComputedStyle(probe.current!).minWidth);
+      const needed =
+        probe.current!.offsetWidth +
+        Math.max(0, cards.length - 1) *
+          (minimum + parseFloat(style.columnGap)) +
+        parseFloat(style.paddingLeft) +
+        parseFloat(style.paddingRight);
+      setCrowded(!!slot && needed > element.clientWidth);
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    observer.observe(probe.current!);
+    measure();
+    return () => observer.disconnect();
+  }, [cards.length]);
+  const sliding = useCardRow(({ x, y }) => {
+    const element = row.current!;
+    const box = element.getBoundingClientRect();
+    if (
+      crowded ||
+      x < box.left ||
+      x > box.right ||
+      y < box.top ||
+      y > box.bottom
+    )
+      return null;
+    const slots = [
+      ...element.querySelectorAll<HTMLElement>(
+        ".db-card-row-card[data-row-card]",
+      ),
+    ];
+    const index =
+      slots.filter((slot) => slot.getBoundingClientRect().left <= x).length - 1;
+    return cards[Math.max(0, index)]?.id ?? null;
+  });
   const eligible = useGame(
     (game) =>
       !!reorder &&
@@ -120,35 +168,62 @@ export function CardRow({
       : null,
   );
   return (
-    <div
-      {...props}
-      {...(eligible ? area.props : {})}
-      ref={row}
-      className={`db-card-row ${className}`}
-      data-zone={zoneId}
-      data-zone-host={hostId}
-    >
-      <span ref={probe} className="db-card-row-probe" aria-hidden />
-      {order.map((card, index) => (
-        <Fragment key={card.id}>
-          {from < 0 && ghost === index ? (
+    <div className="db-card-row-group">
+      <CardBrowser
+        session={browsing.session}
+        count={cards.length}
+        label={label}
+        renderCards={() =>
+          cards.map((card) => (
+            <Fragment key={card.id}>
+              {renderCard(card, arrivingIds.includes(card.id))}
+            </Fragment>
+          ))
+        }
+      >
+        <div
+          {...props}
+          {...sliding.props}
+          data-card-browsing={browsing.props["data-card-browsing"]}
+          onPointerDownCapture={(event) => {
+            props.onPointerDownCapture?.(event);
+            browsing.props.onPointerDownCapture(event);
+          }}
+          style={{ ...props.style, ...sliding.props.style }}
+          {...(eligible ? area.props : {})}
+          ref={row}
+          data-crowded={crowded || undefined}
+          className={`db-card-row ${className}`}
+          data-zone={zoneId}
+          data-zone-host={hostId}
+        >
+          <span ref={probe} className="db-card-row-probe" aria-hidden />
+          {order.map((card, index) => (
+            <Fragment key={card.id}>
+              {from < 0 && ghost === index ? (
+                <div className="db-card-row-card" aria-hidden>
+                  <div className="db-card-row-insertion" />
+                </div>
+              ) : null}
+              <div
+                className="db-card-row-card"
+                data-row-card={card.id}
+                inert={crowded}
+              >
+                {renderCard(card, arrivingIds.includes(card.id))}
+                {from >= 0 && ghost === index ? (
+                  <div className="db-card-row-insertion" aria-hidden />
+                ) : null}
+              </div>
+            </Fragment>
+          ))}
+          {from < 0 && ghost === cards.length ? (
             <div className="db-card-row-card" aria-hidden>
               <div className="db-card-row-insertion" />
             </div>
           ) : null}
-          <div className="db-card-row-card">
-            {renderCard(card, arrivingIds.includes(card.id))}
-            {from >= 0 && ghost === index ? (
-              <div className="db-card-row-insertion" aria-hidden />
-            ) : null}
-          </div>
-        </Fragment>
-      ))}
-      {from < 0 && ghost === cards.length ? (
-        <div className="db-card-row-card" aria-hidden>
-          <div className="db-card-row-insertion" />
         </div>
-      ) : null}
+      </CardBrowser>
     </div>
   );
 }
