@@ -141,29 +141,38 @@ export async function proveCardRow(page: Page, touch: boolean) {
       const opening = destination.locator(".db-card-row-insertion");
       await expect(opening).toBeVisible();
       await expect
+        .poll(() =>
+          destination.evaluate(
+            (element, { left, index, step, width }) => {
+              const opening = element.querySelector(".db-card-row-insertion");
+              if (!opening) return Infinity;
+              const preview = opening.getBoundingClientRect();
+              const errors = [
+                Math.abs(preview.width - width),
+                Math.abs(preview.x - left - index * step),
+              ];
+              element
+                .querySelectorAll("button[data-card]")
+                .forEach((card, cardIndex) => {
+                  const slotIndex =
+                    cardIndex < index ? cardIndex : cardIndex + 1;
+                  const box = card.getBoundingClientRect();
+                  errors.push(
+                    Math.abs(box.x - left - slotIndex * step),
+                    Math.abs(box.y - preview.y),
+                  );
+                });
+              return Math.max(...errors);
+            },
+            { left, index, step, width },
+          ),
+        )
+        .toBeLessThan(2);
+      await expect
         .poll(() => destination.evaluate((element) => element.scrollWidth))
         .toBeLessThanOrEqual(
           await destination.evaluate((element) => element.clientWidth),
         );
-      expect((await opening.boundingBox())!.width).toBeCloseTo(width, 0);
-      await expect
-        .poll(async () =>
-          Math.abs((await opening.boundingBox())!.x - left - index * step),
-        )
-        .toBeLessThan(2);
-      for (let cardIndex = 0; cardIndex < count; cardIndex++) {
-        const slotIndex = cardIndex < index ? cardIndex : cardIndex + 1;
-        await expect
-          .poll(async () => {
-            const box = (await existing.nth(cardIndex).boundingBox())!;
-            const preview = (await opening.boundingBox())!;
-            return Math.max(
-              Math.abs(box.x - left - slotIndex * step),
-              Math.abs(box.y - preview.y),
-            );
-          })
-          .toBeLessThan(2);
-      }
       await release(!commitLast || attempt < indices.length - 1);
       await expect(opening).toHaveCount(0);
       await expect(page.locator(".db-drag-overlay")).toHaveCount(0);
