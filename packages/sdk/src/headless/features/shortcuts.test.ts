@@ -105,6 +105,20 @@ test("unconfigured is inert; eligible authored draw count submits one atomic pay
   expect(game.shortcuts.handle("3", target)).toBeNull();
   game.dispose();
 });
+test("touch activity hides hints without disabling the keys", async () => {
+  const { source, game } = setup();
+  game.shortcuts.register(options);
+  const touch = { focusedTarget: null, pointerActive: false, touch: true };
+  expect(game.shortcuts.getHints(target, touch)).toEqual([]);
+  expect(
+    game.shortcuts.getHints(target, { ...touch, touch: false }),
+  ).toHaveLength(1);
+  const pending = game.shortcuts.handle("3", target, touch)!;
+  expect(source.submissions[0].params).toEqual({ count: 3 });
+  source.submissions[0].resolve({ accepted: true });
+  await pending;
+  game.dispose();
+});
 test("atomic submit validates the projected domain without mutating drafts; stale handles cannot act on a new source", async () => {
   const { source, game } = setup();
   const action = game.interactions.get("play.draw");
@@ -270,7 +284,11 @@ test("local callbacks are focus-only, pure for hints, independent of turns and r
   const registration = game.shortcuts.register({
     bindings: [...options.bindings, local],
   });
-  const activity = { focusedTarget: target, pointerActive: false };
+  const activity = {
+    focusedTarget: target,
+    pointerActive: false,
+    touch: false,
+  };
   expect(game.shortcuts.handle("s", target)).toBeNull();
   expect(
     game.shortcuts.handle("s", target, { ...activity, focusedTarget: null }),
@@ -379,7 +397,7 @@ test("focused cards resolve their own current containing zone and host without w
     ],
   });
   const card = { kind: "card" as const, value: hidden };
-  const activity = { focusedTarget: card, pointerActive: false };
+  const activity = { focusedTarget: card, pointerActive: false, touch: false };
   expect(await game.shortcuts.handle("s", target, activity)).toEqual({
     kind: "local",
   });
@@ -422,7 +440,11 @@ test("collisions across local and interaction variants suppress behavior and hin
   const registration = game.shortcuts.register({
     bindings: [...options.bindings, local],
   });
-  const activity = { focusedTarget: target, pointerActive: false };
+  const activity = {
+    focusedTarget: target,
+    pointerActive: false,
+    touch: false,
+  };
   expect(game.shortcuts.handle("3", target, activity)).toBeNull();
   expect(game.shortcuts.getHints(target, activity)).toEqual([
     {

@@ -118,6 +118,8 @@ export interface ShortcutActivity<G> {
   readonly focusedTarget: ShortcutTarget<G> | null;
   /** Card press, drag, or submitted drag overlay still settling. */
   readonly pointerActive: boolean;
+  /** The latest press was a finger, so there are no keys to show. */
+  readonly touch: boolean;
 }
 export interface ShortcutsController<G> {
   /** UI binding configuration has its own subscription, independent of reducer frames. */
@@ -308,6 +310,8 @@ export function shortcutsFeature<G>(
       }
     },
     getHints(target, activity) {
+      // Keys still work after a tap; only their hints wait for a key or mouse.
+      if (activity?.touch) return [];
       const eligible = bindings().map((binding) => ({
         binding,
         keys: binding.keys.filter((key) =>

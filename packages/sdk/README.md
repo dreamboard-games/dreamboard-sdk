@@ -471,9 +471,11 @@ also be pure. `game.shortcuts.getHints(target, activity)` returns only
 currently usable, unambiguous keys with their labels and `kind`. Interaction
 hints also carry their typed interaction name; local hints do not. Both variants
 share key collision handling. Headless callers supply local focus explicitly as
-`activity: { focusedTarget, pointerActive }`; omitting activity admits only
-interaction bindings. `useShortcutHints(target)` reads those hints reactively
-and returns no hints when the feature is absent. The mounted
+`activity: { focusedTarget, pointerActive, touch }`; omitting activity admits
+only interaction bindings. Hints are empty while `touch` is true. The mounted
+hooks set it when the latest press was a finger and clear it on the next key or
+mouse press; the keys themselves keep working. `useShortcutHints(target)` reads
+those hints reactively and returns no hints when the feature is absent. The mounted
 `useGameShortcuts` hook returns `{ target, hints }` for a reserved help/status
 area. Rejected actions and transport failures use the binding's existing
 `onError` handler; callbacks from an old source, seat, or unmounted child are

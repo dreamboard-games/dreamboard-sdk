@@ -53,6 +53,8 @@ export interface GestureState {
   readonly activeTarget: RuntimeShortcutTarget | null;
   readonly focusedTarget: RuntimeShortcutTarget | null;
   readonly pointerActive: boolean;
+  /** The latest press was a finger; a key or mouse press clears it. */
+  readonly touch: boolean;
   readonly drag: {
     readonly cardId: string;
     readonly cardIds: readonly string[];
@@ -294,6 +296,7 @@ export function createGestureSession(game: GestureGame) {
     activeTarget: null,
     focusedTarget: null,
     pointerActive: false,
+    touch: false,
     drag: null,
     inspect: null,
   });
@@ -728,7 +731,13 @@ export function createGestureSession(game: GestureGame) {
     alt = event.altKey;
     hoverAt({ x: event.clientX, y: event.clientY });
   };
+  // Every press counts, including controls that open their own menus.
+  const pointerDown = (event: globalThis.PointerEvent) => {
+    const touch = event.pointerType === "touch";
+    if (store.get().touch !== touch) set({ touch });
+  };
   const key = (event: KeyboardEvent) => {
+    if (store.get().touch) set({ touch: false });
     if (event.key === "Escape") {
       press?.recognizer.cancel();
       alt = false;
@@ -746,6 +755,7 @@ export function createGestureSession(game: GestureGame) {
     domFocused = null;
     set({ activeTarget: null, inspect: null });
   };
+  addEventListener("pointerdown", pointerDown, true);
   addEventListener("keydown", key);
   addEventListener("keyup", key);
   addEventListener("blur", loseFocus);
@@ -1046,6 +1056,7 @@ export function createGestureSession(game: GestureGame) {
         ? domFocused
         : null,
       pointerActive: store.get().pointerActive,
+      touch: store.get().touch,
     }),
     registerTarget(targetId: string, read: () => RuntimeShortcutTarget) {
       const target = read();
@@ -1120,6 +1131,7 @@ export function createGestureSession(game: GestureGame) {
       cancelAnimationFrame(frame);
       announcer?.remove();
       clearHover();
+      removeEventListener("pointerdown", pointerDown, true);
       removeEventListener("keydown", key);
       removeEventListener("keyup", key);
       removeEventListener("blur", loseFocus);
