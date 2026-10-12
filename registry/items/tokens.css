@@ -397,7 +397,7 @@
 }
 
 @layer components {
-  /* A hand's fan always fits it; a crowded hand opens as a sheet instead. */
+  /* A hand's fan always fits it; Browse opens every card in a sheet. */
   .db-hand {
     position: relative;
     isolation: isolate;

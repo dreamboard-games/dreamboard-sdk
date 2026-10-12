@@ -36,7 +36,8 @@ export type CardRowProps = Omit<ComponentProps<"div">, "children"> & {
 
 /**
  * An ordered row with position-aware drop previews. Cards overlap to fit its
- * width; a row too crowded to target exposes its cards through Browse.
+ * width and keep their gestures however thin they get; Browse opens every
+ * card in a sheet.
  */
 export function CardRow({
   zoneId,
@@ -59,13 +60,7 @@ export function CardRow({
   const sliding = useCardRow(({ x, y }) => {
     const element = row.current!;
     const box = element.getBoundingClientRect();
-    if (
-      crowded ||
-      x < box.left ||
-      x > box.right ||
-      y < box.top ||
-      y > box.bottom
-    )
+    if (x < box.left || x > box.right || y < box.top || y > box.bottom)
       return null;
     const slots = [
       ...element.querySelectorAll<HTMLElement>(
@@ -213,11 +208,7 @@ export function CardRow({
                   <div className="db-card-row-insertion" />
                 </div>
               ) : null}
-              <div
-                className="db-card-row-card"
-                data-row-card={card.id}
-                inert={crowded}
-              >
+              <div className="db-card-row-card" data-row-card={card.id}>
                 {renderCard(card, arrivingIds.includes(card.id))}
                 {from >= 0 && ghost === index ? (
                   <div className="db-card-row-insertion" aria-hidden />

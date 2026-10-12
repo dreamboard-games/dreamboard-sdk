@@ -238,8 +238,8 @@ export async function proveHandChoreography(
     await cards.nth(2).blur();
   }
 
-  // Crowding inside a transformed authored layout still fits the hand, which
-  // becomes one button that opens every card in a sheet.
+  // Crowding inside a transformed authored layout still fits the hand, keeps
+  // every card a button, and Browse opens them all in a sheet.
   await hand.evaluate((element) =>
     Object.assign((element as HTMLElement).style, {
       width: "260px",
@@ -248,7 +248,7 @@ export async function proveHandChoreography(
   );
   const open = hand.getByRole("button", { name: "Browse 9 cards" });
   await expect(open).toBeVisible();
-  await expect(hand.getByRole("button")).toHaveCount(1);
+  await expect(hand.locator("button.db-hand-card")).toHaveCount(9);
   await page.waitForTimeout(650);
   const fan = (await clip.boundingBox())!;
   for (const card of await cards.all()) {
@@ -263,7 +263,7 @@ export async function proveHandChoreography(
   await page.screenshot({ path: `${capturePrefix}-sheet.png` });
   await page.keyboard.press("Escape");
   await expect(sheet).toHaveCount(0);
-  // A narrow hand with room to aim keeps its cards.
+  // A wider hand keeps them too.
   await hand.evaluate((element) => {
     (element as HTMLElement).style.width = "340px";
   });
