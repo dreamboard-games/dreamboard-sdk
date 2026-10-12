@@ -56,6 +56,10 @@ import { Pile } from "@/components/dreamboard/pile";
 highlight. Games supply the menu contents and keep local presentation state such
 as Spread/Gather. See [zone actions](../docs/registry/zone-actions.md).
 
+`CardPile` presents a bound top-first pile, reveals the next face during pickup,
+and preserves the lifted control through cancellation. The game supplies its
+controls and move rules. See [card pile](../docs/registry/card-pile.md).
+
 ## Component boundaries
 
 | Item           | Supplied data / composition                                                                                                          |
@@ -85,7 +89,7 @@ Registry metadata follows the official [registry.json](https://ui.shadcn.com/doc
 
 ## Workspace-bound items
 
-`hand`, `card-row`, `card-browsing`, `hand-drawer`, `draw-pile`, `game-provider`, `card-actions`, `drop-area`, `turn-banner`,
+`hand`, `card-row`, `card-pile`, `card-browsing`, `hand-drawer`, `draw-pile`, `game-provider`, `card-actions`, `drop-area`, `turn-banner`,
 `board-targets`, `interaction-form`, `actions` and `inspector` import the consuming game's
 `useGame` from `@game`. Map `@game` directly to `ui/game.ts` in TypeScript and Vite, retain `@/*` for other UI imports, and export bound canonical `GameModel`, `GameCard`, `CardId`, `ZoneId`, `InteractionKey` and `CardDrag` types alongside `useGame`, `useCardGesture`, `useCardRow`, `useActiveCard`, `useDropArea`, `useDragOverlay`, `useZonePresentation`, `useCardPresentation`, `useShortcutTarget` and `useShortcutHints` from your `createGameHook` binding there. For card UI, export the SDK provider as `SDKGameProvider` and re-export `GameProvider` from the installed `dreamboard/game-provider` component. That UI provider includes internal card motion, so hands, pile gestures and card destinations share draw release hints and respect reduced motion. Application code needs only `<GameProvider source={source}>`; see [provider binding](../docs/registry/game-provider.md). `DrawPile` composes `Pile`, takes a source zone, a destination hand zone and a game-authored interaction key and optional typed `params`, ready from these explicit values, its draft or defaults. Tap opens its action menu; dropping its face-down copy into the hand submits that same interaction. A cancelled drop submits nothing, and pending draws stay face down until the authoritative frame arrives. Enable `dragFeature` for `board-targets` and card dragging, and `originsFeature` for `hand`; a hand still taps and previews when no card can drag. Items provide behavior and pieces, never a table layout: each game arranges its own hands, piles and boards. The dedicated binding alias survives shadcn import rewriting without modifying installed source. These items are copied source,
 not a styled SDK package. `board-targets` requires the board, drag, and pan/zoom features;
