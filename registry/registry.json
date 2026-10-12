@@ -648,7 +648,7 @@
         "binding": "workspace"
       },
       "dependencies": ["@base-ui/react@^1.8.0", "@floating-ui/dom@1.8.0"],
-      "registryDependencies": ["@dreamboard/tokens"],
+      "registryDependencies": ["@dreamboard/tokens", "button"],
       "files": [
         {
           "path": "items/card-browsing.tsx",

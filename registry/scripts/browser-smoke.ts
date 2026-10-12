@@ -20,6 +20,7 @@ import { proveCrowdedHand, proveHand, proveHandSlide } from "./hand-proof.ts";
 import { proveHandSorting } from "./hand-sorting-proof.ts";
 import {
   proveCardBrowsing,
+  proveResponsiveBrowsing,
   proveLimitedCardPreview,
 } from "./card-browsing-proof.ts";
 import { proveCardRow } from "./card-row-proof.ts";
@@ -94,6 +95,14 @@ try {
           story.id,
           `${root}/build/screenshots/${name}-${story.id}.png`,
         );
+      if (
+        name === "desktop" &&
+        [
+          "registry-card-browsing--row-top",
+          "registry-card-browsing--hand-top",
+        ].includes(story.id)
+      )
+        await proveResponsiveBrowsing(page);
       if (name === "phone" && story.id === "registry-card-browsing--row-top")
         await proveLimitedCardPreview(
           page,

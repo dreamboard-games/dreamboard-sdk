@@ -1,9 +1,14 @@
 @layer components {
   .db-card-row-group {
+    position: relative;
+    isolation: isolate;
     display: flex;
     flex-direction: column;
     flex: 1;
     min-width: 0;
+  }
+  .db-card-row-group:has(> .db-card-browse) {
+    padding-top: 3.25rem;
   }
   .db-card-row {
     --card-row-min-slot: 1rem;

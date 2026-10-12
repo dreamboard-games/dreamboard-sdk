@@ -55,6 +55,7 @@ export function CardRow({
   const overlay = useDragOverlay();
   const browsing = useCardBrowsing();
   const [crowded, setCrowded] = useState(false);
+  const [needsBrowse, setNeedsBrowse] = useState(false);
   const sliding = useCardRow(({ x, y }) => {
     const element = row.current!;
     const box = element.getBoundingClientRect();
@@ -115,13 +116,19 @@ export function CardRow({
         parseFloat(style.paddingLeft) +
         parseFloat(style.paddingRight);
       setCrowded(!!slot && needed > element.clientWidth);
+      const fullWidth =
+        cards.length * probe.current!.offsetWidth +
+        Math.max(0, cards.length - 1) * parseFloat(style.columnGap) +
+        parseFloat(style.paddingLeft) +
+        parseFloat(style.paddingRight);
+      setNeedsBrowse(cards.length > 1 && fullWidth > element.clientWidth + 1);
     };
     const observer = new ResizeObserver(measure);
     observer.observe(element);
     observer.observe(probe.current!);
     measure();
     return () => observer.disconnect();
-  }, [slotCount]);
+  }, [slotCount, cards.length]);
   const order = [...cards];
   if (gap !== null && from >= 0) {
     order.splice(ghost, 0, ...order.splice(from, 1));
@@ -172,6 +179,7 @@ export function CardRow({
       <CardBrowser
         session={browsing.session}
         count={cards.length}
+        needed={needsBrowse}
         label={label}
         renderCards={() =>
           cards.map((card) => (

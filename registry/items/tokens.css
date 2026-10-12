@@ -62,14 +62,8 @@
   [data-seat="6"] {
     --seat-color: var(--seat-6);
   }
-  /* Buttons on the table are ivory with dark text; outlined ones show the
-     table through an ivory border. */
+  /* The playing surface never replaces the application's paired UI tokens. */
   .db-table {
-    --background: var(--table);
-    --primary: var(--table-foreground);
-    --primary-foreground: #2a0e06;
-    --border: color-mix(in srgb, var(--table-foreground) 70%, transparent);
-    --ring: var(--table-foreground);
     background: var(--table);
     color: var(--table-foreground);
   }
@@ -425,25 +419,15 @@
     pointer-events: auto;
   }
   .db-card-browse {
-    position: relative;
-    z-index: 1;
-    display: block;
-    margin: 0.25rem auto;
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 101;
+    align-self: flex-end;
+    margin: 0.25rem 0.5rem;
     min-height: 44px;
-    padding: 0.5rem 0.875rem;
-    border: 1px solid currentColor;
-    border-radius: 999px;
-    background: var(--table);
-    color: var(--table-foreground);
-    font:
-      600 var(--text-label) / 1.2 system-ui,
-      sans-serif;
-    cursor: pointer;
+    color: var(--foreground);
     touch-action: manipulation;
-  }
-  .db-card-browse:focus-visible {
-    outline: 3px solid var(--table-foreground);
-    outline-offset: 3px;
   }
   [data-card-browsing="touch"] [data-hovered] .db-card {
     outline: 2px solid var(--brand);
@@ -486,8 +470,8 @@
     max-height: 85dvh;
     padding: 0.5rem 1rem calc(1rem + env(safe-area-inset-bottom, 0px));
     border-radius: 1rem 1rem 0 0;
-    background: var(--table);
-    color: var(--table-foreground);
+    background: var(--background);
+    color: var(--foreground);
     box-shadow: var(--elevation-drag);
     outline: none;
     transform: translateY(var(--drawer-swipe-movement-y, 0px));
@@ -511,7 +495,7 @@
     height: 0.25rem;
     margin-bottom: 0.5rem;
     border-radius: 999px;
-    background: color-mix(in srgb, var(--table-foreground) 40%, transparent);
+    background: color-mix(in srgb, var(--muted-foreground) 40%, transparent);
   }
   .db-hand-sheet-header {
     display: flex;

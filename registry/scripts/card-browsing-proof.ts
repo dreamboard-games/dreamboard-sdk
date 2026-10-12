@@ -15,7 +15,7 @@ export async function proveCardBrowsing(
     name: `Browse ${crowded ? 24 : 8} cards`,
     exact: true,
   });
-  await expect(browse).toBeVisible();
+
   const viewport = page.viewportSize()!;
   if (!crowded) {
     const first = cards.nth(1);
@@ -125,6 +125,7 @@ export async function proveCardBrowsing(
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await cdp.detach();
   }
+  if (!(await browse.isVisible())) return;
   await browse.tap();
   const sheet = page.getByRole("dialog", {
     name: `Expedition · ${crowded ? 24 : 8}`,
@@ -184,4 +185,40 @@ export async function proveLimitedCardPreview(page: Page, screenshot: string) {
   });
   await cdp.detach();
   await expect(preview).toHaveCount(0);
+}
+
+/** Container width, rather than a device breakpoint, owns Browse visibility. */
+export async function proveResponsiveBrowsing(page: Page) {
+  const zone = page.getByTestId("browsing-zone");
+  const browse = zone.getByRole("button", { name: "Browse 8 cards" });
+  await expect(zone.locator("[data-card]")).toHaveCount(8);
+  await zone.evaluate((element) => {
+    element.style.right = "auto";
+    element.style.width = "1000px";
+    element.style.setProperty("--card-w", "80px");
+    element.style.setProperty("--card-w-hand", "80px");
+  });
+  await expect(browse).toHaveCount(0);
+  await zone.evaluate((element) => {
+    element.style.width = "320px";
+  });
+  await expect(browse).toBeVisible();
+  await browse.click();
+  const sheet = page.getByRole("dialog", { name: "Expedition · 8" });
+  await expect(sheet).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  await expect(sheet).toHaveCSS("color", "rgb(25, 43, 53)");
+  await page
+    .locator("html")
+    .evaluate((element) => element.classList.add("dark"));
+  await expect(sheet).toHaveCSS("background-color", "rgb(23, 44, 53)");
+  await expect(sheet).toHaveCSS("color", "rgb(237, 244, 247)");
+  await sheet.getByRole("button", { name: "Done", exact: true }).click();
+  await expect(browse).toBeFocused();
+  await page
+    .locator("html")
+    .evaluate((element) => element.classList.remove("dark"));
+  await zone.evaluate((element) => {
+    element.style.width = "1000px";
+  });
+  await expect(browse).toHaveCount(0);
 }

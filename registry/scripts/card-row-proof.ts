@@ -60,6 +60,12 @@ export async function proveCardRow(page: Page, touch: boolean) {
     }
   };
   await expect(cards).toHaveCount(3);
+  await expect(page.getByRole("button", { name: /Browse 1 card/ })).toHaveCount(
+    0,
+  );
+  await expect(
+    page.getByTestId("supply").locator("..").locator(".db-card-browse"),
+  ).toHaveCount(0);
   // A narrow row overlaps its cards to fit rather than scrolling.
   const card = (await cards.first().boundingBox())!.width;
   const padding = await row.evaluate(
