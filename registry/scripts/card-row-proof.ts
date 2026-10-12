@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 /** Mouse/touch positions, cancellation, cross-zone insertion and an empty row. */
 export async function proveCardRow(page: Page, touch: boolean) {
@@ -13,10 +13,9 @@ export async function proveCardRow(page: Page, touch: boolean) {
       ][]
     ).find(([id]) => id === zone)![1];
   const cdp = touch ? await page.context().newCDPSession(page) : null;
-  const carry = async (
-    card: import("@playwright/test").Locator,
-    to: { x: number; y: number },
-  ) => {
+  const carry = async (card: Locator, to: { x: number; y: number }) => {
+    await expect(card.locator("..")).toHaveCSS("transform", "none");
+    await card.click({ trial: true });
     const box = (await card.boundingBox())!;
     const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
     if (cdp)
@@ -61,6 +60,30 @@ export async function proveCardRow(page: Page, touch: boolean) {
     }
   };
   await expect(cards).toHaveCount(3);
+  // A narrow row overlaps its cards to fit rather than scrolling.
+  const card = (await cards.first().boundingBox())!.width;
+  const padding = await row.evaluate(
+    (element) => parseFloat(getComputedStyle(element).paddingLeft) * 2,
+  );
+  await row.evaluate(
+    (element, width) => {
+      element.style.flex = "none";
+      element.style.width = `${width}px`;
+    },
+    card * 2 + padding,
+  );
+  await expect
+    .poll(() => row.evaluate((element) => element.scrollWidth))
+    .toBeLessThanOrEqual(await row.evaluate((element) => element.clientWidth));
+  const [left, right] = [
+    (await cards.nth(0).boundingBox())!,
+    (await cards.nth(1).boundingBox())!,
+  ];
+  expect(right.x).toBeLessThan(left.x + left.width);
+  await row.evaluate((element) => {
+    element.style.flex = "";
+    element.style.width = "";
+  });
   const before = await order();
   const end = (await cards.last().boundingBox())!;
   await carry(cards.first(), { x: end.x + end.width / 2, y: end.y + 20 });
@@ -80,10 +103,93 @@ export async function proveCardRow(page: Page, touch: boolean) {
   await expect(page.locator(".db-drag-overlay")).toHaveCount(0);
   const incoming = page.getByTestId("supply").locator("button[data-card]");
   const incomingId = await incoming.getAttribute("data-card");
-  const middle = (await row.locator(".db-card-row-card").nth(1).boundingBox())!;
-  await carry(incoming, { x: middle.x - 5, y: middle.y + 20 });
-  await expect(ghost).toBeVisible();
-  await release();
+  const proveIncoming = async (
+    destination: Locator,
+    source: Locator,
+    indices: number[],
+    commitLast: boolean,
+    tight = false,
+  ) => {
+    const existing = destination.locator("button[data-card]");
+    const count = await existing.count();
+    await expect(existing.first().locator("..")).toHaveCSS("transform", "none");
+    const width = (await existing.first().boundingBox())!.width;
+    // The tight case fits existing cards but needs smaller slots for an arrival.
+    await destination.evaluate(
+      (element, { width, count, tight }) => {
+        const style = getComputedStyle(element);
+        const slot = element.querySelector(".db-card-row-card")!;
+        const pitch =
+          parseFloat(getComputedStyle(slot).minWidth) +
+          parseFloat(style.columnGap);
+        element.style.flex = "none";
+        const slots = tight ? (count - 1) * pitch + 4 : count * (pitch + 4);
+        element.style.width = `${width + slots + parseFloat(style.paddingLeft) * 2}px`;
+      },
+      { width, count, tight },
+    );
+    await expect(destination).not.toHaveAttribute("data-crowded");
+    for (const [attempt, index] of indices.entries()) {
+      const bounds = (await destination.boundingBox())!;
+      const padding = await destination.evaluate((element) =>
+        parseFloat(getComputedStyle(element).paddingLeft),
+      );
+      const step = (bounds.width - padding * 2 - width) / count;
+      const left = bounds.x + padding;
+      await carry(source, {
+        x: left + index * step + width / 2,
+        y: bounds.y + bounds.height / 2,
+      });
+      const opening = destination.locator(".db-card-row-insertion");
+      await expect(opening).toBeVisible();
+      if (tight)
+        await expect(destination).toHaveAttribute("data-crowded", "true");
+      await expect
+        .poll(() =>
+          destination.evaluate(
+            (element, { left, index, step, width }) => {
+              const opening = element.querySelector(".db-card-row-insertion");
+              if (!opening) return Infinity;
+              const preview = opening.getBoundingClientRect();
+              const errors = [
+                Math.abs(preview.width - width),
+                Math.abs(preview.x - left - index * step),
+              ];
+              element
+                .querySelectorAll("button[data-card]")
+                .forEach((card, cardIndex) => {
+                  const slotIndex =
+                    cardIndex < index ? cardIndex : cardIndex + 1;
+                  const box = card.getBoundingClientRect();
+                  errors.push(
+                    Math.abs(box.x - left - slotIndex * step),
+                    Math.abs(box.y - preview.y),
+                  );
+                });
+              return Math.max(...errors);
+            },
+            { left, index, step, width },
+          ),
+        )
+        .toBeLessThan(2);
+      await expect
+        .poll(() => destination.evaluate((element) => element.scrollWidth))
+        .toBeLessThanOrEqual(
+          await destination.evaluate((element) => element.clientWidth),
+        );
+      await release(!commitLast || attempt < indices.length - 1);
+      await expect(opening).toHaveCount(0);
+      await expect(page.locator(".db-drag-overlay")).toHaveCount(0);
+      if (tight && !commitLast)
+        await expect(destination).not.toHaveAttribute("data-crowded");
+    }
+    await destination.evaluate((element) => {
+      element.style.flex = "";
+      element.style.width = "";
+    });
+  };
+  await proveIncoming(row, incoming, [0, 3, 1], false, true);
+  await proveIncoming(row, incoming, [0, 3, 1], true);
   await expect
     .poll(() => order())
     .toEqual([moved[0], incomingId, moved[1], moved[2]]);
@@ -99,6 +205,8 @@ export async function proveCardRow(page: Page, touch: boolean) {
   await release();
   await expect.poll(() => order("empty")).toEqual([moved[0]]);
   await expect(page.locator(".db-drag-overlay")).toHaveCount(0);
+  await proveIncoming(empty, cards.last(), [0, 1], false);
+  expect(await order("empty")).toEqual([moved[0]]);
   // A constrained route without a position input reaches the surrounding area.
   await page.getByRole("button", { name: "Toggle whole-zone moves" }).click();
   const supply = page.getByTestId("supply");

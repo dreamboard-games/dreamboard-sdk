@@ -18,6 +18,10 @@ import {
 import { proveCardControl } from "./card-control-proof.ts";
 import { proveCrowdedHand, proveHand, proveHandSlide } from "./hand-proof.ts";
 import { proveHandSorting } from "./hand-sorting-proof.ts";
+import {
+  proveCardBrowsing,
+  proveLimitedCardPreview,
+} from "./card-browsing-proof.ts";
 import { proveCardRow } from "./card-row-proof.ts";
 import { proveHandReorder } from "./hand-reorder-proof.ts";
 import { proveCardLandings } from "./card-landing-proof.ts";
@@ -84,6 +88,17 @@ try {
       await page.goto(`${base}/iframe.html?id=${story.id}&viewMode=story`);
       await expect(page.locator("#storybook-root > *").first()).toBeVisible();
       await expect(page.locator(".sb-errordisplay")).not.toBeVisible();
+      if (touch && story.id.startsWith("registry-card-browsing--"))
+        await proveCardBrowsing(
+          page,
+          story.id,
+          `${root}/build/screenshots/${name}-${story.id}.png`,
+        );
+      if (name === "phone" && story.id === "registry-card-browsing--row-top")
+        await proveLimitedCardPreview(
+          page,
+          `${root}/build/screenshots/phone-card-browsing-compact.png`,
+        );
       if (story.id === "registry-card-row--ordered-positions")
         await proveCardRow(page, touch);
       if (story.id === "registry-zone-actions--authored-actions")
@@ -341,7 +356,7 @@ try {
         await proveDraw(page, touch, false);
         if (!touch) await proveReducedCardMotion(page);
       }
-      if (story.id.endsWith("crowded-hand"))
+      if (story.id === "game-feel-hand--crowded-hand")
         await proveCrowdedHand(page, touch, name === "phone");
       if (story.id.endsWith("--sorting-hand") && name === "desktop")
         await proveHandSorting(page, touch, false);
@@ -387,7 +402,9 @@ try {
         await expect(
           page.getByRole("heading", { name: "passing", exact: true }),
         ).toBeVisible();
-        const card = page.locator(".db-hand button:not(:disabled)").first();
+        const card = page
+          .locator(".db-hand button[data-card]:not(:disabled)")
+          .first();
         await expect(card.locator("..")).not.toHaveAttribute(
           "aria-disabled",
           "true",

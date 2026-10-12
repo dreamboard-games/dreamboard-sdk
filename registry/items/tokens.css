@@ -13,7 +13,7 @@
   --card-w-opponent: clamp(2.25rem, min(9vw, 11dvh), 3.5rem);
   --card-w-pile: var(--card-w-table);
   --card-w-preview: min(64vw, 15rem, calc(60dvh * 5 / 7));
-  --card-w-sheet: clamp(5.5rem, 27vw, 8.5rem);
+  --card-w-sheet: clamp(11.25rem, min(64vw, 40dvh), 15rem);
   --card-w: var(--card-w-table);
   --card-aspect: 5 / 7;
   --card-radius: 0.55rem;
@@ -424,37 +424,42 @@
     position: relative;
     pointer-events: auto;
   }
-  /* A crowded hand is one button, above every card including a focused one. */
-  .db-hand-open {
-    position: absolute;
-    inset: 0;
-    z-index: 101;
-    display: grid;
-    place-items: start center;
-    padding: 0;
-    border: 0;
-    background: none;
-    color: inherit;
+  .db-card-browse {
+    position: relative;
+    z-index: 1;
+    display: block;
+    margin: 0.25rem auto;
+    min-height: 44px;
+    padding: 0.5rem 0.875rem;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    background: var(--table);
+    color: var(--table-foreground);
+    font:
+      600 var(--text-label) / 1.2 system-ui,
+      sans-serif;
     cursor: pointer;
     touch-action: manipulation;
   }
-  .db-hand-open:focus-visible {
+  .db-card-browse:focus-visible {
     outline: 3px solid var(--table-foreground);
-    outline-offset: -3px;
-    border-radius: var(--card-radius);
+    outline-offset: 3px;
   }
-  .db-hand-count {
-    min-width: 2rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 999px;
-    background: var(--table-foreground);
-    color: #2a0e06;
-    box-shadow: var(--elevation-lift);
-    font:
-      700 var(--text-label) / 1.2 system-ui,
-      sans-serif;
-    font-variant-numeric: tabular-nums;
-    text-align: center;
+  [data-card-browsing="touch"] [data-hovered] .db-card {
+    outline: 2px solid var(--brand);
+    outline-offset: -2px;
+  }
+  .db-card-touch-preview {
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    position: fixed;
+    visibility: hidden;
+    z-index: 60;
+    pointer-events: none;
+    border-radius: var(--card-radius);
+    box-shadow: var(--elevation-drag);
   }
   .db-hand-sheet-backdrop {
     position: fixed;

@@ -17,6 +17,7 @@
   "devDependencies": {
     "@base-ui/react": "^1.8.0",
     "@dreamboard-games/sdk": "workspace:*",
+    "@floating-ui/dom": "1.8.0",
     "@playwright/test": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@tailwindcss/vite": "catalog:",

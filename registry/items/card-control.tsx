@@ -9,6 +9,7 @@ import {
 } from "@game";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { CardActions, getCardActions } from "./card-actions";
+import { TouchCardPreview, useCardBrowsingContext } from "./card-browsing";
 import { CardPreview } from "./card-preview";
 import type { CardState } from "./card";
 import {
@@ -69,7 +70,10 @@ export function CardControl({
 }: CardControlProps) {
   const presentation = useCardPresentation(cardId);
   const card = presentation.card;
-  const gesture = useCardGesture(cardId, { drag });
+  const browsing = useCardBrowsingContext();
+  const gesture = useCardGesture(cardId, {
+    drag: browsing.inSheet ? false : drag,
+  });
   const overlay = useDragOverlay();
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const [inspecting, setInspecting] = useState(false);
@@ -203,7 +207,10 @@ export function CardControl({
         <CardActions
           cardId={cardId}
           anchor={anchor}
-          onAction={onAction}
+          onAction={() => {
+            onAction?.();
+            if (browsing.inSheet) browsing.closeSheet();
+          }}
           onClose={() => setOpen(false)}
           onInspect={
             presentation.hidden
@@ -215,15 +222,31 @@ export function CardControl({
           }
         />
       )}
-      {(inspecting || gesture.inspecting) && !inert && !presentation.hidden && (
-        <CardPreview
-          via={inspecting ? "action" : gesture.inspecting!}
-          anchor={anchor}
-          onClose={() => setInspecting(false)}
-        >
-          {renderPreview(card)}
-        </CardPreview>
-      )}
+      {browsing.session &&
+        anchor &&
+        !inert &&
+        !dragging &&
+        !presentation.hidden &&
+        (gesture.isActive || gesture.inspecting === "hold") && (
+          <TouchCardPreview
+            session={browsing.session}
+            anchor={anchor}
+            cardId={cardId}
+          >
+            {renderPreview(card)}
+          </TouchCardPreview>
+        )}
+      {(inspecting || (gesture.inspecting && !browsing.session)) &&
+        !inert &&
+        !presentation.hidden && (
+          <CardPreview
+            via={inspecting ? "action" : gesture.inspecting!}
+            anchor={anchor}
+            onClose={() => setInspecting(false)}
+          >
+            {renderPreview(card)}
+          </CardPreview>
+        )}
     </>
   );
 }

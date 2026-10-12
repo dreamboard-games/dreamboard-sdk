@@ -4,7 +4,7 @@
 pnpm dlx shadcn@4.21.0 add @dreamboard/hand
 ```
 
-A fanned hand that always fits: tap for actions, slide to browse, hold or Alt/Option to inspect, drag to a drop area. A crowded hand opens every card in a sheet.
+A fanned hand that always fits: tap for actions, slide to browse, hold or Alt/Option to inspect, drag to a drop area. Browse opens every card in a readable sheet.
 
 Hosted-safe control; the game binding imports reducer types only.
 
@@ -19,8 +19,9 @@ are authoritative; there is no separate SDK component import.
 
 - The hand renders `game.hand.getSortedCardIds(zone)`. Configure named comparators in `handFeature`; the authored game owns the mode labels, controls, and any shortcut that calls `game.hand.setSortMode(zone, mode)`. Reordering keeps selection and motion identity attached to card IDs.
 - Cards sit on the SDK's `handFan` arc and move with Motion on `handFanTiming`, one exponential ease-out, so a card retargeted mid-sweep keeps moving instead of stalling. The fan tightens to fit the hand and never scrolls.
-- A finger sliding along the hand raises each card it crosses, by the cards' resting places, so the next card is always one strip away. Lifting there opens that card's menu, sliding off the hand chooses nothing, and turning upward picks the card up.
-- When each covered card would show less than 16 px (`CROWDED_STEP` in the copied source), the hand becomes one button showing the card count. It opens `HandSheet`, a bottom sheet with every card at a readable size in hand order. A card there opens the same menu and preview; choosing an action closes the sheet so the table shows the rest of the move, while a card an action picks several of toggles and keeps it open. Swipe down, Escape or Done closes it, and switching seats closes it too.
+- A finger sliding along the hand enlarges each card it crosses in a portalled preview, while the fan and its resting targets stay still. The shared browser tries above the finger, below with extra hand clearance, then the sides. It respects the visible viewport and safe areas, retains a fitting placement throughout the gesture, and never shrinks below 180px wide. Lifting there opens that card's menu, sliding off the hand chooses nothing, and turning upward picks the card up.
+- A visible **Browse N cards** button opens every card at a readable size in hand order. When each covered card would show less than 16px (`CROWDED_STEP`), the fan's faces become inert and Browse is its only control. It is also the fallback when the screen cannot fit a readable touch preview. The sheet uses the same menus and inspection; choosing an action closes it, while multi-card selection keeps it open. Swipe down, Escape or Done closes it, Done restores focus to Browse, and switching seats closes it too. No instructional hint is shown.
+
 - `renderCard` draws a card in the state the hand gives it: selected for the lifted card, eligible for playable cards, and dimmed for unplayable cards while another is playable. Keep it stable, at module scope or in `useCallback`, so a drag renders only the dragged card. Leave `layoutId` to the hand.
 - A tap opens [card actions](card-actions.md) above the card, and the card holds its pose until the menu closes. A card whose only action picks several cards toggles instead. A dimmed card shakes and says why.
 - Hover raises and enlarges the card in place above its neighbours. Crossing a sliver between moving cards keeps the last card raised; leaving the hand lowers it. A hold, Alt/Option, or the Inspect card menu action opens a [card preview](card-preview.md).
