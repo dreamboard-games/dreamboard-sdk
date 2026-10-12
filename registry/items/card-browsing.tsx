@@ -123,7 +123,7 @@ export function CardBrowser({
         {children}
         {/* The SDK owns the press outside this subtree. Remove the modal's hit
             surface immediately so this same pointer can reach the table. */}
-        {!dragging && (
+        {open && !dragging && (
           <Drawer.Portal>
             <Drawer.Backdrop className="db-hand-sheet-backdrop" />
             <Drawer.Viewport className="db-hand-sheet-viewport">
