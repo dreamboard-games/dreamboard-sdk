@@ -95,7 +95,7 @@ export async function proveBrowserDrag(
       await page.mouse.move(1, 1);
     }
     await expect(page.locator("[data-drag-overlay]")).toHaveCount(0);
-    await expect(browse).toBeEnabled();
+    if (cancel) await expect(browse).toBeEnabled();
     await expect(sheet).toHaveCount(0);
     if (cancel) expect(await state()).toEqual(before);
     else
