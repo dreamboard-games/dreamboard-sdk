@@ -16,6 +16,7 @@ import type {
   GameEvent,
   GameOutcome,
   InputCollector,
+  ZoneRef,
   SimultaneousResolveArgs,
   PhaseMapOf,
   ReducerGameContractLike,
@@ -334,6 +335,7 @@ export function createReducerExecutor<
       ...(resolved.transition ? { transition: resolved.transition } : {}),
       ...(resolved.terminal ? { terminal: resolved.terminal } : {}),
       events: resolved.events ?? [],
+      shuffledZones: resolved.shuffledZones ?? [],
       trace: rngTrace(random.consumptions()),
     };
   }
@@ -376,6 +378,7 @@ export function createReducerExecutor<
       ...(result.transition ? { transition: result.transition } : {}),
       ...(result.terminal ? { terminal: result.terminal } : {}),
       events: result.events ?? [],
+      shuffledZones: result.shuffledZones ?? [],
       trace: rngTrace([
         ...sampled.consumptions,
         ...(result.rngConsumptions ?? []),
@@ -395,6 +398,7 @@ export function createReducerExecutor<
     transition?: PhaseName;
     terminal?: GameOutcome<PlayerId>;
     events?: readonly GameEvent[];
+    shuffledZones?: readonly ZoneRef[];
     trace?: readonly DispatchTraceEntry<State, PlayerId, ReducerInput>[];
   };
 
@@ -407,6 +411,7 @@ export function createReducerExecutor<
     let transition = initial.transition;
     let terminal = initial.terminal;
     const events = [...(initial.events ?? [])];
+    const shuffledZones = [...(initial.shuffledZones ?? [])];
     const trace = [...(initial.trace ?? [])];
     while (transition !== undefined) {
       if (entries >= MAX_PHASE_ENTRIES) {
@@ -426,6 +431,7 @@ export function createReducerExecutor<
       trace.push(...rngTrace(entered.consumptions));
       state = entered.state;
       events.push(...entered.events);
+      shuffledZones.push(...entered.shuffledZones);
       terminal ??= entered.terminal;
       if (finalEntry && entered.transition !== undefined) {
         throw new Error(
@@ -436,15 +442,22 @@ export function createReducerExecutor<
     }
     const committedEvents = normalizeGameEvents(events);
     assertGameEventReferences(committedEvents, state.table);
+    // Like events, shuffles describe only this operation; a zone shuffled
+    // twice is listed once.
+    const runtime = { ...state.runtime, events: committedEvents };
+    delete runtime.shuffledZones;
+    const committedShuffles = [
+      ...new Map(
+        shuffledZones.map((zone) => [
+          JSON.stringify([zone.zoneId, zone.hostId]),
+          zone,
+        ]),
+      ).values(),
+    ];
+    if (committedShuffles.length) runtime.shuffledZones = committedShuffles;
     return {
       type: "accept" as const,
-      state: reconcilePending(
-        {
-          ...state,
-          runtime: { ...state.runtime, events: committedEvents },
-        },
-        referenceBasis,
-      ),
+      state: reconcilePending({ ...state, runtime }, referenceBasis),
       events: committedEvents,
       trace,
       ...(terminal ? { terminal } : {}),

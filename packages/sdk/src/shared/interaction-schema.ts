@@ -198,6 +198,7 @@ export const ZoneInteractionRefsSchema = z.strictObject({
   cardViewsById: z.record(z.string(), ViewCardSchema),
   cardBacksById: z.record(z.string(), z.string()),
   playableByCardId: z.record(z.string(), z.array(z.string())),
+  shuffled: z.literal(true).optional(),
 });
 
 type DeepReadonly<T> = T extends string | number | boolean | null | undefined

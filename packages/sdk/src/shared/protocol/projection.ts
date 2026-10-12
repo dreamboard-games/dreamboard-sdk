@@ -111,6 +111,7 @@ function hydrateZones(
                 ),
               ]),
             ),
+            ...(zone.shuffled ? { shuffled: true as const } : {}),
           },
         ]),
       ),

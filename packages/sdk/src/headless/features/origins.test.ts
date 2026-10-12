@@ -16,7 +16,7 @@ const hidden = (zone: string, count: number) =>
 function snapshot(
   version: number,
   zones: Record<string, readonly string[]>,
-  { me = "alice", active = ["alice"] } = {},
+  { me = "alice", active = ["alice"], shuffled = [] as readonly string[] } = {},
 ): SourceSnapshot {
   return {
     me,
@@ -51,6 +51,7 @@ function snapshot(
               ),
               cardBacksById: {},
               playableByCardId: {},
+              ...(shuffled.includes(zone) ? { shuffled: true as const } : {}),
             },
           },
         ]),
@@ -402,6 +403,46 @@ describe("originsFeature", () => {
     });
     source.emit(snapshot(2, { trick: ["ace"] }));
     expect(game.cards.get("ace").getOrigin()).toBeNull();
+    game.dispose();
+  });
+
+  it("reports a zone shuffled by the operation that produced the frame", () => {
+    const deckCards = hidden("deck", 3);
+    const source = createTestSource(
+      snapshot(1, { deck: deckCards, hand: ["ace"] }, { shuffled: ["deck"] }),
+    );
+    const game = createGameInstance()({
+      source,
+      features: (core) => ({ origins: originsFeature(core) }),
+    });
+    const deck = () => game.zones.get("deck", "table");
+    // A game opens without shuffling its setup again.
+    expect(deck().getShuffle()).toBeNull();
+    source.emit(
+      snapshot(2, { deck: deckCards, hand: ["ace"] }, { shuffled: ["deck"] }),
+    );
+    const shuffle = deck().getShuffle();
+    expect(shuffle).toEqual({ version: 2 });
+    expect(deck().getShuffle()).toBe(shuffle);
+    expect(game.zones.get("hand", "alice").getShuffle()).toBeNull();
+    source.emit(
+      snapshot(3, { deck: deckCards, hand: ["ace"] }, { shuffled: ["deck"] }),
+    );
+    expect(deck().getShuffle()).toEqual({ version: 3 });
+    source.emit(
+      snapshot(4, { deck: deckCards.slice(1), hand: ["ace", "king"] }),
+    );
+    expect(deck().getShuffle()).toBeNull();
+    game.setOptions({
+      source: createTestSource(
+        snapshot(
+          5,
+          { deck: deckCards, hand: ["king"] },
+          { me: "bob", shuffled: ["deck"] },
+        ),
+      ),
+    });
+    expect(deck().getShuffle()).toBeNull();
     game.dispose();
   });
 

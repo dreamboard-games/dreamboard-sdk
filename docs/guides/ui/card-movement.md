@@ -150,11 +150,18 @@ Origins last until the next frame and start over when the seat or source
 changes. The first frame has none, so a game opens without dealing itself again.
 
 These are animation hints inferred from observed changes, not an authoritative
-movement log. A shuffle or an exchange that preserves hidden counts has no
-observable identity history. Use a neutral animation when the origin is `null`.
+movement log. An exchange that preserves hidden counts has no observable
+identity history. Use a neutral animation when the origin is `null`.
 If a game needs exact hidden-card movement, the trusted reducer projection
 must provide explicit movement hints limited to what that seat may observe;
 do not give concealed cards persistent IDs to reconstruct their history.
+
+A shuffle has no identity history either, so the reducer records it instead:
+`tx.shuffle` marks the zone for the operation that produced the frame.
+`zone.getShuffle()`, from the same feature, returns `{ version }` for that
+frame and `null` otherwise, with the same first-frame and seat rules. Every seat
+that sees the zone gets it, never the new order. The registry's `PileRiffle`
+riffles a `Pile` from it, and `DrawPile` includes one.
 
 Read the origin when a card mounts and animate from the origin's element, such
 as the zone with that id or the player's seat:

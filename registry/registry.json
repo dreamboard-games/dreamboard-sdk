@@ -619,7 +619,7 @@
       "name": "draw-pile",
       "type": "registry:component",
       "title": "Draw Pile",
-      "description": "Tap a pile for its Draw action, or drag a face-down copy into the hand.",
+      "description": "Tap a pile for its Draw action, or drag a face-down copy into the hand. Shuffled piles riffle.",
       "meta": {
         "binding": "workspace"
       },
@@ -628,6 +628,11 @@
           "path": "items/draw-pile.tsx",
           "type": "registry:component",
           "target": "@components/dreamboard/draw-pile.tsx"
+        },
+        {
+          "path": "items/pile-riffle.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/pile-riffle.tsx"
         }
       ],
       "registryDependencies": [

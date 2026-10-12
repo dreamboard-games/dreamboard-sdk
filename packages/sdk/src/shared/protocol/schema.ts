@@ -71,6 +71,7 @@ export const ZoneHandlesSnapshotSchema = z
       z.string(),
       z.array(InteractionDescriptorSchema),
     ),
+    shuffled: z.literal(true).optional(),
   })
   .strict() satisfies z.ZodType<ZoneHandlesSnapshot>;
 

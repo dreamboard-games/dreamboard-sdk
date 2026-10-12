@@ -15,7 +15,7 @@ import {
 } from "./transaction-mutations";
 import type { TableOfState, StringKeyOf } from "./model";
 import { resolveZone, type ZoneInput } from "./table/zones";
-import type { ZoneDefinitions, ZoneArg } from "./model";
+import type { ZoneDefinitions, ZoneArg, ZoneRef } from "./model";
 
 export type TransactionRandom = {
   roll(sides: number): number;
@@ -88,7 +88,10 @@ type TransactionContext<State extends { table: RuntimeTableRecord }> = {
   currentQueries: TableQueriesOfState<State> | null;
   methodCache: Record<string, (...args: readonly unknown[]) => State>;
   events: GameEvent[];
-  disposition: Omit<ReducerAccept<State>, "state" | "events"> | ReducerReject;
+  shuffledZones: ZoneRef[];
+  disposition:
+    | Omit<ReducerAccept<State>, "state" | "events" | "shuffledZones">
+    | ReducerReject;
   random: TransactionRandom;
   definitions: ZoneDefinitions;
   rollMethod?: (dieId: string) => number;
@@ -143,6 +146,7 @@ export function finishReducerTransaction<
         ...context.disposition,
         state: context.currentState,
         events: [...context.events],
+        shuffledZones: [...context.shuffledZones],
       };
 }
 
@@ -257,7 +261,7 @@ function createReducerTransactionSurface<
       const context = getTransactionContext<State>(this);
       return (context.shuffleMethod ??= (args: { zone: ZoneInput }) => {
         const table = context.currentState.table;
-        const { ids, definition } = resolveZone(
+        const { ref, ids, definition } = resolveZone(
           table,
           context.definitions,
           args.zone,
@@ -275,6 +279,7 @@ function createReducerTransactionSurface<
         )
           throw new Error("Shuffle must preserve zone membership.");
         ids.splice(0, ids.length, ...shuffled);
+        context.shuffledZones.push(ref);
         invalidate(context);
       });
     },
@@ -307,6 +312,7 @@ function createReducerTransactionFromSurface<
       currentQueries: null,
       methodCache: {},
       events: [],
+      shuffledZones: [],
       disposition: { type: "accept" },
       random,
       definitions,

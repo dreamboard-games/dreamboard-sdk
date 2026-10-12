@@ -5,8 +5,8 @@ pnpm dlx shadcn@4.21.0 add @dreamboard/draw-pile @dreamboard/hand
 ```
 
 `DrawPile` adds a draw interaction to the existing stack presentation. Use it
-inside the UI binding's [GameProvider](game-provider.md). The binding supplies `useGame`; the
-destination hand also requires `originsFeature`.
+inside the UI binding's [GameProvider](game-provider.md). The binding supplies `useGame`;
+`originsFeature` supplies the destination hand's arrivals and the pile's riffle.
 
 ```tsx
 <GameProvider source={source}>
@@ -77,3 +77,10 @@ previewed slot until the authoritative frame arrives. The confirmed card continu
 from its current flight position, outside the clipped hand, then flips from back
 to face in that same slot without a second centering movement. A rejected draw
 returns to the pile. Reduced motion skips enlargement, travel and flipping.
+
+When an operation shuffles the source zone, the pile riffles on every seat that
+sees it: two packets split off the top, interleave back and square up. The
+riffle draws above the page, so a clipped pile still has room, and a pile at
+the window's edge splits further in. Reduced motion skips it. The draw-pile item
+also installs `PileRiffle`; place `<PileRiffle zoneId hostId />` inside any
+other `Pile`, such as an opponent's deck, to riffle it too.

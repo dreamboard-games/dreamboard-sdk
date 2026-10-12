@@ -216,6 +216,7 @@ function Table({
   });
   const hostId = useGame((game) => game.me?.id);
   const endTurn = useGame((game) => game.interactions.find("play.endTurn"));
+  const shuffle = useGame((game) => game.interactions.find("play.shuffle"));
   const zones = useGame((game) =>
     JSON.stringify(
       game.zones
@@ -244,6 +245,11 @@ function Table({
           )}
           {drawLifecycle && (
             <Button onClick={() => setShowPile(false)}>Hide deck</Button>
+          )}
+          {drawLifecycle && shuffle && (
+            <Button variant="outline" {...shuffle.getSubmitProps()}>
+              Shuffle deck
+            </Button>
           )}
         </div>
       </header>

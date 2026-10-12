@@ -2,6 +2,7 @@ import type {
   RuntimePayload,
   RuntimeTableRecord,
   RuntimeRecord,
+  ZoneRef,
 } from "./table";
 import type {
   PhaseNameOfState,
@@ -95,6 +96,8 @@ export type RuntimeState<
 > = {
   /** Latest accepted audience-scoped display-event batch; snapshot data, not history. */
   events: readonly GameEvent[];
+  /** Zones the latest accepted operation shuffled; omitted when it shuffled none. */
+  shuffledZones?: readonly ZoneRef[];
   rng: RuntimeRngState;
   options: Options;
   simultaneous: RuntimeSimultaneousState<PhaseName, PlayerId>;
@@ -174,6 +177,7 @@ export type ReducerAccept<State> = {
   state: State;
   transition?: PhaseNameOfState<State>;
   events?: readonly GameEvent[];
+  shuffledZones?: readonly ZoneRef[];
   terminal?: GameOutcome<PlayerIdOfState<State>>;
 };
 

@@ -784,6 +784,16 @@
   .db-draw-overlay .db-card {
     box-shadow: var(--elevation-drag);
   }
+  /* Riffled packets cover the top of the pile they leave from. */
+  .db-pile-riffle {
+    position: fixed;
+    z-index: 60;
+    display: grid;
+    pointer-events: none;
+  }
+  .db-pile-riffle > * {
+    grid-area: 1 / 1;
+  }
   .db-draw-pile-card {
     display: block;
     padding: 0;

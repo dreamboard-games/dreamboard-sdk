@@ -18,6 +18,57 @@ async function readSample<T>(watch: JSHandle<{ sample: T | null }>) {
   return sample!;
 }
 
+/** A shuffle riffles the deck above the page and within the window, unless motion is reduced. */
+export async function proveShuffleRiffle(page: Page) {
+  const riffle = page.locator('[data-pile-riffle="deck"]');
+  const shuffle = page.getByRole("button", { name: "Shuffle deck" });
+  await expect(
+    page.getByRole("button", { name: "Deck actions" }),
+  ).toBeVisible();
+  await expect(riffle).toHaveCount(0);
+  await shuffle.click();
+  await expect(riffle).toHaveCount(1);
+  await expect(riffle.locator(".db-card")).toHaveCount(8);
+  const extents = await page.evaluate(
+    () =>
+      new Promise<{ left: number; right: number; frames: number }>(
+        (resolve) => {
+          let left = Infinity;
+          let right = -Infinity;
+          let frames = 0;
+          const sample = () => {
+            const current = document.querySelector('[data-pile-riffle="deck"]');
+            if (!current) return resolve({ left, right, frames });
+            for (const card of current.querySelectorAll(".db-card")) {
+              const box = card.getBoundingClientRect();
+              left = Math.min(left, box.left);
+              right = Math.max(right, box.right);
+            }
+            frames++;
+            requestAnimationFrame(sample);
+          };
+          sample();
+        },
+      ),
+  );
+  expect(extents.frames).toBeGreaterThan(5);
+  expect(extents.left).toBeGreaterThanOrEqual(0);
+  expect(extents.right).toBeLessThanOrEqual(page.viewportSize()!.width);
+  await expect(riffle).toHaveCount(0);
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await shuffle.click();
+  await expect(shuffle).toBeEnabled();
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  );
+  await expect(riffle).toHaveCount(0);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+}
+
 /** Replacing or unmounting a cosmetic flight must release its confirmed arrivals. */
 export async function proveDrawLifecycle(page: Page, touch: boolean) {
   const cards = page

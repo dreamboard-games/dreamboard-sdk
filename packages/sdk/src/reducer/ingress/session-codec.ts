@@ -284,6 +284,7 @@ export function createIngressRuntimeCodec<
         to: phaseNameSchema,
       })
       .nullable(),
+    shuffledZones: z.array(ContractZod.ShuffledZoneSchema).min(1).optional(),
   });
   const parseRuntimeInput = createRuntimeInputParser(playerIdSchema);
 
