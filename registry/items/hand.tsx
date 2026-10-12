@@ -467,7 +467,7 @@ export function Hand({
               <CardControl
                 key={id}
                 cardId={id}
-                drag={false}
+                drag={{}}
                 choosing={choosing}
                 renderCard={renderCard}
                 renderPreview={renderPreview}
