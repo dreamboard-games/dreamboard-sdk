@@ -74,6 +74,7 @@ export async function proveBrowserDrag(
     await move(start.x, start.y - 40);
     await expect(sheet).toHaveCount(0);
     await expect(page.locator("[data-drag-overlay]")).toHaveCount(1);
+    await expect(browse).toBeDisabled();
     const target = hand
       ? page.locator('[data-zone="discard"]').first()
       : page.getByTestId("empty");
@@ -94,6 +95,8 @@ export async function proveBrowserDrag(
       await page.mouse.move(1, 1);
     }
     await expect(page.locator("[data-drag-overlay]")).toHaveCount(0);
+    await expect(browse).toBeEnabled();
+    await expect(sheet).toHaveCount(0);
     if (cancel) expect(await state()).toEqual(before);
     else
       await expect

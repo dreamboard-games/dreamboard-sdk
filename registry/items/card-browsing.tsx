@@ -107,9 +107,14 @@ export function CardBrowser({
   const closeSheet = () => setOpen(false);
   return (
     <Browsing value={{ session, inSheet: false, closeSheet }}>
-      <Drawer.Root open={open} onOpenChange={setOpen} modal={!dragging}>
+      <Drawer.Root
+        open={open}
+        onOpenChange={(next) => setOpen(next && !dragging)}
+        modal={!dragging}
+      >
         {overlapping && count > 1 ? (
           <Drawer.Trigger
+            disabled={dragging}
             render={<Button variant="outline" className="db-card-browse" />}
           >
             Browse {count} cards
