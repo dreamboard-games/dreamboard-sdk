@@ -125,7 +125,8 @@ export async function proveCardBrowsing(
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await cdp.detach();
   }
-  if (!(await browse.isVisible())) return;
+  if (crowded) await expect(browse).toBeVisible();
+  else if (!(await browse.isVisible())) return;
   await browse.tap();
   const sheet = page.getByRole("dialog", {
     name: `Expedition · ${crowded ? 24 : 8}`,
