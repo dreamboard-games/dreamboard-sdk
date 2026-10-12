@@ -97,7 +97,7 @@ export function CardBrowser({
   renderCards(): ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-  const game = useGame();
+  const game = useGame((game) => game);
   const dragging = useDragOverlay() !== null;
   useLayoutEffect(() => {
     if (dragging) setOpen(false);

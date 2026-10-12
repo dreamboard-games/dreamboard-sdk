@@ -34,6 +34,27 @@ export async function proveBrowserDrag(
     await browse.click();
     const sheet = page.locator(".db-hand-sheet");
     await expect(sheet).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)");
+    if (hand && cdp) {
+      // The gutter scrolls the collection; pressing a card starts its gesture.
+      const content = sheet.locator(".db-hand-sheet-cards");
+      const bounds = (await content.boundingBox())!;
+      const x = bounds.x + 1;
+      const y = bounds.y + bounds.height - 20;
+      await cdp.send("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [{ x, y, id: 1 }],
+      });
+      for (let step = 1; step <= 8; step++) await move(x, y - step * 15);
+      await cdp.send("Input.dispatchTouchEvent", {
+        type: "touchEnd",
+        touchPoints: [],
+      });
+      await expect
+        .poll(() => content.evaluate((element) => element.scrollTop))
+        .toBeGreaterThan(0);
+      await expect(sheet).toBeVisible();
+      await expect(page.locator("[data-drag-overlay]")).toHaveCount(0);
+    }
     const card = sheet
       .locator(hand ? '[data-card^="spades-"]' : "[data-card]")
       .first();
