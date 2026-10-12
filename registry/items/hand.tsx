@@ -21,7 +21,6 @@ import { motion, useMotionValue, type MotionValue } from "motion/react";
 import {
   memo,
   useCallback,
-  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -40,7 +39,7 @@ import {
 } from "./card";
 import { CardControl } from "./card-control";
 import { CardArrival } from "./card-arrival";
-import { HandSheet } from "./hand-sheet";
+import { CardBrowser, useCardBrowsing } from "./card-browsing";
 import { cardEntry, useCardMotion, type CardPlacement } from "./card-motion";
 import { cardDragScale, cardPickup, cardSettle } from "./card";
 import "./tokens.css";
@@ -183,10 +182,7 @@ export function Hand({
   const probe = useRef<HTMLDivElement>(null);
   const latestOptions = useRef(options);
   latestOptions.current = options;
-  const [sheet, setSheet] = useState(false);
-  // Another seat never sees the previous seat's open sheet.
-  const perspective = useGame((game) => game.snapshot?.me);
-  useEffect(() => setSheet(false), [perspective]);
+  const browsing = useCardBrowsing();
   const [size, setSize] = useState({
     width: 0,
     card: 0,
@@ -368,7 +364,9 @@ export function Hand({
     activeCardId ??
     lastPointed;
   const active =
-    crowded || overlay || focusedId === null ? -1 : ids.indexOf(focusedId);
+    crowded || browsing.session || overlay || focusedId === null
+      ? -1
+      : ids.indexOf(focusedId);
   // The fan sits centred between its gutters; handFan works in its coordinates.
   const inset = gutter + Math.max(0, (size.width - fan.width - gutter * 2) / 2);
   const focus = handFan({
@@ -449,6 +447,7 @@ export function Hand({
     <>
       <section
         {...area.props}
+        {...browsing.props}
         aria-label={label}
         data-zone={zoneId}
         data-zone-host={hostId}
@@ -456,121 +455,119 @@ export function Hand({
         data-draw-over={drawOver || undefined}
         className={`db-hand ${className}`}
       >
-        <div
-          ref={setClip}
-          className="db-hand-clip"
-          style={{ paddingTop: headroom, marginTop: -headroom }}
+        <CardBrowser
+          session={browsing.session}
+          count={ids.length}
+          label={label}
+          renderCards={() =>
+            ids.map((id) => (
+              <CardControl
+                key={id}
+                cardId={id}
+                drag={false}
+                choosing={choosing}
+                renderCard={renderCard}
+                renderPreview={renderPreview}
+                getCardLabel={getCardLabel}
+              />
+            ))
+          }
         >
           <div
-            className="db-hand-fan"
-            style={{
-              width: Math.max(size.width, fan.width + gutter * 2),
-              height: height + headroom,
-              marginTop: -headroom,
-            }}
+            ref={setClip}
+            className="db-hand-clip"
+            style={{ paddingTop: headroom, marginTop: -headroom }}
           >
             <div
-              {...row.props}
-              className="db-hand-layer"
-              style={{ ...row.props.style, top: headroom, height }}
-              onPointerMove={pointed}
-              onPointerLeave={() => setLastPointed(null)}
+              className="db-hand-fan"
+              style={{
+                width: Math.max(size.width, fan.width + gutter * 2),
+                height: height + headroom,
+                marginTop: -headroom,
+              }}
             >
               <div
-                ref={probe}
-                aria-hidden
-                style={{
-                  position: "absolute",
-                  visibility: "hidden",
-                  width: "max-content",
-                }}
+                {...row.props}
+                className="db-hand-layer"
+                style={{ ...row.props.style, top: headroom, height }}
+                onPointerMove={pointed}
+                onPointerLeave={() => setLastPointed(null)}
               >
-                {firstCard ? (
-                  renderCard(firstCard, "idle")
-                ) : (
-                  <div className="db-card" />
-                )}
-              </div>
-              {ready &&
-                order.map((id, position) => {
-                  const index =
-                    opening >= 0 && position >= opening
-                      ? position + 1
-                      : position;
-                  return (
-                    <HandCard
-                      key={id}
-                      cardId={id}
-                      arriving={presentation.arrivingIds.includes(id)}
-                      zoneId={zoneId}
-                      hostId={hostId}
-                      gameUI={clip?.closest("[data-game-ui]") ?? null}
-                      index={index}
-                      x={places[index].x}
-                      y={places[index].y}
-                      rotate={places[index].rotate}
-                      scale={places[index].scale}
-                      overlay={
-                        overlay?.cardId === id &&
-                        (!overlay.settling || !overlay.landing)
-                          ? overlay
-                          : null
-                      }
-                      baseWidth={size.card}
-                      baseHeight={size.cardHeight}
-                      lift={lift}
-                      focused={index === active}
-                      crowded={crowded}
-                      choosing={choosing}
-                      renderCard={renderCard}
-                      renderPreview={renderPreview}
-                      getCardLabel={getCardLabel}
-                      destination={destination}
-                      onMenuChange={onMenuChange}
-                    />
-                  );
-                })}
-              {ready && ghost >= 0 && (
                 <div
-                  className={
-                    drawOver ? "db-draw-insertion" : "db-hand-insertion"
-                  }
-                  // A dragged card takes the size of the gap it would land in.
-                  data-drop-landing={drawOver ? undefined : "gap"}
+                  ref={probe}
                   aria-hidden
                   style={{
-                    width: size.card,
-                    height: size.cardHeight,
-                    transform: `translate(${fan.cards[ghost].x + inset}px, ${fan.cards[ghost].y + lift}px) rotate(${fan.cards[ghost].rotate}deg)`,
+                    position: "absolute",
+                    visibility: "hidden",
+                    width: "max-content",
                   }}
-                />
-              )}
-              {crowded && (
-                <button
-                  type="button"
-                  className="db-hand-open"
-                  aria-label={`${label}: ${ids.length} cards`}
-                  aria-haspopup="dialog"
-                  onClick={() => setSheet(true)}
                 >
-                  <span className="db-hand-count">{ids.length}</span>
-                </button>
-              )}
+                  {firstCard ? (
+                    renderCard(firstCard, "idle")
+                  ) : (
+                    <div className="db-card" />
+                  )}
+                </div>
+                {ready &&
+                  order.map((id, position) => {
+                    const index =
+                      opening >= 0 && position >= opening
+                        ? position + 1
+                        : position;
+                    return (
+                      <HandCard
+                        key={id}
+                        cardId={id}
+                        arriving={presentation.arrivingIds.includes(id)}
+                        zoneId={zoneId}
+                        hostId={hostId}
+                        gameUI={clip?.closest("[data-game-ui]") ?? null}
+                        index={index}
+                        x={places[index].x}
+                        y={places[index].y}
+                        rotate={places[index].rotate}
+                        scale={places[index].scale}
+                        overlay={
+                          overlay?.cardId === id &&
+                          (!overlay.settling || !overlay.landing)
+                            ? overlay
+                            : null
+                        }
+                        baseWidth={size.card}
+                        baseHeight={size.cardHeight}
+                        lift={lift}
+                        focused={index === active}
+                        crowded={crowded}
+                        choosing={choosing}
+                        renderCard={renderCard}
+                        renderPreview={renderPreview}
+                        getCardLabel={getCardLabel}
+                        destination={destination}
+                        onMenuChange={onMenuChange}
+                      />
+                    );
+                  })}
+                {ready && ghost >= 0 && (
+                  <div
+                    className={
+                      drawOver ? "db-draw-insertion" : "db-hand-insertion"
+                    }
+                    // A dragged card takes the size of the gap it would land in.
+                    data-drop-landing={drawOver ? undefined : "gap"}
+                    aria-hidden
+                    style={{
+                      width: size.card,
+                      height: size.cardHeight,
+                      transform: `translate(${fan.cards[ghost].x + inset}px, ${fan.cards[ghost].y + lift}px) rotate(${fan.cards[ghost].rotate}deg)`,
+                    }}
+                  />
+                )}
+              </div>
             </div>
           </div>
-        </div>
-        {ids.length === 0 && <p className="db-hand-empty">No cards</p>}
+          {ids.length === 0 && <p className="db-hand-empty">No cards</p>}
+        </CardBrowser>
       </section>
-      <HandSheet
-        open={sheet}
-        onOpenChange={setSheet}
-        ids={ids}
-        label={label}
-        choosing={choosing}
-        renderCard={renderCard}
-        renderPreview={renderPreview}
-        getCardLabel={getCardLabel}
-      />
     </>
   );
 }

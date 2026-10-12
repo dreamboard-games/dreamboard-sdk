@@ -246,7 +246,7 @@ export async function proveHandChoreography(
       transform: "translateZ(0)",
     }),
   );
-  const open = hand.getByRole("button", { name: "Your hand: 9 cards" });
+  const open = hand.getByRole("button", { name: "Browse 9 cards" });
   await expect(open).toBeVisible();
   await expect(hand.getByRole("button")).toHaveCount(1);
   await page.waitForTimeout(650);
@@ -267,7 +267,8 @@ export async function proveHandChoreography(
   await hand.evaluate((element) => {
     (element as HTMLElement).style.width = "340px";
   });
-  await expect(open).toHaveCount(0);
+  await expect(open).toBeVisible();
+  await expect(hand.locator("button.db-hand-card")).toHaveCount(9);
   await page.waitForTimeout(650);
   if (!touch) {
     const first = cards.first();
@@ -352,7 +353,9 @@ export async function proveHandReading(
       touchPoints: [{ ...at, id: 1 }],
     });
   } else await page.keyboard.down("Alt");
-  const preview = page.locator("[data-card-preview]");
+  const preview = page.locator(
+    touch ? "[data-touch-preview]" : "[data-card-preview]",
+  );
   await expect(preview).toBeVisible();
   await expect(preview).toHaveCSS("opacity", "1");
   const face = (await preview.locator(".db-card").boundingBox())!;
