@@ -67,6 +67,10 @@
     background: var(--table);
     color: var(--table-foreground);
   }
+  /* Outline buttons inherit text; pair a UI background with its own foreground. */
+  .db-table .bg-background {
+    color: var(--foreground);
+  }
   .db-card {
     position: relative;
     box-sizing: border-box;
