@@ -29,6 +29,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --dir packages/sdk build
       - run: pnpm --dir registry check
+      - run: pnpm --dir registry exec playwright install --with-deps chromium
       - run: pnpm --dir registry smoke
       - run: pnpm --dir registry smoke:bound
       - name: Assemble registry site
