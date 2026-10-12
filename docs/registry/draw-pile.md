@@ -58,7 +58,7 @@ registers its exact source zone and host with `useShortcutTarget`. Install
 child to map number keys to the counted draw. The keys submit one canonical
 interaction payload; they do not loop the one-card menu action. Menu hints read
 that same binding through `useShortcutHints`, which returns no hints when the
-feature is absent. Export the inferred hooks and the bound SDK
+feature is absent or the latest press was a finger. Export the inferred hooks and the bound SDK
 `ShortcutZoneTarget<Definition>` alias from `@game`; the source and destination
 props retain that canonical zone/host correlation.
 

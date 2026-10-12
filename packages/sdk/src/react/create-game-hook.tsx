@@ -537,7 +537,8 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
       useSelector(session.store, () => session.getShortcutActivity(), {
         compare: (left, right) =>
           left.focusedTarget === right.focusedTarget &&
-          left.pointerActive === right.pointerActive,
+          left.pointerActive === right.pointerActive &&
+          left.touch === right.touch,
       });
       useGame(
         (snapshot) =>

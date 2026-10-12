@@ -69,7 +69,11 @@ test("opt-in adapter ignores competing browser/UI input, handles once, and clean
   const target = { kind: "zone" as const, zoneId: "deck", hostId: "table" };
   const session = {
     getActiveTarget: () => target,
-    getShortcutActivity: () => ({ focusedTarget: null, pointerActive: false }),
+    getShortcutActivity: () => ({
+      focusedTarget: null,
+      pointerActive: false,
+      touch: false,
+    }),
   };
   const onResult = vi.fn();
   const options = {
@@ -189,7 +193,11 @@ test("late result after unmount or source switch does not notify the new lifetim
     }),
   });
   const session = {
-    getShortcutActivity: () => ({ focusedTarget: null, pointerActive: false }),
+    getShortcutActivity: () => ({
+      focusedTarget: null,
+      pointerActive: false,
+      touch: false,
+    }),
     getActiveTarget: () => ({
       kind: "zone" as const,
       zoneId: "deck",
@@ -407,6 +415,67 @@ test("bound hooks retain admitted frame targets, clear replaced controls and sou
   expect(host.querySelector("output")!.textContent).toBe(
     '{"target":null,"hints":[]}',
   );
+  await act(async () => root.unmount());
+  host.remove();
+});
+
+test("a finger press hides key hints until the next key or mouse press", async () => {
+  const { createGameHook } = await import("./create-game-hook.js");
+  const { GameProvider, useGameShortcuts, useShortcutHints } = createGameHook()(
+    {
+      features: (game, context) => ({
+        shortcuts: shortcutsFeature(game, context),
+      }),
+    },
+  );
+  const source = createTestSource(snapshot());
+  const deck = { kind: "zone", zoneId: "deck", hostId: "table" } as const;
+  function App() {
+    useGameShortcuts({
+      bindings: [
+        {
+          kind: "interaction" as const,
+          keys: ["1"],
+          label: "Draw",
+          target: "zone",
+          zoneId: "deck",
+          interaction: "play.draw",
+          inputs: () => ({ count: 1 }),
+        },
+      ],
+    });
+    // A pile's menu names its own target, so its hints need no focus.
+    const hints = useShortcutHints(deck);
+    return <output>{hints.flatMap((hint) => hint.keys).join()}</output>;
+  }
+  const host = document.createElement("div");
+  document.body.append(host);
+  const root = createRoot(host);
+  await act(async () =>
+    root.render(
+      <GameProvider source={source}>
+        <App />
+      </GameProvider>,
+    ),
+  );
+  const shown = () => host.querySelector("output")!.textContent;
+  const press = (pointerType: string) =>
+    act(async () =>
+      host.dispatchEvent(
+        new PointerEvent("pointerdown", { bubbles: true, pointerType }),
+      ),
+    );
+  expect(shown()).toBe("1");
+  await press("touch");
+  expect(shown()).toBe("");
+  await act(async () =>
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Shift" })),
+  );
+  expect(shown()).toBe("1");
+  await press("touch");
+  expect(shown()).toBe("");
+  await press("pen");
+  expect(shown()).toBe("1");
   await act(async () => root.unmount());
   host.remove();
 });
