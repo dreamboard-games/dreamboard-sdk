@@ -39,11 +39,12 @@ down, and when to shuffle. `CardPile` submits no actions.
 
 Omit `count` to use the projected zone count. Supply an aggregate `count` when
 another player's concealed zone exposes its size without card identities; the
-pile shows a card back. Normal div props and `ref` are forwarded. Styling lives
+pile shows a card back and applies pending incoming/outgoing deltas to that
+authoritative count. Normal div props and `ref` are forwarded. Styling lives
 in `card-pile.css`; `--card-w-pile` sizes both the stack and its live control.
 Surrounding scroll containers must reserve space for the
 badge outside the card's top and right edges.
 
 Use the pure `Pile` component when no bound drag presentation is needed. The
-game binding must export `useZonePresentation`, `useDragOverlay`, `GameCard` and
+game binding must export `useGame`, `useZonePresentation`, `useDragOverlay`, `GameCard` and
 `ZoneId`.

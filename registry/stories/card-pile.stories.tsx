@@ -93,6 +93,10 @@ function face(card: GameCard, state: CardState) {
   );
 }
 function Zone({ definition }: { definition: (typeof zones)[number] }) {
+  // Exercise an authored authoritative count alongside SDK pending presentation.
+  const count = useGame(
+    (game) => game.zones.find(definition.id, "table")?.count ?? 0,
+  );
   return (
     <DropArea
       binding={{
@@ -109,6 +113,7 @@ function Zone({ definition }: { definition: (typeof zones)[number] }) {
         zoneId={definition.id}
         hostId="table"
         label={definition.name}
+        count={definition.id === "deck" ? count : undefined}
         renderCard={(card, arriving) => (
           <CardControl
             cardId={card.id}

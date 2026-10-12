@@ -1,5 +1,6 @@
 import {
   useDragOverlay,
+  useGame,
   useZonePresentation,
   type GameCard,
   type ZoneId,
@@ -34,6 +35,10 @@ export function CardPile({
 }: CardPileProps) {
   const presentation = useZonePresentation(zoneId, hostId);
   const { cards, arrivingIds } = presentation;
+  const authoritativeCount = useGame(
+    (game) => game.zones.find(zoneId, hostId)?.count ?? 0,
+  );
+  const pendingDelta = presentation.count - authoritativeCount;
   const overlay = useDragOverlay();
   const liftedIds = overlay && !overlay.settling ? overlay.cardIds : [];
   const lifted = cards.filter((card) => liftedIds.includes(card.id));
@@ -43,7 +48,13 @@ export function CardPile({
   const top = cards[0];
   return (
     <div {...props} className={`db-card-pile ${className}`}>
-      <Pile count={(count ?? presentation.count) - lifted.length} label={label}>
+      <Pile
+        count={
+          (count === undefined ? presentation.count : count + pendingDelta) -
+          lifted.length
+        }
+        label={label}
+      >
         {next ? (
           <div aria-hidden className="db-card-pile-underneath">
             {renderFace(next)}

@@ -85,6 +85,7 @@ export async function proveCardPile(page: Page, touch: boolean) {
   await pickup(table.locator(card(first)));
   await drop(deck);
   await expect(deck.locator(card(first))).toBeDisabled();
+  await expect(deck.locator(".db-pile-count")).toHaveText("2");
   await expect(
     deck.locator(card(first)).getByRole("img", { name: "Face-down card" }),
   ).toBeVisible();
@@ -92,6 +93,17 @@ export async function proveCardPile(page: Page, touch: boolean) {
   await expect(authority).toHaveText(accepted);
   await page.getByRole("button", { name: "Reject move" }).click();
   await expect(table.locator(card(first))).toBeEnabled();
+  await expect(deck.locator(".db-pile-count")).toHaveText("1");
+
+  // An aggregate count also subtracts a pending outgoing card, then restores it.
+  await pickup(deck.locator("button[data-card]"));
+  await drop(table);
+  await expect(deck.locator(".db-pile")).toHaveAttribute("data-empty", "true");
+  await expect(deck.locator(".db-pile-count")).toHaveCount(0);
+  await expect(authority).toHaveText(accepted);
+  await page.getByRole("button", { name: "Reject move" }).click();
+  await expect(deck.locator(".db-pile-count")).toHaveText("1");
+  await expect(deck.locator("button[data-card]")).toBeEnabled();
 
   // Move the top destination card away, then cancel lifting its last card.
   await pickup(table.locator(card(first)));
