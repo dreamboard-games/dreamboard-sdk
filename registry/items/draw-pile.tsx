@@ -34,6 +34,7 @@ import {
   cardSettle,
 } from "./card";
 import { Pile } from "./pile";
+import { PileRiffle } from "./pile-riffle";
 import { useCardMotion, type CardBox, type CardPlacement } from "./card-motion";
 import "./tokens.css";
 
@@ -62,7 +63,7 @@ export type DrawPileProps<K extends InteractionKey = InteractionKey> =
       className?: string;
     };
 
-/** A face-down draw action: tap for its menu or drop its visual copy into a hand. */
+/** A face-down draw action: tap for its menu or drop its visual copy into a hand. It riffles when shuffled. */
 export function DrawPile<K extends InteractionKey>(props: DrawPileProps<K>) {
   const {
     destinationHostId,
@@ -420,6 +421,7 @@ export function DrawPile<K extends InteractionKey>(props: DrawPileProps<K>) {
         >
           <CardBack image={lifted ? nextBack : back} />
         </button>
+        <PileRiffle zoneId={zoneId} hostId={hostId} />
       </Pile>
       {open && (
         <Popover.Root

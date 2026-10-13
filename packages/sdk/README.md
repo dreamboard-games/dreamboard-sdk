@@ -291,7 +291,9 @@ phase entry and returned transitions.
 
 Mutation callbacks use `tx.roll(dieId)`, `tx.shuffle({ zone: { zoneId, hostId } })`,
 `tx.deal({ from, to, count })` and
-`tx.flipCard({ cardId, faceUp })` directly. Return
+`tx.flipCard({ cardId, faceUp })` directly. Like events, the zones the latest
+accepted operation shuffled are recorded in the runtime state; every seat that
+sees such a zone learns that it was shuffled, never its new order. Return
 `tx.transition(phaseName)` to enter a phase, including reentering the current
 phase. An unreturned outcome schedules no work. Entry chains are bounded to
 1,000 entries per dispatch. `tx.endGame(outcome, { transition })` enters the
@@ -364,7 +366,8 @@ same explicit params as `submit(params)`, retaining pending and connection gates
 `handFan` adds a focused, readable card with configurable presets and timing,
 and
 `originsFeature` adds `card.getOrigin()` so a newly shown card can animate from
-the zone or player it came from.
+the zone or player it came from, and `zone.getShuffle()` so a shuffled pile can
+riffle.
 
 ## Local hand sorting
 

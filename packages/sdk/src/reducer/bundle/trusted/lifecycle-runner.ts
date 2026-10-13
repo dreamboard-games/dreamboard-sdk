@@ -4,6 +4,7 @@ import { safeParseOrThrow } from "../../parse-utils";
 import { createStateQueries } from "../../table-queries";
 import type {
   GameEvent,
+  ZoneRef,
   ExactManifestContractOf,
   GameOutcome,
   PhaseMapOf,
@@ -84,6 +85,7 @@ export function createLifecycleRunner<
     consumptions: RngConsumption[];
     terminal?: GameOutcome<PlayerId>;
     events: GameEvent[];
+    shuffledZones: readonly ZoneRef[];
   } {
     const enteringState = {
       ...state,
@@ -111,6 +113,7 @@ export function createLifecycleRunner<
     const consumptions: RngConsumption[] = [];
     let terminal: GameOutcome<PlayerId> | undefined;
     const events: GameEvent[] = [];
+    let shuffledZones: readonly ZoneRef[] = [];
     if (phase.enter) {
       const random = createMutableRandomHelpers(workingState.runtime.rng);
       const enterArgs = scope.buildRuntimeArgs(
@@ -137,6 +140,7 @@ export function createLifecycleRunner<
       };
       terminal ??= entered.terminal;
       events.push(...(entered.events ?? []));
+      shuffledZones = entered.shuffledZones ?? [];
       consumptions.push(...random.consumptions());
       transition = entered.transition;
     }
@@ -147,6 +151,7 @@ export function createLifecycleRunner<
       consumptions,
       ...(terminal ? { terminal } : {}),
       events,
+      shuffledZones,
     };
   }
 
@@ -159,6 +164,7 @@ export function createLifecycleRunner<
     consumptions: RngConsumption[];
     terminal?: GameOutcome<PlayerId>;
     events: GameEvent[];
+    shuffledZones: readonly ZoneRef[];
   } {
     return enterPhase({
       state,

@@ -72,6 +72,11 @@ export const TransitionRecordSchema = z.strictObject({
   to: z.string().min(1),
 });
 
+export const ShuffledZoneSchema = z.strictObject({
+  zoneId: z.string().min(1),
+  hostId: z.string().min(1),
+});
+
 export const ReferenceBasisSchema = z.strictObject({
   sessionId: z.string().min(1),
   version: z.number().int().gte(0),
@@ -147,6 +152,11 @@ export const ReducerRuntimeStateSchema = z.strictObject({
   simultaneous: RuntimeSimultaneousStateSchema,
   lastTransition: z.union([TransitionRecordSchema, z.null()]),
   options: z.record(z.string(), RuntimeJsonSchema),
+  /**
+   * Zones the latest accepted operation shuffled; omitted when it shuffled
+   * none, so sessions saved before shuffles were recorded stay valid.
+   */
+  shuffledZones: z.array(ShuffledZoneSchema).min(1).optional(),
 });
 
 export const ReducerDomainStateSchema = z.strictObject({

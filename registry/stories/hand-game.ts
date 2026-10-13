@@ -160,6 +160,13 @@ export function createHandGame(handSize: number, copies = 1, reorder = false) {
               });
             },
           }),
+          shuffle: play.interaction({
+            presentation: { label: "Shuffle" },
+            inputs: {},
+            reduce({ tx }) {
+              tx.shuffle({ zone: { zoneId: "deck" } });
+            },
+          }),
           endTurn: play.interaction({
             presentation: { label: "End turn" },
             inputs: {},

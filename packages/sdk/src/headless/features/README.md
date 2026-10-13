@@ -30,7 +30,8 @@ They add no DOM, React, CSS dependencies, or executable game imports.
   the current frame left, or the sole active player on the immediately preceding frame when it came from
   zones the seat's frame does not list. Visible cards are followed by id and
   hidden cards counted per zone. Ambiguous sources and arriving positions have
-  no origin. Pure fan geometry is `fanLayout` in
+  no origin. It also adds `zone.getShuffle()`, set when the operation that
+  produced the current frame shuffled the zone. Pure fan geometry is `fanLayout` in
   `../fan.ts`; neither touches the DOM.
 - `panZoomFeature` adds immutable `game.viewport` state and native pointer/wheel
   props. Apply `viewport.getTransform()` through `board.getLayout({ hexSize,

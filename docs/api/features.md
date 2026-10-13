@@ -25,6 +25,7 @@
 <!-- api: root GestureKind -->
 <!-- api: root GestureRecognizer -->
 <!-- api: root CardOrigin -->
+<!-- api: root ZoneShuffle -->
 <!-- api: root fanLayout -->
 <!-- api: root liftFanCard -->
 <!-- api: root FanOptions -->
@@ -99,6 +100,7 @@ Generic boards reject spatial layout requests; square and hex layouts reuse the 
 | `game.drag`              | `active` (cardId, target)   | `getCanDrag(cardId, options?)`, `getDropTargets()`                  | `begin(cardId, options?)`, `setDropTarget`, `drop`, `cancel` |
 | `game.viewport`          | `transform` (x, y, scale)   | `getTransform`, `getProps`                                          | `setTransform`, `reset`; pointer and wheel props             |
 | Card with originsFeature | Existing card data          | `getOrigin()`                                                       | —                                                            |
+| Zone with originsFeature | Existing zone data          | `getShuffle()`                                                      | —                                                            |
 
 `handFeature(core, context, { zones? })` owns local sort selection per zone and
 host. Declare each zone's named `sorts` with a `compare` function and optional
@@ -197,7 +199,10 @@ card came from zones the seat's frame does not list. Player origins require a
 consecutive frame and one sole active player other than the seat. Hidden zone
 origins are inferred from net counts; ambiguous sources or arriving positions
 return `null`. It is also `null` on the first frame and after a seat or source
-change. `fanLayout(FanOptions)`
+change. The same feature adds `zone.getShuffle()`, a `ZoneShuffle` (`{ version }`)
+when the operation that produced the current frame shuffled the zone, under the
+same consecutive-frame rule; the version tells two shuffles in a row apart.
+`fanLayout(FanOptions)`
 returns a `FanLayout`: a `FanCard` (`x`, `y`, `rotate`) per card on a circular
 arc, and the bounding `width` and `height`. `liftFanCard(card, distance)` moves
 a card along its own tilt. `handFan(HandFanInput)` adds one focused card to that

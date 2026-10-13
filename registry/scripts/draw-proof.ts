@@ -18,6 +18,95 @@ async function readSample<T>(watch: JSHandle<{ sample: T | null }>) {
   return sample!;
 }
 
+/** A shuffle riffles the deck above the page and within the window, unless motion is reduced. */
+export async function proveShuffleRiffle(page: Page) {
+  const riffle = page.locator('[data-pile-riffle="deck"]');
+  const shuffle = page.getByRole("button", { name: "Shuffle deck" });
+  await expect(
+    page.getByRole("button", { name: "Deck actions" }),
+  ).toBeVisible();
+  await expect(riffle).toHaveCount(0);
+  const stack = page.locator(".db-pile-stack").filter({
+    has: page.getByRole("button", { name: "Deck actions" }),
+  });
+  const originalStyle = await stack.getAttribute("style");
+  for (const position of [
+    "",
+    "top: 1px; left: 8px",
+    "top: 1px; right: 8px",
+    "bottom: 1px; left: 8px",
+    "bottom: 1px; right: 8px",
+  ]) {
+    if (position)
+      await stack.evaluate((element, position) => {
+        element.setAttribute("style", `position: fixed; ${position}`);
+      }, position);
+    const watch = await page.evaluateHandle(() => {
+      const extents = {
+        left: Infinity,
+        right: -Infinity,
+        top: Infinity,
+        bottom: -Infinity,
+        frames: 0,
+        done: false,
+      };
+      const sample = () => {
+        const current = document.querySelector('[data-pile-riffle="deck"]');
+        if (!current && extents.frames) {
+          extents.done = true;
+          return;
+        }
+        if (current) {
+          for (const card of current.querySelectorAll(".db-card")) {
+            const box = card.getBoundingClientRect();
+            extents.left = Math.min(extents.left, box.left);
+            extents.right = Math.max(extents.right, box.right);
+            extents.top = Math.min(extents.top, box.top);
+            extents.bottom = Math.max(extents.bottom, box.bottom);
+          }
+          extents.frames++;
+        }
+        requestAnimationFrame(sample);
+      };
+      requestAnimationFrame(sample);
+      return extents;
+    });
+    // A corner-positioned pile can cover the story's button in landscape.
+    await shuffle.press("Enter");
+    await expect(riffle).toHaveCount(1);
+    await expect(riffle.locator(".db-card")).toHaveCount(8);
+    await expect.poll(() => watch.evaluate((value) => value.done)).toBe(true);
+    const extents = await watch.evaluate((value) => value);
+    await watch.dispose();
+    expect(extents.frames).toBeGreaterThan(5);
+    expect(extents.left, position).toBeGreaterThanOrEqual(0);
+    expect(extents.right, position).toBeLessThanOrEqual(
+      page.viewportSize()!.width,
+    );
+    expect(extents.top, position).toBeGreaterThanOrEqual(0);
+    expect(extents.bottom, position).toBeLessThanOrEqual(
+      page.viewportSize()!.height,
+    );
+    await expect(riffle).toHaveCount(0);
+  }
+  await stack.evaluate((element, style) => {
+    if (style === null) element.removeAttribute("style");
+    else element.setAttribute("style", style);
+  }, originalStyle);
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await shuffle.click();
+  await expect(shuffle).toBeEnabled();
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  );
+  await expect(riffle).toHaveCount(0);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+}
+
 /** Replacing or unmounting a cosmetic flight must release its confirmed arrivals. */
 export async function proveDrawLifecycle(page: Page, touch: boolean) {
   const cards = page

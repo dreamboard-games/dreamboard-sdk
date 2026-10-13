@@ -10,6 +10,7 @@ import { proveCardDrag } from "./card-drag-proof.ts";
 import {
   proveDraw,
   proveDrawLifecycle,
+  proveShuffleRiffle,
   proveDrawTouchActivation,
   proveHostDraw,
   proveReducedCardMotion,
@@ -403,8 +404,11 @@ try {
         await proveHandReorder(page, touch);
       if (story.id.endsWith("pending-draw") && name !== "landscape")
         await proveDraw(page, touch, true);
-      if (story.id.endsWith("draw-lifecycle") && name !== "landscape")
-        await proveDrawLifecycle(page, touch);
+      if (story.id.endsWith("draw-lifecycle")) {
+        await proveShuffleRiffle(page);
+        await page.reload();
+        if (name !== "landscape") await proveDrawLifecycle(page, touch);
+      }
       if (story.id.endsWith("empty-hand") && name !== "landscape") {
         if (touch) await proveDrawTouchActivation(page);
         await proveDraw(page, touch, true, 0);

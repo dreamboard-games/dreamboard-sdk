@@ -15,6 +15,9 @@ export type CardOrigin<G> =
     }
   | { readonly player: IdOf<G, "playerId">; readonly hidden: true };
 
+/** The frame whose operation shuffled a zone; its version tells two shuffles apart. */
+export type ZoneShuffle = { readonly version: number };
+
 type RuntimeOrigin =
   | {
       readonly zone: string;
@@ -165,15 +168,19 @@ function moverOf(snapshot: SourceSnapshot) {
 
 /**
  * Adds `card.getOrigin()`: where a card that arrived in its zone with the
- * current frame came from, or null. Origins last until the next frame and
- * reset when the seat or source changes. Hidden origins are inferred from
- * net counts; ambiguous sources and arriving positions return null.
+ * current frame came from, or null, and `zone.getShuffle()`: whether the
+ * operation that produced the current frame shuffled the zone. Both last
+ * until the next frame and reset when the seat or source changes. Hidden
+ * origins are inferred from net counts; ambiguous sources and arriving
+ * positions return null.
  */
 export function originsFeature<G>(game: CoreInstance<G>) {
   type Origins = ReadonlyMap<SeatCardId<G>, CardOrigin<G>>;
   let frame = game.snapshot;
   let source = game.getOptions().source;
   let origins: Origins = new Map();
+  let shuffled: ReadonlySet<string> = new Set();
+  let shuffle: ZoneShuffle | null = null;
   function sync() {
     const next = game.snapshot;
     const nextSource = game.getOptions().source;
@@ -183,19 +190,29 @@ export function originsFeature<G>(game: CoreInstance<G>) {
       nextSource === source
     )
       return;
-    // Game-binding boundary: card, zone and player ids come from this instance's frames.
-    origins =
+    origins = new Map();
+    shuffled = new Set();
+    shuffle = null;
+    if (
       frame &&
       next &&
       next.me === frame.me &&
       nextSource === source &&
       next.version === frame.version + 1
-        ? (findCardOrigins(
-            frame.frame.zones,
-            next.frame.zones,
-            moverOf(frame),
-          ) as Origins)
-        : new Map();
+    ) {
+      // Game-binding boundary: card, zone and player ids come from this instance's frames.
+      origins = findCardOrigins(
+        frame.frame.zones,
+        next.frame.zones,
+        moverOf(frame),
+      ) as Origins;
+      shuffled = new Set(
+        Object.entries(flatten(next.frame.zones))
+          .filter(([, zone]) => zone.shuffled)
+          .map(([zone]) => zone),
+      );
+      shuffle = Object.freeze({ version: next.version });
+    }
     frame = next;
     source = nextSource;
   }
@@ -206,6 +223,17 @@ export function originsFeature<G>(game: CoreInstance<G>) {
       getOrigin(this: { readonly id: SeatCardId<G> }): CardOrigin<G> | null {
         sync();
         return origins.get(this.id) ?? null;
+      },
+    },
+    zone: {
+      getShuffle(this: {
+        readonly id: IdOf<G, "zoneId">;
+        readonly hostId: ZoneHostId<G>;
+      }): ZoneShuffle | null {
+        sync();
+        return shuffled.has(JSON.stringify([this.id, this.hostId]))
+          ? shuffle
+          : null;
       },
     },
     dispose: unsubscribe,

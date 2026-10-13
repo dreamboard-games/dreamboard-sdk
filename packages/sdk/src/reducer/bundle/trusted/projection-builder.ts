@@ -181,11 +181,15 @@ export function createProjectionBuilder<
           cardViewsById: Record<string, ViewCard>;
           cardBacksById: Record<string, string>;
           playableByCardId: Record<string, string[]>;
+          shuffled?: true;
         }
       >
     > = {};
+    // A seat learns that a zone it can see was shuffled, never the new order.
+    const shuffledZones = combinedState.runtime.shuffledZones ?? [];
     for (const {
       zoneId,
+      hostId,
       seatHostId,
       componentIds,
       tiles,
@@ -265,6 +269,11 @@ export function createProjectionBuilder<
         cardViewsById,
         cardBacksById,
         playableByCardId,
+        ...(shuffledZones.some(
+          (zone) => zone.zoneId === zoneId && zone.hostId === hostId,
+        )
+          ? { shuffled: true as const }
+          : {}),
       };
     }
     return result;

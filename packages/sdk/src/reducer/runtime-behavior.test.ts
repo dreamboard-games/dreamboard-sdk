@@ -76,6 +76,86 @@ function expectProjectionTiming(
 }
 
 describe("direct reducer lifecycle and seeded operations", () => {
+  test("records the zones an operation shuffled for every seat until the next operation", async () => {
+    const contract = createGame({
+      manifest: createManifestContract(),
+      phases: { play: z.object({}) },
+      state: {
+        public: z.object({}),
+        private: z.object({}),
+        hidden: z.object({}),
+      },
+    });
+    const play = contract.phase("play");
+    const game = contract.assemble({
+      view: () => ({}),
+      initial: {
+        public: () => ({}),
+        private: () => ({}),
+        hidden: () => ({}),
+      },
+      initialPhase: "play",
+      phases: {
+        play: play.define({
+          kind: "player",
+          initialState: () => ({}),
+          interactions: {
+            shuffle: play.interaction({
+              inputs: {},
+              reduce({ tx }) {
+                tx.shuffle({ zone: { zoneId: "draw" } });
+                tx.shuffle({ zone: { zoneId: "draw" } });
+              },
+            }),
+            pass: play.interaction({ inputs: {}, reduce() {} }),
+          },
+        }),
+      },
+    });
+    const bundle = createReducerTestingRuntime(game);
+    const playerIds = ["player-1", "player-2"];
+    const initial = (
+      await bundle.initialize({ table: createTable(), playerIds, rngSeed: 7 })
+    ).state;
+    const dispatch = async (
+      state: typeof initial,
+      interactionId: "shuffle" | "pass",
+    ) => {
+      const result = await bundle.dispatch({
+        referenceBasis: testReferenceBasis,
+        state,
+        input: {
+          basis: testGameplayBasis("player-1"),
+          kind: "interaction",
+          playerId: "player-1",
+          interactionId,
+          params: {},
+        },
+      });
+      if (result.kind !== "accept")
+        throw new Error(`${interactionId} rejected`);
+      return result.state;
+    };
+    const drawFor = (state: typeof initial, playerId: string) =>
+      bundle.project({ state, playerIds, referenceBasis: testReferenceBasis })
+        .seats[playerId]?.zones?.draw?.table;
+    expect(initial.runtime).not.toHaveProperty("shuffledZones");
+
+    const shuffled = await dispatch(initial, "shuffle");
+    expect(ReducerWireZod.ReducerSessionStateSchema.parse(shuffled)).toEqual(
+      shuffled,
+    );
+    expect(shuffled.runtime.shuffledZones).toEqual([
+      { zoneId: "draw", hostId: "table" },
+    ]);
+    for (const playerId of playerIds)
+      expect(drawFor(shuffled, playerId)?.shuffled).toBe(true);
+
+    const passed = await dispatch(shuffled, "pass");
+    expect(passed.runtime).not.toHaveProperty("shuffledZones");
+    expect(drawFor(passed, "player-1")).not.toHaveProperty("shuffled");
+  });
+
   test("accepted mixed random helpers and transaction operations publish one contiguous RNG stream through entry", async () => {
     const contract = createGame({
       manifest: createManifestContract(),

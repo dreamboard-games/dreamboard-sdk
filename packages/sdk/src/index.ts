@@ -32,6 +32,7 @@ export * from "./headless/features/pan-zoom.js";
 export {
   originsFeature,
   type CardOrigin,
+  type ZoneShuffle,
 } from "./headless/features/origins.js";
 export * from "./headless/gesture.js";
 export * from "./headless/fan.js";

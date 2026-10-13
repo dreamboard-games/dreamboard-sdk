@@ -56,6 +56,8 @@ export interface ZoneHandlesSnapshot<Interaction extends string = string> {
   readonly playableByCardId: Readonly<
     Record<string, readonly InteractionDescriptor<Interaction>[]>
   >;
+  /** The operation that produced this frame shuffled the zone. */
+  readonly shuffled?: true;
 }
 
 type ReadonlyProjection<Value> = Value extends
