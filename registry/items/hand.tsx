@@ -458,7 +458,9 @@ export function Hand({
         <CardBrowser
           session={browsing.session}
           count={ids.length}
-          needed={ready && ids.length * size.card > size.width - gutter * 2 + 1}
+          overlapping={
+            ready && ids.length * size.card > size.width - gutter * 2 + 1
+          }
           label={label}
           renderCards={() =>
             ids.map((id) => (

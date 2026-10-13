@@ -84,14 +84,14 @@ export function useCardBrowsing() {
 export function CardBrowser({
   session,
   count,
-  needed,
+  overlapping,
   label,
   children,
   renderCards,
 }: {
   session: TouchSession | null;
   count: number;
-  needed: boolean;
+  overlapping: boolean;
   label: string;
   children: ReactNode;
   renderCards(): ReactNode;
@@ -103,7 +103,7 @@ export function CardBrowser({
   return (
     <Browsing value={{ session, inSheet: false, closeSheet }}>
       <Drawer.Root open={open} onOpenChange={setOpen}>
-        {needed && count > 1 ? (
+        {overlapping && count > 1 ? (
           <Drawer.Trigger
             render={<Button variant="outline" className="db-card-browse" />}
           >
