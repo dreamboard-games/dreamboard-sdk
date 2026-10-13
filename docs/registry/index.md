@@ -16,6 +16,7 @@ is separate from the locally verified installation workflow.
 - [standings](standings.md)
 - [results](results.md)
 - [card-row](card-row.md)
+- [card-pile](card-pile.md)
 - [hand](hand.md)
 - [card-preview](card-preview.md)
 - [card-actions](card-actions.md)

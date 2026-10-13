@@ -298,6 +298,29 @@
     },
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "card-pile",
+      "type": "registry:component",
+      "title": "Card pile",
+      "description": "A bound top-first pile with drag pickup and pending landing presentation.",
+      "meta": {
+        "binding": "workspace"
+      },
+      "files": [
+        {
+          "path": "items/card-pile.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/card-pile.tsx"
+        },
+        {
+          "path": "items/card-pile.css",
+          "type": "registry:file",
+          "target": "@components/dreamboard/card-pile.css"
+        }
+      ],
+      "registryDependencies": ["@dreamboard/pile", "@dreamboard/card"]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
       "name": "card-row",
       "type": "registry:component",
       "title": "Card Row",

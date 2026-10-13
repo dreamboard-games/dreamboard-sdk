@@ -25,6 +25,7 @@ import {
   proveLimitedCardPreview,
 } from "./card-browsing-proof.ts";
 import { proveBrowserDrag } from "./card-browser-drag-proof.ts";
+import { proveCardPile } from "./card-pile-proof.ts";
 import { proveCardRow } from "./card-row-proof.ts";
 import { proveHandReorder } from "./hand-reorder-proof.ts";
 import { proveCardLandings } from "./card-landing-proof.ts";
@@ -110,6 +111,15 @@ try {
           page,
           `${root}/build/screenshots/phone-card-browsing-compact.png`,
         );
+      if (story.id === "registry-card-pile--pickup-and-landing") {
+        await proveCardPile(page, touch);
+        if (!touch) {
+          await page.emulateMedia({ reducedMotion: "reduce" });
+          await page.reload();
+          await proveCardPile(page, false);
+          await page.emulateMedia({ reducedMotion: "no-preference" });
+        }
+      }
       if (story.id === "registry-card-row--ordered-positions") {
         await proveCardRow(page, touch);
         await page.reload();
