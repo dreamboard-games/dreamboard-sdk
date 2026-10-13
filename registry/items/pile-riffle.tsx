@@ -14,6 +14,7 @@ type PileZone = ShortcutZoneTarget extends infer Target
 
 /** Seconds from the split until the riffled pile squares up. */
 const RIFFLE_DURATION = 0.66;
+const PACKET_ROTATION = 9;
 
 /**
  * Riffles the `Pile` it is placed in when the operation that produced the
@@ -43,9 +44,15 @@ export function PileRiffle({ zoneId, hostId }: PileZone) {
     });
   }, [version, reduced]);
   const overlay = () => {
-    const { x, y, width } = riffle!.box;
+    const { x, y, width, height } = riffle!.box;
     const apart = width * 0.6;
-    const lift = width * -0.12;
+    // sin(angle) <= angle keeps this margin safe throughout the rotation,
+    // including the interpolated frames on the way back to the pile.
+    const verticalReach = (width * PACKET_ROTATION * Math.PI) / 360;
+    const lift = Math.min(
+      Math.max(width * -0.12, verticalReach - y),
+      innerHeight - y - height - verticalReach,
+    );
     // A tilted packet reaches a little past its spread.
     const reach = width * 0.75;
     const center = Math.min(
@@ -71,7 +78,7 @@ export function PileRiffle({ zoneId, hostId }: PileZone) {
             animate={{
               x: [0, split(side), split(side), 0],
               y: [0, lift, lift, 0],
-              rotate: [0, side * 9, side * 9, 0],
+              rotate: [0, side * PACKET_ROTATION, side * PACKET_ROTATION, 0],
             }}
             transition={{
               duration: 0.5,
@@ -90,7 +97,7 @@ export function PileRiffle({ zoneId, hostId }: PileZone) {
               initial={{
                 x: split(side),
                 y: lift,
-                rotate: side * 9,
+                rotate: side * PACKET_ROTATION,
                 opacity: 0,
               }}
               animate={{ x: 0, y: 0, rotate: 0, opacity: 1 }}

@@ -388,10 +388,10 @@ try {
         await proveHandReorder(page, touch);
       if (story.id.endsWith("pending-draw") && name !== "landscape")
         await proveDraw(page, touch, true);
-      if (story.id.endsWith("draw-lifecycle") && name !== "landscape") {
+      if (story.id.endsWith("draw-lifecycle")) {
         await proveShuffleRiffle(page);
         await page.reload();
-        await proveDrawLifecycle(page, touch);
+        if (name !== "landscape") await proveDrawLifecycle(page, touch);
       }
       if (story.id.endsWith("empty-hand") && name !== "landscape") {
         if (touch) await proveDrawTouchActivation(page);

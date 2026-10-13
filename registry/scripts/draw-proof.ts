@@ -26,35 +26,73 @@ export async function proveShuffleRiffle(page: Page) {
     page.getByRole("button", { name: "Deck actions" }),
   ).toBeVisible();
   await expect(riffle).toHaveCount(0);
-  await shuffle.click();
-  await expect(riffle).toHaveCount(1);
-  await expect(riffle.locator(".db-card")).toHaveCount(8);
-  const extents = await page.evaluate(
-    () =>
-      new Promise<{ left: number; right: number; frames: number }>(
-        (resolve) => {
-          let left = Infinity;
-          let right = -Infinity;
-          let frames = 0;
-          const sample = () => {
-            const current = document.querySelector('[data-pile-riffle="deck"]');
-            if (!current) return resolve({ left, right, frames });
-            for (const card of current.querySelectorAll(".db-card")) {
-              const box = card.getBoundingClientRect();
-              left = Math.min(left, box.left);
-              right = Math.max(right, box.right);
-            }
-            frames++;
-            requestAnimationFrame(sample);
-          };
-          sample();
-        },
-      ),
-  );
-  expect(extents.frames).toBeGreaterThan(5);
-  expect(extents.left).toBeGreaterThanOrEqual(0);
-  expect(extents.right).toBeLessThanOrEqual(page.viewportSize()!.width);
-  await expect(riffle).toHaveCount(0);
+  const stack = page.locator(".db-pile-stack").filter({
+    has: page.getByRole("button", { name: "Deck actions" }),
+  });
+  const originalStyle = await stack.getAttribute("style");
+  for (const position of [
+    "",
+    "top: 1px; left: 8px",
+    "top: 1px; right: 8px",
+    "bottom: 1px; left: 8px",
+    "bottom: 1px; right: 8px",
+  ]) {
+    if (position)
+      await stack.evaluate((element, position) => {
+        element.setAttribute("style", `position: fixed; ${position}`);
+      }, position);
+    const watch = await page.evaluateHandle(() => {
+      const extents = {
+        left: Infinity,
+        right: -Infinity,
+        top: Infinity,
+        bottom: -Infinity,
+        frames: 0,
+        done: false,
+      };
+      const sample = () => {
+        const current = document.querySelector('[data-pile-riffle="deck"]');
+        if (!current && extents.frames) {
+          extents.done = true;
+          return;
+        }
+        if (current) {
+          for (const card of current.querySelectorAll(".db-card")) {
+            const box = card.getBoundingClientRect();
+            extents.left = Math.min(extents.left, box.left);
+            extents.right = Math.max(extents.right, box.right);
+            extents.top = Math.min(extents.top, box.top);
+            extents.bottom = Math.max(extents.bottom, box.bottom);
+          }
+          extents.frames++;
+        }
+        requestAnimationFrame(sample);
+      };
+      requestAnimationFrame(sample);
+      return extents;
+    });
+    // A corner-positioned pile can cover the story's button in landscape.
+    await shuffle.press("Enter");
+    await expect(riffle).toHaveCount(1);
+    await expect(riffle.locator(".db-card")).toHaveCount(8);
+    await expect.poll(() => watch.evaluate((value) => value.done)).toBe(true);
+    const extents = await watch.evaluate((value) => value);
+    await watch.dispose();
+    expect(extents.frames).toBeGreaterThan(5);
+    expect(extents.left, position).toBeGreaterThanOrEqual(0);
+    expect(extents.right, position).toBeLessThanOrEqual(
+      page.viewportSize()!.width,
+    );
+    expect(extents.top, position).toBeGreaterThanOrEqual(0);
+    expect(extents.bottom, position).toBeLessThanOrEqual(
+      page.viewportSize()!.height,
+    );
+    await expect(riffle).toHaveCount(0);
+  }
+  await stack.evaluate((element, style) => {
+    if (style === null) element.removeAttribute("style");
+    else element.setAttribute("style", style);
+  }, originalStyle);
 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await shuffle.click();
