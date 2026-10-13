@@ -78,8 +78,7 @@ export interface HandProps {
    * as `{ interaction: "play.reorder" }`. Dragging a card along the hand opens
    * a gap where it would land, and dropping there moves it. Name `input` when
    * the interaction has two card inputs. It is off while a sort shows the
-   * hand in another order than the zone's own, and while the hand is too
-   * crowded to aim at.
+   * hand in another order than the zone's own.
    */
   reorder?: HandReorder;
 }
@@ -91,8 +90,6 @@ const moved = (ids: readonly CardId[], from: number, to: number) => {
   next.splice(to, 0, ids[from]);
   return next;
 };
-/** Below this much of each covered card, in pixels, the hand opens as a sheet. */
-const CROWDED_STEP = 16;
 const sameIds = (left: readonly CardId[], right: readonly CardId[]) =>
   left.length === right.length &&
   left.every((id, index) => id === right[index]);
@@ -102,8 +99,8 @@ const sameIds = (left: readonly CardId[], right: readonly CardId[]) =>
  * menu, or toggles it when its only action picks several cards; a hold or a
  * Alt/Option previews it; a card with somewhere to land drags. A finger
  * sliding along the hand raises the card under it, and lifting there taps it.
- * The fan always fits the hand; once its cards are too thin to aim at, the
- * hand is one button that opens every card in a sheet. Cards arriving with an
+ * The fan always fits the hand, and however thin its cards get they keep
+ * these gestures; Browse opens every card in a sheet. Cards arriving with an
  * origin fly from where they were last seen: their released drag copy, their
  * control in the zone marked `data-zone` and `data-zone-host`, or that zone or
  * the seat marked `data-player`.
@@ -281,7 +278,6 @@ export function Hand({
     ...arc,
   });
   const ready = size.width > 0 && size.card > 0;
-  const crowded = ready && ids.length > 1 && fan.step < CROWDED_STEP;
   const nextFan = fanLayout({
     count: ids.length + 1,
     width: size.width - gutter * 2,
@@ -364,7 +360,7 @@ export function Hand({
     activeCardId ??
     lastPointed;
   const active =
-    crowded || browsing.session || overlay || focusedId === null
+    browsing.session || overlay || focusedId === null
       ? -1
       : ids.indexOf(focusedId);
   // The fan sits centred between its gutters; handFan works in its coordinates.
@@ -433,7 +429,7 @@ export function Hand({
     } as PositionBinding;
   };
   const area = useDropArea(
-    reorder && ready && !crowded && sameIds(ids, zoneOrder) ? positionAt : null,
+    reorder && ready && sameIds(ids, zoneOrder) ? positionAt : null,
   );
   const ghost = drawOver
     ? ids.length
@@ -540,7 +536,6 @@ export function Hand({
                         baseHeight={size.cardHeight}
                         lift={lift}
                         focused={index === active}
-                        crowded={crowded}
                         choosing={choosing}
                         renderCard={renderCard}
                         renderPreview={renderPreview}
@@ -595,8 +590,6 @@ interface HandCardProps {
   renderPreview: HandProps["renderPreview"];
   getCardLabel: HandProps["getCardLabel"];
   focused: boolean;
-  /** The hand opens as a sheet; its cards show without their own gestures. */
-  crowded: boolean;
   destination(index: number): CardPlacement;
   onMenuChange(cardId: CardId, open: boolean): void;
 }
@@ -620,7 +613,6 @@ const HandCard = memo(function HandCard({
   renderPreview,
   getCardLabel,
   focused,
-  crowded,
   destination,
   onMenuChange,
 }: HandCardProps) {
@@ -659,7 +651,6 @@ const HandCard = memo(function HandCard({
       <CardControl
         cardId={cardId}
         drag={{}}
-        inert={crowded}
         choosing={choosing}
         disabled={!!arrival}
         style={{ visibility: arrival ? "hidden" : undefined }}

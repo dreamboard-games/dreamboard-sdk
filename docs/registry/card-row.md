@@ -5,7 +5,7 @@ pnpm dlx shadcn@4.21.0 add @dreamboard/card-row
 ```
 
 An ordered horizontal row with insertion previews. Copied source owned by the game.
-A crowded row overlaps its cards evenly to fit its width, like a hand, and offers a visible **Browse N cards** button. Once the row is too crowded to target individual cards, its compact faces become inert; Browse opens every card at a readable size in order.
+A crowded row overlaps its cards evenly to fit its width, like a hand, and offers a visible **Browse N cards** button. However thin its overlapped cards get, each keeps its own gestures; Browse opens every card at a readable size in order.
 
 ```tsx
 <CardRow

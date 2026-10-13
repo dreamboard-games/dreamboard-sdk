@@ -25,8 +25,10 @@ type TouchSession = {
 const Browsing = createContext<{
   session: TouchSession | null;
   inSheet: boolean;
+  /** The open sheet covers these cards; its own copies inspect instead. */
+  covered: boolean;
   closeSheet(): void;
-}>({ session: null, inSheet: false, closeSheet() {} });
+}>({ session: null, inSheet: false, covered: false, closeSheet() {} });
 export const useCardBrowsingContext = () => useContext(Browsing);
 
 /** Track presentation coordinates only; the SDK owns gesture recognition. */
@@ -106,7 +108,7 @@ export function CardBrowser({
   useEffect(() => setOpen(false), [perspective]);
   const closeSheet = () => setOpen(false);
   return (
-    <Browsing value={{ session, inSheet: false, closeSheet }}>
+    <Browsing value={{ session, inSheet: false, covered: open, closeSheet }}>
       <Drawer.Root
         open={open}
         onOpenChange={(next) => setOpen(next && !dragging)}
@@ -144,7 +146,12 @@ export function CardBrowser({
                 </div>
                 <Drawer.Content className="db-hand-sheet-cards">
                   <Browsing
-                    value={{ session: null, inSheet: true, closeSheet }}
+                    value={{
+                      session: null,
+                      inSheet: true,
+                      covered: false,
+                      closeSheet,
+                    }}
                   >
                     {renderCards()}
                   </Browsing>

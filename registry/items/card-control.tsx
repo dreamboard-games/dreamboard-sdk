@@ -26,8 +26,6 @@ import { createPortal } from "react-dom";
 export interface CardControlProps {
   cardId: CardId;
   drag: CardDrag;
-  /** Shows the face without its own gestures, menu or preview, as in a hand too crowded to aim at. */
-  inert?: boolean;
   renderCard(card: GameCard, state: CardState): ReactNode;
   /**
    * Draws the inspected face. Leave out table markers such as damage or
@@ -56,7 +54,6 @@ export interface CardControlProps {
 export function CardControl({
   cardId,
   drag,
-  inert = false,
   renderCard,
   renderPreview = (card) => renderCard(card, "idle"),
   getCardLabel,
@@ -113,11 +110,7 @@ export function CardControl({
     ) : (
       renderCard(card, state)
     );
-  const control = inert ? (
-    <div ref={setAnchor} className={className} data-card={card.id} aria-hidden>
-      {face}
-    </div>
-  ) : (
+  const control = (
     <button
       {...gesture.props}
       ref={setAnchor}
@@ -201,7 +194,7 @@ export function CardControl({
           </motion.div>,
           document.body,
         )}
-      {open && !inert && !dragging && anchor && (
+      {open && !dragging && anchor && (
         <CardActions
           cardId={cardId}
           anchor={anchor}
@@ -222,7 +215,6 @@ export function CardControl({
       )}
       {browsing.session &&
         anchor &&
-        !inert &&
         !dragging &&
         !presentation.hidden &&
         (gesture.isActive || gesture.inspecting === "hold") && (
@@ -234,8 +226,8 @@ export function CardControl({
             {renderPreview(card)}
           </TouchCardPreview>
         )}
-      {(inspecting || (gesture.inspecting && !browsing.session)) &&
-        !inert &&
+      {(inspecting ||
+        (gesture.inspecting && !browsing.session && !browsing.covered)) &&
         !presentation.hidden && (
           <CardPreview
             via={inspecting ? "action" : gesture.inspecting!}

@@ -304,7 +304,7 @@ export async function proveHandSlide(page: Page) {
   await expect(page.locator("[data-drag-overlay]")).toHaveCount(0);
 }
 
-/** A crowded hand fits, then opens every card in a sheet. */
+/** A crowded hand fits, keeps every card live, and opens them all in a sheet. */
 export async function proveCrowdedHand(
   page: Page,
   touch: boolean,
@@ -321,15 +321,26 @@ export async function proveCrowdedHand(
     expect(box.x).toBeGreaterThanOrEqual(bounds.x - 1);
     expect(box.x + box.width).toBeLessThanOrEqual(bounds.x + bounds.width + 1);
   }
-  if (!crowded) {
-    await expect(open).toBeVisible();
-    await expect(hand.getByRole("button")).toHaveCount(25);
-    return;
-  }
-  // Too thin to aim at, Browse is the hand's only button.
-  await expect(hand.getByRole("button")).toHaveCount(1);
+  await expect(open).toBeVisible();
+  // However thin, every card stays a button beside Browse.
+  await expect(hand.getByRole("button")).toHaveCount(25);
+  if (!crowded) return;
+  // Pressing the strip a covered card shows opens that card's own menu.
+  const [face, next] = await Promise.all([
+    faces.nth(12).boundingBox(),
+    faces.nth(13).boundingBox(),
+  ]);
+  expect(next!.x - face!.x).toBeLessThan(16);
+  const strip = { x: face!.x + 2, y: face!.y + 32 };
+  if (touch) await page.touchscreen.tap(strip.x, strip.y);
+  else await page.mouse.click(strip.x, strip.y);
+  await expect(page.locator('[data-action="card-action"]')).not.toHaveCount(0);
+  await expect(hand.locator('[aria-expanded="true"]')).toHaveCount(1);
   const activate = (locator: Locator) =>
     touch ? locator.tap() : locator.click();
+  // Pressing the table dismisses the menu without leaving the card raised.
+  await activate(page.getByText("Tap a card for its actions"));
+  await expect(page.locator('[data-action="card-action"]')).toHaveCount(0);
   await activate(open);
   const sheet = page.getByRole("dialog", { name: "Your hand · 24" });
   const cards = sheet.locator(".db-hand-card");
