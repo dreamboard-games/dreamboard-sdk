@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Drawer } from "@base-ui/react/drawer";
 import { computePosition, shift, size, type Placement } from "@floating-ui/dom";
-import { useGame } from "@game";
+import { useDragOverlay, useGame } from "@game";
 import {
   createContext,
   useContext,
@@ -97,43 +97,62 @@ export function CardBrowser({
   renderCards(): ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const game = useGame((game) => game);
+  const dragging = useDragOverlay() !== null;
+  useLayoutEffect(() => {
+    if (dragging) setOpen(false);
+  }, [dragging]);
   const perspective = useGame((game) => game.snapshot?.me);
   useEffect(() => setOpen(false), [perspective]);
   const closeSheet = () => setOpen(false);
   return (
     <Browsing value={{ session, inSheet: false, closeSheet }}>
-      <Drawer.Root open={open} onOpenChange={setOpen}>
+      <Drawer.Root
+        open={open}
+        onOpenChange={(next) => setOpen(next && !dragging)}
+        modal={!dragging}
+      >
         {overlapping && count > 1 ? (
           <Drawer.Trigger
+            disabled={dragging}
             render={<Button variant="outline" className="db-card-browse" />}
           >
             Browse {count} cards
           </Drawer.Trigger>
         ) : null}
         {children}
-        <Drawer.Portal>
-          <Drawer.Backdrop className="db-hand-sheet-backdrop" />
-          <Drawer.Viewport className="db-hand-sheet-viewport">
-            <Drawer.Popup className="db-hand-sheet">
-              <div className="db-hand-sheet-handle" aria-hidden />
-              <div className="db-hand-sheet-header">
-                <Drawer.Title className="db-hand-sheet-title">
-                  {label} · {count}
-                </Drawer.Title>
-                <Drawer.Close
-                  render={<Button variant="outline" className="min-h-11" />}
-                >
-                  Done
-                </Drawer.Close>
-              </div>
-              <Drawer.Content className="db-hand-sheet-cards">
-                <Browsing value={{ session: null, inSheet: true, closeSheet }}>
-                  {renderCards()}
-                </Browsing>
-              </Drawer.Content>
-            </Drawer.Popup>
-          </Drawer.Viewport>
-        </Drawer.Portal>
+        {/* The SDK owns the press outside this subtree. Remove the modal's hit
+            surface immediately so this same pointer can reach the table. */}
+        {open && !dragging && (
+          <Drawer.Portal>
+            <Drawer.Backdrop className="db-hand-sheet-backdrop" />
+            <Drawer.Viewport className="db-hand-sheet-viewport">
+              <Drawer.Popup
+                className="db-hand-sheet"
+                finalFocus={() => !game.drag.active}
+              >
+                <div className="db-hand-sheet-handle" aria-hidden />
+                <div className="db-hand-sheet-header">
+                  <Drawer.Title className="db-hand-sheet-title">
+                    {label} · {count}
+                  </Drawer.Title>
+                  <Drawer.Close
+                    render={<Button variant="outline" className="min-h-11" />}
+                  >
+                    Done
+                  </Drawer.Close>
+                </div>
+                <Drawer.Content className="db-hand-sheet-cards">
+                  <Browsing
+                    value={{ session: null, inSheet: true, closeSheet }}
+                  >
+                    {renderCards()}
+                  </Browsing>
+                </Drawer.Content>
+              </Drawer.Popup>
+            </Drawer.Viewport>
+          </Drawer.Portal>
+        )}
       </Drawer.Root>
     </Browsing>
   );

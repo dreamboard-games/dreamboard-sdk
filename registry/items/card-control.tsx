@@ -71,9 +71,7 @@ export function CardControl({
   const presentation = useCardPresentation(cardId);
   const card = presentation.card;
   const browsing = useCardBrowsingContext();
-  const gesture = useCardGesture(cardId, {
-    drag: browsing.inSheet ? false : drag,
-  });
+  const gesture = useCardGesture(cardId, { drag });
   const overlay = useDragOverlay();
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const [inspecting, setInspecting] = useState(false);

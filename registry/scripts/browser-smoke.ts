@@ -23,6 +23,7 @@ import {
   proveResponsiveBrowsing,
   proveLimitedCardPreview,
 } from "./card-browsing-proof.ts";
+import { proveBrowserDrag } from "./card-browser-drag-proof.ts";
 import { proveCardRow } from "./card-row-proof.ts";
 import { proveHandReorder } from "./hand-reorder-proof.ts";
 import { proveCardLandings } from "./card-landing-proof.ts";
@@ -108,8 +109,11 @@ try {
           page,
           `${root}/build/screenshots/phone-card-browsing-compact.png`,
         );
-      if (story.id === "registry-card-row--ordered-positions")
+      if (story.id === "registry-card-row--ordered-positions") {
         await proveCardRow(page, touch);
+        await page.reload();
+        await proveBrowserDrag(page, touch);
+      }
       if (story.id === "registry-zone-actions--authored-actions")
         await proveZoneActions(page, touch);
       if (story.id === "card-selection--marquee-and-group-drop" && !touch)
@@ -365,8 +369,11 @@ try {
         await proveDraw(page, touch, false);
         if (!touch) await proveReducedCardMotion(page);
       }
-      if (story.id === "game-feel-hand--crowded-hand")
+      if (story.id === "game-feel-hand--crowded-hand") {
         await proveCrowdedHand(page, touch, name === "phone");
+        await page.reload();
+        await proveBrowserDrag(page, touch, true);
+      }
       if (story.id.endsWith("--sorting-hand") && name === "desktop")
         await proveHandSorting(page, touch, false);
       if (story.id.endsWith("--sorting-tucked-hand") && name === "phone")
