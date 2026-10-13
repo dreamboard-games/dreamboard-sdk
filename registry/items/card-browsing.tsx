@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { Drawer } from "@base-ui/react/drawer";
 import { computePosition, shift, size, type Placement } from "@floating-ui/dom";
 import { useGame } from "@game";
@@ -83,12 +84,14 @@ export function useCardBrowsing() {
 export function CardBrowser({
   session,
   count,
+  overlapping,
   label,
   children,
   renderCards,
 }: {
   session: TouchSession | null;
   count: number;
+  overlapping: boolean;
   label: string;
   children: ReactNode;
   renderCards(): ReactNode;
@@ -100,13 +103,13 @@ export function CardBrowser({
   return (
     <Browsing value={{ session, inSheet: false, closeSheet }}>
       <Drawer.Root open={open} onOpenChange={setOpen}>
-        <Drawer.Trigger
-          className="db-card-browse"
-          disabled={count === 0}
-          style={{ visibility: count === 0 ? "hidden" : undefined }}
-        >
-          Browse {count} {count === 1 ? "card" : "cards"}
-        </Drawer.Trigger>
+        {overlapping && count > 1 ? (
+          <Drawer.Trigger
+            render={<Button variant="outline" className="db-card-browse" />}
+          >
+            Browse {count} cards
+          </Drawer.Trigger>
+        ) : null}
         {children}
         <Drawer.Portal>
           <Drawer.Backdrop className="db-hand-sheet-backdrop" />
@@ -117,7 +120,11 @@ export function CardBrowser({
                 <Drawer.Title className="db-hand-sheet-title">
                   {label} · {count}
                 </Drawer.Title>
-                <Drawer.Close className="db-inspect-close">Done</Drawer.Close>
+                <Drawer.Close
+                  render={<Button variant="outline" className="min-h-11" />}
+                >
+                  Done
+                </Drawer.Close>
               </div>
               <Drawer.Content className="db-hand-sheet-cards">
                 <Browsing value={{ session: null, inSheet: true, closeSheet }}>
