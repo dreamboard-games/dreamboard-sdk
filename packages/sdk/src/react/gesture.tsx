@@ -828,9 +828,10 @@ export function createGestureSession(game: GestureGame) {
           const { cardId, element, options } = card;
           if (options === false || !game.drag?.begin(cardId, options))
             return false;
-          // Browse can unmount the pressed card when the overlay appears.
-          // Keep native events in this document, including inside an iframe.
-          capture.setPointerCapture(event.pointerId);
+          // Browse can unmount the implicitly captured touch/pen target.
+          // Keep its events in this document, including inside an iframe.
+          if (event.pointerType !== "mouse")
+            capture.setPointerCapture(event.pointerId);
           const box = element.getBoundingClientRect();
           clearHover();
           focused = null;
