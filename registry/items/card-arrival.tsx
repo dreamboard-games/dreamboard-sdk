@@ -8,7 +8,7 @@ import {
   type CSSProperties,
 } from "react";
 import { createPortal } from "react-dom";
-import { CardBack, cardSettle } from "./card";
+import { CardBack } from "./card";
 import type { CardPlacement } from "./card-motion";
 
 /** A confirmed arrival flies outside the clipped hand, then reveals its face. */
@@ -108,7 +108,7 @@ export function CardArrival({
         scale: 1,
         rotate,
       }}
-      transition={landed ? cardSettle : handFanTiming.settle}
+      transition={handFanTiming.settle}
       onAnimationComplete={() => {
         moving.current = false;
         if (flipped.current) onComplete();
