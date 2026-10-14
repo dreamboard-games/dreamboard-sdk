@@ -32,4 +32,4 @@ are authoritative; there is no separate SDK component import.
 
 Cards stay pressable when unplayable so they can be inspected and explain themselves. The shared [CardControl](card-control.md) owns the action menu and inspection; its opener stays enabled while the selected action decides whether the card can be played.
 
-Draws keep one face-down flight all the way to the insertion slot before flipping. Piles catch a dragged card near their stack and zones hold it inside their edge; see [snapping](../guides/ui/gestures.md#snapping). Exact board-space targets keep their native shape. Touch reaches further. Escape, pointer cancellation, a changed frame, and a lost window focus cancel a drag.
+Piles catch a dragged card near their stack and zones hold it inside their edge; see [snapping](../guides/ui/gestures.md#snapping). Exact board-space targets keep their native shape. Touch reaches further. Escape, pointer cancellation, a changed frame, and a lost window focus cancel a drag.
