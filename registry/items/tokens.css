@@ -164,7 +164,8 @@
     display: grid;
     width: var(--card-w);
     aspect-ratio: var(--card-aspect);
-    margin-bottom: calc(var(--depth) * 2px);
+    /* Reserve all four edges, including when the final card leaves. */
+    margin-bottom: 8px;
   }
   .db-pile-stack > * {
     grid-area: 1 / 1;

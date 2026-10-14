@@ -226,6 +226,31 @@ export async function proveDraw(
     const box = (await selector.boundingBox())!;
     return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
   };
+  const waitForLanding = async () => {
+    await expect
+      .poll(() =>
+        overlay.evaluate(
+          (element) =>
+            new Promise<number>((resolve) => {
+              const before = element.getBoundingClientRect();
+              requestAnimationFrame(() =>
+                requestAnimationFrame(() => {
+                  const after = element.getBoundingClientRect();
+                  resolve(
+                    Math.max(
+                      Math.abs(after.x - before.x),
+                      Math.abs(after.y - before.y),
+                      Math.abs(after.width - before.width),
+                      Math.abs(after.height - before.height),
+                    ),
+                  );
+                }),
+              );
+            }),
+        ),
+      )
+      .toBeLessThan(0.1);
+  };
   const activate = async () => {
     await expect(pile).toHaveAttribute("aria-expanded", "false");
     const watch = await pile.evaluateHandle((element) => {
@@ -421,9 +446,15 @@ export async function proveDraw(
       .poll(async () => {
         const to = await center(hand.locator(".db-draw-insertion"));
         const at = await center(overlay);
-        return Math.hypot(at.x - to.x, at.y - to.y);
+        return Math.abs(at.x - to.x);
       })
       .toBeLessThan(2);
+    await expect
+      .poll(() =>
+        overlay.evaluate((element) => element.getBoundingClientRect().bottom),
+      )
+      .toBeLessThanOrEqual(page.viewportSize()!.height);
+    await waitForLanding();
     menuOrigin = await center(overlay);
     await page.getByRole("button", { name: "Confirm draw" }).click();
   }
@@ -465,10 +496,11 @@ export async function proveDraw(
     await expect
       .poll(async () => {
         const at = await center(overlay);
-        return Math.hypot(at.x - landing.x, at.y - landing.y);
+        return Math.abs(at.x - landing.x);
       })
       .toBeLessThan(2);
     expect((await pile.boundingBox())!.y).toBeCloseTo(pileBefore.y, 0);
+    await waitForLanding();
     dragOrigin = await center(overlay);
     await page.getByRole("button", { name: "Confirm draw" }).click();
   }
@@ -632,14 +664,83 @@ export async function proveSteadyTuckedHand(page: Page) {
   for (let count = 1; count <= 8; count++) {
     await pile.focus();
     await pile.press("Enter");
+    // Observe every painted frame, including the overlay-to-arrival handoff.
+    const watch = await hand.evaluateHandle((element) => {
+      const initial = element.getBoundingClientRect();
+      const deck = document.querySelector("[data-draw-pile]")!;
+      const deckTop = deck.getBoundingClientRect().top;
+      const scroll = window.scrollY;
+      const result = {
+        running: true,
+        shift: 0,
+        firstBottom: null as number | null,
+        turnFrames: 0,
+        turnTravel: 0,
+        previousTurnY: null as number | null,
+      };
+      const observer = new MutationObserver(() => {
+        const arrival = document.querySelector("[data-card-arrival]");
+        if (arrival) {
+          result.firstBottom ??= arrival.getBoundingClientRect().bottom;
+          observer.disconnect();
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+      function sample() {
+        if (!result.running) {
+          observer.disconnect();
+          return;
+        }
+        const box = element.getBoundingClientRect();
+        result.shift = Math.max(
+          result.shift,
+          Math.abs(box.y - initial.y),
+          Math.abs(box.height - initial.height),
+          Math.abs(window.scrollY - scroll),
+          Math.abs(deck.getBoundingClientRect().top - deckTop),
+        );
+        const arrival = document.querySelector("[data-card-arrival]");
+        if (arrival) {
+          const rect = arrival.getBoundingClientRect();
+          result.firstBottom ??= rect.bottom;
+          const flip = arrival.querySelector(".db-card-flip")!;
+          const turn = new DOMMatrix(getComputedStyle(flip).transform).m11;
+          if (turn > -0.95 && turn < 0.95) {
+            result.turnFrames++;
+            if (result.previousTurnY !== null)
+              result.turnTravel += Math.abs(rect.y - result.previousTurnY);
+            result.previousTurnY = rect.y;
+          }
+        }
+        requestAnimationFrame(sample);
+      }
+      requestAnimationFrame(sample);
+      return result;
+    });
     await page.locator('[data-action="draw"]').press("Enter");
     await expect(cards).toHaveCount(count);
-    await expect(page.locator("[data-card-arrival]")).toHaveCount(0);
+    await expect(
+      page.locator("[data-draw-overlay], [data-card-arrival]"),
+    ).toHaveCount(0);
+    const motion = await watch.evaluate((value) => {
+      value.running = false;
+      return value;
+    });
+    await watch.dispose();
+    expect(motion.shift, `table movement on draw ${count}`).toBeLessThan(1);
+    expect(motion.firstBottom).not.toBeNull();
+    expect(motion.firstBottom!, `draw ${count}`).toBeLessThanOrEqual(
+      page.viewportSize()!.height + 1,
+    );
+    expect(motion.turnFrames).toBeGreaterThan(1);
+    expect(
+      motion.turnTravel,
+      "reveal overlaps settling into the hand",
+    ).toBeGreaterThan(1);
     const box = (await hand.boundingBox())!;
     expect(box.y).toBeCloseTo(handBox.y, 0);
     expect(box.height).toBeCloseTo(handBox.height, 0);
     if (count === 1) {
-      // The lone card shows all but the tucked share of itself.
       const shown = await cards.first().evaluate((element) => {
         const clip = element.closest(".db-hand-clip")!.getBoundingClientRect();
         const card = element.getBoundingClientRect();

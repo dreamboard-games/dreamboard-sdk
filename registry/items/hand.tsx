@@ -209,11 +209,10 @@ export function Hand({
         cardHeight: cardHeight || 1,
         options: latestOptions.current,
       }).height;
-      const bottom =
-        clip.getBoundingClientRect().top +
-        parseFloat(style.paddingTop) +
-        cardHeight * 0.28 +
-        band;
+      const box = clip.getBoundingClientRect();
+      const bottom = settings.tuck
+        ? box.bottom
+        : box.top + parseFloat(style.paddingTop) + cardHeight * 0.28 + band;
       // A focused face may not rise past the window's top edge. Record that
       // limit only while it binds, so ordinary page scrolling re-renders nothing.
       const room = Math.max(0, bottom - 16);
@@ -285,8 +284,15 @@ export function Hand({
     cardHeight: size.cardHeight || 1,
     ...arc,
   });
-  // Reserve the same vertical space before pickup, during preview and on
-  // arrival. Tucked cards hang below the hand's bottom edge, which clips them.
+  // Reserve the entire allowed arc, independent of the number of cards.
+  // Its centres rise by at most half the width * tan(half the edge angle);
+  // rotating the faces adds at most a card width * sin(the edge angle).
+  const edge =
+    options.angle === 0 ? 0 : ((options.maxSpread ?? 30) * Math.PI) / 360;
+  const envelope =
+    size.cardHeight +
+    size.card * Math.sin(edge) +
+    (Math.max(0, size.width - gutter * 2) / 2) * Math.tan(edge / 2);
   const band = (count: number) =>
     handFan({
       count,
@@ -298,12 +304,14 @@ export function Hand({
   const height =
     Math.max(
       options.tuck ? 0 : size.cardHeight * 1.45,
-      band(ids.length + extra),
-      band(ids.length + 1),
+      envelope - (options.tuck ?? 0) * size.cardHeight,
     ) + lift;
+  // Only the fan moves inside the reserved band; the table and dock stay put.
+  const insetY = options.tuck ? height - band(ids.length + extra) : lift;
   function placement(
     index: number,
     layout: Pick<typeof fan, "cards" | "width"> = fan,
+    offsetY = insetY,
   ): CardPlacement {
     const box = clip!.getBoundingClientRect();
     const style = getComputedStyle(clip!);
@@ -315,7 +323,7 @@ export function Hand({
         Math.max(0, (size.width - layout.width - gutter * 2) / 2) +
         card.x +
         gutter,
-      y: box.y + parseFloat(style.paddingTop) + card.y + lift,
+      y: box.y + parseFloat(style.paddingTop) + card.y + offsetY,
       width: size.card,
       height: size.cardHeight,
       rotate: card.rotate,
@@ -323,9 +331,25 @@ export function Hand({
   }
   useLayoutEffect(() => {
     if (!ready) return;
-    return table.registerHand({ zoneId, hostId }, () =>
-      placement(ids.length, nextFan),
-    );
+    return table.registerHand({ zoneId, hostId }, () => {
+      const slot = placement(
+        ids.length,
+        nextFan,
+        options.tuck ? height - band(ids.length + 1) : lift,
+      );
+      // Deal above the tucked edge so the back and its reveal stay in view.
+      return {
+        ...slot,
+        rotate: 0,
+        y: Math.max(
+          8,
+          Math.min(
+            slot.y - size.cardHeight * 0.12,
+            innerHeight - size.cardHeight - 8,
+          ),
+        ),
+      };
+    });
   });
   // A stable getter keeps memoized cards from re-rendering on every scroll;
   // an arrival can retarget to its current slot when the hand order changes.
@@ -380,7 +404,7 @@ export function Hand({
   const places = focus.cards.map((card) => ({
     ...card,
     x: card.x + inset,
-    y: card.y + lift,
+    y: card.y + insetY,
   }));
   const headroom = focus.headroom;
   // A finger slides by resting places, so each card is one strip's travel
@@ -556,7 +580,7 @@ export function Hand({
                     style={{
                       width: size.card,
                       height: size.cardHeight,
-                      transform: `translate(${fan.cards[ghost].x + inset}px, ${fan.cards[ghost].y + lift}px) rotate(${fan.cards[ghost].rotate}deg)`,
+                      transform: `translate(${fan.cards[ghost].x + inset}px, ${fan.cards[ghost].y + insetY}px) rotate(${fan.cards[ghost].rotate}deg)`,
                     }}
                   />
                 )}
