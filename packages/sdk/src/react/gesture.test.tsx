@@ -245,6 +245,30 @@ test("a tap leaves selection to the card's own click", async () => {
   expect(get("drafts")!.textContent).toContain('"card":"red"');
 });
 
+test.each(["up", "cancel", "Escape", "blur", "unmount"] as const)(
+  "an accepted touch drag releases its persistent capture on %s",
+  async (ending) => {
+    const { get } = await mount();
+    hitTesting(() => null);
+    const at = { pointerType: "touch", x: 10, y: 50 } as const;
+    await down(get("red")!, at);
+    // Taps and native browsing keep their original event target.
+    expect(document.body.hasPointerCapture(1)).toBe(false);
+    await move({ ...at, y: 30 });
+    expect(get("overlay")).not.toBeNull();
+    expect(document.body.hasPointerCapture(1)).toBe(true);
+    await act(async () => {
+      if (ending === "unmount") roots.pop()!.unmount();
+      else if (ending === "Escape")
+        window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+      else if (ending === "blur") window.dispatchEvent(new Event("blur"));
+      else window.dispatchEvent(pointer(`pointer${ending}`, at));
+    });
+    expect(get("overlay")).toBeNull();
+    expect(document.body.hasPointerCapture(1)).toBe(false);
+  },
+);
+
 test("a finger sliding along a row raises the card resting under it and lifting there clicks that card", async () => {
   const { get } = await mount(true, true);
   expect(get("row")!.style.touchAction).toBe("none");
