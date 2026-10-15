@@ -462,6 +462,8 @@ export function Hand({
         data-draw-target={drawTarget || undefined}
         data-draw-over={drawOver || undefined}
         className={`db-hand ${className}`}
+        // The empty band above resting cards, for controls that share it.
+        style={{ "--db-hand-lift": `${lift}px` } as CSSProperties}
       >
         <CardBrowser
           session={browsing.session}

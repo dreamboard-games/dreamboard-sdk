@@ -531,10 +531,12 @@
     margin: 0;
     pointer-events: none;
   }
+  /* Its box spans the empty lift band above the card; only the card answers. */
   .db-hand-slot {
     position: absolute;
     top: 0;
     left: 0;
+    pointer-events: none;
   }
   .db-hand-card {
     pointer-events: auto;
