@@ -1,13 +1,19 @@
-import { expect, type Page } from "@playwright/test";
+import {
+  expect,
+  type FrameLocator,
+  type Page,
+  type Route,
+} from "@playwright/test";
 
 /** A single physical press leaves the modal and commits (or cancels) on the table. */
 export async function proveBrowserDrag(
   page: Page,
   touch: boolean,
   hand = false,
+  game: Page | FrameLocator = page,
 ) {
-  const source = hand ? page.locator(".db-hand") : page.getByTestId("table");
-  const authority = page.getByTestId(hand ? "table-cards" : "row-authority");
+  const source = hand ? game.locator(".db-hand") : game.getByTestId("table");
+  const authority = game.getByTestId(hand ? "table-cards" : "row-authority");
   const state = async () =>
     JSON.parse((await authority.textContent())!) as [string, string[]][];
   if (!hand) {
@@ -32,7 +38,7 @@ export async function proveBrowserDrag(
   for (const cancel of [true, false]) {
     const before = await state();
     await browse.click();
-    const sheet = page.locator(".db-hand-sheet");
+    const sheet = game.locator(".db-hand-sheet");
     await expect(sheet).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)");
     if (hand && cdp) {
       // The gutter scrolls the collection; pressing a card starts its gesture.
@@ -53,7 +59,7 @@ export async function proveBrowserDrag(
         .poll(() => content.evaluate((element) => element.scrollTop))
         .toBeGreaterThan(0);
       await expect(sheet).toBeVisible();
-      await expect(page.locator("[data-drag-overlay]")).toHaveCount(0);
+      await expect(game.locator("[data-drag-overlay]")).toHaveCount(0);
     }
     const card = sheet
       .locator(hand ? '[data-card^="spades-"]' : "[data-card]")
@@ -73,17 +79,34 @@ export async function proveBrowserDrag(
     }
     await move(start.x, start.y - 40);
     await expect(sheet).toHaveCount(0);
-    await expect(page.locator("[data-drag-overlay]")).toHaveCount(1);
+    const overlay = game.locator("[data-drag-overlay]");
+    await expect(overlay).toHaveCount(1);
     await expect(browse).toBeDisabled();
     const target = hand
-      ? page.locator('[data-zone="discard"]').first()
-      : page.getByTestId("empty");
+      ? game.locator('[data-zone="discard"]').first()
+      : game.getByTestId("empty");
     const to = (await target.boundingBox())!;
     for (let step = 1; step <= 10; step++)
       await move(
         start.x + ((to.x + to.width / 2 - start.x) * step) / 10,
         start.y - 40 + ((to.y + to.height / 2 - start.y + 40) * step) / 10,
       );
+    // Check the painted face before lifting: a drop assertion alone can miss
+    // a preview that froze when the sheet removed the captured touch target.
+    await expect
+      .poll(
+        async () => {
+          const face = await overlay.locator(".db-card").boundingBox();
+          return face
+            ? Math.hypot(
+                face.x + face.width / 2 - (to.x + to.width / 2),
+                face.y + face.height / 2 - (to.y + to.height / 2),
+              )
+            : Infinity;
+        },
+        { message: "The held card follows the pointer after Browse closes" },
+      )
+      .toBeLessThan(50);
     if (cdp)
       await cdp.send("Input.dispatchTouchEvent", {
         type: cancel ? "touchCancel" : "touchEnd",
@@ -94,7 +117,7 @@ export async function proveBrowserDrag(
       await page.mouse.up();
       await page.mouse.move(1, 1);
     }
-    await expect(page.locator("[data-drag-overlay]")).toHaveCount(0);
+    await expect(overlay).toHaveCount(0);
     if (cancel) await expect(browse).toBeEnabled();
     await expect(sheet).toHaveCount(0);
     if (cancel) expect(await state()).toEqual(before);
@@ -104,4 +127,32 @@ export async function proveBrowserDrag(
         .toContainEqual([hand ? "discard" : "empty", [id]]);
   }
   await cdp?.detach();
+}
+
+/** Playtest embeds the game in an opaque iframe, unlike a top-level story. */
+export async function proveEmbeddedBrowserDrag(page: Page, base: string) {
+  const allowModules = async (route: Route) => {
+    const response = await route.fetch();
+    await route.fulfill({
+      response,
+      headers: { ...response.headers(), "access-control-allow-origin": "*" },
+    });
+  };
+  // Static Storybook modules need CORS permission when loaded by a null origin.
+  await page.route(`${base}/**`, allowModules);
+  try {
+    await page.setContent(
+      `<meta name="viewport" content="width=device-width, initial-scale=1">
+       <style>html,body{margin:0;height:100%}iframe{border:0;width:100%;height:100%;display:block}</style>
+       <iframe title="Game" sandbox="allow-scripts" src="${base}/iframe.html?id=game-feel-hand--crowded-hand&viewMode=story"></iframe>`,
+    );
+    await proveBrowserDrag(
+      page,
+      true,
+      true,
+      page.frameLocator('iframe[title="Game"]'),
+    );
+  } finally {
+    await page.unroute(`${base}/**`, allowModules);
+  }
 }

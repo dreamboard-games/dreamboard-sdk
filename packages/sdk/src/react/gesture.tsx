@@ -784,6 +784,7 @@ export function createGestureSession(game: GestureGame) {
     if (disposed || press || event.button !== 0) return;
     const pending = store.get().drag;
     if (pending?.settling && pending.cardIds.includes(cardId)) return;
+    const capture = document.body;
     // The card a press acts on; a sliding finger moves it, or leaves the row.
     let card: {
       cardId: string;
@@ -827,6 +828,10 @@ export function createGestureSession(game: GestureGame) {
           const { cardId, element, options } = card;
           if (options === false || !game.drag?.begin(cardId, options))
             return false;
+          // Browse can unmount the implicitly captured touch/pen target.
+          // Keep its events in this document, including inside an iframe.
+          if (event.pointerType !== "mouse")
+            capture.setPointerCapture(event.pointerId);
           const box = element.getBoundingClientRect();
           clearHover();
           focused = null;
@@ -964,6 +969,8 @@ export function createGestureSession(game: GestureGame) {
         removeEventListener("pointerup", up);
         removeEventListener("pointercancel", cancel);
         removeEventListener("blur", blur);
+        if (capture.hasPointerCapture(event.pointerId))
+          capture.releasePointerCapture(event.pointerId);
       },
     };
     set({});

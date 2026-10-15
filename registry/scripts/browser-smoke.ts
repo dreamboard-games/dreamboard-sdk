@@ -24,7 +24,10 @@ import {
   proveResponsiveBrowsing,
   proveLimitedCardPreview,
 } from "./card-browsing-proof.ts";
-import { proveBrowserDrag } from "./card-browser-drag-proof.ts";
+import {
+  proveBrowserDrag,
+  proveEmbeddedBrowserDrag,
+} from "./card-browser-drag-proof.ts";
 import { proveCardPile } from "./card-pile-proof.ts";
 import { proveCardRow } from "./card-row-proof.ts";
 import { proveHandReorder } from "./hand-reorder-proof.ts";
@@ -384,6 +387,10 @@ try {
         await proveCrowdedHand(page, touch, name === "phone");
         await page.reload();
         await proveBrowserDrag(page, touch, true);
+        if (name === "phone") {
+          await proveEmbeddedBrowserDrag(page, base);
+          await page.goto(`${base}/iframe.html?id=${story.id}&viewMode=story`);
+        }
       }
       if (story.id.endsWith("--sorting-hand") && name === "desktop")
         await proveHandSorting(page, touch, false);
