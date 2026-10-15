@@ -76,7 +76,8 @@ export function CardArrival({
         from.rotate !== target.rotate
       ) {
         moving.current = true;
-        setPhase("flight");
+        // A confirmed draw reveals while settling from its raised landing.
+        setPhase(hidden ? "flip" : "flight");
       } else {
         moving.current = false;
         if (hidden) setPhase("flip");
