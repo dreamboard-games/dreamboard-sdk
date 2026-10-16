@@ -552,12 +552,18 @@ Standard playing cards are game-owned definitions with ordinary suit/rank
 properties; the SDK does not synthesize inventories or assign built-in rules.
 
 The exported `createGestureRecognizer(down, callbacks, options)` defaults to
-upward touch dragging so card containers retain sideways scrolling. A row that
-fits uses `{ scrub: true }`: a sliding finger reports each move through
-`browse`, and turning upward still drags. Pile controls can use
-`{ dragDirection: "any" }` with `touch-action: none` to drag toward a hand below
-or beside them. This classifies pointer intent only; submit an authored interaction
+vertical touch dragging, up or down, so card containers retain sideways
+scrolling. A row that fits uses `{ scrub: true }`: a sliding finger reports each
+move through `browse`, and turning up or down still drags. Pile controls can use
+`{ dragDirection: "any" }` with `touch-action: none` to drag toward a hand
+beside them. This classifies pointer intent only; submit an authored interaction
 through the bound game to enforce its rules, without selecting a hidden card ID.
+
+`blockEdgeSwipes(target, claim?)` keeps a press that starts within 20 px of a
+side from becoming iOS Safari's back or forward swipe. Cards bound through
+`useCardGesture` already have it. Install it on any other control a finger
+drags, such as a pile. Cancelling the touch also cancels its click, so the
+control must handle a touch tap itself.
 
 ### Local card groups and marquee selection
 

@@ -21,7 +21,7 @@ keyboard focus. A mouse target changes on physical movement, so card animation
 under a parked pointer does not switch inspection or activation. A finger
 sliding along the hand raises the card resting under it, one strip's travel
 per card however wide the raised face is; lifting there opens that card's
-menu, sliding off chooses nothing, and turning upward picks the card up.
+menu, sliding off chooses nothing, and turning up or down picks the card up.
 Export `useActiveCard` and `useCardRow` alongside the other card gesture hooks
 from the game's binding.
 

@@ -168,11 +168,13 @@ The React binding returns `useCardGesture(cardId, { drag: false | { interaction?
 `useCardRow(cardAt)`, `useDropArea(binding)` and `useDragOverlay()`. `createGestureRecognizer`
 classifies each press as a tap, hold, drag or browse using `GESTURE_THRESHOLDS`:
 a mouse drags after 8 px in any direction and inspects after resting 250 ms; a
-finger drags upward, browses sideways and inspects after holding 350 ms. With
+finger drags up or down, browses sideways and inspects after holding 350 ms. With
 `{ scrub: true }` a browsing finger reports each move through `browse`, and
-turning upward still drags; `useCardRow` uses it for a row that fits. Spread
+turning up or down still drags; `useCardRow` uses it for a row that fits. Spread
 `CardGesture.props` on the card's own button after its selection props. The
 click that follows a hold, drag or browse is swallowed; keyboard clicks never are.
+A finger's tap clicks the card itself and swallows the browser's click, because
+`blockEdgeSwipes` cancels that click for a press at a side edge.
 
 `useDropArea` accepts a board `DropTarget`, `{ interaction, input?, params? }`,
 or a function of the dragged point returning one, such as

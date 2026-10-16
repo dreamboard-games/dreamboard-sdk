@@ -1,5 +1,6 @@
 import { Popover } from "@base-ui/react/popover";
 import {
+  blockEdgeSwipes,
   createGestureRecognizer,
   magneticDropPoint,
   type GestureRecognizer,
@@ -270,6 +271,8 @@ export function DrawPile<K extends InteractionKey>(props: DrawPileProps<K>) {
   useEffect(() => {
     press.current?.recognizer.cancel();
   }, [snapshot, request, zoneId, hostId, destinationZoneId, destinationHostId]);
+  // A deck docked at the screen's edge stays in the game; touch taps open it themselves.
+  useEffect(() => blockEdgeSwipes(control.current!), []);
   useEffect(
     () => () => {
       press.current?.detach();

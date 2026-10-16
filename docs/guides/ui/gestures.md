@@ -39,17 +39,20 @@ Spread them after the card's selection props. A press becomes:
 
 | Outcome | Mouse                                            | Touch or pen                               |
 | ------- | ------------------------------------------------ | ------------------------------------------ |
-| Tap     | Release without moving: the native click selects | The same                                   |
+| Tap     | Release without moving: the native click selects | Lift without moving: the card is clicked   |
 | Inspect | Hold Alt/Option over the card (`hover`)          | Hold still for 350 ms (`hold`)             |
-| Drag    | Move 8 px in any direction                       | Move 8 px upward                           |
+| Drag    | Move 8 px in any direction                       | Move 8 px up or down                       |
 | Browse  | —                                                | Move sideways; native scrolling takes over |
 
 Cards use `touch-action: pan-x`, so a sideways swipe scrolls their container
 natively. A row that fits uses `useCardRow` instead. A card drags only when it
 has somewhere to land; otherwise the press browses. The
-click the browser fires after a hold, drag or browse is not a selection. Keyboard
-activation always clicks. `inspecting` and `data-inspecting` tell the game to
-show a preview; haptics and preview presentation are the game's choice.
+click the browser fires after a finger's tap, hold, drag or browse is not a
+selection. Keyboard activation always clicks. A finger landing on a card within
+20 px of a side edge cancels its touchstart, which keeps iOS Safari's back or
+forward swipe out and also cancels the browser's click; the finger's tap still
+clicks the card. `inspecting` and `data-inspecting` tell the game to show a
+preview; haptics and preview presentation are the game's choice.
 `GESTURE_THRESHOLDS` holds the timings, and `createGestureRecognizer` is the
 framework-free classifier the hook uses.
 
@@ -60,9 +63,9 @@ Spread its `props` on the element holding the cards. `cardAt(point)` names the
 card whose resting place is under a viewport point, or `null` off the row. A
 finger pressed on one of the row's cards slides along it: the card under the
 finger becomes active, as a hovered card does for a mouse; lifting there clicks
-it, and turning upward drags it. Answering from resting places rather than the
-raised face keeps each card one strip's travel from the next. Taps, holds and
-straight upward drags work as on any card.
+it, and turning up or down drags it. Answering from resting places rather than
+the raised face keeps each card one strip's travel from the next. Taps, holds and
+straight vertical drags work as on any card.
 
 ## Where a card lands
 
