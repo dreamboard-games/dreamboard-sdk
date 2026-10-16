@@ -126,10 +126,13 @@
     background: none;
     box-shadow: none;
   }
+  /* Holds the card's shape until the image loads and reports its own, so a
+     newly shown face never collapses the layout around it. */
   .db-image-card > img {
     display: block;
     width: 100%;
     height: auto;
+    aspect-ratio: auto var(--card-aspect);
     filter: drop-shadow(0 2px 3px #00182326);
   }
   .db-card[data-suit="hearts"],
