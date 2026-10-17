@@ -14,6 +14,7 @@ import {
   type PointerEvent,
 } from "react";
 import {
+  blockEdgeSwipes,
   createGestureRecognizer,
   type GestureRecognizer,
 } from "../headless/gesture.js";
@@ -769,6 +770,15 @@ export function createGestureSession(game: GestureGame) {
   };
   addEventListener("pointermove", browse);
   addEventListener("pointerout", leaveWindow);
+  // A card pressed at the screen's edge stays in the game.
+  const unblockEdges = blockEdgeSwipes(
+    window,
+    ({ target }) =>
+      target instanceof Element &&
+      target
+        .closest("[data-card-gesture]")
+        ?.getAttribute("data-gesture-session") === id,
+  );
   function release() {
     press?.detach();
     press = null;
@@ -872,15 +882,21 @@ export function createGestureSession(game: GestureGame) {
         end(kind, at) {
           const dragging = press!.dragging;
           const pointerType = press!.pointerType;
-          // A finger lifted from a scrub chooses the card under it, as a tap would.
-          const chosen = scrubbing && kind === "browse" ? card?.element : null;
+          // A finger lifted from a scrub chooses the card under it, as a tap
+          // would. A finger's tap clicks itself too, since the edge-swipe
+          // block cancels the native click.
+          const chosen =
+            (scrubbing && kind === "browse") ||
+            (kind === "tap" && pointerType !== "mouse")
+              ? card?.element
+              : null;
           if (dragging) retarget(at);
           release();
           // A finger leaves no hover behind.
           if (scrubbing) activate(null);
           // Clicked before the guard below, so the choice is never swallowed.
           if (chosen instanceof HTMLElement) chosen.click();
-          if (kind !== "tap") swallowNextClick();
+          if (kind !== "tap" || chosen) swallowNextClick();
           if (kind === "hold") set({ inspect: null });
           if (!dragging) {
             // A rejected drag or inspection-only mouse press may browse to a
@@ -1144,6 +1160,7 @@ export function createGestureSession(game: GestureGame) {
       removeEventListener("blur", loseFocus);
       removeEventListener("pointermove", browse);
       removeEventListener("pointerout", leaveWindow);
+      unblockEdges();
       unsubscribe();
       followers.clear();
       targets.clear();

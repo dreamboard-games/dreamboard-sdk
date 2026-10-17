@@ -8,8 +8,10 @@ export const GESTURE_THRESHOLDS = Object.freeze({
   holdMs: 350,
   /** A mouse resting on a card this long inspects it. */
   hoverMs: 250,
-  /** A finger drags when upward travel exceeds this multiple of sideways travel. */
+  /** A finger drags when vertical travel exceeds this multiple of sideways travel. */
   axisBias: 1.25,
+  /** A touch starting this close to a side can start iOS Safari's back or forward swipe. */
+  edgeSwipe: 20,
 });
 
 export interface GesturePointer {
@@ -47,18 +49,18 @@ export interface GestureRecognizer {
 }
 
 export interface GestureOptions {
-  /** Cards drag upward on touch; piles can be dragged toward any destination. */
-  readonly dragDirection?: "up" | "any";
+  /** Cards drag up or down on touch; piles can be dragged toward any destination. */
+  readonly dragDirection?: "vertical" | "any";
   /**
    * A browsing finger scrubs along its row instead of scrolling it: `browse`
-   * reports every move, and turning upward still drags.
+   * reports every move, and turning up or down still drags.
    */
   readonly scrub?: boolean;
 }
 
 /**
  * Classifies one press. A mouse drags in any direction and never holds. A
- * finger drags upward, browses sideways and holds when still, so cards can use
+ * finger drags up or down, browses sideways and holds when still, so cards can use
  * `touch-action: pan-x` and keep native sideways scrolling, or
  * `touch-action: none` and scrub.
  */
@@ -71,7 +73,7 @@ export function createGestureRecognizer(
   const mouse = down.pointerType === "mouse";
   let kind: GestureKind = "tap";
   let finished = false;
-  // Where an upward pull out of a scrub starts: the last point it was not rising.
+  // Where a pull out of a scrub starts: the last point it was not steep.
   let pull: Point = origin;
   const holdTimer = mouse
     ? undefined
@@ -89,8 +91,9 @@ export function createGestureRecognizer(
     finished = true;
     clearTimeout(holdTimer);
   }
-  const rises = (from: Point, to: Point) =>
-    from.y - to.y > GESTURE_THRESHOLDS.axisBias * Math.abs(to.x - from.x);
+  const steep = (from: Point, to: Point) =>
+    Math.abs(to.y - from.y) >
+    GESTURE_THRESHOLDS.axisBias * Math.abs(to.x - from.x);
   function drag(from: Point, to: Point) {
     if (!callbacks.dragStart(from)) return false;
     kind = "drag";
@@ -107,8 +110,9 @@ export function createGestureRecognizer(
         callbacks.browse?.(at);
         // A refused pull starts over, so a card that cannot drag is asked once per pull.
         if (
-          !rises(pull, at) ||
-          (pull.y - at.y >= GESTURE_THRESHOLDS.slop && !drag(pull, at))
+          !steep(pull, at) ||
+          (Math.abs(at.y - pull.y) >= GESTURE_THRESHOLDS.slop &&
+            !drag(pull, at))
         )
           pull = at;
         return;
@@ -120,7 +124,7 @@ export function createGestureRecognizer(
         return;
       clearTimeout(holdTimer);
       const lifts =
-        mouse || options.dragDirection === "any" || rises(origin, at);
+        mouse || options.dragDirection === "any" || steep(origin, at);
       if (lifts && drag(origin, at)) return;
       kind = "browse";
       pull = at;
@@ -137,6 +141,32 @@ export function createGestureRecognizer(
       callbacks.cancel(kind);
     },
   };
+}
+
+/**
+ * Keeps a press that starts at a side edge from becoming iOS Safari's back or
+ * forward swipe. Safari only waits for a touchstart listener that is already
+ * non-passive when the finger lands, so this stays installed and `claim`
+ * decides each touch. A cancelled touchstart also cancels the click, so a
+ * claimed tap must act without one.
+ */
+export function blockEdgeSwipes(
+  target: EventTarget,
+  claim: (event: TouchEvent) => boolean = () => true,
+): () => void {
+  const block = (event: Event) => {
+    const touch = event as TouchEvent;
+    if (touch.touches.length !== 1) return;
+    const x = touch.touches[0].clientX;
+    const edge = GESTURE_THRESHOLDS.edgeSwipe;
+    if ((x < edge || x > innerWidth - edge) && claim(touch))
+      event.preventDefault();
+  };
+  target.addEventListener("touchstart", block, {
+    capture: true,
+    passive: false,
+  });
+  return () => target.removeEventListener("touchstart", block, true);
 }
 
 /** Magnetic rectangular UI targets. A wider exit band prevents edge flicker.

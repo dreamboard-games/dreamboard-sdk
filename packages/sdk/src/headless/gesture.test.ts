@@ -111,12 +111,33 @@ describe("gesture recognizer", () => {
     ]);
   });
 
-  it("keeps scrubbing while a sideways finger drifts upward", () => {
+  it("pulls the scrubbed card down from where the finger turned downward", () => {
     const { log, recognizer } = press("touch", {}, { scrub: true });
-    for (let step = 1; step <= 6; step++)
-      recognizer.move(at("touch", 100 - step * 12, 100 - step * 3));
-    expect(log.some((entry) => entry.startsWith("dragStart"))).toBe(false);
+    recognizer.move(at("touch", 80, 100));
+    recognizer.move(at("touch", 60, 98));
+    recognizer.move(at("touch", 61, 103));
+    recognizer.move(at("touch", 62, 110));
+    recognizer.up(at("touch", 62, 110));
+    expect(log).toEqual([
+      "browse 80,100",
+      "browse 60,98",
+      "browse 61,103",
+      "browse 62,110",
+      "dragStart 60,98",
+      "dragMove 62,110",
+      "end drag 62,110",
+    ]);
   });
+
+  it.each([-1, 1])(
+    "keeps scrubbing while a sideways finger drifts vertically (%i)",
+    (sign) => {
+      const { log, recognizer } = press("touch", {}, { scrub: true });
+      for (let step = 1; step <= 6; step++)
+        recognizer.move(at("touch", 100 - step * 12, 100 + sign * step * 3));
+      expect(log.some((entry) => entry.startsWith("dragStart"))).toBe(false);
+    },
+  );
 
   it("asks a card that cannot drag once per pull and keeps scrubbing", () => {
     const { log, recognizer } = press(
@@ -139,14 +160,19 @@ describe("gesture recognizer", () => {
     ]);
   });
 
-  it("browses a downward finger", () => {
+  it("drags a finger moving downward, toward a hand below", () => {
     const { log, recognizer } = press("touch");
-    recognizer.move(at("touch", 100, 120));
-    recognizer.up(at("touch", 100, 120));
-    expect(log).toEqual(["end browse 100,120"]);
+    recognizer.move(at("touch", 97, 110));
+    recognizer.up(at("touch", 95, 160));
+    vi.runAllTimers();
+    expect(log).toEqual([
+      "dragStart 100,100",
+      "dragMove 97,110",
+      "end drag 95,160",
+    ]);
   });
 
-  it("lets a pile drag downward on touch without changing hand scrolling", () => {
+  it("lets a pile drag sideways on touch without changing hand scrolling", () => {
     const log: string[] = [];
     const recognizer = createGestureRecognizer(
       at("touch", 100, 100),
@@ -159,8 +185,8 @@ describe("gesture recognizer", () => {
       },
       { dragDirection: "any" },
     );
-    recognizer.move(at("touch", 100, 120));
-    recognizer.up(at("touch", 100, 150));
+    recognizer.move(at("touch", 120, 100));
+    recognizer.up(at("touch", 150, 100));
     vi.runAllTimers();
     expect(log).toEqual(["move", "drag"]);
   });

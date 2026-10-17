@@ -33,7 +33,7 @@ card-sized ghost at the pointer's position, shifts neighbouring cards, and resto
 the order on cancellation. A card arriving from another zone opens an additional
 slot. Hit testing uses resting slots so the preview cannot move its own targets.
 
-A finger slides across resting slots to inspect cards without moving the row. With `CardControl`, the enlarged face appears outside the finger's reserved area: above first, then below, then either side. Positioning uses Floating UI against the visible viewport and safe-area margins. The preview keeps its accepted placement and size while they fit, tries alternatives before shrinking, and stops below 180px wide; Browse remains available when no readable placement fits. Releasing a slide opens the chosen card's actions, pulling upward drags it, and cancellation chooses nothing. No instructional hint is shown.
+A finger slides across resting slots to inspect cards without moving the row. With `CardControl`, the enlarged face appears outside the finger's reserved area: above first, then below, then either side. Positioning uses Floating UI against the visible viewport and safe-area margins. The preview keeps its accepted placement and size while they fit, tries alternatives before shrinking, and stops below 180px wide; Browse remains available when no readable placement fits. Releasing a slide opens the chosen card's actions, pulling up or down drags it, and cancellation chooses nothing. No instructional hint is shown.
 
 `label` names the Browse dialog (default `Cards`). The shared browser preserves order and each authored control's actions; `CardControl` disables dragging inside the sheet and closes it after an action. Done restores focus to Browse, and changing seats closes the sheet.
 
