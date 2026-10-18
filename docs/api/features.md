@@ -173,8 +173,6 @@ finger drags up or down, browses sideways and inspects after holding 350 ms. Wit
 turning up or down still drags; `useCardRow` uses it for a row that fits. Spread
 `CardGesture.props` on the card's own button after its selection props. The
 click that follows a hold, drag or browse is swallowed; keyboard clicks never are.
-A finger's tap clicks the card itself and swallows the browser's click, because
-`blockEdgeSwipes` cancels that click for a press at a side edge.
 
 `useDropArea` accepts a board `DropTarget`, `{ interaction, input?, params? }`,
 or a function of the dragged point returning one, such as

@@ -96,7 +96,6 @@ exports[`public export surface > root export names are stable 1`] = `
   "SystemActionEventSchema",
   "ViewCardSchema",
   "ZoneHandlesSnapshotSchema",
-  "blockEdgeSwipes",
   "boardEdgeId",
   "boardFeature",
   "boardSpaceHostId",
