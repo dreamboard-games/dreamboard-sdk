@@ -227,16 +227,6 @@ async function click(element: Element) {
     );
   });
 }
-/** Whether the page cancelled a finger landing at `x`, as Safari's edge swipe checks. */
-function touchStart(target: Element, x: number) {
-  const event = new TouchEvent("touchstart", {
-    bubbles: true,
-    cancelable: true,
-    touches: [new Touch({ identifier: 1, target, clientX: x, clientY: 10 })],
-  });
-  target.dispatchEvent(event);
-  return event.defaultPrevented;
-}
 /** Browser hit testing is not implemented by happy-dom. */
 function hitTesting(hit: () => Element | null) {
   document.elementFromPoint = () => hit();
@@ -252,33 +242,6 @@ test("a tap leaves selection to the card's own click", async () => {
   await down(get("red")!, mouse);
   await up(mouse);
   await click(get("red")!);
-  expect(get("drafts")!.textContent).toContain('"card":"red"');
-});
-
-test.each(["left", "right"] as const)(
-  "a finger pressing a card at the %s edge keeps Safari's edge swipe out and its tap still selects",
-  async (side) => {
-    const { get } = await mount();
-    const x = side === "left" ? 4 : innerWidth - 4;
-    const edge = { pointerType: "touch", x, y: 10 } as const;
-    await down(get("red")!, edge);
-    expect(touchStart(get("red")!, x)).toBe(true);
-    // The cancelled touchstart leaves no native click, so the tap clicks itself.
-    await up(edge);
-    expect(get("drafts")!.textContent).toContain('"card":"red"');
-  },
-);
-
-test("touches away from the edges or off a card stay with the browser", async () => {
-  const { get } = await mount();
-  expect(touchStart(get("discard")!, 4)).toBe(false);
-  const middle = { pointerType: "touch", x: 200, y: 10 } as const;
-  await down(get("red")!, middle);
-  expect(touchStart(get("red")!, middle.x)).toBe(false);
-  await up(middle);
-  // The finger's tap already chose the card; the browser's own click is swallowed.
-  await click(get("red")!);
-  await click(get("blue")!);
   expect(get("drafts")!.textContent).toContain('"card":"red"');
 });
 

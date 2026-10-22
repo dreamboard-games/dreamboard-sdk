@@ -559,12 +559,6 @@ move through `browse`, and turning up or down still drags. Pile controls can use
 beside them. This classifies pointer intent only; submit an authored interaction
 through the bound game to enforce its rules, without selecting a hidden card ID.
 
-`blockEdgeSwipes(target, claim?)` keeps a press that starts within 20 px of a
-side from becoming iOS Safari's back or forward swipe. Cards bound through
-`useCardGesture` already have it. Install it on any other control a finger
-drags, such as a pile. Cancelling the touch also cancels its click, so the
-control must handle a touch tap itself.
-
 ### Local card groups and marquee selection
 
 `cardSelectionFeature` holds a local list of projected card IDs, separate from

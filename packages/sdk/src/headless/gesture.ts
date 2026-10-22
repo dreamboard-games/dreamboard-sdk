@@ -10,8 +10,6 @@ export const GESTURE_THRESHOLDS = Object.freeze({
   hoverMs: 250,
   /** A finger drags when vertical travel exceeds this multiple of sideways travel. */
   axisBias: 1.25,
-  /** A touch starting this close to a side can start iOS Safari's back or forward swipe. */
-  edgeSwipe: 20,
 });
 
 export interface GesturePointer {
@@ -141,32 +139,6 @@ export function createGestureRecognizer(
       callbacks.cancel(kind);
     },
   };
-}
-
-/**
- * Keeps a press that starts at a side edge from becoming iOS Safari's back or
- * forward swipe. Safari only waits for a touchstart listener that is already
- * non-passive when the finger lands, so this stays installed and `claim`
- * decides each touch. A cancelled touchstart also cancels the click, so a
- * claimed tap must act without one.
- */
-export function blockEdgeSwipes(
-  target: EventTarget,
-  claim: (event: TouchEvent) => boolean = () => true,
-): () => void {
-  const block = (event: Event) => {
-    const touch = event as TouchEvent;
-    if (touch.touches.length !== 1) return;
-    const x = touch.touches[0].clientX;
-    const edge = GESTURE_THRESHOLDS.edgeSwipe;
-    if ((x < edge || x > innerWidth - edge) && claim(touch))
-      event.preventDefault();
-  };
-  target.addEventListener("touchstart", block, {
-    capture: true,
-    passive: false,
-  });
-  return () => target.removeEventListener("touchstart", block, true);
 }
 
 /** Magnetic rectangular UI targets. A wider exit band prevents edge flicker.
