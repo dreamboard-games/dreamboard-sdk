@@ -63,6 +63,9 @@ feature is absent or the latest press was a finger. Export the inferred hooks an
 props retain that canonical zone/host correlation.
 
 Tap, click or Enter opens the action menu. Escape closes it and returns focus.
+Pass the pile's other actions, such as Shuffle, as `children`: they follow Draw
+in the same menu, so one tap opens everything the pile can do. Wrap each in Base
+UI's `Popover.Close` so choosing it closes the menu.
 The pile and its lifted copy show the top card's back art when the game has one.
 A pointer drag lifts the back to 120% size with a stronger shadow, highlights
 the hand and opens an insertion gap when over it. While a card is lifted, the

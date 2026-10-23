@@ -6,6 +6,7 @@ import {
   type GameCard as Card,
   type CardId,
 } from "@game";
+import type { ReactNode } from "react";
 import "./tokens.css";
 
 /** The interactions this card can start now, in the game's order. */
@@ -32,6 +33,8 @@ export interface CardActionsProps {
   onAction?(): void;
   onClose(): void;
   onInspect?(): void;
+  /** More actions after the card's own, such as its pile's. */
+  children?: ReactNode;
 }
 /**
  * A menu of the card's available actions above the card, the first one
@@ -45,6 +48,7 @@ export function CardActions({
   onAction,
   onClose,
   onInspect,
+  children,
 }: CardActionsProps) {
   const hints = useShortcutHints({ kind: "card", value: cardId });
   const card = useGame((game) => game.cards.find(cardId));
@@ -181,6 +185,7 @@ export function CardActions({
                 Inspect card
               </Button>
             )}
+            {children}
           </Popover.Popup>
         </Popover.Positioner>
       </Popover.Portal>
