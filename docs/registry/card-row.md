@@ -31,7 +31,10 @@ selection policy. The same action remains available through authored card menus.
 The row reads projected zone contents, including pending landings. It opens a
 card-sized ghost at the pointer's position, shifts neighbouring cards, and restores
 the order on cancellation. A card arriving from another zone opens an additional
-slot. Hit testing uses resting slots so the preview cannot move its own targets.
+slot, and a dropped card settles into that gap. Hit testing uses resting slots so
+the preview cannot move its own targets. Mouse hover brings an overlapped card
+forward; focus and touch leave the overlap alone, so the strips beside a card
+whose menu just closed stay ready for the next press.
 
 A finger slides across resting slots to inspect cards without moving the row. With `CardControl`, the enlarged face appears outside the finger's reserved area: above first, then below, then either side. Positioning uses Floating UI against the visible viewport and safe-area margins. The preview keeps its accepted placement and size while they fit, tries alternatives before shrinking, and stops below 180px wide; Browse remains available when no readable placement fits. Releasing a slide opens the chosen card's actions, pulling up or down drags it, and cancellation chooses nothing. No instructional hint is shown.
 

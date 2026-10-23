@@ -35,9 +35,12 @@
   .db-card-row-card:last-child {
     flex-shrink: 0;
   }
-  /* An overlapped card comes forward to be read. */
-  .db-card-row-card:is(:hover, :focus-within) {
-    z-index: 1;
+  /* Mouse hover reveals an overlapped card. Restored focus and sticky touch
+     hover must leave neighboring strips available for the next press. */
+  @media (hover: hover) and (pointer: fine) {
+    .db-card-row-card:hover {
+      z-index: 1;
+    }
   }
   .db-card-row-probe {
     min-width: var(--card-row-min-slot);

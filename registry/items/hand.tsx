@@ -136,6 +136,17 @@ export function Hand({
         .some((card) => card.getIsEligible()) ?? false,
   );
   const overlay = useDragOverlay();
+  const canReorderHere = useGame((game) =>
+    game.drag
+      .getDropTargets()
+      .some(
+        (target) =>
+          target.kind === "position" &&
+          target.interactionKey === reorder?.interaction &&
+          target.value.zoneId === zoneId &&
+          target.value.hostId === hostId,
+      ),
+  );
   // Positions count the zone's own order, which a sort may not show.
   const zoneOrder = useGame(
     (game) =>
@@ -454,7 +465,8 @@ export function Hand({
   return (
     <>
       <section
-        {...area.props}
+        // An ineligible insertion area must leave the enclosing zone move reachable.
+        {...(!overlay || canReorderHere ? area.props : {})}
         {...browsing.props}
         aria-label={label}
         data-zone={zoneId}
