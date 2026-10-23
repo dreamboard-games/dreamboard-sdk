@@ -1,6 +1,6 @@
 import "./tokens.css";
 import { motion, type HTMLMotionProps } from "motion/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /** The spring every card movement uses, matching the tokens' timings. */
 export const cardSpring = {
@@ -69,13 +69,21 @@ export function Card({
 /** Marks an element `data-moving` while Motion carries it between places, so it can fly above the rest. */
 export function useMoving(onStart?: () => void, onComplete?: () => void) {
   const [moving, setMoving] = useState(false);
+  const settled = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(settled.current), []);
   return {
     "data-moving": moving || undefined,
     onLayoutAnimationStart() {
       setMoving(true);
+      // Motion stops an interrupted layout animation, as when its container
+      // resizes mid-flight, without reporting completion. Any card move has
+      // settled well within a second.
+      clearTimeout(settled.current);
+      settled.current = setTimeout(() => setMoving(false), 1000);
       onStart?.();
     },
     onLayoutAnimationComplete() {
+      clearTimeout(settled.current);
       setMoving(false);
       onComplete?.();
     },
