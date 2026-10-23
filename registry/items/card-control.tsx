@@ -41,6 +41,8 @@ export interface CardControlProps {
   onMenuChange?(open: boolean): void;
   /** An action was chosen from the menu, as when a sheet should get out of the way. */
   onAction?(): void;
+  /** More actions after the card's own in its menu, such as its pile's. */
+  moreActions?: ReactNode;
   /** A hand can position the control and animate its arrival. */
   children?(slot: {
     raised: boolean;
@@ -63,6 +65,7 @@ export function CardControl({
   className = "db-hand-card",
   onMenuChange,
   onAction,
+  moreActions,
   children,
 }: CardControlProps) {
   const presentation = useCardPresentation(cardId);
@@ -211,7 +214,9 @@ export function CardControl({
                   setInspecting(true);
                 }
           }
-        />
+        >
+          {moreActions}
+        </CardActions>
       )}
       {browsing.session &&
         anchor &&

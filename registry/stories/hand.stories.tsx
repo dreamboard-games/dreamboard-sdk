@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { Popover } from "@base-ui/react/popover";
 import {
   useEffect,
   useLayoutEffect,
@@ -266,7 +267,21 @@ function Table({
               interaction="play.draw"
               destinationZoneId="hand"
               label="Deck"
-            />
+            >
+              {drawLifecycle && shuffle && (
+                <Popover.Close
+                  render={
+                    <Button
+                      variant="outline"
+                      className="min-h-11 px-4"
+                      {...shuffle.getSubmitProps()}
+                    />
+                  }
+                >
+                  Shuffle
+                </Popover.Close>
+              )}
+            </DrawPile>
           )}
         </div>
         <Area zoneId="table" label="Table" interaction="play.play" />

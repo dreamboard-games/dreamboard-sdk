@@ -205,20 +205,27 @@ export function CardRow({
             <Fragment key={card.id}>
               {from < 0 && ghost === index ? (
                 <div className="db-card-row-card" aria-hidden>
-                  <div className="db-card-row-insertion" />
+                  <div
+                    className="db-card-row-insertion"
+                    data-drop-landing="gap"
+                  />
                 </div>
               ) : null}
               <div className="db-card-row-card" data-row-card={card.id}>
                 {renderCard(card, arrivingIds.includes(card.id))}
                 {from >= 0 && ghost === index ? (
-                  <div className="db-card-row-insertion" aria-hidden />
+                  <div
+                    className="db-card-row-insertion"
+                    data-drop-landing="gap"
+                    aria-hidden
+                  />
                 ) : null}
               </div>
             </Fragment>
           ))}
           {from < 0 && ghost === cards.length ? (
             <div className="db-card-row-card" aria-hidden>
-              <div className="db-card-row-insertion" />
+              <div className="db-card-row-insertion" data-drop-landing="gap" />
             </div>
           ) : null}
         </div>

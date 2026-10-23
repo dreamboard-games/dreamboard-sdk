@@ -125,6 +125,16 @@ export async function proveDrawLifecycle(page: Page, touch: boolean) {
     await expect(page.locator("[data-card-arrival]")).toHaveCount(0);
   };
   await expect(cards).toHaveCount(9);
+  // The pile's other actions follow Draw in the same menu, and choosing one
+  // closes it.
+  await pile.focus();
+  await pile.press("Enter");
+  const menu = page.getByRole("dialog", { name: "Deck actions" });
+  await expect(menu.locator('[data-action="draw"]')).toBeVisible();
+  await menu.getByRole("button", { name: "Shuffle", exact: true }).click();
+  await expect(menu).toHaveCount(0);
+  await expect(page.locator('[data-pile-riffle="deck"]')).toHaveCount(1);
+  await expect(page.locator('[data-pile-riffle="deck"]')).toHaveCount(0);
   for (let index = 0; index < 4; index++) {
     await draw();
     await expect(cards).toHaveCount(10 + index);

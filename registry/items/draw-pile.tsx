@@ -23,6 +23,7 @@ import {
   useRef,
   useState,
   type PointerEvent,
+  type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
@@ -61,6 +62,8 @@ export type DrawPileProps<K extends InteractionKey = InteractionKey> =
       params?: Parameters<BoundInteraction<K>["submit"]>[0];
       label?: string;
       className?: string;
+      /** The pile's other actions, shown after Draw in the same menu. */
+      children?: ReactNode;
     };
 
 /** A face-down draw action: tap for its menu or drop its visual copy into a hand. It riffles when shuffled. */
@@ -72,6 +75,7 @@ export function DrawPile<K extends InteractionKey>(props: DrawPileProps<K>) {
     destinationZoneId,
     label = "Draw pile",
     className,
+    children,
     ...source
   } = props;
   const { zoneId, hostId } = source;
@@ -491,6 +495,7 @@ export function DrawPile<K extends InteractionKey>(props: DrawPileProps<K>) {
                     {draw?.getUnavailableReason() ?? "You can't draw now."}
                   </p>
                 )}
+                {children}
               </Popover.Popup>
             </Popover.Positioner>
           </Popover.Portal>
