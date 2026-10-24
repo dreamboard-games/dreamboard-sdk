@@ -689,16 +689,20 @@ export function createGestureSession(game: GestureGame) {
   function inspectWithAlt() {
     const target = hover ?? focused;
     const cardId = target?.kind === "card" ? target.value : null;
-    const pending = store.get().drag;
+    const { drag: pending, inspect } = store.get();
     set({
       activeTarget: target,
       inspect:
-        alt &&
-        cardId &&
-        !press &&
-        !(pending?.settling && pending.cardIds.includes(cardId))
-          ? { cardId, via: "hover" }
-          : null,
+        // Chrome's long press moves focus to the held card; a hold lasts
+        // until its press ends.
+        press && inspect?.via === "hold"
+          ? inspect
+          : alt &&
+              cardId &&
+              !press &&
+              !(pending?.settling && pending.cardIds.includes(cardId))
+            ? { cardId, via: "hover" }
+            : null,
     });
   }
   function targetOf(element: Element | null): RuntimeShortcutTarget | null {
@@ -947,8 +951,11 @@ export function createGestureSession(game: GestureGame) {
     const cancel = (next: globalThis.PointerEvent) => recognizer.cancel(next);
     const blur = () => recognizer.cancel();
     addEventListener("pointermove", move);
-    addEventListener("pointerup", up);
-    addEventListener("pointercancel", cancel);
+    // The press ends before page listeners see the lift, so their own state
+    // never outlives its inspection or drag. Window blur stays a bubble
+    // listener: capturing it would also catch every element's blur.
+    addEventListener("pointerup", up, true);
+    addEventListener("pointercancel", cancel, true);
     addEventListener("blur", blur);
     if (event.pointerType === "mouse") {
       // A mouse keeps reporting outside the card; touch is captured implicitly.
@@ -966,8 +973,8 @@ export function createGestureSession(game: GestureGame) {
       target: null,
       detach() {
         removeEventListener("pointermove", move);
-        removeEventListener("pointerup", up);
-        removeEventListener("pointercancel", cancel);
+        removeEventListener("pointerup", up, true);
+        removeEventListener("pointercancel", cancel, true);
         removeEventListener("blur", blur);
         if (capture.hasPointerCapture(event.pointerId))
           capture.releasePointerCapture(event.pointerId);
