@@ -5,6 +5,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { createGameHook } from "./create-game-hook.js";
 import { dragFeature } from "../headless/features/drag.js";
 import { GESTURE_THRESHOLDS } from "../headless/gesture.js";
+import { useGestureSession, type GestureSession } from "./gesture.js";
 import { createTestSource } from "../testing/sources/test-source.js";
 import type { InteractionDescriptor } from "../headless/model.js";
 import type { SourceSnapshot } from "../headless/sources/types.js";
@@ -405,6 +406,57 @@ test("holding a card inspects it and the following click does not select it", as
   expect(get("red")!.dataset.inspecting).toBeUndefined();
   await click(get("red")!);
   expect(get("drafts")!.textContent).toBe("{}");
+});
+
+test("a hold keeps inspecting while a long press moves focus to its card", async () => {
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+  const { get } = await mount();
+  await act(async () => get("blue")!.focus());
+  const touch = { pointerType: "touch", x: 10, y: 10 } as const;
+  await down(get("red")!, touch);
+  await act(async () => vi.advanceTimersByTime(GESTURE_THRESHOLDS.holdMs));
+  // Chrome's long press focuses the held control, blurring the previous one.
+  await act(async () => get("red")!.focus());
+  expect(get("red")!.dataset.inspecting).toBe("hold");
+  await up(touch);
+  expect(get("red")!.dataset.inspecting).toBeUndefined();
+});
+
+test("a press ends before page listeners see its lift", async () => {
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+  let gestures: GestureSession | null = null;
+  function Probe() {
+    gestures = useGestureSession();
+    return null;
+  }
+  const host = document.createElement("div");
+  document.body.append(host);
+  const root = createRoot(host);
+  roots.push(root);
+  await act(async () =>
+    root.render(
+      <GameProvider source={createTestSource(snapshot())}>
+        <Card id="red" draggable />
+        <Probe />
+      </GameProvider>,
+    ),
+  );
+  const red = document.querySelector<HTMLElement>('[data-testid="red"]')!;
+  const seen: unknown[] = [];
+  // Registered before the press, as a hand's own touch tracking is.
+  const lift = () => seen.push(gestures!.store.get().inspect);
+  addEventListener("pointerup", lift);
+  try {
+    const touch = { pointerType: "touch", x: 10, y: 10 } as const;
+    await down(red, touch);
+    await act(async () => vi.advanceTimersByTime(GESTURE_THRESHOLDS.holdMs));
+    await act(async () => {
+      red.dispatchEvent(pointer("pointerup", touch));
+    });
+    expect(seen).toEqual([null]);
+  } finally {
+    removeEventListener("pointerup", lift);
+  }
 });
 
 test("only the press's own click is swallowed; a new press or the keyboard still clicks", async () => {
