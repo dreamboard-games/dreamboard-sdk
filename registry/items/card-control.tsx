@@ -8,7 +8,12 @@ import {
   type GameCard,
 } from "@game";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
-import { CardActions, getCardActions } from "./card-actions";
+import {
+  CardActions,
+  getCardActions,
+  getCardActionInput,
+  type CardAction,
+} from "./card-actions";
 import { TouchCardPreview, useCardBrowsingContext } from "./card-browsing";
 import { CardPreview } from "./card-preview";
 import type { CardState } from "./card";
@@ -33,6 +38,16 @@ export interface CardControlProps {
    */
   renderPreview?(card: GameCard): ReactNode;
   getCardLabel?(card: GameCard): string;
+  /** Caller-owned actions and selection, for example a batch-selection toolbar. */
+  actions?: readonly CardAction[];
+  onChooseAction?(route: CardAction): void;
+  selection?: {
+    readonly selected: boolean;
+    readonly active: boolean;
+    toggle(): void;
+  };
+  /** Allow inspecting the visible back of a concealed card; never renders its front. */
+  inspectBack?: boolean;
   choosing?: boolean;
   disabled?: boolean;
   style?: CSSProperties;
@@ -60,6 +75,10 @@ export function CardControl({
   renderPreview = (card) => renderCard(card, "idle"),
   getCardLabel,
   choosing = false,
+  actions: providedActions,
+  onChooseAction,
+  selection,
+  inspectBack = false,
   disabled = false,
   style,
   className = "db-hand-card",
@@ -98,7 +117,14 @@ export function CardControl({
     return () => onMenuChange?.(false);
   }, [menu, onMenuChange]);
   if (!card) return null;
-  const selected = card.getIsSelected();
+  const actions = providedActions ?? getCardActions(card);
+  const canInspect = !presentation.hidden || inspectBack;
+  const preview = presentation.hidden ? (
+    <CardBack image={backImageOf(card)} />
+  ) : (
+    renderPreview(card)
+  );
+  const selected = selection?.selected || card.getIsSelected();
   const raised = selected || (open && card.getIsEligible());
   const state: CardState = raised
     ? "selected"
@@ -124,7 +150,7 @@ export function CardControl({
       style={{
         ...gesture.props.style,
         ...style,
-        ...(overlay?.cardId === cardId && !presentation.isPending
+        ...(overlay?.cardIds.includes(cardId) && !presentation.isPending
           ? { visibility: "hidden" }
           : {}),
       }}
@@ -141,19 +167,16 @@ export function CardControl({
         (card.hidden ? "Face-down card" : String(card.id))
       }
       data-shake={shake ? (shake % 2 ? "a" : "b") : undefined}
-      onClick={() => {
-        const actions = getCardActions(card);
+      onClick={(event) => {
+        if (selection && (event.shiftKey || selection.active)) {
+          selection.toggle();
+          return;
+        }
         const pick = actions.length === 1 ? actions[0] : null;
-        if (
-          pick
-            ?.getInputs()
-            .some(
-              (input) =>
-                input.domainType === "cardTarget" &&
-                input.selectionMode !== "single",
-            )
-        ) {
-          card.select({ interaction: pick.key });
+        const input = pick ? getCardActionInput(pick, cardId) : undefined;
+        if (pick && input?.selectionMode === "many") {
+          if (onChooseAction) onChooseAction(pick);
+          else input.getSelectHandler(cardId)();
           return;
         }
         setOpen(actions.length ? !open : true);
@@ -201,13 +224,15 @@ export function CardControl({
         <CardActions
           cardId={cardId}
           anchor={anchor}
+          actions={actions}
+          onChooseAction={onChooseAction}
           onAction={() => {
             onAction?.();
             if (browsing.inSheet) browsing.closeSheet();
           }}
           onClose={() => setOpen(false)}
           onInspect={
-            presentation.hidden
+            !canInspect
               ? undefined
               : () => {
                   setOpen(false);
@@ -221,25 +246,25 @@ export function CardControl({
       {browsing.session &&
         anchor &&
         !dragging &&
-        !presentation.hidden &&
+        canInspect &&
         (gesture.isActive || gesture.inspecting === "hold") && (
           <TouchCardPreview
             session={browsing.session}
             anchor={anchor}
             cardId={cardId}
           >
-            {renderPreview(card)}
+            {preview}
           </TouchCardPreview>
         )}
       {(inspecting ||
         (gesture.inspecting && !browsing.session && !browsing.covered)) &&
-        !presentation.hidden && (
+        canInspect && (
           <CardPreview
             via={inspecting ? "action" : gesture.inspecting!}
             anchor={anchor}
             onClose={() => setInspecting(false)}
           >
-            {renderPreview(card)}
+            {preview}
           </CardPreview>
         )}
     </>

@@ -37,6 +37,7 @@ import {
   useSnapTick,
   type CardState,
 } from "./card";
+import type { CardAction } from "./card-actions";
 import { CardControl } from "./card-control";
 import { CardArrival } from "./card-arrival";
 import { CardBrowser, useCardBrowsing } from "./card-browsing";
@@ -66,6 +67,9 @@ export interface HandProps {
    */
   renderPreview?(card: Card): ReactNode;
   getCardLabel?(card: Card): string;
+  getCardActions?(card: Card): readonly CardAction[];
+  onChooseCardAction?(card: Card, route: CardAction): void;
+  inspectBack?: boolean;
   /**
    * How the fan rests and focuses a card. Spread a `handFanPresets` entry and
    * override what differs; defaults to `handFanPresets.open`. A `tuck` hides
@@ -113,6 +117,9 @@ export function Hand({
   renderCard,
   renderPreview,
   getCardLabel,
+  getCardActions,
+  onChooseCardAction,
+  inspectBack,
   options = handFanPresets.open,
   reorder,
 }: HandProps) {
@@ -485,15 +492,22 @@ export function Hand({
           }
           label={label}
           renderCards={() =>
-            ids.map((id) => (
+            presentation.cards.map((card) => (
               <CardControl
-                key={id}
-                cardId={id}
+                key={card.id}
+                cardId={card.id}
                 drag={{}}
                 choosing={choosing}
                 renderCard={renderCard}
                 renderPreview={renderPreview}
                 getCardLabel={getCardLabel}
+                actions={getCardActions?.(card)}
+                onChooseAction={
+                  onChooseCardAction
+                    ? (route) => onChooseCardAction(card, route)
+                    : undefined
+                }
+                inspectBack={inspectBack}
               />
             ))
           }
@@ -566,6 +580,9 @@ export function Hand({
                         renderCard={renderCard}
                         renderPreview={renderPreview}
                         getCardLabel={getCardLabel}
+                        getCardActions={getCardActions}
+                        onChooseCardAction={onChooseCardAction}
+                        inspectBack={inspectBack}
                         destination={destination}
                         onMenuChange={onMenuChange}
                       />
@@ -615,6 +632,9 @@ interface HandCardProps {
   renderCard: HandProps["renderCard"];
   renderPreview: HandProps["renderPreview"];
   getCardLabel: HandProps["getCardLabel"];
+  getCardActions: HandProps["getCardActions"];
+  onChooseCardAction: HandProps["onChooseCardAction"];
+  inspectBack: HandProps["inspectBack"];
   focused: boolean;
   destination(index: number): CardPlacement;
   onMenuChange(cardId: CardId, open: boolean): void;
@@ -638,6 +658,9 @@ const HandCard = memo(function HandCard({
   renderCard,
   renderPreview,
   getCardLabel,
+  getCardActions,
+  onChooseCardAction,
+  inspectBack,
   focused,
   destination,
   onMenuChange,
@@ -683,6 +706,13 @@ const HandCard = memo(function HandCard({
         renderCard={renderCard}
         renderPreview={renderPreview}
         getCardLabel={getCardLabel}
+        actions={getCardActions?.(card)}
+        onChooseAction={
+          onChooseCardAction
+            ? (route) => onChooseCardAction(card, route)
+            : undefined
+        }
+        inspectBack={inspectBack}
         onMenuChange={menuChanged}
       >
         {({ raised, anchor, control }) => {

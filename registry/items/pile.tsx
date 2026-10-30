@@ -3,6 +3,8 @@ import type { ComponentProps, CSSProperties, ReactNode } from "react";
 export type PileProps = Omit<ComponentProps<"figure">, "children"> & {
   count: number;
   label: string;
+  /** An optional control or placeholder inside the empty outline. */
+  empty?: ReactNode;
   /** The top card. */
   children?: ReactNode;
 };
@@ -14,6 +16,7 @@ export function Pile({
   count,
   label,
   children,
+  empty,
   className = "",
   ...props
 }: PileProps) {
@@ -34,7 +37,7 @@ export function Pile({
             style={{ "--edge": depth - index } as CSSProperties}
           />
         ))}
-        {count > 0 && children}
+        {count > 0 ? children : empty}
         {count > 0 && (
           <span className="db-pile-count" aria-hidden="true">
             {count}

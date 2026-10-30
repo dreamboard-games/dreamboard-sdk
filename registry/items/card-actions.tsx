@@ -9,11 +9,23 @@ import {
 import type { ReactNode } from "react";
 import "./tokens.css";
 
+/** The bound game's canonical interaction type. */
+export type CardAction = ReturnType<Card["getInteractions"]>[number];
+
+/** Resolve an eligible card-target input, preferring one still awaiting a value. */
+export function getCardActionInput(route: CardAction, cardId: CardId) {
+  const inputs = route
+    .getInputs()
+    .filter((input) => input.domainType === "cardTarget")
+    .filter((input) => !input.getTargetProps(cardId).disabled);
+  return inputs.find((input) => !input.getIsReady()) ?? inputs[0];
+}
+
 /** The interactions this card can start now, in the game's order. */
 export function getCardActions(card: Card) {
   return card
     .getInteractions()
-    .filter((route) => card.getCanSelect({ interaction: route.key }));
+    .filter((route) => getCardActionInput(route, card.id));
 }
 /** Why a card has no action: its interaction's reason, or a plain fallback. */
 export function getCardUnavailableReason(card: Card) {
@@ -29,6 +41,9 @@ export interface CardActionsProps {
   cardId: CardId;
   /** The card's own control; the menu opens above it and returns focus to it. */
   anchor: HTMLElement;
+  /** Override the card's default actions, including their selection behavior. */
+  actions?: readonly CardAction[];
+  onChooseAction?(route: CardAction): void;
   /** An action was chosen; the menu then closes. */
   onAction?(): void;
   onClose(): void;
@@ -45,6 +60,8 @@ export interface CardActionsProps {
 export function CardActions({
   cardId,
   anchor,
+  actions: providedActions,
+  onChooseAction,
   onAction,
   onClose,
   onInspect,
@@ -53,7 +70,13 @@ export function CardActions({
   const hints = useShortcutHints({ kind: "card", value: cardId });
   const card = useGame((game) => game.cards.find(cardId));
   if (!card) return null;
-  const actions = getCardActions(card);
+  const actions = providedActions ?? getCardActions(card);
+  function choose(action: CardAction) {
+    if (onChooseAction) onChooseAction(action);
+    else getCardActionInput(action, cardId)?.getSelectHandler(cardId)();
+    onAction?.();
+    onClose();
+  }
   return (
     <Popover.Root
       open
@@ -93,15 +116,22 @@ export function CardActions({
                 event.shiftKey
               )
                 return;
-              const route = actions.find((route) =>
-                hints.some(
-                  (hint) =>
-                    hint.kind === "interaction" &&
-                    hint.interaction === route.key &&
-                    hint.keys.includes(event.key),
-                ),
+              const matching = actions.filter(
+                (action) =>
+                  getCardActionInput(action, cardId) &&
+                  hints.some(
+                    (hint) =>
+                      hint.kind === "interaction" &&
+                      hint.interaction === action.key &&
+                      hint.keys.includes(event.key),
+                  ),
               );
-              if (!route) return;
+              if (matching.length !== 1) return;
+              if (onChooseAction) {
+                event.preventDefault();
+                choose(matching[0]);
+                return;
+              }
               const pending = card.game.shortcuts.handle(event.key, {
                 kind: "card",
                 value: cardId,
@@ -127,36 +157,39 @@ export function CardActions({
           >
             <Popover.Arrow className="db-card-action-arrow" />
             {actions.length ? (
-              actions.map((route, index) => (
+              actions.map((action, index) => (
                 <Button
-                  key={route.key}
+                  key={action.key}
                   type="button"
                   variant={index ? "outline" : "default"}
                   className="min-h-11 px-4"
+                  disabled={!getCardActionInput(action, cardId)}
+                  title={
+                    !getCardActionInput(action, cardId)
+                      ? (action.getUnavailableReason() ??
+                        getCardUnavailableReason(card))
+                      : undefined
+                  }
                   data-action="card-action"
-                  data-interaction={route.key}
+                  data-interaction={action.key}
                   aria-keyshortcuts={
                     hints
                       .filter(
                         (hint) =>
                           hint.kind === "interaction" &&
-                          hint.interaction === route.key,
+                          hint.interaction === action.key,
                       )
                       .flatMap((hint) => hint.keys)
                       .join(" ") || undefined
                   }
-                  onClick={() => {
-                    card.select({ interaction: route.key });
-                    onAction?.();
-                    onClose();
-                  }}
+                  onClick={() => choose(action)}
                 >
-                  {route.label}
+                  {action.label}
                   {hints
                     .filter(
                       (hint) =>
                         hint.kind === "interaction" &&
-                        hint.interaction === route.key,
+                        hint.interaction === action.key,
                     )
                     .flatMap((hint) => hint.keys)
                     .map((name) => (

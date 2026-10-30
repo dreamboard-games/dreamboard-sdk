@@ -680,11 +680,10 @@
     --ring: var(--card-back);
     --muted: color-mix(in srgb, var(--card-back) 8%, var(--card-face));
     position: relative;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.5rem;
-    max-width: min(20rem, calc(100vw - 1rem));
+    width: min(20rem, calc(100vw - 1rem));
     padding: 0.5rem;
     border: 1px solid var(--border);
     border-radius: 0.75rem;
@@ -692,6 +691,16 @@
     color: var(--foreground);
     box-shadow: 0 3px 12px #192b3526;
     outline: none;
+  }
+  .db-card-actions > [data-slot="button"] {
+    width: 100%;
+    height: auto;
+    min-height: 2.75rem;
+    padding: 0.5rem;
+    white-space: normal;
+  }
+  .db-card-actions > p {
+    grid-column: 1 / -1;
   }
   /* A keyboard key drawn as its keycap, in the surrounding text colour. Keys
      keep their event.key text, and show a letter in capitals as printed. */

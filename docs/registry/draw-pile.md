@@ -87,3 +87,8 @@ riffle draws above the page, so a clipped pile still has room, and a pile at
 the window's edge splits further in. Reduced motion skips it. The draw-pile item
 also installs `PileRiffle`; place `<PileRiffle zoneId hostId />` inside any
 other `Pile`, such as an opponent's deck, to riffle it too.
+
+An empty pile can still offer Draw when its bound interaction allows it, for
+example to recycle a discard pile or resolve fatigue. The menu submits that
+action directly without inventing a card animation. An empty pile never starts
+a drag. Availability remains the interaction's decision.
