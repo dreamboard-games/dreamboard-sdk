@@ -34,7 +34,7 @@ Cards stay pressable when unplayable so they can be inspected and explain themse
 
 Piles catch a dragged card near their stack and zones hold it inside their edge; see [snapping](../guides/ui/gestures.md#snapping). Exact board-space targets keep their native shape. Touch reaches further. Escape, pointer cancellation, a changed frame, and a lost window focus cancel a drag.
 
-For authored action policies, `getCardActions(card)` provides canonical
-interaction objects and `onChooseCardAction(card, route)` owns selection.
+Card actions come from the reducer-projected interactions.
+`onChooseCardAction(card, route)` customizes selection for those actions.
 `inspectBack` allows back-only inspection of concealed cards. These props reach
 both fan controls and the Browse sheet; see [CardControl](card-control.md).

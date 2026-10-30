@@ -37,8 +37,8 @@ settling into a pile ticks. A custom slot, such as the hand's fan, owns its
 placement and moving overlay; `dragCopyScale(overlay.fit)` and `useSnapTick`
 from the copied `card` give it the same behaviour.
 
-`actions` and `onChooseAction(route)` customize the same action list and selection
-policy used by the opener and menu. `selection={{ selected, active, toggle }}`
+The opener and menu derive actions from the card's reducer-projected interactions.
+`onChooseAction(route)` customizes selection for those actions. `selection={{ selected, active, toggle }}`
 adds caller-owned batch selection: Shift-click or an active selection toggles the
 card. The game owns which cards the batch can act on.
 

@@ -21,9 +21,8 @@ are authoritative; there is no separate SDK component import.
 
 `CardActions` takes a `cardId`, the card control as `anchor`, and `onClose`. It opens a Base UI popover above the card with one button per interaction the card can start now, in the game's order, the first one primary. Choosing one selects the card for that interaction, which submits it when the interaction commits on its own; a board or form input then continues the move. A card without an action shows its interaction's unavailable reason, or a plain fallback. `children` follow the card's own actions and Inspect, as when a pile adds its actions under its top card's. Focus moves to the first action and returns to the card when the menu closes; Escape and an outside press close it. `getCardActions` and `getCardUnavailableReason` expose the same rules. [Hand](hand.md) opens it on a tap.
 
-Use `actions` to provide a list of the bound game's canonical interaction objects,
-and `onChooseAction(route)` to own their selection policy, such as selecting a
-batch of cards. The default resolves an eligible `cardTarget` input and calls
+Actions always come from the card's reducer-projected interactions. Use
+`onChooseAction(route)` to own selection, such as selecting a batch of cards. The default resolves an eligible `cardTarget` input and calls
 its select handler; it checks every target input and prefers one still awaiting
 a value. Input names are authored by the game. Menu shortcuts use the same
 callback as the action buttons. Buttons share a two-column grid and equal touch

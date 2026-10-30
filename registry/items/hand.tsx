@@ -67,7 +67,6 @@ export interface HandProps {
    */
   renderPreview?(card: Card): ReactNode;
   getCardLabel?(card: Card): string;
-  getCardActions?(card: Card): readonly CardAction[];
   onChooseCardAction?(card: Card, route: CardAction): void;
   inspectBack?: boolean;
   /**
@@ -117,7 +116,6 @@ export function Hand({
   renderCard,
   renderPreview,
   getCardLabel,
-  getCardActions,
   onChooseCardAction,
   inspectBack,
   options = handFanPresets.open,
@@ -501,7 +499,6 @@ export function Hand({
                 renderCard={renderCard}
                 renderPreview={renderPreview}
                 getCardLabel={getCardLabel}
-                actions={getCardActions?.(card)}
                 onChooseAction={
                   onChooseCardAction
                     ? (route) => onChooseCardAction(card, route)
@@ -580,7 +577,6 @@ export function Hand({
                         renderCard={renderCard}
                         renderPreview={renderPreview}
                         getCardLabel={getCardLabel}
-                        getCardActions={getCardActions}
                         onChooseCardAction={onChooseCardAction}
                         inspectBack={inspectBack}
                         destination={destination}
@@ -632,7 +628,6 @@ interface HandCardProps {
   renderCard: HandProps["renderCard"];
   renderPreview: HandProps["renderPreview"];
   getCardLabel: HandProps["getCardLabel"];
-  getCardActions: HandProps["getCardActions"];
   onChooseCardAction: HandProps["onChooseCardAction"];
   inspectBack: HandProps["inspectBack"];
   focused: boolean;
@@ -658,7 +653,6 @@ const HandCard = memo(function HandCard({
   renderCard,
   renderPreview,
   getCardLabel,
-  getCardActions,
   onChooseCardAction,
   inspectBack,
   focused,
@@ -706,7 +700,6 @@ const HandCard = memo(function HandCard({
         renderCard={renderCard}
         renderPreview={renderPreview}
         getCardLabel={getCardLabel}
-        actions={getCardActions?.(card)}
         onChooseAction={
           onChooseCardAction
             ? (route) => onChooseCardAction(card, route)

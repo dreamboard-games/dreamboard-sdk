@@ -161,8 +161,7 @@ function Controls({ source }: { source: StorySource }) {
             <CardControl
               cardId={card.id}
               drag={false}
-              renderCard={() => <Card>Custom actions</Card>}
-              actions={card.getInteractions()}
+              renderCard={() => <Card>Custom selection</Card>}
               onChooseAction={() => setChoices((value) => value + 1)}
               selection={{
                 selected,

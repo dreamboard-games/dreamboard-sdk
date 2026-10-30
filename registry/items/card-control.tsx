@@ -38,8 +38,7 @@ export interface CardControlProps {
    */
   renderPreview?(card: GameCard): ReactNode;
   getCardLabel?(card: GameCard): string;
-  /** Caller-owned actions and selection, for example a batch-selection toolbar. */
-  actions?: readonly CardAction[];
+  /** Caller-owned selection, for example a batch-selection toolbar. */
   onChooseAction?(route: CardAction): void;
   selection?: {
     readonly selected: boolean;
@@ -75,7 +74,6 @@ export function CardControl({
   renderPreview = (card) => renderCard(card, "idle"),
   getCardLabel,
   choosing = false,
-  actions: providedActions,
   onChooseAction,
   selection,
   inspectBack = false,
@@ -117,7 +115,7 @@ export function CardControl({
     return () => onMenuChange?.(false);
   }, [menu, onMenuChange]);
   if (!card) return null;
-  const actions = providedActions ?? getCardActions(card);
+  const actions = getCardActions(card);
   const canInspect = !presentation.hidden || inspectBack;
   const preview = presentation.hidden ? (
     <CardBack image={backImageOf(card)} />
@@ -224,7 +222,6 @@ export function CardControl({
         <CardActions
           cardId={cardId}
           anchor={anchor}
-          actions={actions}
           onChooseAction={onChooseAction}
           onAction={() => {
             onAction?.();

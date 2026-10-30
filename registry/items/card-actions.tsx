@@ -41,8 +41,7 @@ export interface CardActionsProps {
   cardId: CardId;
   /** The card's own control; the menu opens above it and returns focus to it. */
   anchor: HTMLElement;
-  /** Override the card's default actions, including their selection behavior. */
-  actions?: readonly CardAction[];
+  /** Handle selection instead of selecting this card as the interaction input. */
   onChooseAction?(route: CardAction): void;
   /** An action was chosen; the menu then closes. */
   onAction?(): void;
@@ -60,7 +59,6 @@ export interface CardActionsProps {
 export function CardActions({
   cardId,
   anchor,
-  actions: providedActions,
   onChooseAction,
   onAction,
   onClose,
@@ -70,7 +68,7 @@ export function CardActions({
   const hints = useShortcutHints({ kind: "card", value: cardId });
   const card = useGame((game) => game.cards.find(cardId));
   if (!card) return null;
-  const actions = providedActions ?? getCardActions(card);
+  const actions = getCardActions(card);
   function choose(action: CardAction) {
     if (onChooseAction) onChooseAction(action);
     else getCardActionInput(action, cardId)?.getSelectHandler(cardId)();
