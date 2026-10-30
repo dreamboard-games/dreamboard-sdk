@@ -84,7 +84,11 @@ const game = model.assemble({
   view: model.view(({ state }) => state.publicState),
 });
 
-function Controls() {
+interface StorySource extends CommandSource {
+  failNextDraw(mode: "reject" | "throw"): void;
+}
+
+function Controls({ source }: { source: StorySource }) {
   const current = useGame();
   useGameShortcuts({
     bindings: [
@@ -170,6 +174,12 @@ function Controls() {
             </CardControl>
           </div>
         ))}
+      <button type="button" onClick={() => source.failNextDraw("reject")}>
+        Reject next draw
+      </button>
+      <button type="button" onClick={() => source.failNextDraw("throw")}>
+        Throw next draw
+      </button>
       <DrawPile
         zoneId="deck"
         hostId="table"
@@ -181,14 +191,36 @@ function Controls() {
   );
 }
 function Example() {
-  const [source, setSource] = useState<CommandSource | null>(null);
+  const [source, setSource] = useState<StorySource | null>(null);
   useEffect(() => {
     let active = true;
     let owned: CommandSource | null = null;
     void localSource(game, { players: 1, seed: 1 }).then((value) => {
       if (!active) return value.dispose();
       owned = value;
-      setSource(value);
+      let failure: "reject" | "throw" | null = null;
+      setSource({
+        store: value.store,
+        dispose: () => value.dispose(),
+        cancel: (id) => value.cancel(id),
+        failNextDraw(mode) {
+          failure = mode;
+        },
+        async submit(id, params) {
+          if (id === "draw" && failure) {
+            const mode = failure;
+            failure = null;
+            if (mode === "throw")
+              throw new Error("Empty draw transport failed.");
+            return {
+              accepted: false,
+              errorCode: "DRAW_REJECTED",
+              message: "Empty draw was rejected.",
+            };
+          }
+          return value.submit(id, params);
+        },
+      });
     });
     return () => {
       active = false;
@@ -198,7 +230,7 @@ function Example() {
   return (
     source && (
       <GameProvider source={source}>
-        <Controls />
+        <Controls source={source} />
       </GameProvider>
     )
   );

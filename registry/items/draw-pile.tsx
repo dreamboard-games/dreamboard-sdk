@@ -233,33 +233,36 @@ export function DrawPile<K extends InteractionKey>(props: DrawPileProps<K>) {
     }
     setOpen(false);
     setError(null);
-    // The interaction can recycle or resolve fatigue with no physical card to lift.
-    if (current.count === 0) {
-      current.draw.getSubmitProps(current.params).onClick();
-      return;
+    // Empty draws still submit and report errors, but have no physical card to lift.
+    const animated = current.count > 0;
+    if (animated) {
+      const target = current.table.getDrawTarget(destinationZone);
+      const landed = moveTo(target, box);
+      current.table.stageDraw(
+        sourceZone,
+        destinationZone,
+        () => placement(box),
+        target,
+        landed,
+      );
+      current.table.setDrop(destinationZone, true);
+      setGhost({ box, phase: "pending", snapshot: current.snapshot, landed });
     }
-    const target = current.table.getDrawTarget(destinationZone);
-    const landed = moveTo(target, box);
-    current.table.stageDraw(
-      sourceZone,
-      destinationZone,
-      () => placement(box),
-      target,
-      landed,
-    );
-    current.table.setDrop(destinationZone, true);
-    setGhost({ box, phase: "pending", snapshot: current.snapshot, landed });
     try {
       const result = await current.draw.submit(current.params);
       if (!result.accepted) {
-        current.table.clearDraw();
+        if (animated) {
+          current.table.clearDraw();
+          returnToPile();
+        }
         setError(result.message ?? result.errorCode);
-        returnToPile();
       }
     } catch (cause) {
-      current.table.clearDraw();
+      if (animated) {
+        current.table.clearDraw();
+        returnToPile();
+      }
       setError(cause instanceof Error ? cause.message : String(cause));
-      returnToPile();
     }
   }
 

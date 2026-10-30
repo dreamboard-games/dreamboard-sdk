@@ -82,4 +82,57 @@ export async function proveCardActionComposition(page: Page) {
     .click();
   await expect(page.getByTestId("action-results")).toContainText('"draws":1');
   await expect(page.locator("[data-draw-overlay]")).toHaveCount(0);
+  await proveEmptyDrawErrors(page);
+}
+
+/** Empty draws share visible rejection/exception handling without ever staging a card. */
+export async function proveEmptyDrawErrors(page: Page) {
+  await page.evaluate(() => {
+    document.body.dataset.emptyDrawGhost = "false";
+    const observer = new MutationObserver((records) => {
+      for (const record of records)
+        for (const node of record.addedNodes) {
+          if (
+            node instanceof Element &&
+            (node.matches("[data-draw-overlay]") ||
+              node.querySelector("[data-draw-overlay]"))
+          )
+            document.body.dataset.emptyDrawGhost = "true";
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  });
+  const results = page.getByTestId("action-results");
+  const before = await results.textContent();
+  for (const [control, message] of [
+    ["Reject next draw", "Empty draw was rejected."],
+    ["Throw next draw", "Empty draw transport failed."],
+  ]) {
+    await page.getByRole("button", { name: control, exact: true }).click();
+    await page
+      .getByRole("button", { name: "Draw pile actions", exact: true })
+      .click();
+    await page
+      .getByRole("button", { name: "Resolve empty draw", exact: true })
+      .click();
+    await expect(
+      page.getByRole("status").filter({ hasText: message }),
+    ).toHaveText(message);
+    await expect(results).toHaveText(before!);
+    await expect(page.locator("[data-draw-overlay]")).toHaveCount(0);
+  }
+  await page
+    .getByRole("button", { name: "Draw pile actions", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Resolve empty draw", exact: true })
+    .click();
+  await expect(page.getByTestId("action-results")).toContainText('"draws":2');
+  await expect(
+    page.getByText("Empty draw transport failed.", { exact: true }),
+  ).toHaveCount(0);
+  await expect(page.locator("body")).toHaveAttribute(
+    "data-empty-draw-ghost",
+    "false",
+  );
 }
