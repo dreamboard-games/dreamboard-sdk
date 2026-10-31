@@ -45,8 +45,6 @@ export interface CardControlProps {
     readonly active: boolean;
     toggle(): void;
   };
-  /** Allow inspecting the visible back of a concealed card; never renders its front. */
-  inspectBack?: boolean;
   choosing?: boolean;
   disabled?: boolean;
   style?: CSSProperties;
@@ -76,7 +74,6 @@ export function CardControl({
   choosing = false,
   onChooseAction,
   selection,
-  inspectBack = false,
   disabled = false,
   style,
   className = "db-hand-card",
@@ -116,7 +113,6 @@ export function CardControl({
   }, [menu, onMenuChange]);
   if (!card) return null;
   const actions = getCardActions(card);
-  const canInspect = !presentation.hidden || inspectBack;
   const preview = presentation.hidden ? (
     <CardBack image={backImageOf(card)} />
   ) : (
@@ -228,14 +224,10 @@ export function CardControl({
             if (browsing.inSheet) browsing.closeSheet();
           }}
           onClose={() => setOpen(false)}
-          onInspect={
-            !canInspect
-              ? undefined
-              : () => {
-                  setOpen(false);
-                  setInspecting(true);
-                }
-          }
+          onInspect={() => {
+            setOpen(false);
+            setInspecting(true);
+          }}
         >
           {moreActions}
         </CardActions>
@@ -243,7 +235,6 @@ export function CardControl({
       {browsing.session &&
         anchor &&
         !dragging &&
-        canInspect &&
         (gesture.isActive || gesture.inspecting === "hold") && (
           <TouchCardPreview
             session={browsing.session}
@@ -254,16 +245,15 @@ export function CardControl({
           </TouchCardPreview>
         )}
       {(inspecting ||
-        (gesture.inspecting && !browsing.session && !browsing.covered)) &&
-        canInspect && (
-          <CardPreview
-            via={inspecting ? "action" : gesture.inspecting!}
-            anchor={anchor}
-            onClose={() => setInspecting(false)}
-          >
-            {preview}
-          </CardPreview>
-        )}
+        (gesture.inspecting && !browsing.session && !browsing.covered)) && (
+        <CardPreview
+          via={inspecting ? "action" : gesture.inspecting!}
+          anchor={anchor}
+          onClose={() => setInspecting(false)}
+        >
+          {preview}
+        </CardPreview>
+      )}
     </>
   );
 }

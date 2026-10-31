@@ -68,7 +68,6 @@ export interface HandProps {
   renderPreview?(card: Card): ReactNode;
   getCardLabel?(card: Card): string;
   onChooseCardAction?(card: Card, route: CardAction): void;
-  inspectBack?: boolean;
   /**
    * How the fan rests and focuses a card. Spread a `handFanPresets` entry and
    * override what differs; defaults to `handFanPresets.open`. A `tuck` hides
@@ -117,7 +116,6 @@ export function Hand({
   renderPreview,
   getCardLabel,
   onChooseCardAction,
-  inspectBack,
   options = handFanPresets.open,
   reorder,
 }: HandProps) {
@@ -504,7 +502,6 @@ export function Hand({
                     ? (route) => onChooseCardAction(card, route)
                     : undefined
                 }
-                inspectBack={inspectBack}
               />
             ))
           }
@@ -578,7 +575,6 @@ export function Hand({
                         renderPreview={renderPreview}
                         getCardLabel={getCardLabel}
                         onChooseCardAction={onChooseCardAction}
-                        inspectBack={inspectBack}
                         destination={destination}
                         onMenuChange={onMenuChange}
                       />
@@ -629,7 +625,6 @@ interface HandCardProps {
   renderPreview: HandProps["renderPreview"];
   getCardLabel: HandProps["getCardLabel"];
   onChooseCardAction: HandProps["onChooseCardAction"];
-  inspectBack: HandProps["inspectBack"];
   focused: boolean;
   destination(index: number): CardPlacement;
   onMenuChange(cardId: CardId, open: boolean): void;
@@ -654,7 +649,6 @@ const HandCard = memo(function HandCard({
   renderPreview,
   getCardLabel,
   onChooseCardAction,
-  inspectBack,
   focused,
   destination,
   onMenuChange,
@@ -705,7 +699,6 @@ const HandCard = memo(function HandCard({
             ? (route) => onChooseCardAction(card, route)
             : undefined
         }
-        inspectBack={inspectBack}
         onMenuChange={menuChanged}
       >
         {({ raised, anchor, control }) => {

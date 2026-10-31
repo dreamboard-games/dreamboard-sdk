@@ -42,7 +42,6 @@ The opener and menu derive actions from the card's reducer-projected interaction
 adds caller-owned batch selection: Shift-click or an active selection toggles the
 card. The game owns which cards the batch can act on.
 
-Concealed cards have no preview by default. Set `inspectBack` only when the game
-allows inspecting that card's visible reverse. Its preview always renders
+Concealed cards always allow inspection of their visible reverse. Their preview renders
 `CardBack` with the visible back image, and never calls `renderPreview` for a
 concealed card.

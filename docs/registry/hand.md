@@ -36,5 +36,5 @@ Piles catch a dragged card near their stack and zones hold it inside their edge;
 
 Card actions come from the reducer-projected interactions.
 `onChooseCardAction(card, route)` customizes selection for those actions.
-`inspectBack` allows back-only inspection of concealed cards. These props reach
-both fan controls and the Browse sheet; see [CardControl](card-control.md).
+Concealed cards allow back-only inspection in both fan controls and the Browse
+sheet; see [CardControl](card-control.md).
