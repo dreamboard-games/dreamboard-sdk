@@ -16,6 +16,7 @@ import {
   proveReducedCardMotion,
   proveSteadyTuckedHand,
 } from "./draw-proof.ts";
+import { proveCardActionComposition } from "./card-actions-proof.ts";
 import { proveCardControl } from "./card-control-proof.ts";
 import { proveCrowdedHand, proveHand, proveHandSlide } from "./hand-proof.ts";
 import { proveHandSorting } from "./hand-sorting-proof.ts";
@@ -128,6 +129,8 @@ try {
         await page.reload();
         await proveBrowserDrag(page, touch);
       }
+      if (story.id === "registry-card-actions--eligibility-and-composition")
+        await proveCardActionComposition(page);
       if (story.id === "registry-zone-actions--authored-actions")
         await proveZoneActions(page, touch);
       if (story.id === "card-selection--marquee-and-group-drop" && !touch)

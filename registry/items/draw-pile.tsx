@@ -124,10 +124,9 @@ export function DrawPile<K extends InteractionKey>(props: DrawPileProps<K>) {
     controls: ReturnType<typeof animate>[];
     finish(): void;
   } | null>(null);
-  const available =
-    count > 0 && !!draw && !draw.getSubmitProps(params).disabled;
-  const latest = useRef({ draw, params, available, snapshot, table });
-  latest.current = { draw, params, available, snapshot, table };
+  const available = !!draw && !draw.getSubmitProps(params).disabled;
+  const latest = useRef({ draw, params, available, count, snapshot, table });
+  latest.current = { draw, params, available, count, snapshot, table };
   const highlighted = useRef<HTMLElement | null>(null);
   const snapped = useRef(false);
   const sourceZone = { zoneId, hostId };
@@ -234,28 +233,36 @@ export function DrawPile<K extends InteractionKey>(props: DrawPileProps<K>) {
     }
     setOpen(false);
     setError(null);
-    const target = current.table.getDrawTarget(destinationZone);
-    const landed = moveTo(target, box);
-    current.table.stageDraw(
-      sourceZone,
-      destinationZone,
-      () => placement(box),
-      target,
-      landed,
-    );
-    current.table.setDrop(destinationZone, true);
-    setGhost({ box, phase: "pending", snapshot: current.snapshot, landed });
+    // Empty draws still submit and report errors, but have no physical card to lift.
+    const animated = current.count > 0;
+    if (animated) {
+      const target = current.table.getDrawTarget(destinationZone);
+      const landed = moveTo(target, box);
+      current.table.stageDraw(
+        sourceZone,
+        destinationZone,
+        () => placement(box),
+        target,
+        landed,
+      );
+      current.table.setDrop(destinationZone, true);
+      setGhost({ box, phase: "pending", snapshot: current.snapshot, landed });
+    }
     try {
       const result = await current.draw.submit(current.params);
       if (!result.accepted) {
-        current.table.clearDraw();
+        if (animated) {
+          current.table.clearDraw();
+          returnToPile();
+        }
         setError(result.message ?? result.errorCode);
-        returnToPile();
       }
     } catch (cause) {
-      current.table.clearDraw();
+      if (animated) {
+        current.table.clearDraw();
+        returnToPile();
+      }
       setError(cause instanceof Error ? cause.message : String(cause));
-      returnToPile();
     }
   }
 
@@ -304,7 +311,8 @@ export function DrawPile<K extends InteractionKey>(props: DrawPileProps<K>) {
       {
         hold() {},
         dragStart() {
-          if (!latest.current.available) return false;
+          if (!latest.current.available || latest.current.count === 0)
+            return false;
           setOpen(false);
           x.set(box.x);
           y.set(box.y);
@@ -385,46 +393,50 @@ export function DrawPile<K extends InteractionKey>(props: DrawPileProps<K>) {
 
   // A lifted card has left the pile until the frame that draws it arrives.
   const lifted = ghost !== null && ghost.snapshot === snapshot;
+  const drawControl = (
+    <button
+      {...shortcut.props}
+      ref={control}
+      type="button"
+      className="db-draw-pile-card"
+      aria-label={`${label} actions`}
+      data-draw-available={available}
+      aria-haspopup="dialog"
+      aria-expanded={open}
+      data-draw-pile={zoneId}
+      onPointerDown={(event) => {
+        shortcut.props.onPointerDown(event);
+        start(event);
+      }}
+      onDragStart={(event) => event.preventDefault()}
+      onContextMenu={(event) => event.preventDefault()}
+      onMouseDown={(event) => {
+        // A touch tap already opened and focused the menu.
+        if (suppressClick.current) event.preventDefault();
+      }}
+      onClick={(event) => {
+        if (suppressClick.current && event.detail !== 0) {
+          suppressClick.current = false;
+          return;
+        }
+        setOpen((current) => !current);
+      }}
+    >
+      {count > 0 && <CardBack image={lifted ? nextBack : back} />}
+    </button>
+  );
   return (
     <>
       <Pile
         ref={pile}
         count={lifted ? count - 1 : count}
         label={label}
+        empty={count === 0 ? drawControl : undefined}
         data-zone={zoneId}
         data-zone-host={hostId}
         className={className}
       >
-        <button
-          {...shortcut.props}
-          ref={control}
-          type="button"
-          className="db-draw-pile-card"
-          aria-label={`${label} actions`}
-          data-draw-available={available}
-          aria-haspopup="dialog"
-          aria-expanded={open}
-          data-draw-pile={zoneId}
-          onPointerDown={(event) => {
-            shortcut.props.onPointerDown(event);
-            start(event);
-          }}
-          onDragStart={(event) => event.preventDefault()}
-          onContextMenu={(event) => event.preventDefault()}
-          onMouseDown={(event) => {
-            // A touch tap already opened and focused the menu.
-            if (suppressClick.current) event.preventDefault();
-          }}
-          onClick={(event) => {
-            if (suppressClick.current && event.detail !== 0) {
-              suppressClick.current = false;
-              return;
-            }
-            setOpen((current) => !current);
-          }}
-        >
-          <CardBack image={lifted ? nextBack : back} />
-        </button>
+        {drawControl}
         <PileRiffle zoneId={zoneId} hostId={hostId} />
       </Pile>
       {open && (

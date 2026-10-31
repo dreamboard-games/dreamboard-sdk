@@ -22,7 +22,7 @@ Use `drag={false}` for table cards that only tap and inspect. Use `drag={{}}` fo
 Pass `moreActions` to add actions after the card's own in its menu, such as the
 actions of the face-up pile it tops; wrap each in Base UI's `Popover.Close`.
 
-The opener remains enabled when no action is available, so players can inspect a card and see the reason. It does not spread `card.getProps()` or inherit direct selection activation. Choosing an action calls `card.select`; a sole multi-card action toggles selection directly. A drag closes the menu, and Escape/outside press dismiss it and restore focus to the card. `disabled` is reserved for a transient arrival animation.
+The opener remains enabled when no action is available, so players can inspect a card and see the reason. It does not spread `card.getProps()` or inherit direct selection activation. Choosing an action calls the eligible card-target input's select handler; a sole multi-card action toggles selection directly. A drag closes the menu, and Escape/outside press dismiss it and restore focus to the card. `disabled` is reserved for a transient arrival animation.
 
 `CardControl` reads the SDK's `useCardPresentation` and pending gesture state. A
 provisional landing stays visible and disabled without a preview prop. Concealed
@@ -36,3 +36,13 @@ land, flat on a pile, and as its back over a zone that hides it; on touch,
 settling into a pile ticks. A custom slot, such as the hand's fan, owns its
 placement and moving overlay; `dragCopyScale(overlay.fit)` and `useSnapTick`
 from the copied `card` give it the same behaviour.
+
+The opener and menu derive actions from the card's reducer-projected interactions.
+`onChooseAction(route)` customizes selection for those actions. `selection={{ selected, active, toggle }}`
+adds caller-owned batch selection: Shift-click or an active selection toggles the
+card. The game owns which cards the batch can act on.
+
+Concealed cards have no preview by default. Set `inspectBack` only when the game
+allows inspecting that card's visible reverse. Its preview always renders
+`CardBack` with the visible back image, and never calls `renderPreview` for a
+concealed card.

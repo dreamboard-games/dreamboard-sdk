@@ -33,3 +33,8 @@ are authoritative; there is no separate SDK component import.
 Cards stay pressable when unplayable so they can be inspected and explain themselves. The shared [CardControl](card-control.md) owns the action menu and inspection; its opener stays enabled while the selected action decides whether the card can be played.
 
 Piles catch a dragged card near their stack and zones hold it inside their edge; see [snapping](../guides/ui/gestures.md#snapping). Exact board-space targets keep their native shape. Touch reaches further. Escape, pointer cancellation, a changed frame, and a lost window focus cancel a drag.
+
+Card actions come from the reducer-projected interactions.
+`onChooseCardAction(card, route)` customizes selection for those actions.
+`inspectBack` allows back-only inspection of concealed cards. These props reach
+both fan controls and the Browse sheet; see [CardControl](card-control.md).
