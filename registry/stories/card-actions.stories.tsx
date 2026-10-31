@@ -148,7 +148,6 @@ function Controls({ source }: { source: StorySource }) {
                 renderPreview={() => (
                   <Card>Secret front must stay concealed</Card>
                 )}
-                inspectBack={zone === "hidden" && index === 1}
               />
             </div>
           )),

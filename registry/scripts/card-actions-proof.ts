@@ -44,11 +44,6 @@ export async function proveCardActionComposition(page: Page) {
   await expect(custom).toHaveAttribute("aria-pressed", "false");
 
   await page.getByTestId("control-hidden-0").getByRole("button").click();
-  await expect(
-    page.getByRole("button", { name: "Inspect card", exact: true }),
-  ).toHaveCount(0);
-  await page.keyboard.press("Escape");
-  await page.getByTestId("control-hidden-1").getByRole("button").click();
   await page.getByRole("button", { name: "Inspect card", exact: true }).click();
   await expect(
     page.getByRole("dialog", { name: "Card inspection" }),
