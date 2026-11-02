@@ -27,12 +27,15 @@ the repo marketplace through its Plugins directory.
 
 ### Claude Code
 
-Run these commands in Claude Code:
+In Claude Code v2.1.275 or later, run:
 
 ```text
-/plugin marketplace add dreamboard-games/dreamboard-sdk
-/plugin install dreamboard@dreamboard-games
+/plugin install dreamboard --marketplace dreamboard-games/dreamboard-sdk
 ```
+
+Review the plugin and choose its installation scope. Older clients can run
+`/plugin marketplace add dreamboard-games/dreamboard-sdk`, then
+`/plugin install dreamboard@dreamboard-games`.
 
 Claude uses `.claude-plugin/marketplace.json` and the plugin's Claude manifest.
 
@@ -57,6 +60,11 @@ directory as described in Cursor's skills documentation. This uses the same
 server and instructions as the packaged plugin. Do not add API keys or tokens
 to the configuration. Complete the browser sign-in when prompted.
 
+The setup cards in Studio's **Settings → MCP → Connect your tools** provide these
+instructions and an **Add MCP to Cursor** install link. That shortcut installs the
+connection only; install the skill separately or use the full plugin once listed.
+A setup click is not proof of a connection: complete Dreamboard sign-in and consent.
+
 ## Use
 
 Try “Find my Dreamboard projects” or “Help me customise this Studio game.”
@@ -64,13 +72,16 @@ Only actively synced projects are available; free accounts can sync one project.
 Device-only projects still work in Studio. Use Settings → Manage sync to choose
 which project to connect.
 
-Reading uses the latest saved cloud revision. Card edits need the project open
-in Studio with AI editing enabled, so changes use its normal validation and undo.
+Reading uses the latest saved cloud revision. Card edits are validated and saved
+directly to the synced project, even while Studio is closed. Concurrent changes
+are checked against the saved revision. Each edit has a seven-day recovery receipt;
+reverting writes a new revision and refuses to overwrite subsequent edits.
+This recovery is separate from the editor's local Undo.
 Game code uses a private project repository and temporary, repository-scoped Git
 credentials. Credentials expire after one hour and must be renewed through the
 connection tool. Never paste a token into a remote URL or commit it.
 
-Access can be revoked in Studio's connected-app settings. Disabling project sync
+Access can be revoked in Studio's Settings → MCP. Disabling project sync
 stops new remote authoring access; already issued Git credentials expire at their
 normal expiry.
 
@@ -87,5 +98,5 @@ host against a deployed test backend before release. Local manifest validation
 does not prove OAuth or Git permissions.
 
 Format references: [Codex plugins](https://developers.openai.com/plugins/build/plugins),
-[Claude plugins](https://code.claude.com/docs/en/plugins-reference),
-[Cursor plugins](https://cursor.com/docs/reference/plugins).
+[Claude plugins](https://code.claude.com/docs/en/discover-plugins),
+[Cursor plugins](https://cursor.com/docs/plugins).

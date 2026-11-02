@@ -20,28 +20,39 @@ For a missing device-only project, direct the user to Studio's Settings → Mana
 sync. Do not silently disable another project's sync or imply that the plugin
 can read browser-local data.
 
-## Edit cards through Studio
+## Edit synced cards
 
-Use `update_cards` for card data. The user must open the project in Studio and
-enable AI editing. Read the latest project first, use its revision when required,
-and target the intended card type. The tab validates and fits the text, applies
-one undoable import, and saves and syncs it before acknowledging success.
+Use `update_cards` for card data. Studio does not need to be open and there is no
+per-tab permission switch. Read the latest saved project first and supply its
+saved revision plus a new UUID request ID. The server validates the import using
+Studio's document rules, fits text, and commits a new cloud revision atomically.
 
-Follow the tool's table contract. Headers match Name, Quantity and property names
-without regard to case. Card names match after trimming, with case preserved.
-A new name creates a card; an existing name updates it. Empty cells leave existing
-values unchanged. Cards absent from the table stay. Duplicate or ambiguous names
-must be resolved before applying. Image columns are not supported.
+Follow the current tool schema: `payload` contains `definitionId`, explicit
+`columns` descriptors and a `table` with one header row followed by string cells.
+Column descriptors select card name, quantity, or an existing property ID; do not
+infer property identity from a header alone. Card names match after trimming,
+with case preserved. A new name creates a card; an existing name updates it.
+Empty cells preserve existing values or defaults. Cards absent from the table
+stay. Duplicate or ambiguous names must be resolved before applying. Image
+columns are not supported.
 
-Keep the returned request ID and use `get_edit_request` to check completion.
-Report queued or claimed requests as pending until acknowledged. Repeating the
-same request must use its original ID and payload. On a stale revision, read
-again and reconcile the intended changes before submitting a new request.
-A result with status `unconfirmed` means the edit may already have happened: read the
-current project and reconcile it, rather than automatically submitting a
-replacement. `cancel_edit_request` can cancel work that has not been claimed.
-Request IDs have a seven-day retention window. Rulebooks, images and layouts remain
-Studio edits until a dedicated tool supports them.
+Keep the request ID. If a response is lost, use `get_edit_request` or retry with
+exactly the same request ID, revision and payload. Never invent a replacement ID
+just because a call timed out. A stored result remains authoritative even if
+newer project revisions exist. On a stale revision, read again and reconcile the
+intended changes before submitting a new request. Do not automatically overwrite
+concurrent edits.
+
+Use `restore_card_edit` only when the user asks to revert an applied edit. Supply
+the original request ID and the expected saved revision. Recovery writes a new
+revision and refuses to overwrite intervening edits; if it reports a conflict,
+read the latest project and discuss the intended correction. It is separate from
+Studio's local Undo. Receipts and recovery data are retained for seven days; do
+not retry or promise recovery of an older request.
+
+An open editor may show a newer-cloud-version notice. Unsynced local changes must
+be preserved and reconciled; do not tell the user to discard them. Rulebooks,
+images and layouts remain Studio edits until a dedicated tool supports them.
 
 ## Customise game code
 

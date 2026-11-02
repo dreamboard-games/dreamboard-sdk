@@ -1,11 +1,14 @@
 {
   "name": "dreamboard-games",
-  "owner": { "name": "Dreamboard Games" },
+  "owner": {
+    "name": "Dreamboard Games"
+  },
   "plugins": [
     {
       "name": "dreamboard",
       "source": "./plugins/dreamboard",
-      "description": "Work on synced Dreamboard projects with your AI agent."
+      "description": "Connect your tools to edit synced Dreamboard projects."
     }
-  ]
+  ],
+  "description": "Tools for editing synced Dreamboard projects and custom game code."
 }
