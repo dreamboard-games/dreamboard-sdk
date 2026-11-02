@@ -33,10 +33,13 @@ A new name creates a card; an existing name updates it. Empty cells leave existi
 values unchanged. Cards absent from the table stay. Duplicate or ambiguous names
 must be resolved before applying. Image columns are not supported.
 
-Report queued requests as pending until acknowledged. On a stale revision, read
-again and reconcile the intended changes before retrying. If the request times
-out or the tab closes, inspect its status and the current project before sending
-a replacement that might duplicate work. Rulebooks, images and layouts remain
+Keep the returned request ID and use `get_edit_request` to check completion.
+Report queued or claimed requests as pending until acknowledged. Repeating the
+same request must use its original ID and payload. On a stale revision, read
+again and reconcile the intended changes before submitting a new request.
+An outcome-unknown result means the edit may already have happened: read the
+current project and reconcile it, rather than automatically submitting a
+replacement. Rulebooks, images and layouts remain
 Studio edits until a dedicated tool supports them.
 
 ## Customise game code
@@ -53,7 +56,9 @@ logs, commits and user-facing replies. Do not overwrite unrelated GitHub
 credentials. If the environment cannot pass it safely, direct the user to Studio's
 connection instructions instead of printing a token-bearing clone command.
 
-Clone the clean URL. Read the repository's `AGENTS.md`, `rule.md`, package scripts
+Clone the clean URL with repository-scoped credential lookup:
+`git clone --config credential.useHttpPath=true <clean-repository-url>`.
+Read the repository's `AGENTS.md`, `rule.md`, package scripts
 and current source before editing. `AGENTS.md` defines the exact ownership
 boundary and verification commands for that repository. Edit game-owned source;
 change cards through `update_cards`. Never modify Studio-owned inputs such as
