@@ -1,0 +1,9 @@
+{
+  "name": "dreamboard",
+  "version": "0.1.0",
+  "description": "Find synced Dreamboard projects, edit card data, and customise game code.",
+  "author": {
+    "name": "Dreamboard Games"
+  },
+  "privacyPolicyUrl": "https://dreamboard.games/privacy"
+}

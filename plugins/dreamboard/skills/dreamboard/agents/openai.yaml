@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dreamboard"
+  short_description: "Edit synced projects and custom game code"
+  default_prompt: "Use Dreamboard to work on my synced game project."
