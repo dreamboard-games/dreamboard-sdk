@@ -1,0 +1,12 @@
+{
+  "name": "dreamboard-games",
+  "interface": { "displayName": "Dreamboard Games" },
+  "plugins": [
+    {
+      "name": "dreamboard",
+      "source": { "source": "local", "path": "./plugins/dreamboard" },
+      "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" },
+      "category": "Productivity"
+    }
+  ]
+}

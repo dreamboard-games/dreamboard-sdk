@@ -10,6 +10,9 @@ or [reference games](examples/reference-games/README.md).
 To make your own local game, [bootstrap the starter with Giget](templates/game/README.md).
 It installs published packages and runs without a Dreamboard account.
 
+For a synced Studio project, use the [Dreamboard plugin](plugins/dreamboard/README.md)
+with Codex, Claude Code, or Cursor. Installing the SDK does not enable the plugin.
+
 ```sh
 corepack pnpm install --frozen-lockfile
 pnpm check
