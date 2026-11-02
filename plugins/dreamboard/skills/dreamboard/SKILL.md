@@ -37,9 +37,10 @@ Keep the returned request ID and use `get_edit_request` to check completion.
 Report queued or claimed requests as pending until acknowledged. Repeating the
 same request must use its original ID and payload. On a stale revision, read
 again and reconcile the intended changes before submitting a new request.
-An outcome-unknown result means the edit may already have happened: read the
+A result with status `unconfirmed` means the edit may already have happened: read the
 current project and reconcile it, rather than automatically submitting a
-replacement. Rulebooks, images and layouts remain
+replacement. `cancel_edit_request` can cancel work that has not been claimed.
+Request IDs have a seven-day retention window. Rulebooks, images and layouts remain
 Studio edits until a dedicated tool supports them.
 
 ## Customise game code
