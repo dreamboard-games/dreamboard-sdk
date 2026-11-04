@@ -19,6 +19,12 @@ export const GameplayCloseCode = {
 
 export const GameplayCredentialSchema = z.discriminatedUnion("kind", [
   z
+    .object({
+      kind: z.literal("room-guest"),
+      token: z.string().min(1).max(1024),
+    })
+    .strict(),
+  z
     .object({ kind: z.literal("user"), token: z.string().min(1).max(16384) })
     .strict(),
   z
