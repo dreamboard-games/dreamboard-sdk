@@ -137,7 +137,7 @@ export function hostSource(options: {
               }
             }
             clearTimeout(refreshTimer);
-            if (credential.kind === "user") {
+            if (credential.kind !== "demo") {
               const ttl = Date.parse(frame.expiresAt) - Date.now();
               if (ttl <= 0)
                 throw new Error("Gameplay credential is already expired.");

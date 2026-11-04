@@ -435,37 +435,40 @@ describe("socket recovery deadlines", () => {
     vi.advanceTimersByTime(100);
     expect(source.store.get().connection).toBe("failed");
   });
-  it("refreshes credentials without replacing the snapshot and times out a missing refresh ACK", async () => {
-    vi.useFakeTimers();
-    vi.stubGlobal("WebSocket", TestSocket);
-    const getCredential = vi.fn(async () => ({
-      kind: "user" as const,
-      token: "fixture",
-    }));
-    const source = hostSource({
-      url: "wss://host/gameplay",
-      session,
-      playerId: "alice",
-      getCredential,
-      timeoutMs: 100,
-    });
-    await Promise.resolve();
-    const socket = TestSocket.instances.at(-1)!;
-    socket.open();
-    socket.receive({
-      ...accepted,
-      expiresAt: new Date(Date.now() + 1000).toISOString(),
-    });
-    socket.receive(snapshot());
-    const before = source.store.get().snapshot;
-    await vi.advanceTimersByTimeAsync(800);
-    expect(socket.sent.at(-1)?.type).toBe("auth.refresh");
-    expect(getCredential).toHaveBeenCalledTimes(2);
-    socket.receive(snapshot(2));
-    await vi.advanceTimersByTimeAsync(100);
-    expect(source.store.get().connection).toBe("failed");
-    expect(before?.version).toBe(1);
-  });
+  it.each(["user", "room-guest"] as const)(
+    "refreshes %s credentials without replacing the snapshot and times out a missing refresh ACK",
+    async (kind) => {
+      vi.useFakeTimers();
+      vi.stubGlobal("WebSocket", TestSocket);
+      const getCredential = vi.fn(async () => ({
+        kind,
+        token: "fixture",
+      }));
+      const source = hostSource({
+        url: "wss://host/gameplay",
+        session,
+        playerId: "alice",
+        getCredential,
+        timeoutMs: 100,
+      });
+      await Promise.resolve();
+      const socket = TestSocket.instances.at(-1)!;
+      socket.open();
+      socket.receive({
+        ...accepted,
+        expiresAt: new Date(Date.now() + 1000).toISOString(),
+      });
+      socket.receive(snapshot());
+      const before = source.store.get().snapshot;
+      await vi.advanceTimersByTimeAsync(800);
+      expect(socket.sent.at(-1)?.type).toBe("auth.refresh");
+      expect(getCredential).toHaveBeenCalledTimes(2);
+      socket.receive(snapshot(2));
+      await vi.advanceTimersByTimeAsync(100);
+      expect(source.store.get().connection).toBe("failed");
+      expect(before?.version).toBe(1);
+    },
+  );
 });
 
 it("preserves a startup credential failure before any snapshot or request", async () => {
