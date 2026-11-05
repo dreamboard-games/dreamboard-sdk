@@ -9,4 +9,4 @@ export const game = createGameInstance<typeof definition>()({
 });
 ```
 
-Use real local/scenario sources for gameplay and createTestSource for controlled ACK/frame ordering. Browser proofs operate actual buttons/cards and assert frames, not recorded command tapes. ScenarioControls supports seat switching and checkpoint JSON in local entries. The copied browser-game helper locates canonical DOM attributes. Hosted bundles must exclude executable reducer/testing imports.
+Use real local/scenario sources for gameplay and createTestSource for controlled snapshot acknowledgments, including unchanged frames and state arriving before acknowledgment. Browser proofs operate actual buttons/cards and assert frames, not recorded command tapes. ScenarioControls supports seat switching and checkpoint JSON in local entries. The copied browser-game helper locates canonical DOM attributes. Hosted bundles must exclude executable reducer/testing imports.

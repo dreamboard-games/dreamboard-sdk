@@ -5,7 +5,7 @@ import { createGameInstance, iframeSource } from "@dreamboard-games/sdk";
 export const game = createGameInstance<unknown>()({ source: iframeSource() });
 ```
 
-iframeSource connects to a parent host; hostSource connects to the canonical websocket host; staticSource renders a validated immutable seat snapshot. /testing provides localSource/scenarioSource/createTestSource. Public snapshots contain me, players, basis-free frame and version. Transport owns original basis, retry and dedup identifiers. A successful ACK can precede its frame: request remains awaiting-frame. Connection failures do not imply acceptance or draft clearing.
+iframeSource connects to a parent host; hostSource connects to the canonical websocket host; staticSource renders a validated immutable seat snapshot. /testing provides localSource/scenarioSource/createTestSource. Public snapshots contain me, players, basis-free frame and version. Transport owns original basis, retry and dedup identifiers. Each source admits one pending action. A snapshot envelope's matching `acknowledgedClientActionId` clears that request when the covering state is admitted, before the submit promise resolves. Equal-version acknowledgments do not replay state. `causedBy` is presentation-only. Connection failures do not imply acceptance or draft clearing.
 
 Terminal source failures are available as `source.store.get().failure` and
 `game.failure` (also `game.getSnapshot().failure`). The value is the original,
@@ -36,7 +36,7 @@ game.dispose();
 
 Pending submit promises still reject with the original error. A terminal source
 failure reaches `onError` once, even when a submit handler also observes that
-rejection. Failures after an accepted ACK remain observable while the source
-waits for the authoritative frame. Replacing a source starts a new lifetime;
+rejection. Successful submits resolve only after their covering snapshot has
+been admitted. Replacing a source starts a new lifetime;
 normal disposal and obsolete source callbacks do not notify the new lifetime.
 React selectors can read `useGame((snapshot) => snapshot.failure)`.
