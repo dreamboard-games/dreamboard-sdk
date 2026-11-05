@@ -435,8 +435,14 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
       const me = game.me?.id;
       const count =
         (zone?.count ?? 0) -
-        outgoing.length +
-        (incoming ? active.cards.length : 0);
+        outgoing.filter((moving) =>
+          actual.some((card) => card.id === moving.id),
+        ).length +
+        (incoming
+          ? active.cards.filter(
+              (moving) => !actual.some((card) => card.id === moving.id),
+            ).length
+          : 0);
       const previous = useRef({
         source,
         me,

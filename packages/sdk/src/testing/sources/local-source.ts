@@ -144,8 +144,8 @@ export function createLocalProvider<
       },
     };
   }
-  function publish() {
-    lifecycle.frame(makeFrame());
+  function publish(acknowledgedClientActionId?: string) {
+    lifecycle.frame(makeFrame(), acknowledgedClientActionId);
   }
   async function execute(
     input: GameInput,
@@ -187,7 +187,7 @@ export function createLocalProvider<
           ? undefined
           : { playerId: input.playerId, clientActionId: causedBy };
       const version = revision;
-      publish();
+      publish(causedBy);
       return { accepted: true, version };
     } finally {
       if (generation === epoch) inFlight = false;
@@ -201,30 +201,40 @@ export function createLocalProvider<
     disconnect();
     lifecycle?.source.dispose();
     const generation = epoch;
+    // One immutable lifecycle command may be retried while execution is pending.
+    let submitted:
+      { id: string; result: ReturnType<typeof execute> } | undefined;
     lifecycle = createSourceLifecycle({
       context: { sessionId: session.sessionId, playerId },
       send(command) {
         const current = lifecycle;
-        void execute(
-          command.type === "interaction.cancel"
-            ? {
-                kind: "interaction.cancel",
-                basis: command.basis,
-                playerId,
-                interactionId: command.interactionId,
-              }
-            : {
-                kind: "interaction",
-                basis: command.basis,
-                playerId,
-                interactionId: command.interactionId,
-                params: command.params,
-              },
-          false,
-          command.clientActionId,
-        )
+        const retry = submitted?.id === command.clientActionId;
+        const result = retry
+          ? submitted!.result
+          : execute(
+              command.type === "interaction.cancel"
+                ? {
+                    kind: "interaction.cancel",
+                    basis: command.basis,
+                    playerId,
+                    interactionId: command.interactionId,
+                  }
+                : {
+                    kind: "interaction",
+                    basis: command.basis,
+                    playerId,
+                    interactionId: command.interactionId,
+                    params: command.params,
+                  },
+              false,
+              command.clientActionId,
+            );
+        submitted = { id: command.clientActionId, result };
+        void result
           .then((result) => {
-            if (generation === epoch)
+            if (generation === epoch && result.accepted && retry)
+              publish(command.clientActionId);
+            if (generation === epoch && !result.accepted)
               current.result({
                 ...result,
                 type: "interaction.result",

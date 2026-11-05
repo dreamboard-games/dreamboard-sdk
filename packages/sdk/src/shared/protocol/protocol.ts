@@ -11,10 +11,8 @@ export const DREAMBOARD_PLUGIN_PROTOCOL_VERSION = 11 as const;
 
 export type InteractionResult =
   | {
-      readonly type: "interaction.result";
       readonly clientActionId: string;
       readonly accepted: true;
-      readonly version: number;
     }
   | {
       readonly type: "interaction.result";
@@ -47,12 +45,14 @@ export type HostToPluginPayload =
   | {
       readonly type: "gameplay.frame";
       readonly frame: PluginGameplayFrame;
+      /** Confirms a durable action covered by this frame. Independent of causedBy. */
+      readonly acknowledgedClientActionId?: string;
     }
-  | InteractionResult;
+  | Extract<InteractionResult, { accepted: false }>;
 
 export type PluginToHostPayload =
   | { readonly type: "runtime.ready" }
-  | { readonly type: "runtime.resume" }
+  | { readonly type: "runtime.resume"; readonly pendingClientActionId?: string }
   | {
       readonly type: "runtime.ack";
       /** Echoes the host envelope sequence. It is delivery order only. */

@@ -132,12 +132,11 @@ describe("iframe source", () => {
       .find((payload) => payload.type === "interaction.cancel")!;
     expect(newCommand.basis.perspectivePlayerId).toBe("bob");
     receive({
-      type: "interaction.result",
-      clientActionId: oldCommand.clientActionId,
-      accepted: true,
-      version: 2,
+      type: "gameplay.frame",
+      frame: frame(1, "bob"),
+      acknowledgedClientActionId: oldCommand.clientActionId,
     });
-    expect(source.store.get().request?.phase).toBe("awaiting-result");
+    expect(source.store.get().request).not.toBeNull();
     receive({
       type: "interaction.result",
       clientActionId: newCommand.clientActionId,
@@ -227,20 +226,19 @@ describe("iframe source", () => {
       .map((call) => call[0].payload)
       .find((payload) => payload.type === "interaction.cancel");
     if (!command) throw new Error("Expected cancellation command");
-    receive({
-      type: "interaction.result",
-      clientActionId: command.clientActionId,
-      accepted: true,
-      version: 2,
-    });
-    expect(await promise).toEqual({ accepted: true });
+    receive({ type: "gameplay.frame", frame: frame(2) });
     vi.advanceTimersByTime(100);
     expect(
       parent.postMessage.mock.calls.some(
         (call) => call[0].payload.type === "runtime.resume",
       ),
     ).toBe(true);
-    receive({ type: "gameplay.frame", frame: frame(2) });
+    receive({
+      type: "gameplay.frame",
+      frame: frame(2),
+      acknowledgedClientActionId: command.clientActionId,
+    });
+    expect(await promise).toEqual({ accepted: true });
     expect(source.store.get().request).toBeNull();
     receive({ type: "gameplay.frame", frame: frame(3, "bob") });
     expect(source.store.get().connection).toBe("failed");
@@ -301,7 +299,7 @@ describe("websocket source", () => {
     socket.receive(snapshot(2));
     await Promise.resolve();
     expect(settled).not.toHaveBeenCalled();
-    expect(source.store.get().request?.phase).toBe("awaiting-result");
+    expect(source.store.get().request).not.toBeNull();
     await vi.advanceTimersByTimeAsync(100);
     const commands = socket.sent.filter(
       (value) => value.type === "interaction.submit",
@@ -312,7 +310,7 @@ describe("websocket source", () => {
     expect(
       socket.sent.filter((value) => value.type === "session.resume"),
     ).toHaveLength(2);
-    expect(source.store.get().request?.phase).toBe("awaiting-result");
+    expect(source.store.get().request).not.toBeNull();
     expect(settled).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(100);
     expect(await result).toEqual(
@@ -332,7 +330,7 @@ describe("websocket source", () => {
     expect(source.store.get()).toBe(finalState);
   });
 
-  it("uses real auth/resume and strips host extras; ACK leaves frame barrier", async () => {
+  it("uses real auth/resume and completes against an acknowledged snapshot", async () => {
     const { source, socket } = await socketSource();
     expect(socket.sent[0]).toEqual({
       type: "auth.connect",
@@ -347,13 +345,10 @@ describe("websocket source", () => {
     if (command.type !== "interaction.submit")
       throw new Error("Expected submit command");
     socket.receive({
-      type: "interaction.result",
-      clientActionId: command.clientActionId,
-      accepted: true,
-      version: 2,
+      ...snapshot(2),
+      acknowledgedClientActionId: command.clientActionId,
     });
     expect(await p).toEqual({ accepted: true });
-    expect(source.store.get().request?.phase).toBe("awaiting-frame");
     socket.receive(snapshot(2));
     expect(source.store.get().request).toBeNull();
     source.dispose();
@@ -374,10 +369,8 @@ describe("websocket source", () => {
     expect(source.store.get().snapshot?.version).toBe(1);
     replacement.receive(snapshot(2));
     replacement.receive({
-      type: "interaction.result",
-      clientActionId: original.clientActionId,
-      accepted: true,
-      version: 2,
+      ...snapshot(2),
+      acknowledgedClientActionId: original.clientActionId,
     });
     await p;
     expect(source.store.get().request).toBeNull();

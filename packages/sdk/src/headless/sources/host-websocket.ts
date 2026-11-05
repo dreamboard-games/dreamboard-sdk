@@ -34,11 +34,14 @@ export function hostSource(options: {
       throw new Error("Gameplay socket is not open.");
     socket.send(JSON.stringify(ClientGameplayFrameSchema.parse(frame)));
   };
-  const resume = () =>
+  const resume = (
+    pendingClientActionId = lifecycle.source.store.get().request
+      ?.clientActionId,
+  ) =>
     send({
       type: "session.resume",
       lastSeenLogCursor: null,
-      unacknowledgedClientActionIds: queued ? [queued.clientActionId] : [],
+      pendingClientActionId,
     });
   const lifecycle = createSourceLifecycle({
     context: {
@@ -53,8 +56,8 @@ export function hostSource(options: {
       }
       send(command);
     },
-    recover() {
-      if (authenticated) resume();
+    recover(pendingClientActionId) {
+      if (authenticated) resume(pendingClientActionId);
       else if (!openTimer) void connect();
     },
     close() {
@@ -168,7 +171,7 @@ export function hostSource(options: {
             clearTimeout(snapshotTimer);
             snapshotTimer = undefined;
             reconnects = 0;
-            lifecycle.frame(frame.frame);
+            lifecycle.frame(frame.frame, frame.acknowledgedClientActionId);
           } else if (frame.type === "interaction.result")
             lifecycle.result(frame);
           else lifecycle.fail(new Error(frame.message));

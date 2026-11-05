@@ -32,7 +32,6 @@ export interface SourceRequest {
   readonly clientActionId: string;
   readonly interactionId: string;
   readonly operation: "submit" | "cancel";
-  readonly phase: "awaiting-result" | "awaiting-frame";
 }
 export type SourceState =
   | {

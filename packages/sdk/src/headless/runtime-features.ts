@@ -28,7 +28,7 @@ export interface RuntimeInteraction {
   readonly key: string;
   getIsAvailable(params?: Readonly<Record<string, RuntimeJson>>): boolean;
   getIsReady(params?: Readonly<Record<string, RuntimeJson>>): boolean;
-  getStatus(): "open" | "submitting" | "submitted";
+  getStatus(): "open" | "submitting";
   submit(params?: Readonly<Record<string, RuntimeJson>>): Promise<SubmitResult>;
   getInputs(): readonly RuntimeInput[];
 }

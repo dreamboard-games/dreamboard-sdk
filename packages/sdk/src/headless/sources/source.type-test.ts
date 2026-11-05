@@ -92,7 +92,6 @@ export function sourceStateNarrowing(
       clientActionId: "test-action",
       interactionId: "move",
       operation: "submit" as const,
-      phase: "awaiting-frame" as const,
     },
     failure: new Error(),
   };

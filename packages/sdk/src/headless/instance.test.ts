@@ -280,7 +280,7 @@ describe("headless instance", () => {
     },
   );
   it.each([true, false])(
-    "clears only after both ACK and frame, frame first=%s",
+    "clears on an acknowledged snapshot, newer state first=%s",
     async (frameFirst) => {
       const x = setup();
       const game = createGameInstance()({ source: x.source });
@@ -292,13 +292,6 @@ describe("headless instance", () => {
       expect(game.state.drafts["play.move"]).toEqual({ choice: "a" });
       x.ack();
       await submit;
-      if (!frameFirst) {
-        expect(game.interactions.get("play.move").getStatus()).toBe(
-          "submitted",
-        );
-        expect(game.state.drafts["play.move"]).toEqual({ choice: "a" });
-        x.emit(2);
-      }
       expect(game.state.drafts["play.move"]).toBeUndefined();
       game.dispose();
     },
@@ -548,14 +541,14 @@ describe("headless instance", () => {
 });
 
 describe("instance boundaries", () => {
-  it("failed frame recovery after accepted ACK preserves the submitted draft", async () => {
+  it("failed recovery of an unconfirmed action preserves the submitted draft", async () => {
     const x = setup();
     const game = createGameInstance()({ source: x.source });
     game.interactions.get("play.move").getInput("choice").setValue("a");
     const submitted = game.interactions.get("play.move").submit();
-    x.ack();
-    await submitted;
+    const failed = submitted.catch((error: unknown) => error);
     x.source.fail(new Error("Recovery exhausted"));
+    await failed;
     expect(game.connection).toBe("failed");
     expect(game.state.drafts["play.move"]).toEqual({ choice: "a" });
     game.dispose();
@@ -1149,7 +1142,7 @@ it("publishes the replacement failure before notifying observers", () => {
   expect(onError).toHaveBeenCalledExactlyOnceWith(failure);
   game.dispose();
 });
-it("notifies once when an accepted request exhausts frame recovery", async () => {
+it("notifies once when an unconfirmed request exhausts recovery", async () => {
   vi.useFakeTimers();
   const x = setup();
   const onError = vi.fn();
@@ -1157,9 +1150,9 @@ it("notifies once when an accepted request exhausts frame recovery", async () =>
   try {
     game.inputs.get("play.move", "choice").setValue("a");
     const submitted = game.interactions.get("play.move").submit();
-    x.ack();
-    await expect(submitted).resolves.toEqual({ accepted: true });
+    const failed = submitted.catch((error: unknown) => error);
     await vi.advanceTimersByTimeAsync(20_000);
+    expect(await failed).toBe(game.failure);
     expect(game.failure?.message).toBe("Gameplay source recovery timed out.");
     expect(onError).toHaveBeenCalledExactlyOnceWith(game.failure);
     expect(game.state.drafts["play.move"]).toEqual({ choice: "a" });

@@ -33,7 +33,7 @@ const snapshot: SourceSnapshot = {
 };
 
 describe("controlled test source", () => {
-  it("keeps ACK/frame order explicit without exposing wire identities", async () => {
+  it("acknowledges the current test snapshot without exposing wire identities", async () => {
     const source = createTestSource(snapshot);
     const pending = source.submit("move", { target: "a" });
     expect(source.submissions[0]).toMatchObject({
@@ -45,12 +45,12 @@ describe("controlled test source", () => {
     expect(source.submissions[0]).not.toHaveProperty("clientActionId");
     source.submissions[0].resolve({ accepted: true });
     expect(await pending).toEqual({ accepted: true });
-    expect(source.store.get().request?.phase).toBe("awaiting-frame");
+    expect(source.store.get().request).toBeNull();
     source.emit({ ...snapshot, version: 2 });
     expect(source.store.get().request).toBeNull();
     const cancel = source.cancel("move");
     source.emit({ ...snapshot, version: 3 });
-    expect(source.store.get().request?.phase).toBe("awaiting-result");
+    expect(source.store.get().request).not.toBeNull();
     source.submissions[1].resolve({ accepted: true });
     await cancel;
     expect(source.store.get().request).toBeNull();

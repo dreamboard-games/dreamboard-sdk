@@ -29,8 +29,7 @@ manifest path. Sources turn them into object URLs once, replace matching card
 `recovering`, `failed`, or `closed`. Ready requires a snapshot; recovery and
 terminal states retain any last snapshot. Failed requires a diagnostic `failure`;
 other states have `failure: null`. Connecting and terminal states have no request.
-`SourceRequest` exposes `clientActionId` before transport delivery and tracks submit/cancel progress through `awaiting-result` and
-`awaiting-frame`. A snapshot contains
+`SourceRequest` exposes `clientActionId` before transport delivery and allows one pending submit/cancel per source. A snapshot contains
 `me`, `players`, basis-free `frame`, `version`, and optional `causedBy` (the originating client action ID). Sources expose a subscribable
 store and dispose. Command sources provide submit/cancel; their transport details
 remain private. `SubmitResult` discriminates accepted from rejection; exceptions
@@ -55,8 +54,16 @@ Missing names use `Player N`; missing colors use `playerSeatColor(index)` from
 `PLAYER_SEAT_COLORS`. Resolved names and colors stay fixed for the source lifetime.
 
 A repeated session/perspective/version reuses the snapshot object while still
-handling transport acknowledgements and recovery. Accepted wire results include
-the original committed `version`, including retries. The pending request clears
-only after acceptance and a same-context snapshot at or beyond that version,
-regardless of delivery order. `causedBy` is display causation and never changes
-`GameplayBasis` authority equality.
+processing delivery acknowledgements and recovery. A `session.snapshot` or
+iframe `gameplay.frame` envelope may carry `acknowledgedClientActionId`: the
+identified action durably committed and its commit is covered by the accompanying
+frame. Applying that delivery clears the matching request and resolves success,
+even when the frame version is unchanged. `causedBy` is presentation-only and
+never acknowledges a request or changes `GameplayBasis` authority equality.
+
+Only rejected interactions use `interaction.result` messages. Resume carries one
+optional `pendingClientActionId`; recovery retransmits the exact original command
+and ID. Servers deduplicate before stale-basis validation and acknowledge committed
+retries with current state, preserving that state's actual cause. Missing
+acknowledgment means unconfirmed, not rejected. A connection admits one pending
+interaction; independent sources use independent connections.

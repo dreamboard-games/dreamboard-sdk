@@ -17,14 +17,15 @@ export interface CapturedSubmission {
 }
 export interface TestSource extends CommandSource {
   readonly submissions: readonly CapturedSubmission[];
-  emit(snapshot: SourceSnapshot): void;
+  emit(snapshot: SourceSnapshot, acknowledgedClientActionId?: string): void;
   recovering(): void;
   fail(error: Error): void;
 }
-/** Test-owned transport control; all request/barrier behavior remains production code. */
+/** Test-owned transport control; all request/acknowledgment behavior remains production code. */
 export function createTestSource(initial: SourceSnapshot): TestSource {
   const sessionId = crypto.randomUUID();
   const submissions: CapturedSubmission[] = [];
+  let latest = initial;
   const lifecycle = createSourceLifecycle({
     send(command) {
       submissions.push(
@@ -36,14 +37,13 @@ export function createTestSource(initial: SourceSnapshot): TestSource {
             ? { params: immutableCopy(command.params) }
             : {}),
           resolve(result: SubmitResult) {
-            lifecycle.result({
-              ...result,
-              ...(result.accepted
-                ? { version: command.basis.version + 1 }
-                : {}),
-              type: "interaction.result",
-              clientActionId: command.clientActionId,
-            });
+            if (result.accepted) emit(latest, command.clientActionId);
+            else
+              lifecycle.result({
+                ...result,
+                type: "interaction.result",
+                clientActionId: command.clientActionId,
+              });
           },
         }),
       );
@@ -51,22 +51,26 @@ export function createTestSource(initial: SourceSnapshot): TestSource {
     recover() {},
     close() {},
   });
-  function emit(value: SourceSnapshot) {
+  function emit(value: SourceSnapshot, acknowledgedClientActionId?: string) {
+    latest = value;
     const snapshot = SourceSnapshotSchema.parse(value);
     lifecycle.session({ sessionId, players: snapshot.players });
-    lifecycle.frame({
-      ...snapshot.frame,
-      causedBy: snapshot.causedBy ?? snapshot.frame.causedBy,
-      basis: {
-        sessionId,
-        version: snapshot.version,
-        perspectivePlayerId: snapshot.me,
-        actionSetVersion: computePluginActionSetVersion({
+    lifecycle.frame(
+      {
+        ...snapshot.frame,
+        causedBy: snapshot.causedBy ?? snapshot.frame.causedBy,
+        basis: {
+          sessionId,
           version: snapshot.version,
-          availableInteractions: snapshot.frame.availableInteractions,
-        }),
+          perspectivePlayerId: snapshot.me,
+          actionSetVersion: computePluginActionSetVersion({
+            version: snapshot.version,
+            availableInteractions: snapshot.frame.availableInteractions,
+          }),
+        },
       },
-    });
+      acknowledgedClientActionId,
+    );
   }
   emit(initial);
   return {

@@ -36,48 +36,43 @@ describe("source request lifecycle", () => {
     subscription.unsubscribe();
     x.source.dispose();
   });
-  it("does not rearm recovery after a synchronous recovery frame settles the request", async () => {
+  it("does not retry after synchronous recovery acknowledges an unchanged frame", async () => {
     vi.useFakeTimers();
     const x = setup();
     const promise = x.source.submit("move", {});
-    x.result({
-      type: "interaction.result",
-      accepted: true,
-      version: 2,
-      clientActionId: x.send.mock.calls[0][0].clientActionId,
-    });
-    await promise;
-    x.recover.mockImplementation(() => x.frame(frame(2)));
+    const command = x.send.mock.calls[0][0];
+    x.frame(frame(2));
+    const snapshot = x.source.store.get().snapshot;
+    x.recover.mockImplementation(() =>
+      x.frame(frame(2), command.clientActionId),
+    );
     vi.advanceTimersByTime(300);
-    expect(x.source.store.get().connection).toBe("ready");
+    await expect(promise).resolves.toEqual({ accepted: true });
+    expect(x.source.store.get().snapshot).toBe(snapshot);
     expect(x.source.store.get().request).toBeNull();
+    expect(x.send).toHaveBeenCalledOnce();
     expect(x.close).not.toHaveBeenCalled();
     x.source.dispose();
   });
-  it("waits for the accepted version and settles a retry against a later recovery frame", async () => {
+  it("only acknowledgment completes a request, preserving a later frame's actual cause", async () => {
     const x = setup();
     const promise = x.source.submit("move", {});
     const command = x.send.mock.calls[0][0];
+    x.frame({ ...frame(2), causedBy: command.clientActionId });
     expect(x.source.store.get().request?.clientActionId).toBe(
       command.clientActionId,
     );
-    x.frame(frame(2));
     x.retry();
     expect(x.send.mock.calls[1][0]).toBe(command);
-    x.result({
-      type: "interaction.result",
-      clientActionId: command.clientActionId,
-      accepted: true,
-      version: 4,
-    });
-    await promise;
-    expect(x.source.store.get().request?.phase).toBe("awaiting-frame");
-    x.frame(frame(3));
-    expect(x.source.store.get().request).not.toBeNull();
-    x.recovering();
     x.frame({ ...frame(7), causedBy: "another-action" });
+    const snapshot = x.source.store.get().snapshot;
+    x.frame(frame(7), "unrelated");
+    expect(x.source.store.get().request).not.toBeNull();
+    x.frame(frame(7), command.clientActionId);
+    await expect(promise).resolves.toEqual({ accepted: true });
+    expect(x.source.store.get().snapshot).toBe(snapshot);
+    expect(snapshot?.causedBy).toBe("another-action");
     expect(x.source.store.get().request).toBeNull();
-    expect(x.source.store.get().snapshot?.causedBy).toBe("another-action");
     x.source.dispose();
   });
   it("rejects pending work when the host changes perspective even at the same version", async () => {
@@ -159,33 +154,16 @@ describe("source request lifecycle", () => {
     x.source.dispose();
   });
 
-  it.each([true, false])(
-    "requires ACK and newer frame, frame first=%s",
-    async (frameFirst) => {
-      const x = setup();
-      const promise = x.source.submit("move", { target: "a" });
-      if (frameFirst) x.frame(frame(2));
-      expect(x.source.store.get().request?.phase).toBe("awaiting-result");
-      expect(Object.isFrozen(x.source.store.get())).toBe(true);
-      expect(Object.isFrozen(x.source.store.get().request)).toBe(true);
-      x.result({
-        type: "interaction.result",
-        clientActionId: x.send.mock.calls[0][0].clientActionId,
-        accepted: true,
-        version: 2,
-      });
-      expect((await promise).accepted).toBe(true);
-      if (!frameFirst) {
-        expect(x.source.store.get().request?.phase).toBe("awaiting-frame");
-        expect(Object.isFrozen(x.source.store.get().request)).toBe(true);
-        x.frame(frame(1));
-        expect(x.source.store.get().request).not.toBeNull();
-        x.frame(frame(2));
-      }
-      expect(x.source.store.get().request).toBeNull();
-      x.source.dispose();
-    },
-  );
+  it("publishes the covering frame and clears pending before promise completion", async () => {
+    const x = setup();
+    const promise = x.source.submit("move", {});
+    const id = x.send.mock.calls[0][0].clientActionId;
+    x.frame(frame(2), id);
+    expect(x.source.store.get().snapshot?.version).toBe(2);
+    expect(x.source.store.get().request).toBeNull();
+    await expect(promise).resolves.toEqual({ accepted: true });
+    x.source.dispose();
+  });
   it("copies original command and retries exact ID/basis, rejecting concurrent intent", async () => {
     const x = setup();
     const params = { target: ["a"] };
@@ -210,26 +188,19 @@ describe("source request lifecycle", () => {
     expect(x.send).toHaveBeenCalledTimes(2);
     x.source.dispose();
   });
-  it("resumes a missing frame without replaying accepted intent, then closes on exhaustion", async () => {
+  it("resumes and retries unconfirmed intent, then closes on exhaustion", async () => {
     vi.useFakeTimers();
     const x = setup();
-    const p = x.source.cancel("move");
-    expect(x.send.mock.calls[0][0].type).toBe("interaction.cancel");
-    x.result({
-      type: "interaction.result",
-      clientActionId: x.send.mock.calls[0][0].clientActionId,
-      accepted: true,
-      version: 2,
-    });
-    await p;
+    const p = x.source.cancel("move").catch((error: unknown) => error);
+    const command = x.send.mock.calls[0][0];
     vi.advanceTimersByTime(100);
-    expect(x.recover).toHaveBeenCalledOnce();
-    expect(x.send).toHaveBeenCalledOnce();
+    expect(x.recover).toHaveBeenCalledWith(command.clientActionId);
+    expect(x.send.mock.calls.map(([value]) => value)).toEqual([
+      command,
+      command,
+    ]);
     vi.advanceTimersByTime(100);
-    expect(x.source.store.get().connection).toBe("failed");
-    expect(x.source.store.get().failure?.message).toBe(
-      "Gameplay source recovery timed out.",
-    );
+    expect(await p).toEqual(new Error("Gameplay source recovery timed out."));
     expect(x.close).toHaveBeenCalledOnce();
   });
   it("disposal rejects unresolved promise and ignores obsolete ingress", async () => {

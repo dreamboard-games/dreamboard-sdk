@@ -360,7 +360,6 @@ export function createGestureSession(game: GestureGame) {
       };
     });
 
-  let settlingClientActionId: string | null = null;
   let snapshot = game.snapshot;
   let source = game.getOptions().source;
   function admitted(target: RuntimeShortcutTarget | null) {
@@ -420,12 +419,7 @@ export function createGestureSession(game: GestureGame) {
     // New frames, seats and sources cancel the semantic drag; end the press with it.
     if (press?.dragging && !game.drag?.active) press.recognizer.cancel();
     const drag = store.get().drag;
-    if (
-      drag?.settling &&
-      (game.request === null ||
-        game.snapshot?.causedBy === settlingClientActionId ||
-        changedLifetime)
-    )
+    if (drag?.settling && (game.request === null || changedLifetime))
       set({ drag: null });
   });
 
@@ -927,7 +921,6 @@ export function createGestureSession(game: GestureGame) {
           game.drag?.drop();
           // A submitted move keeps its overlay until the authoritative frame.
           if (drag && game.request !== null && game.request !== before) {
-            settlingClientActionId = game.request.clientActionId;
             set({ drag: { ...drag, settling: true, landing } });
           } else set({ drag: null });
         },

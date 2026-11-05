@@ -5,6 +5,7 @@ import {
   DREAMBOARD_PLUGIN_PROTOCOL,
   DREAMBOARD_PLUGIN_PROTOCOL_VERSION,
   HostToPluginEnvelopeSchema,
+  HostToPluginPayloadSchema,
   InteractionResultSchema,
   PluginGameplayFrameSchema,
   SubmitInteractionCommandSchema,
@@ -407,19 +408,20 @@ describe("shared plugin runtime contract", () => {
       interactionId: claimDescriptor.interactionId,
       params: "scalar-value",
     });
-    const result = InteractionResultSchema.parse({
-      type: "interaction.result",
-      clientActionId: command.clientActionId,
-      accepted: true,
-      version: 43,
+    expect(
+      InteractionResultSchema.safeParse({
+        type: "interaction.result",
+        clientActionId: command.clientActionId,
+        accepted: true,
+        version: 43,
+      }).success,
+    ).toBe(false);
+    const delivery = HostToPluginPayloadSchema.parse({
+      type: "gameplay.frame",
+      frame: baseFrame(),
+      acknowledgedClientActionId: command.clientActionId,
     });
-
-    expect(result).toEqual({
-      type: "interaction.result",
-      clientActionId: "action-1",
-      accepted: true,
-      version: 43,
-    });
+    expect(delivery).toHaveProperty("acknowledgedClientActionId", "action-1");
     expect(() =>
       PluginGameplayFrameSchema.parse({
         ...baseFrame(),
