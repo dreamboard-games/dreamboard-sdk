@@ -106,6 +106,13 @@ describe("iframe source", () => {
       },
     });
     receive({ type: "gameplay.frame", frame: frame() });
+    const firstSnapshot = source.store.get().snapshot;
+    receive({ type: "gameplay.frame", frame: frame() });
+    expect(source.store.get().snapshot).toBe(firstSnapshot);
+    expect(parent.postMessage.mock.calls.at(-1)![0].payload).toEqual({
+      type: "runtime.ack",
+      sequence,
+    });
     const pending = source.submit("move", {}).catch((error: unknown) => error);
     const oldCommand = parent.postMessage.mock.calls
       .map(([envelope]) => envelope.payload)

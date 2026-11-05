@@ -1131,15 +1131,7 @@ test("a submitted drop presents its landing without changing authoritative zone 
   });
   // An ACK alone must not end the presentation.
   expect(get("red")!.dataset.pending).toBe("true");
-  await act(async () =>
-    source.emit({
-      ...landingSnapshot(2, true),
-      frame: {
-        ...landingSnapshot(2, true).frame,
-        causedBy: source.store.get().request!.clientActionId,
-      },
-    }),
-  );
+  await act(async () => source.emit(landingSnapshot(2, true)));
   expect(get("red")!.dataset.pending).toBe("false");
   expect(get("table")!.dataset.count).toBe("1");
   expect(get("table")!.dataset.arriving).toBe("[]");
