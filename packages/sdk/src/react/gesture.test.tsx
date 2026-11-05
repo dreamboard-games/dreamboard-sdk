@@ -1085,6 +1085,7 @@ async function mountLanding(
   visibility: "public" | "hidden" = "public",
   initial = landingSnapshot(),
   cardId = "red",
+  destination = "table",
 ) {
   const source = createTestSource(initial);
   const host = document.createElement("div");
@@ -1094,7 +1095,10 @@ async function mountLanding(
   await act(async () =>
     root.render(
       <GameProvider source={source}>
-        <PresentedZone zoneId="hand" />
+        <PresentedZone
+          zoneId="hand"
+          visibility={destination === "hand" ? visibility : "public"}
+        />
         <PresentedZone zoneId="table" visibility={visibility} />
         <Overlay />
       </GameProvider>,
@@ -1102,7 +1106,7 @@ async function mountLanding(
   );
   const get = (id: string) =>
     document.querySelector<HTMLElement>(`[data-testid="${id}"]`);
-  hitTesting(() => get("table"));
+  hitTesting(() => get(destination));
   const at = (y: number) => ({ pointerType: "touch", x: 10, y }) as const;
   await down(get(cardId)!, at(200));
   await move(at(180));
@@ -1185,7 +1189,7 @@ test("a source/seat replacement discards the previous pending face", async () =>
   expect(get("overlay")).toBeNull();
 });
 
-test("a causal frame without acknowledgment keeps the provisional landing pending", async () => {
+test("a causal frame retires presentation without acknowledging the request", async () => {
   const { source, get } = await mountLanding();
   await act(async () =>
     source.emit({
@@ -1196,15 +1200,115 @@ test("a causal frame without acknowledgment keeps the provisional landing pendin
       },
     }),
   );
-  expect(get("red")!.dataset.pending).toBe("true");
+  expect(get("red")!.dataset.pending).toBe("false");
+  expect(source.store.get().request).not.toBeNull();
   expect(get("hand")!.dataset.count).toBe("1");
   expect(get("table")!.dataset.count).toBe("1");
-  expect(get("overlay")).not.toBeNull();
+  expect(get("overlay")).toBeNull();
   await act(async () => source.submissions[0].resolve({ accepted: true }));
   expect(get("red")!.dataset.pending).toBe("false");
   expect(get("overlay")).toBeNull();
   expect(get("table")!.querySelectorAll("button")).toHaveLength(1);
 });
+
+test("a concealed destination replaces its provisional card when visible source membership proves the move", async () => {
+  const { source, get } = await mountLanding("hidden");
+  const id = source.store.get().request!.clientActionId;
+  const moved = landingSnapshot(2, true);
+  const concealed = {
+    ...moved,
+    frame: {
+      ...moved.frame,
+      causedBy: "another-action",
+      zones: {
+        ...moved.frame.zones,
+        table: {
+          table: {
+            ...moved.frame.zones.table.table,
+            cardIds: ["hidden-position-0"],
+            cardViewsById: {},
+            cardBacksById: { "hidden-position-0": "back.webp" },
+          },
+        },
+      },
+    },
+  };
+  await act(async () => source.emit(concealed));
+  expect(source.store.get().request?.clientActionId).toBe(id);
+  expect(get("table")!.dataset.count).toBe("1");
+  expect(get("hand")!.dataset.count).toBe("1");
+  expect(get("table")!.querySelectorAll("button")).toHaveLength(1);
+  expect(get("red")).toBeNull();
+  expect(get("hidden-position-0")!.dataset.hidden).toBe("true");
+  expect(get("hidden-position-0")!.dataset.pending).toBe("false");
+  expect(get("overlay")).toBeNull();
+  expect(get("table")!.dataset.arriving).toBe("[]");
+  await act(async () => source.emit({ ...concealed, version: 3 }));
+  expect(get("table")!.dataset.count).toBe("1");
+  expect(get("overlay")).toBeNull();
+  await act(async () => source.submissions[0].resolve({ accepted: true }));
+});
+
+test.each(["table", "hand"])(
+  "causation retires concealed source placeholders for a move to %s without reusing positional identity",
+  async (destination) => {
+    const id = `card-ref:sha256:${"1".repeat(64)}`;
+    const initial = concealedLandingSnapshot();
+    const { source, get } = await mountLanding(
+      destination === "hand" ? "hidden" : "public",
+      initial,
+      id,
+      destination,
+    );
+    const actionId = source.store.get().request!.clientActionId;
+    // An unrelated frame with the same opaque positions cannot prove this move.
+    await act(async () =>
+      source.emit({ ...initial, version: 2, causedBy: "another-action" }),
+    );
+    expect(get("overlay")!.dataset.settling).toBe("true");
+    expect(get(id)!.dataset.pending).toBe("true");
+    const moved = destination === "hand" ? initial : landingSnapshot(3, true);
+    const committed = {
+      ...moved,
+      version: 3,
+      causedBy: actionId,
+      frame: {
+        ...moved.frame,
+        zones: {
+          ...moved.frame.zones,
+          hand: {
+            alice: {
+              ...initial.frame.zones.hand.alice,
+              cardIds: destination === "hand" ? ["blue", id] : [id],
+              // The same concealed position now refers to a different physical card.
+              cardViewsById:
+                destination === "hand"
+                  ? initial.frame.zones.hand.alice.cardViewsById
+                  : {},
+            },
+          },
+        },
+      },
+    };
+    await act(async () => source.emit(committed));
+    expect(source.store.get().request?.clientActionId).toBe(actionId);
+    expect(get("overlay")).toBeNull();
+    expect(get(id)!.dataset.pending).toBe("false");
+    expect(get("hand")!.dataset.count).toBe(destination === "hand" ? "2" : "1");
+    expect(get("hand")!.querySelector(`[data-testid="${id}"]`)).not.toBeNull();
+    expect(get(destination)!.querySelectorAll("button")).toHaveLength(
+      destination === "hand" ? 2 : 1,
+    );
+    if (destination === "table")
+      expect(get("red")!.dataset.hidden).toBe("false");
+    await act(async () =>
+      source.emit({ ...committed, version: 4, causedBy: "later-action" }),
+    );
+    expect(get(id)!.dataset.pending).toBe("false");
+    expect(get("overlay")).toBeNull();
+    await act(async () => source.submissions[0].resolve({ accepted: true }));
+  },
+);
 
 test("a pending card cannot start another press", async () => {
   const { source, get } = await mountLanding();
@@ -1297,7 +1401,7 @@ test("a selected group lands atomically in selection order", async () => {
   ).toEqual(["red", "blue"]);
 });
 
-test("revealing a pending concealed card does not restart its arrival", async () => {
+function concealedLandingSnapshot(): SourceSnapshot {
   const id = `card-ref:sha256:${"1".repeat(64)}`;
   const initial = landingSnapshot();
   const concealed: InteractionDescriptor = {
@@ -1315,7 +1419,7 @@ test("revealing a pending concealed card does not restart its arrival", async ()
       },
     ],
   };
-  const hidden = {
+  return {
     ...initial,
     frame: {
       ...initial.frame,
@@ -1336,6 +1440,11 @@ test("revealing a pending concealed card does not restart its arrival", async ()
       },
     },
   };
+}
+
+test("revealing a pending concealed card does not restart its arrival", async () => {
+  const id = `card-ref:sha256:${"1".repeat(64)}`;
+  const hidden = concealedLandingSnapshot();
   const { source, get } = await mountLanding("public", hidden, id);
   expect(get(id)!.dataset.hidden).toBe("true");
   await act(async () => {

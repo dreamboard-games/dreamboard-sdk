@@ -395,6 +395,22 @@ export function createGestureSession(game: GestureGame) {
       ? target
       : null;
   }
+  function landingApplied(
+    landing: NonNullable<GestureState["drag"]>["landing"],
+  ) {
+    if (!landing) return false;
+    if (game.request && game.snapshot?.causedBy === game.request.clientActionId)
+      return true;
+    // Visible identities can prove the source cards have left. Concealed IDs
+    // identify positions, so only causation can retire their presentation.
+    return landing.cards.every(
+      (card) =>
+        !card.hidden &&
+        !game.snapshot?.frame.zones[card.zone]?.[card.hostId]?.cardIds.includes(
+          card.id,
+        ),
+    );
+  }
   const unsubscribe = game.subscribe(() => {
     const nextSource = game.getOptions().source;
     const changedLifetime =
@@ -419,7 +435,10 @@ export function createGestureSession(game: GestureGame) {
     // New frames, seats and sources cancel the semantic drag; end the press with it.
     if (press?.dragging && !game.drag?.active) press.recognizer.cancel();
     const drag = store.get().drag;
-    if (drag?.settling && (game.request === null || changedLifetime))
+    if (
+      drag?.settling &&
+      (game.request === null || changedLifetime || landingApplied(drag.landing))
+    )
       set({ drag: null });
   });
 
@@ -919,8 +938,13 @@ export function createGestureSession(game: GestureGame) {
                 })
               : null;
           game.drag?.drop();
-          // A submitted move keeps its overlay until the authoritative frame.
-          if (drag && game.request !== null && game.request !== before) {
+          // Authority can replace the presentation before its acknowledgment arrives.
+          if (
+            drag &&
+            game.request !== null &&
+            game.request !== before &&
+            !landingApplied(landing)
+          ) {
             set({ drag: { ...drag, settling: true, landing } });
           } else set({ drag: null });
         },
