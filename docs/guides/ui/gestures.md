@@ -174,10 +174,12 @@ there is no per-card preview flag. Custom renderers use the same hooks and rende
 a back when the presentation is hidden. The registry's `DropArea` accepts the
 same `zone`, `visibility`, and `index` metadata as props.
 
-The landing remains while its action is pending, including across unrelated
-frames. A matching snapshot acknowledgment replaces it with authoritative
-placement without another arrival; rejection restores the source. Counts
-reconcile against current membership when state arrives before acknowledgment.
+The landing survives unrelated frames. A matching snapshot acknowledgment,
+matching `causedBy`, or visible source cards leaving their original zones retires
+the overlay and provisional placement without another arrival. Concealed
+positional IDs are never used to infer a move. Presentation can therefore retire
+before acknowledgment; the request still blocks new actions until acknowledged.
+Rejection restores the source.
 Seat changes, source replacement, and disposal discard retained pending faces. A
 non-zone interaction continues to use its pointer overlay while settling;
 `useDragOverlay().landing` is null in that case. Render a moving overlay while
