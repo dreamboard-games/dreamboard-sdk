@@ -108,6 +108,8 @@ const ProjectedViewSchema = z
 
 export const SeatFrameSchema = z
   .object({
+    players: z.array(PlayerIdSchema),
+    causedBy: z.string().min(1).optional(),
     events: z.array(GameEventSchema).max(32),
     view: ProjectedViewSchema.nullable(),
     flow: z
@@ -129,24 +131,18 @@ export const PluginGameplayFrameSchema = SeatFrameSchema.extend({
   basis: GameplayBasisSchema,
 }) satisfies z.ZodType<PluginGameplayFrame>;
 
-export const InteractionResultSchema = z.discriminatedUnion("accepted", [
-  z
-    .object({
-      type: z.literal("interaction.result"),
-      clientActionId: z.string().min(1),
-      accepted: z.literal(true),
-    })
-    .strict(),
-  z
-    .object({
-      type: z.literal("interaction.result"),
-      clientActionId: z.string().min(1),
-      accepted: z.literal(false),
-      errorCode: z.string().min(1),
-      message: z.string().optional(),
-    })
-    .strict(),
-]) satisfies z.ZodType<InteractionResult>;
+/** Only rejections are standalone wire results; success accompanies a frame. */
+export const InteractionResultSchema = z
+  .object({
+    type: z.literal("interaction.result"),
+    clientActionId: z.string().min(1),
+    accepted: z.literal(false),
+    errorCode: z.string().min(1),
+    message: z.string().optional(),
+  })
+  .strict() satisfies z.ZodType<
+  Extract<InteractionResult, { accepted: false }>
+>;
 
 export const SubmitInteractionCommandSchema = z
   .object({
@@ -174,6 +170,7 @@ export const HostToPluginPayloadSchema = z.discriminatedUnion("type", [
     .object({
       type: z.literal("gameplay.frame"),
       frame: PluginGameplayFrameSchema,
+      acknowledgedClientActionId: z.string().min(1).optional(),
     })
     .strict(),
   InteractionResultSchema,
@@ -181,7 +178,12 @@ export const HostToPluginPayloadSchema = z.discriminatedUnion("type", [
 
 export const PluginToHostPayloadSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("runtime.ready") }).strict(),
-  z.object({ type: z.literal("runtime.resume") }).strict(),
+  z
+    .object({
+      type: z.literal("runtime.resume"),
+      pendingClientActionId: z.string().min(1).optional(),
+    })
+    .strict(),
   z
     .object({
       type: z.literal("runtime.ack"),

@@ -37,7 +37,8 @@ export function iframeSource(
     timeoutMs: options.timeoutMs,
     followHostSeat: options.followHostSeat,
     send,
-    recover: () => send({ type: "runtime.resume" }),
+    recover: (pendingClientActionId) =>
+      send({ type: "runtime.resume", pendingClientActionId }),
     close: () => target.removeEventListener("message", receive),
   });
   const isOpen = () => {
@@ -86,7 +87,7 @@ export function iframeSource(
       lifecycle.session(payload.session);
       if (isOpen()) send({ type: "runtime.ready" });
     } else if (payload.type === "gameplay.frame")
-      lifecycle.frame(payload.frame);
+      lifecycle.frame(payload.frame, payload.acknowledgedClientActionId);
     else lifecycle.result(payload);
     if (isOpen()) send({ type: "runtime.ack", sequence: envelope.sequence });
   }

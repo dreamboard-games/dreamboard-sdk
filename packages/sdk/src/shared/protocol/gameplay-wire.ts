@@ -49,7 +49,7 @@ export const AuthRefreshFrameSchema = z
 export const SessionResumeFrameSchema = z.object({
   type: z.literal("session.resume"),
   lastSeenLogCursor: z.number().int().nonnegative().nullable(),
-  unacknowledgedClientActionIds: z.array(z.string().min(1)).max(32),
+  pendingClientActionId: z.string().min(1).optional(),
 });
 
 export const AuthAcceptedFrameSchema = z.object({
@@ -78,6 +78,7 @@ export const GameplayBackpressureFrameSchema = z.object({
 export const SessionSnapshotFrameSchema = z.object({
   type: z.literal("session.snapshot"),
   frame: PluginGameplayFrameSchema,
+  acknowledgedClientActionId: z.string().min(1).optional(),
 });
 export const ClientGameplayFrameSchema = z.discriminatedUnion("type", [
   AuthConnectFrameSchema,

@@ -174,9 +174,11 @@ there is no per-card preview flag. Custom renderers use the same hooks and rende
 a back when the presentation is hidden. The registry's `DropArea` accepts the
 same `zone`, `visibility`, and `index` metadata as props.
 
-An ACK alone retains the landing until a new authoritative frame. An accepted
-frame replaces it without another arrival; rejection restores the source.
-New frames, seats, sources, and disposal discard retained pending faces. A
+The landing remains while its action is pending, including across unrelated
+frames. A matching snapshot acknowledgment replaces it with authoritative
+placement without another arrival; rejection restores the source. Counts
+reconcile against current membership when state arrives before acknowledgment.
+Seat changes, source replacement, and disposal discard retained pending faces. A
 non-zone interaction continues to use its pointer overlay while settling;
 `useDragOverlay().landing` is null in that case. Render a moving overlay while
 `!overlay.settling || !overlay.landing`; a registered pending zone already

@@ -5,6 +5,7 @@ import {
   DREAMBOARD_PLUGIN_PROTOCOL,
   DREAMBOARD_PLUGIN_PROTOCOL_VERSION,
   HostToPluginEnvelopeSchema,
+  HostToPluginPayloadSchema,
   InteractionResultSchema,
   PluginGameplayFrameSchema,
   SubmitInteractionCommandSchema,
@@ -44,6 +45,7 @@ const claimDescriptor = {
 
 function baseFrame() {
   return {
+    players: ["player-1"],
     events: [],
     basis: {
       sessionId: "test-session",
@@ -85,6 +87,7 @@ describe("shared plugin runtime contract", () => {
     const frame = PluginGameplayFrameSchema.parse(
       Reflect.apply(materializePluginGameplayFrame, undefined, [
         {
+          players: ["player-1", "player-2"],
           sessionId: "test-session",
           currentPhase: "play",
           activePlayers: ["player-1"],
@@ -130,7 +133,7 @@ describe("shared plugin runtime contract", () => {
       properties: { nested: { value: 2 } },
     });
   });
-  test("strict frame and protocol schemas accept version 10 gameplay frames", () => {
+  test("strict frame and protocol schemas accept version 11 gameplay frames", () => {
     const frame = PluginGameplayFrameSchema.parse(baseFrame());
     expect(frame.basis.version).toBe(42);
 
@@ -145,7 +148,7 @@ describe("shared plugin runtime contract", () => {
       },
     } satisfies PluginProtocolEnvelope<unknown>);
 
-    expect(envelope.version).toBe(10);
+    expect(envelope.version).toBe(11);
     expect(() =>
       PluginGameplayFrameSchema.parse({ ...baseFrame(), syncId: 9 }),
     ).toThrow();
@@ -207,6 +210,7 @@ describe("shared plugin runtime contract", () => {
       availableInteractions: [claimDescriptor],
     });
     const frame = materializePluginGameplayFrame({
+      players: ["player-1", "player-2"],
       sessionId: "test-session",
       currentPhase: "play",
       activePlayers: ["player-1"],
@@ -270,6 +274,7 @@ describe("shared plugin runtime contract", () => {
     const frame = PluginGameplayFrameSchema.parse(
       Reflect.apply(materializePluginGameplayFrame, undefined, [
         {
+          players: ["player-1", "player-2"],
           sessionId: "test-session",
           currentPhase: "play",
           activePlayers: ["player-1"],
@@ -403,17 +408,20 @@ describe("shared plugin runtime contract", () => {
       interactionId: claimDescriptor.interactionId,
       params: "scalar-value",
     });
-    const result = InteractionResultSchema.parse({
-      type: "interaction.result",
-      clientActionId: command.clientActionId,
-      accepted: true,
+    expect(
+      InteractionResultSchema.safeParse({
+        type: "interaction.result",
+        clientActionId: command.clientActionId,
+        accepted: true,
+        version: 43,
+      }).success,
+    ).toBe(false);
+    const delivery = HostToPluginPayloadSchema.parse({
+      type: "gameplay.frame",
+      frame: baseFrame(),
+      acknowledgedClientActionId: command.clientActionId,
     });
-
-    expect(result).toEqual({
-      type: "interaction.result",
-      clientActionId: "action-1",
-      accepted: true,
-    });
+    expect(delivery).toHaveProperty("acknowledgedClientActionId", "action-1");
     expect(() =>
       PluginGameplayFrameSchema.parse({
         ...baseFrame(),
@@ -460,6 +468,7 @@ describe("manifest-owned boards in the single seat view", () => {
   const boards = {};
   test("an absent seat receives neither board data nor another seat's private view", () => {
     const frame = materializePluginGameplayFrame({
+      players: ["player-1", "player-2"],
       sessionId: "test-session",
       currentPhase: "play",
       activePlayers: ["player-1"],
@@ -491,6 +500,7 @@ describe("manifest-owned boards in the single seat view", () => {
   });
   function materialize(view: unknown) {
     return materializePluginGameplayFrame({
+      players: ["player-1", "player-2"],
       sessionId: "test-session",
       currentPhase: "play",
       activePlayers: ["player-1"],
@@ -542,6 +552,7 @@ test("seat board projection uses only the selected seat's current collection", (
     },
   };
   const frame = materializePluginGameplayFrame({
+    players: ["player-1", "player-2"],
     sessionId: "test-session",
     currentPhase: "play",
     activePlayers: ["player-1"],

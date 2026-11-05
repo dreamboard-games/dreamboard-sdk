@@ -180,6 +180,7 @@ test("public batches replace on every accepted operation and survive JSON checkp
     playerIds: [playerOne],
   });
   const frame = materializePluginGameplayFrame({
+    players: [playerOne],
     sessionId: testReferenceBasis.sessionId,
     dynamicProjection: projection,
     currentPhase: "play",

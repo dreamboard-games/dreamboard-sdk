@@ -18,6 +18,7 @@ const snapshot: SourceSnapshot = {
   players: [{ playerId: "alice", displayName: "Alice" }],
   version: 1,
   frame: {
+    players: ["alice"],
     events: [],
     view: { score: 0 },
     flow: {
@@ -32,7 +33,7 @@ const snapshot: SourceSnapshot = {
 };
 
 describe("controlled test source", () => {
-  it("keeps ACK/frame order explicit without exposing wire identities", async () => {
+  it("acknowledges the current test snapshot without exposing wire identities", async () => {
     const source = createTestSource(snapshot);
     const pending = source.submit("move", { target: "a" });
     expect(source.submissions[0]).toMatchObject({
@@ -44,12 +45,12 @@ describe("controlled test source", () => {
     expect(source.submissions[0]).not.toHaveProperty("clientActionId");
     source.submissions[0].resolve({ accepted: true });
     expect(await pending).toEqual({ accepted: true });
-    expect(source.store.get().request?.phase).toBe("awaiting-frame");
+    expect(source.store.get().request).toBeNull();
     source.emit({ ...snapshot, version: 2 });
     expect(source.store.get().request).toBeNull();
     const cancel = source.cancel("move");
     source.emit({ ...snapshot, version: 3 });
-    expect(source.store.get().request?.phase).toBe("awaiting-result");
+    expect(source.store.get().request).not.toBeNull();
     source.submissions[1].resolve({ accepted: true });
     await cancel;
     expect(source.store.get().request).toBeNull();
@@ -154,6 +155,28 @@ describe("production-backed local sources", () => {
       accepted: false,
       errorCode: "game-ended",
     });
+    source.dispose();
+  });
+  it("publishes pending causation and preserves it when revisiting a committed seat", async () => {
+    const source = await scenarioSource(hex, bandits, {
+      at: "ready-to-move",
+      as: "player-1",
+    });
+    const pending = source.submit("moveBandits", {
+      hexId: projectedSpaceRef(source.inspect(), "frontier", "northForest"),
+    });
+    const clientActionId = source.store.get().request!.clientActionId;
+    expect(clientActionId).toBeTruthy();
+    await expect(pending).resolves.toEqual({ accepted: true });
+    const committed = source.inspect();
+    expect(committed.causedBy).toBe(clientActionId);
+    source.switchSeat("player-2");
+    expect(source.inspect().causedBy).toBeUndefined();
+    source.switchSeat("player-1");
+    expect(source.inspect()).toEqual(committed);
+    source.restore(source.checkpoint());
+    expect(source.inspect().version).toBeGreaterThan(committed.version);
+    expect(source.inspect().causedBy).toBeUndefined();
     source.dispose();
   });
   it("switches selected-seat privacy and invalidates in-flight intent without replay", async () => {

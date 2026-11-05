@@ -1,3 +1,4 @@
+import { playerSeatColor } from "../../shared/protocol/players.js";
 import { createStore } from "@tanstack/store";
 import {
   PluginGameplayFrameSchema,
@@ -9,6 +10,7 @@ import type {
   GameplayBasis,
   PluginGameplayFrame,
   PluginSessionDescriptor,
+  PluginPlayerSummary,
 } from "../../shared/protocol/frame.js";
 import { immutableCopy } from "../../shared/immutable.js";
 import type {
@@ -23,14 +25,13 @@ interface Pending {
   readonly command: SourceCommand;
   readonly resolve: (result: SubmitResult) => void;
   readonly reject: (error: Error) => void;
-  accepted: boolean;
 }
 
 /** Adapter-private lifecycle. Transport callbacks must belong to this lifetime. */
 export function createSourceLifecycle(options: {
   context?: SourceContext;
   send(command: SourceCommand): void;
-  recover(): void;
+  recover(pendingClientActionId?: string): void;
   close(): void;
   timeoutMs?: number;
   followHostSeat?: boolean;
@@ -46,6 +47,7 @@ export function createSourceLifecycle(options: {
   );
   let session: Omit<PluginSessionDescriptor, "assets"> | null = null;
   let assetUrls: Readonly<Record<string, string>> | null = null;
+  const playerSummaries = new Map<string, PluginPlayerSummary>();
   let basis: GameplayBasis | null = null;
   let pending: Pending | null = null;
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -94,26 +96,13 @@ export function createSourceLifecycle(options: {
       recovered = true;
       recovering();
       try {
-        options.recover();
-        if (pending && !pending.accepted) options.send(pending.command);
-        arm();
+        options.recover(pending?.command.clientActionId);
+        if (pending) options.send(pending.command);
+        if (pending) arm();
       } catch (error) {
         fail(asError(error));
       }
     }, options.timeoutMs ?? 10_000);
-  };
-  const finishBarrier = () => {
-    if (!pending?.accepted) return;
-    const frame = store.get().snapshot;
-    if (!frame || frame.version <= pending.command.basis.version) return;
-    clearTimer();
-    pending = null;
-    publish({
-      snapshot: frame,
-      request: null,
-      connection: "ready",
-      failure: null,
-    });
   };
   const start = async (
     operation: "submit" | "cancel",
@@ -139,14 +128,14 @@ export function createSourceLifecycle(options: {
     );
     recovered = false;
     const promise = new Promise<SubmitResult>((resolve, reject) => {
-      pending = { command, resolve, reject, accepted: false };
+      pending = { command, resolve, reject };
     });
     publish({
       ...state,
       request: {
+        clientActionId: command.clientActionId,
         interactionId,
         operation,
-        phase: "awaiting-result",
       },
     });
     arm();
@@ -171,8 +160,7 @@ export function createSourceLifecycle(options: {
     retry() {
       if (closed || !pending) return;
       try {
-        if (pending.accepted) options.recover();
-        else options.send(pending.command);
+        options.send(pending.command);
       } catch (error) {
         fail(asError(error));
       }
@@ -189,14 +177,7 @@ export function createSourceLifecycle(options: {
         fail(new Error("Gameplay session changed."));
         return;
       }
-      if (
-        context &&
-        !parsed.players.some((player) => player.playerId === context!.playerId)
-      ) {
-        fail(new Error("Gameplay seat is absent from session."));
-        return;
-      }
-      session = immutableCopy(parsed);
+      session ??= immutableCopy(parsed);
       // Hosts repeat initialization until ready; the first delivery wins.
       assetUrls ??= Object.fromEntries(
         Object.entries(assets ?? {}).map(([path, blob]) => [
@@ -205,7 +186,7 @@ export function createSourceLifecycle(options: {
         ]),
       );
     },
-    frame(value: unknown) {
+    frame(value: unknown, acknowledgedClientActionId?: string) {
       if (closed) return;
       const parsed = PluginGameplayFrameSchema.parse(value);
       if (!session) {
@@ -225,15 +206,10 @@ export function createSourceLifecycle(options: {
         fail(new Error("Gameplay perspective changed."));
         return;
       }
-      if (
-        !session.players.some(
-          (player) => player.playerId === parsed.basis.perspectivePlayerId,
-        )
-      ) {
+      if (!parsed.players.includes(parsed.basis.perspectivePlayerId)) {
         fail(new Error("Gameplay seat is absent from session."));
         return;
       }
-      if (basis && parsed.basis.version < basis.version) return;
       if (changedSeat) {
         clearTimer();
         pending?.reject(new Error("Gameplay perspective changed."));
@@ -241,68 +217,83 @@ export function createSourceLifecycle(options: {
         recovered = false;
         context = { ...context, playerId: parsed.basis.perspectivePlayerId };
       }
+      const confirmed =
+        pending && pending.command.clientActionId === acknowledgedClientActionId
+          ? pending
+          : null;
+      if (confirmed) {
+        clearTimer();
+        pending = null;
+        recovered = false;
+      }
+      if (!changedSeat && basis && parsed.basis.version <= basis.version) {
+        if (confirmed || store.get().connection === "recovering") {
+          publish({
+            ...store.get(),
+            snapshot: store.get().snapshot!,
+            request: confirmed ? null : store.get().request,
+            connection: "ready",
+            failure: null,
+          });
+        }
+        confirmed?.resolve({ accepted: true });
+        return;
+      }
       const { basis: nextBasis, ...frame } = immutableCopy(
         withCardImageUrls(parsed, assetUrls),
       );
       basis = nextBasis;
       publish({
         failure: null,
-        request: changedSeat ? null : store.get().request,
+        request: changedSeat || confirmed ? null : store.get().request,
         snapshot: Object.freeze({
           me: context.playerId,
-          players: session.players,
+          players: Object.freeze(
+            frame.players.map((playerId, index) => {
+              let summary = playerSummaries.get(playerId);
+              if (!summary) {
+                const metadata = session!.players.find(
+                  (player) => player.playerId === playerId,
+                );
+                summary = Object.freeze({
+                  playerId,
+                  displayName: metadata?.displayName ?? `Player ${index + 1}`,
+                  color: metadata?.color ?? playerSeatColor(index),
+                });
+                playerSummaries.set(playerId, summary);
+              }
+              return summary;
+            }),
+          ),
+          ...(frame.causedBy === undefined ? {} : { causedBy: frame.causedBy }),
           frame: Object.freeze(frame),
           version: basis.version,
         }),
         connection: "ready",
       });
-      finishBarrier();
+      confirmed?.resolve({ accepted: true });
     },
     result(value: unknown) {
       if (closed) return;
       const result = InteractionResultSchema.parse(value);
-      if (
-        !pending ||
-        result.clientActionId !== pending.command.clientActionId ||
-        pending.accepted
-      )
+      if (!pending || result.clientActionId !== pending.command.clientActionId)
         return;
-      pending.resolve(
-        immutableCopy(
-          result.accepted
-            ? { accepted: true }
-            : {
-                accepted: false,
-                errorCode: result.errorCode,
-                ...(result.message === undefined
-                  ? {}
-                  : { message: result.message }),
-              },
-        ),
-      );
-      if (!result.accepted) {
-        clearTimer();
-        pending = null;
-        publish({
-          snapshot: store.get().snapshot!,
-          request: null,
-          connection: "ready",
-          failure: null,
-        });
-        return;
-      }
-      pending.accepted = true;
-      recovered = false;
-      const state = store.get();
-      // A pending command was submitted from ready, so its snapshot exists.
+      const rejected = pending;
+      clearTimer();
+      pending = null;
       publish({
-        connection: state.connection === "recovering" ? "recovering" : "ready",
-        snapshot: state.snapshot!,
+        snapshot: store.get().snapshot!,
+        request: null,
+        connection: "ready",
         failure: null,
-        request: { ...state.request!, phase: "awaiting-frame" },
       });
-      arm();
-      finishBarrier();
+      rejected.resolve(
+        immutableCopy({
+          accepted: false,
+          errorCode: result.errorCode,
+          ...(result.message === undefined ? {} : { message: result.message }),
+        }),
+      );
     },
   };
 }

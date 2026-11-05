@@ -524,7 +524,7 @@ contain these objects directly. Headless `card.view` preserves the manifest's
 card identity, category, and property inference and is deeply readonly; table-only
 `cardSetId` and `componentType` are absent. Concealed cards have a positional
 opaque seat identity, no view, and an optional separate `cardBacksById` entry.
-This wire format requires plugin protocol version 10 and reducer contract `0.11.0`.
+This wire format requires plugin protocol version 11 and reducer contract `0.11.0`.
 
 Tiles use opaque `SeatTileRef` values even when visible. A projected tile is either
 `{ disclosure: "visible", ref, tileTypeId, name, ownerId, fields, properties, frontImage? }` or

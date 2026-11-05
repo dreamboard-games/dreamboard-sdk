@@ -80,6 +80,7 @@ exports[`public export surface > root export names are stable 1`] = `
   "InteractionDescriptorSchema",
   "InteractionInputDescriptorSchema",
   "InteractionResultSchema",
+  "PLAYER_SEAT_COLORS",
   "PluginGameplayFrameSchema",
   "PluginPlayerSummarySchema",
   "PluginSessionDescriptorSchema",
@@ -133,6 +134,7 @@ exports[`public export surface > root export names are stable 1`] = `
   "parsePluginSessionDescriptor",
   "parsePluginToHostEnvelope",
   "perPlayerInstanceId",
+  "playerSeatColor",
   "shortcutsFeature",
   "staticSource",
 ]

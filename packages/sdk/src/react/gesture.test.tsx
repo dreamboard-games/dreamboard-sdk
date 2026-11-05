@@ -51,6 +51,7 @@ function snapshot(version = 1): SourceSnapshot {
     players: [{ playerId: "alice", displayName: "Alice" }],
     version,
     frame: {
+      players: ["alice"],
       events: [],
       view: {},
       flow: {
@@ -1125,15 +1126,37 @@ test("a submitted drop presents its landing without changing authoritative zone 
     [],
   );
   expect(get("table")!.dataset.arriving).toBe("[]");
-  await act(async () => {
-    source.submissions[0].resolve({ accepted: true });
-  });
-  // An ACK alone must not end the presentation.
-  expect(get("red")!.dataset.pending).toBe("true");
-  await act(async () => source.emit(landingSnapshot(2, true)));
+  const id = source.store.get().request!.clientActionId;
+  await act(async () => source.emit(landingSnapshot(2, true), id));
   expect(get("red")!.dataset.pending).toBe("false");
   expect(get("table")!.dataset.count).toBe("1");
   expect(get("table")!.dataset.arriving).toBe("[]");
+});
+
+test("an unrelated frame retains the submitted overlay and provisional landing", async () => {
+  const { source, get } = await mountLanding();
+  const clientActionId = source.store.get().request!.clientActionId;
+  await act(async () =>
+    source.emit({
+      ...landingSnapshot(2),
+      frame: { ...landingSnapshot(2).frame, causedBy: "another-action" },
+    }),
+  );
+  expect(get("red")!.dataset.pending).toBe("true");
+  expect(get("table")!.querySelector('[data-testid="red"]')).not.toBeNull();
+  expect(get("overlay")!.dataset.settling).toBe("true");
+  await act(async () =>
+    source.emit(
+      {
+        ...landingSnapshot(3, true),
+        frame: { ...landingSnapshot(3, true).frame, causedBy: clientActionId },
+      },
+      clientActionId,
+    ),
+  );
+  expect(get("red")!.dataset.pending).toBe("false");
+  expect(get("overlay")).toBeNull();
+  await act(async () => source.submissions[0].resolve({ accepted: true }));
 });
 
 test("rejecting a landing restores the source without replaying an arrival", async () => {
@@ -1162,14 +1185,24 @@ test("a source/seat replacement discards the previous pending face", async () =>
   expect(get("overlay")).toBeNull();
 });
 
-test("an authoritative frame arriving before the ACK replaces the provisional landing", async () => {
+test("a causal frame without acknowledgment keeps the provisional landing pending", async () => {
   const { source, get } = await mountLanding();
-  await act(async () => source.emit(landingSnapshot(2, true)));
-  expect(get("red")!.dataset.pending).toBe("false");
+  await act(async () =>
+    source.emit({
+      ...landingSnapshot(2, true),
+      frame: {
+        ...landingSnapshot(2, true).frame,
+        causedBy: source.store.get().request!.clientActionId,
+      },
+    }),
+  );
+  expect(get("red")!.dataset.pending).toBe("true");
+  expect(get("hand")!.dataset.count).toBe("1");
   expect(get("table")!.dataset.count).toBe("1");
-  expect(get("table")!.dataset.arriving).toBe("[]");
-  expect(get("overlay")).toBeNull();
+  expect(get("overlay")).not.toBeNull();
   await act(async () => source.submissions[0].resolve({ accepted: true }));
+  expect(get("red")!.dataset.pending).toBe("false");
+  expect(get("overlay")).toBeNull();
   expect(get("table")!.querySelectorAll("button")).toHaveLength(1);
 });
 

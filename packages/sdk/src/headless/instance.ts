@@ -146,7 +146,7 @@ class InteractionObject {
     readonly owner: Controller,
     readonly descriptor: InteractionDescriptor,
     draft: Values,
-    readonly status: "open" | "submitting" | "submitted",
+    readonly status: "open" | "submitting",
     readonly connected: boolean,
   ) {
     this.seat =
@@ -846,13 +846,8 @@ class Controller {
   sourceState: SourceState;
   reportedFailures = new WeakMap<GameSource, Readonly<Error>>();
   pending: {
-    source: GameSource;
     key: string;
     draftRevision: number | undefined;
-    version: number;
-    epoch: number;
-    accepted: boolean;
-    cancel: boolean;
   } | null = null;
   building: RuntimeModel | undefined;
   rootProperties = new Map<PropertyKey, PropertyDescriptor>();
@@ -1287,14 +1282,9 @@ class Controller {
       cancel(id: string): Promise<SubmitResult>;
     };
     const operation = {
-      source,
       key,
       draftRevision:
         params === undefined ? (this.revisions.get(key) ?? 0) : undefined,
-      version: this.sourceState.snapshot.version,
-      epoch: this.epoch,
-      accepted: false,
-      cancel,
     };
     this.pending = operation;
     try {
@@ -1310,8 +1300,14 @@ class Controller {
         this.refresh();
         return result;
       }
-      operation.accepted = true;
-      this.finishBarrier();
+      // Source success already includes the authoritative confirmation frame.
+      this.pending = null;
+      if (
+        operation.draftRevision !== undefined &&
+        (this.revisions.get(operation.key) ?? 0) === operation.draftRevision
+      )
+        this.reset(operation.key);
+      else this.refresh();
       return result;
     } catch (error) {
       if (this.pending === operation) {
@@ -1320,36 +1316,6 @@ class Controller {
       }
       throw error;
     }
-  }
-  finishBarrier() {
-    const operation = this.pending;
-    if (
-      !operation?.accepted ||
-      this.sourceState.request ||
-      operation.source !== this.options.source ||
-      operation.epoch !== this.epoch
-    )
-      return;
-    if (
-      this.sourceState.connection === "closed" ||
-      this.sourceState.connection === "failed"
-    ) {
-      this.pending = null;
-      this.refresh();
-      return;
-    }
-    if (
-      this.sourceState.connection !== "ready" ||
-      (this.sourceState.snapshot?.version ?? -1) <= operation.version
-    )
-      return;
-    this.pending = null;
-    if (
-      operation.draftRevision !== undefined &&
-      (this.revisions.get(operation.key) ?? 0) === operation.draftRevision
-    )
-      this.reset(operation.key);
-    else this.refresh();
   }
   reportSourceFailure() {
     const failure = this.sourceState.failure;
@@ -1384,7 +1350,6 @@ class Controller {
       }
       this.reconcile();
       this.refresh();
-      this.finishBarrier();
       this.reportSourceFailure();
     });
   }
@@ -1746,13 +1711,7 @@ class Controller {
       const key = base.interactionKey;
       const draft = drafts[key] ?? EMPTY;
       const descriptor = this.descriptorFor(base, draft);
-      const status =
-        request || this.pending
-          ? request?.interactionId === descriptor.interactionId &&
-            request.phase === "awaiting-frame"
-            ? "submitted"
-            : "submitting"
-          : "open";
+      const status = request || this.pending ? "submitting" : "open";
       const oldObject = this.lastInteractions.find(
         (value) => value.key === key,
       );

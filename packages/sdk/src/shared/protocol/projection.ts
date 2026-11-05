@@ -13,6 +13,8 @@ import type {
 import type { RuntimeJson } from "../runtime-json.js";
 
 export interface MaterializePluginGameplayFrameInput {
+  readonly players: readonly PlayerId[];
+  readonly causedBy?: string;
   readonly currentPhase: string | null;
   readonly activePlayers: readonly PlayerId[];
   readonly dynamicProjection: ReducerSeatProjectionBundle;
@@ -52,6 +54,8 @@ export function materializePluginGameplayFrame(
     seat?.zones == null ? {} : hydrateZones(registry, seat.zones, "zones");
 
   const frame = {
+    players: input.players,
+    ...(input.causedBy === undefined ? {} : { causedBy: input.causedBy }),
     events: seat?.events ?? [],
     basis: {
       sessionId: input.sessionId,

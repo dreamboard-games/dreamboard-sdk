@@ -85,6 +85,7 @@ export function createLocalProvider<
 ): LocalSource<Game> {
   let checkpoint = immutableCopy(checkpointSchema.parse(initial));
   let revision = 1;
+  let committedCause: { playerId: string; clientActionId: string } | undefined;
   let playerId = selectedPlayerId;
   let epoch = 0;
   let disposed = false;
@@ -119,6 +120,11 @@ export function createLocalProvider<
       referenceBasis: { sessionId: session.sessionId, version: revision },
     });
     const provisional = materializePluginGameplayFrame({
+      players: (state.domain.table as { playerOrder: string[] }).playerOrder,
+      causedBy:
+        committedCause?.playerId === perspective
+          ? committedCause.clientActionId
+          : undefined,
       currentPhase: state.domain.flow.currentPhase,
       activePlayers: projection.schedulerFlow?.activePlayerIds ?? [],
       dynamicProjection: projection,
@@ -138,13 +144,17 @@ export function createLocalProvider<
       },
     };
   }
-  function publish() {
-    lifecycle.frame(makeFrame());
+  function publish(acknowledgedClientActionId?: string) {
+    lifecycle.frame(makeFrame(), acknowledgedClientActionId);
   }
   async function execute(
     input: GameInput,
     authored = false,
-  ): Promise<SubmitResult> {
+    causedBy?: string,
+  ): Promise<
+    | Exclude<SubmitResult, { accepted: true }>
+    | { accepted: true; version: number }
+  > {
     assertOpen();
     if (inFlight) throw new Error("A gameplay interaction is already pending.");
     if (checkpoint.terminal)
@@ -172,8 +182,13 @@ export function createLocalProvider<
         terminal: result.terminal ?? null,
       });
       revision++;
-      publish();
-      return { accepted: true };
+      committedCause =
+        causedBy === undefined
+          ? undefined
+          : { playerId: input.playerId, clientActionId: causedBy };
+      const version = revision;
+      publish(causedBy);
+      return { accepted: true, version };
     } finally {
       if (generation === epoch) inFlight = false;
     }
@@ -186,28 +201,40 @@ export function createLocalProvider<
     disconnect();
     lifecycle?.source.dispose();
     const generation = epoch;
+    // One immutable lifecycle command may be retried while execution is pending.
+    let submitted:
+      { id: string; result: ReturnType<typeof execute> } | undefined;
     lifecycle = createSourceLifecycle({
       context: { sessionId: session.sessionId, playerId },
       send(command) {
         const current = lifecycle;
-        void execute(
-          command.type === "interaction.cancel"
-            ? {
-                kind: "interaction.cancel",
-                basis: command.basis,
-                playerId,
-                interactionId: command.interactionId,
-              }
-            : {
-                kind: "interaction",
-                basis: command.basis,
-                playerId,
-                interactionId: command.interactionId,
-                params: command.params,
-              },
-        )
+        const retry = submitted?.id === command.clientActionId;
+        const result = retry
+          ? submitted!.result
+          : execute(
+              command.type === "interaction.cancel"
+                ? {
+                    kind: "interaction.cancel",
+                    basis: command.basis,
+                    playerId,
+                    interactionId: command.interactionId,
+                  }
+                : {
+                    kind: "interaction",
+                    basis: command.basis,
+                    playerId,
+                    interactionId: command.interactionId,
+                    params: command.params,
+                  },
+              false,
+              command.clientActionId,
+            );
+        submitted = { id: command.clientActionId, result };
+        void result
           .then((result) => {
-            if (generation === epoch)
+            if (generation === epoch && result.accepted && retry)
+              publish(command.clientActionId);
+            if (generation === epoch && !result.accepted)
               current.result({
                 ...result,
                 type: "interaction.result",
@@ -221,7 +248,7 @@ export function createLocalProvider<
               );
           });
       },
-      recover: publish,
+      recover: () => publish(),
       close() {},
     });
     lifecycle.session(session);
@@ -268,7 +295,7 @@ export function createLocalProvider<
         playerIds,
         path: "command",
       });
-      return execute(
+      const result = await execute(
         {
           kind: "interaction",
           basis: makeFrame(checkpoint.state, actor).basis,
@@ -278,6 +305,7 @@ export function createLocalProvider<
         },
         true,
       );
+      return result.accepted ? { accepted: true } : result;
     },
     switchSeat(next) {
       assertOpen();
@@ -309,6 +337,7 @@ export function createLocalProvider<
       )
         throw new Error("Checkpoint roster does not match the local session.");
       checkpoint = immutableCopy(next);
+      committedCause = undefined;
       revision++;
       replaceLifetime();
     },

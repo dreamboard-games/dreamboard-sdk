@@ -42,10 +42,9 @@ export interface GestureDrag {
 }
 export interface GestureGame extends Pick<
   CoreInstance<unknown>,
-  "snapshot" | "subscribe" | "cards" | "zones" | "me"
+  "snapshot" | "subscribe" | "cards" | "zones" | "me" | "request"
 > {
   readonly drag?: GestureDrag;
-  readonly request: unknown;
   getOptions(): Pick<InstanceOptions<unknown>, "source">;
 }
 
@@ -75,7 +74,6 @@ export interface GestureState {
       readonly index: number;
       readonly concealed: boolean;
       readonly cards: readonly Card<unknown, Record<never, never>>[];
-      readonly snapshot: GestureGame["snapshot"];
     } | null;
   } | null;
   readonly inspect: {
@@ -401,7 +399,6 @@ export function createGestureSession(game: GestureGame) {
     const nextSource = game.getOptions().source;
     const changedLifetime =
       source !== nextSource || snapshot?.me !== game.snapshot?.me;
-    const changedSnapshot = snapshot !== game.snapshot;
     if (changedLifetime || snapshot !== game.snapshot) {
       // Cancelling first lets a scrubbing finger take its activity with it.
       press?.recognizer.cancel();
@@ -422,10 +419,7 @@ export function createGestureSession(game: GestureGame) {
     // New frames, seats and sources cancel the semantic drag; end the press with it.
     if (press?.dragging && !game.drag?.active) press.recognizer.cancel();
     const drag = store.get().drag;
-    if (
-      drag?.settling &&
-      (game.request === null || changedSnapshot || changedLifetime)
-    )
+    if (drag?.settling && (game.request === null || changedLifetime))
       set({ drag: null });
   });
 
@@ -922,14 +916,13 @@ export function createGestureSession(game: GestureGame) {
                           card.hidden,
                       ),
                   cards: Object.freeze(cards),
-                  snapshot: game.snapshot,
                 })
               : null;
           game.drag?.drop();
           // A submitted move keeps its overlay until the authoritative frame.
-          if (drag && game.request !== null && game.request !== before)
+          if (drag && game.request !== null && game.request !== before) {
             set({ drag: { ...drag, settling: true, landing } });
-          else set({ drag: null });
+          } else set({ drag: null });
         },
         cancel(kind) {
           const dragging = press!.dragging;

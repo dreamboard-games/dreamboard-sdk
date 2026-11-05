@@ -1,6 +1,7 @@
 import type { SourceCommand } from "./types.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createSourceLifecycle } from "./lifecycle.js";
+import { playerSeatColor } from "../../shared/protocol/players.js";
 import { staticSource } from "./static.js";
 
 import { session, frame } from "./__fixtures__/frames.js";
@@ -21,6 +22,115 @@ function setup() {
 }
 afterEach(() => vi.useRealTimers());
 describe("source request lifecycle", () => {
+  it("deduplicates snapshots while completing duplicate-frame recovery", () => {
+    const x = setup();
+    const snapshot = x.source.store.get().snapshot;
+    const listener = vi.fn();
+    const subscription = x.source.store.subscribe(listener);
+    x.frame(frame());
+    expect(listener).not.toHaveBeenCalled();
+    x.recovering();
+    x.frame(frame());
+    expect(x.source.store.get().connection).toBe("ready");
+    expect(x.source.store.get().snapshot).toBe(snapshot);
+    subscription.unsubscribe();
+    x.source.dispose();
+  });
+  it("does not retry after synchronous recovery acknowledges an unchanged frame", async () => {
+    vi.useFakeTimers();
+    const x = setup();
+    const promise = x.source.submit("move", {});
+    const command = x.send.mock.calls[0][0];
+    x.frame(frame(2));
+    const snapshot = x.source.store.get().snapshot;
+    x.recover.mockImplementation(() =>
+      x.frame(frame(2), command.clientActionId),
+    );
+    vi.advanceTimersByTime(300);
+    await expect(promise).resolves.toEqual({ accepted: true });
+    expect(x.source.store.get().snapshot).toBe(snapshot);
+    expect(x.source.store.get().request).toBeNull();
+    expect(x.send).toHaveBeenCalledOnce();
+    expect(x.close).not.toHaveBeenCalled();
+    x.source.dispose();
+  });
+  it("only acknowledgment completes a request, preserving a later frame's actual cause", async () => {
+    const x = setup();
+    const promise = x.source.submit("move", {});
+    const command = x.send.mock.calls[0][0];
+    x.frame({ ...frame(2), causedBy: command.clientActionId });
+    expect(x.source.store.get().request?.clientActionId).toBe(
+      command.clientActionId,
+    );
+    x.retry();
+    expect(x.send.mock.calls[1][0]).toBe(command);
+    x.frame({ ...frame(7), causedBy: "another-action" });
+    const snapshot = x.source.store.get().snapshot;
+    x.frame(frame(7), "unrelated");
+    expect(x.source.store.get().request).not.toBeNull();
+    x.frame(frame(7), command.clientActionId);
+    await expect(promise).resolves.toEqual({ accepted: true });
+    expect(x.source.store.get().snapshot).toBe(snapshot);
+    expect(snapshot?.causedBy).toBe("another-action");
+    expect(x.source.store.get().request).toBeNull();
+    x.source.dispose();
+  });
+  it("rejects pending work when the host changes perspective even at the same version", async () => {
+    const x = createSourceLifecycle({
+      send: vi.fn(),
+      recover: vi.fn(),
+      close: vi.fn(),
+      followHostSeat: true,
+    });
+    x.session(session);
+    x.frame(frame());
+    const promise = x.source.submit("move", {});
+    x.frame(frame(1, "bob"));
+    await expect(promise).rejects.toThrow("perspective changed");
+    expect(x.source.store.get().snapshot?.me).toBe("bob");
+    expect(x.source.store.get().request).toBeNull();
+    x.source.dispose();
+  });
+  it("uses the frame roster with fixed metadata and stable fallback names and colors", () => {
+    const x = createSourceLifecycle({
+      send: vi.fn(),
+      recover: vi.fn(),
+      close: vi.fn(),
+    });
+    x.session({
+      ...session,
+      players: [
+        { playerId: "alice", displayName: "A", color: "purple" },
+        { playerId: "absent", displayName: "Absent" },
+      ],
+    });
+    x.frame({ ...frame(), players: ["bob", "alice", "charlie"] });
+    expect(x.source.store.get().snapshot?.players).toEqual([
+      { playerId: "bob", displayName: "Player 1", color: playerSeatColor(0) },
+      { playerId: "alice", displayName: "A", color: "purple" },
+      {
+        playerId: "charlie",
+        displayName: "Player 3",
+        color: playerSeatColor(2),
+      },
+    ]);
+    x.session({
+      ...session,
+      players: [{ playerId: "alice", displayName: "Changed" }],
+    });
+    x.frame({ ...frame(2), players: ["charlie", "alice", "bob"] });
+    expect(
+      x.source.store
+        .get()
+        .snapshot?.players.map((p) => [p.displayName, p.color]),
+    ).toEqual([
+      ["Player 3", playerSeatColor(2)],
+      ["A", "purple"],
+      ["Player 1", playerSeatColor(0)],
+    ]);
+    expect(playerSeatColor(8)).toBe(playerSeatColor(0));
+    x.source.dispose();
+  });
   it("rejects a frame from a different authority session", () => {
     const x = setup();
     const value = frame(2);
@@ -44,32 +154,16 @@ describe("source request lifecycle", () => {
     x.source.dispose();
   });
 
-  it.each([true, false])(
-    "requires ACK and newer frame, frame first=%s",
-    async (frameFirst) => {
-      const x = setup();
-      const promise = x.source.submit("move", { target: "a" });
-      if (frameFirst) x.frame(frame(2));
-      expect(x.source.store.get().request?.phase).toBe("awaiting-result");
-      expect(Object.isFrozen(x.source.store.get())).toBe(true);
-      expect(Object.isFrozen(x.source.store.get().request)).toBe(true);
-      x.result({
-        type: "interaction.result",
-        clientActionId: x.send.mock.calls[0][0].clientActionId,
-        accepted: true,
-      });
-      expect((await promise).accepted).toBe(true);
-      if (!frameFirst) {
-        expect(x.source.store.get().request?.phase).toBe("awaiting-frame");
-        expect(Object.isFrozen(x.source.store.get().request)).toBe(true);
-        x.frame(frame(1));
-        expect(x.source.store.get().request).not.toBeNull();
-        x.frame(frame(2));
-      }
-      expect(x.source.store.get().request).toBeNull();
-      x.source.dispose();
-    },
-  );
+  it("publishes the covering frame and clears pending before promise completion", async () => {
+    const x = setup();
+    const promise = x.source.submit("move", {});
+    const id = x.send.mock.calls[0][0].clientActionId;
+    x.frame(frame(2), id);
+    expect(x.source.store.get().snapshot?.version).toBe(2);
+    expect(x.source.store.get().request).toBeNull();
+    await expect(promise).resolves.toEqual({ accepted: true });
+    x.source.dispose();
+  });
   it("copies original command and retries exact ID/basis, rejecting concurrent intent", async () => {
     const x = setup();
     const params = { target: ["a"] };
@@ -94,25 +188,19 @@ describe("source request lifecycle", () => {
     expect(x.send).toHaveBeenCalledTimes(2);
     x.source.dispose();
   });
-  it("resumes a missing frame without replaying accepted intent, then closes on exhaustion", async () => {
+  it("resumes and retries unconfirmed intent, then closes on exhaustion", async () => {
     vi.useFakeTimers();
     const x = setup();
-    const p = x.source.cancel("move");
-    expect(x.send.mock.calls[0][0].type).toBe("interaction.cancel");
-    x.result({
-      type: "interaction.result",
-      clientActionId: x.send.mock.calls[0][0].clientActionId,
-      accepted: true,
-    });
-    await p;
+    const p = x.source.cancel("move").catch((error: unknown) => error);
+    const command = x.send.mock.calls[0][0];
     vi.advanceTimersByTime(100);
-    expect(x.recover).toHaveBeenCalledOnce();
-    expect(x.send).toHaveBeenCalledOnce();
+    expect(x.recover).toHaveBeenCalledWith(command.clientActionId);
+    expect(x.send.mock.calls.map(([value]) => value)).toEqual([
+      command,
+      command,
+    ]);
     vi.advanceTimersByTime(100);
-    expect(x.source.store.get().connection).toBe("failed");
-    expect(x.source.store.get().failure?.message).toBe(
-      "Gameplay source recovery timed out.",
-    );
+    expect(await p).toEqual(new Error("Gameplay source recovery timed out."));
     expect(x.close).toHaveBeenCalledOnce();
   });
   it("disposal rejects unresolved promise and ignores obsolete ingress", async () => {
@@ -264,6 +352,7 @@ describe("source request lifecycle", () => {
       players: session.players,
       version: 1,
       frame: {
+        players: ["alice"],
         events: [],
         view: original.view,
         flow: original.flow,

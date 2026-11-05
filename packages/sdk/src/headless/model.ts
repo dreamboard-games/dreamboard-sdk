@@ -497,7 +497,7 @@ export interface InteractionBase<G, K extends InteractionKey<G>> {
   getStepIndex(): number | null;
   getIsReady(params?: InteractionParams<G, K>): boolean;
   getMissingInputs(): readonly InputKey<G, K>[];
-  getStatus(): "open" | "submitting" | "submitted";
+  getStatus(): "open" | "submitting";
   submit(params?: InteractionParams<G, K>): Promise<SubmitResult>;
   cancel(): Promise<SubmitResult>;
   reset(): void;

@@ -208,6 +208,7 @@ function source(authoritative: BoardTopology = hexBoard()) {
     players: [{ playerId: "alice", displayName: "Alice" }],
     version: 1,
     frame: {
+      players: ["alice"],
       events: [],
       view: {
         boards: {

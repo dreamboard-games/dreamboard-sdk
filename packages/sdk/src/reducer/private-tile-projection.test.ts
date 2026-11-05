@@ -221,6 +221,7 @@ async function fixture(hiddenGeometry = 1) {
   const frame = (playerId = south, basis = referenceBasis, current = state) => {
     const projection = project(playerId, basis, current);
     const input = {
+      players: [north, south],
       sessionId: basis.sessionId,
       version: basis.version,
       perspectivePlayerId: playerId,

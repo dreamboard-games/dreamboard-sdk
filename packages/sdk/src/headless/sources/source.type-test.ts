@@ -89,9 +89,9 @@ export function sourceStateNarrowing(
     connection: "failed",
     snapshot,
     request: {
+      clientActionId: "test-action",
       interactionId: "move",
       operation: "submit" as const,
-      phase: "awaiting-frame" as const,
     },
     failure: new Error(),
   };

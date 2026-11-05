@@ -4,6 +4,7 @@ import type { MaterializePluginGameplayFrameInput } from "./projection.js";
 
 function input(): MaterializePluginGameplayFrameInput {
   return {
+    players: ["alice", "bob"],
     sessionId: "authority",
     version: 3,
     actionSetVersion: "actions-3",
