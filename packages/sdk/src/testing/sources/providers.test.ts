@@ -18,6 +18,7 @@ const snapshot: SourceSnapshot = {
   players: [{ playerId: "alice", displayName: "Alice" }],
   version: 1,
   frame: {
+    players: ["alice"],
     events: [],
     view: { score: 0 },
     flow: {
@@ -154,6 +155,28 @@ describe("production-backed local sources", () => {
       accepted: false,
       errorCode: "game-ended",
     });
+    source.dispose();
+  });
+  it("publishes pending causation and preserves it when revisiting a committed seat", async () => {
+    const source = await scenarioSource(hex, bandits, {
+      at: "ready-to-move",
+      as: "player-1",
+    });
+    const pending = source.submit("moveBandits", {
+      hexId: projectedSpaceRef(source.inspect(), "frontier", "northForest"),
+    });
+    const clientActionId = source.store.get().request!.clientActionId;
+    expect(clientActionId).toBeTruthy();
+    await expect(pending).resolves.toEqual({ accepted: true });
+    const committed = source.inspect();
+    expect(committed.causedBy).toBe(clientActionId);
+    source.switchSeat("player-2");
+    expect(source.inspect().causedBy).toBeUndefined();
+    source.switchSeat("player-1");
+    expect(source.inspect()).toEqual(committed);
+    source.restore(source.checkpoint());
+    expect(source.inspect().version).toBeGreaterThan(committed.version);
+    expect(source.inspect().causedBy).toBeUndefined();
     source.dispose();
   });
   it("switches selected-seat privacy and invalidates in-flight intent without replay", async () => {

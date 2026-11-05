@@ -7,13 +7,14 @@ import type {
 import type { RuntimeJson } from "../runtime-json.js";
 
 export const DREAMBOARD_PLUGIN_PROTOCOL = "dreamboard-plugin" as const;
-export const DREAMBOARD_PLUGIN_PROTOCOL_VERSION = 10 as const;
+export const DREAMBOARD_PLUGIN_PROTOCOL_VERSION = 11 as const;
 
 export type InteractionResult =
   | {
       readonly type: "interaction.result";
       readonly clientActionId: string;
       readonly accepted: true;
+      readonly version: number;
     }
   | {
       readonly type: "interaction.result";

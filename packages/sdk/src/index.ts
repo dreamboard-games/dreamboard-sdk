@@ -162,3 +162,8 @@ export type {
 } from "./shared/domain/board-identities.js";
 
 export * from "./headless/features/card-selection.js";
+
+export {
+  PLAYER_SEAT_COLORS,
+  playerSeatColor,
+} from "./shared/protocol/players.js";

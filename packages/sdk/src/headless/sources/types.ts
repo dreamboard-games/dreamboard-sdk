@@ -15,6 +15,7 @@ export interface SourceContext {
   readonly playerId: string;
 }
 export interface SourceSnapshot {
+  readonly causedBy?: string;
   readonly me: string;
   readonly players: readonly PluginPlayerSummary[];
   readonly frame: Omit<PluginGameplayFrame, "basis">;
@@ -28,6 +29,7 @@ export type SubmitResult =
       readonly message?: string;
     };
 export interface SourceRequest {
+  readonly clientActionId: string;
   readonly interactionId: string;
   readonly operation: "submit" | "cancel";
   readonly phase: "awaiting-result" | "awaiting-frame";

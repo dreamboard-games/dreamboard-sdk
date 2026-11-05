@@ -398,7 +398,7 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
         () => (zone?.getCards() ?? []) as readonly Card<Game, Enabled>[],
         [zone],
       );
-      const active = landing?.snapshot === game.snapshot ? landing : null;
+      const active = landing;
       const incoming = active?.zoneId === zoneId && active.hostId === hostId;
       const outgoing =
         active?.cards.filter(
@@ -489,7 +489,7 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
       const landing = useGestureState(session, (state) =>
         state.drag?.settling ? state.drag.landing : null,
       );
-      const active = landing?.snapshot === game.snapshot ? landing : null;
+      const active = landing;
       const captured = active?.cards.find((card) => card.id === cardId);
       const card =
         game.cards.find(cardId) ??

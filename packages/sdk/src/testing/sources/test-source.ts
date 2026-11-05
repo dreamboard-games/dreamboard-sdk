@@ -38,6 +38,9 @@ export function createTestSource(initial: SourceSnapshot): TestSource {
           resolve(result: SubmitResult) {
             lifecycle.result({
               ...result,
+              ...(result.accepted
+                ? { version: command.basis.version + 1 }
+                : {}),
               type: "interaction.result",
               clientActionId: command.clientActionId,
             });
@@ -53,6 +56,7 @@ export function createTestSource(initial: SourceSnapshot): TestSource {
     lifecycle.session({ sessionId, players: snapshot.players });
     lifecycle.frame({
       ...snapshot.frame,
+      causedBy: snapshot.causedBy ?? snapshot.frame.causedBy,
       basis: {
         sessionId,
         version: snapshot.version,

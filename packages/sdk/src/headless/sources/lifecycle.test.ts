@@ -1,6 +1,7 @@
 import type { SourceCommand } from "./types.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createSourceLifecycle } from "./lifecycle.js";
+import { playerSeatColor } from "../../shared/protocol/players.js";
 import { staticSource } from "./static.js";
 
 import { session, frame } from "./__fixtures__/frames.js";
@@ -21,6 +22,120 @@ function setup() {
 }
 afterEach(() => vi.useRealTimers());
 describe("source request lifecycle", () => {
+  it("deduplicates snapshots while completing duplicate-frame recovery", () => {
+    const x = setup();
+    const snapshot = x.source.store.get().snapshot;
+    const listener = vi.fn();
+    const subscription = x.source.store.subscribe(listener);
+    x.frame(frame());
+    expect(listener).not.toHaveBeenCalled();
+    x.recovering();
+    x.frame(frame());
+    expect(x.source.store.get().connection).toBe("ready");
+    expect(x.source.store.get().snapshot).toBe(snapshot);
+    subscription.unsubscribe();
+    x.source.dispose();
+  });
+  it("does not rearm recovery after a synchronous recovery frame settles the request", async () => {
+    vi.useFakeTimers();
+    const x = setup();
+    const promise = x.source.submit("move", {});
+    x.result({
+      type: "interaction.result",
+      accepted: true,
+      version: 2,
+      clientActionId: x.send.mock.calls[0][0].clientActionId,
+    });
+    await promise;
+    x.recover.mockImplementation(() => x.frame(frame(2)));
+    vi.advanceTimersByTime(300);
+    expect(x.source.store.get().connection).toBe("ready");
+    expect(x.source.store.get().request).toBeNull();
+    expect(x.close).not.toHaveBeenCalled();
+    x.source.dispose();
+  });
+  it("waits for the accepted version and settles a retry against a later recovery frame", async () => {
+    const x = setup();
+    const promise = x.source.submit("move", {});
+    const command = x.send.mock.calls[0][0];
+    expect(x.source.store.get().request?.clientActionId).toBe(
+      command.clientActionId,
+    );
+    x.frame(frame(2));
+    x.retry();
+    expect(x.send.mock.calls[1][0]).toBe(command);
+    x.result({
+      type: "interaction.result",
+      clientActionId: command.clientActionId,
+      accepted: true,
+      version: 4,
+    });
+    await promise;
+    expect(x.source.store.get().request?.phase).toBe("awaiting-frame");
+    x.frame(frame(3));
+    expect(x.source.store.get().request).not.toBeNull();
+    x.recovering();
+    x.frame({ ...frame(7), causedBy: "another-action" });
+    expect(x.source.store.get().request).toBeNull();
+    expect(x.source.store.get().snapshot?.causedBy).toBe("another-action");
+    x.source.dispose();
+  });
+  it("rejects pending work when the host changes perspective even at the same version", async () => {
+    const x = createSourceLifecycle({
+      send: vi.fn(),
+      recover: vi.fn(),
+      close: vi.fn(),
+      followHostSeat: true,
+    });
+    x.session(session);
+    x.frame(frame());
+    const promise = x.source.submit("move", {});
+    x.frame(frame(1, "bob"));
+    await expect(promise).rejects.toThrow("perspective changed");
+    expect(x.source.store.get().snapshot?.me).toBe("bob");
+    expect(x.source.store.get().request).toBeNull();
+    x.source.dispose();
+  });
+  it("uses the frame roster with fixed metadata and stable fallback names and colors", () => {
+    const x = createSourceLifecycle({
+      send: vi.fn(),
+      recover: vi.fn(),
+      close: vi.fn(),
+    });
+    x.session({
+      ...session,
+      players: [
+        { playerId: "alice", displayName: "A", color: "purple" },
+        { playerId: "absent", displayName: "Absent" },
+      ],
+    });
+    x.frame({ ...frame(), players: ["bob", "alice", "charlie"] });
+    expect(x.source.store.get().snapshot?.players).toEqual([
+      { playerId: "bob", displayName: "Player 1", color: playerSeatColor(0) },
+      { playerId: "alice", displayName: "A", color: "purple" },
+      {
+        playerId: "charlie",
+        displayName: "Player 3",
+        color: playerSeatColor(2),
+      },
+    ]);
+    x.session({
+      ...session,
+      players: [{ playerId: "alice", displayName: "Changed" }],
+    });
+    x.frame({ ...frame(2), players: ["charlie", "alice", "bob"] });
+    expect(
+      x.source.store
+        .get()
+        .snapshot?.players.map((p) => [p.displayName, p.color]),
+    ).toEqual([
+      ["Player 3", playerSeatColor(2)],
+      ["A", "purple"],
+      ["Player 1", playerSeatColor(0)],
+    ]);
+    expect(playerSeatColor(8)).toBe(playerSeatColor(0));
+    x.source.dispose();
+  });
   it("rejects a frame from a different authority session", () => {
     const x = setup();
     const value = frame(2);
@@ -57,6 +172,7 @@ describe("source request lifecycle", () => {
         type: "interaction.result",
         clientActionId: x.send.mock.calls[0][0].clientActionId,
         accepted: true,
+        version: 2,
       });
       expect((await promise).accepted).toBe(true);
       if (!frameFirst) {
@@ -103,6 +219,7 @@ describe("source request lifecycle", () => {
       type: "interaction.result",
       clientActionId: x.send.mock.calls[0][0].clientActionId,
       accepted: true,
+      version: 2,
     });
     await p;
     vi.advanceTimersByTime(100);
@@ -264,6 +381,7 @@ describe("source request lifecycle", () => {
       players: session.players,
       version: 1,
       frame: {
+        players: ["alice"],
         events: [],
         view: original.view,
         flow: original.flow,

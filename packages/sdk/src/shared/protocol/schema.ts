@@ -108,6 +108,8 @@ const ProjectedViewSchema = z
 
 export const SeatFrameSchema = z
   .object({
+    players: z.array(PlayerIdSchema),
+    causedBy: z.string().min(1).optional(),
     events: z.array(GameEventSchema).max(32),
     view: ProjectedViewSchema.nullable(),
     flow: z
@@ -135,6 +137,7 @@ export const InteractionResultSchema = z.discriminatedUnion("accepted", [
       type: z.literal("interaction.result"),
       clientActionId: z.string().min(1),
       accepted: z.literal(true),
+      version: z.number().int().nonnegative(),
     })
     .strict(),
   z

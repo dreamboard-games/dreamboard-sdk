@@ -282,7 +282,7 @@ checkpoints. Submitted interaction and cancellation inputs carry the issued full
 frame basis, including the perspective seat and action-set version. Materialization
 rejects a projection whose reference basis differs from the frame basis.
 
-Worker contract 0.11.0 and plugin protocol 10 require rebuilt bundles and fresh
+Worker contract 0.11.0 and plugin protocol 11 require rebuilt bundles and fresh
 sessions. Action-set, frame and command digest domains use version 6. There are
 no legacy readers. Authoritative events explicitly declare a public or seat
 audience; frame events contain only the selected seat's projected display data.

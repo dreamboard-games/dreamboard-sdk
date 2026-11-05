@@ -1,3 +1,4 @@
+import { playerSeatColor } from "../../shared/protocol/players.js";
 import { createStore } from "@tanstack/store";
 import {
   PluginGameplayFrameSchema,
@@ -9,6 +10,7 @@ import type {
   GameplayBasis,
   PluginGameplayFrame,
   PluginSessionDescriptor,
+  PluginPlayerSummary,
 } from "../../shared/protocol/frame.js";
 import { immutableCopy } from "../../shared/immutable.js";
 import type {
@@ -23,7 +25,7 @@ interface Pending {
   readonly command: SourceCommand;
   readonly resolve: (result: SubmitResult) => void;
   readonly reject: (error: Error) => void;
-  accepted: boolean;
+  acceptedVersion: number | null;
 }
 
 /** Adapter-private lifecycle. Transport callbacks must belong to this lifetime. */
@@ -46,6 +48,7 @@ export function createSourceLifecycle(options: {
   );
   let session: Omit<PluginSessionDescriptor, "assets"> | null = null;
   let assetUrls: Readonly<Record<string, string>> | null = null;
+  const playerSummaries = new Map<string, PluginPlayerSummary>();
   let basis: GameplayBasis | null = null;
   let pending: Pending | null = null;
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -95,17 +98,24 @@ export function createSourceLifecycle(options: {
       recovering();
       try {
         options.recover();
-        if (pending && !pending.accepted) options.send(pending.command);
-        arm();
+        if (pending && pending.acceptedVersion === null)
+          options.send(pending.command);
+        if (pending) arm();
       } catch (error) {
         fail(asError(error));
       }
     }, options.timeoutMs ?? 10_000);
   };
   const finishBarrier = () => {
-    if (!pending?.accepted) return;
+    if (pending?.acceptedVersion == null) return;
     const frame = store.get().snapshot;
-    if (!frame || frame.version <= pending.command.basis.version) return;
+    if (
+      !frame ||
+      frame.version < pending.acceptedVersion ||
+      basis?.sessionId !== pending.command.basis.sessionId ||
+      basis.perspectivePlayerId !== pending.command.basis.perspectivePlayerId
+    )
+      return;
     clearTimer();
     pending = null;
     publish({
@@ -139,11 +149,12 @@ export function createSourceLifecycle(options: {
     );
     recovered = false;
     const promise = new Promise<SubmitResult>((resolve, reject) => {
-      pending = { command, resolve, reject, accepted: false };
+      pending = { command, resolve, reject, acceptedVersion: null };
     });
     publish({
       ...state,
       request: {
+        clientActionId: command.clientActionId,
         interactionId,
         operation,
         phase: "awaiting-result",
@@ -171,7 +182,7 @@ export function createSourceLifecycle(options: {
     retry() {
       if (closed || !pending) return;
       try {
-        if (pending.accepted) options.recover();
+        if (pending.acceptedVersion !== null) options.recover();
         else options.send(pending.command);
       } catch (error) {
         fail(asError(error));
@@ -189,14 +200,7 @@ export function createSourceLifecycle(options: {
         fail(new Error("Gameplay session changed."));
         return;
       }
-      if (
-        context &&
-        !parsed.players.some((player) => player.playerId === context!.playerId)
-      ) {
-        fail(new Error("Gameplay seat is absent from session."));
-        return;
-      }
-      session = immutableCopy(parsed);
+      session ??= immutableCopy(parsed);
       // Hosts repeat initialization until ready; the first delivery wins.
       assetUrls ??= Object.fromEntries(
         Object.entries(assets ?? {}).map(([path, blob]) => [
@@ -225,11 +229,7 @@ export function createSourceLifecycle(options: {
         fail(new Error("Gameplay perspective changed."));
         return;
       }
-      if (
-        !session.players.some(
-          (player) => player.playerId === parsed.basis.perspectivePlayerId,
-        )
-      ) {
+      if (!parsed.players.includes(parsed.basis.perspectivePlayerId)) {
         fail(new Error("Gameplay seat is absent from session."));
         return;
       }
@@ -241,6 +241,18 @@ export function createSourceLifecycle(options: {
         recovered = false;
         context = { ...context, playerId: parsed.basis.perspectivePlayerId };
       }
+      if (!changedSeat && basis?.version === parsed.basis.version) {
+        if (store.get().connection === "recovering") {
+          publish({
+            ...store.get(),
+            snapshot: store.get().snapshot!,
+            connection: "ready",
+            failure: null,
+          });
+        }
+        finishBarrier();
+        return;
+      }
       const { basis: nextBasis, ...frame } = immutableCopy(
         withCardImageUrls(parsed, assetUrls),
       );
@@ -250,7 +262,24 @@ export function createSourceLifecycle(options: {
         request: changedSeat ? null : store.get().request,
         snapshot: Object.freeze({
           me: context.playerId,
-          players: session.players,
+          players: Object.freeze(
+            frame.players.map((playerId, index) => {
+              let summary = playerSummaries.get(playerId);
+              if (!summary) {
+                const metadata = session!.players.find(
+                  (player) => player.playerId === playerId,
+                );
+                summary = Object.freeze({
+                  playerId,
+                  displayName: metadata?.displayName ?? `Player ${index + 1}`,
+                  color: metadata?.color ?? playerSeatColor(index),
+                });
+                playerSummaries.set(playerId, summary);
+              }
+              return summary;
+            }),
+          ),
+          ...(frame.causedBy === undefined ? {} : { causedBy: frame.causedBy }),
           frame: Object.freeze(frame),
           version: basis.version,
         }),
@@ -264,7 +293,7 @@ export function createSourceLifecycle(options: {
       if (
         !pending ||
         result.clientActionId !== pending.command.clientActionId ||
-        pending.accepted
+        pending.acceptedVersion !== null
       )
         return;
       pending.resolve(
@@ -291,7 +320,7 @@ export function createSourceLifecycle(options: {
         });
         return;
       }
-      pending.accepted = true;
+      pending.acceptedVersion = result.version;
       recovered = false;
       const state = store.get();
       // A pending command was submitted from ready, so its snapshot exists.

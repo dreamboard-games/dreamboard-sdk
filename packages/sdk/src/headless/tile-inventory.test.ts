@@ -299,7 +299,7 @@ describe("projected tile inventory", () => {
       } else
         source.emit({
           ...snapshot,
-          version: change === "version" ? 2 : 1,
+          version: change === "version" || change === "restore" ? 2 : 1,
           me: change === "seat" ? "bob" : "alice",
         });
       stale();

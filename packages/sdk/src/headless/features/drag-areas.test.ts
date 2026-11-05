@@ -66,6 +66,7 @@ function setup(interactions = [discard, pass], selectionEnabled = false) {
     players: [{ playerId: "alice", displayName: "Alice" }],
     version: 1,
     frame: {
+      players: ["alice"],
       events: [],
       view: {},
       flow: {

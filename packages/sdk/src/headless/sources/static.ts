@@ -10,6 +10,7 @@ import type { GameSource, SourceSnapshot, SourceState } from "./types.js";
 export const SourceSnapshotSchema = z
   .object({
     me: z.string().min(1),
+    causedBy: z.string().min(1).optional(),
     players: z.array(PluginPlayerSummarySchema),
     frame: SeatFrameSchema,
     version: z.number().int().nonnegative(),

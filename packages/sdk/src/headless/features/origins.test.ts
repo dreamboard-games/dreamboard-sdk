@@ -26,6 +26,7 @@ function snapshot(
     ],
     version,
     frame: {
+      players: ["alice", "bob"],
       events: [],
       view: {},
       flow: {

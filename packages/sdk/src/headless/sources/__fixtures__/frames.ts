@@ -7,6 +7,7 @@ export const frame = (
   version = 1,
   playerId = "alice",
 ): PluginGameplayFrame => ({
+  players: ["alice", "bob"],
   basis: {
     sessionId: session.sessionId,
     version,

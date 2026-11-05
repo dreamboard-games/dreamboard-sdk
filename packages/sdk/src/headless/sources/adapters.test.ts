@@ -128,6 +128,7 @@ describe("iframe source", () => {
       type: "interaction.result",
       clientActionId: oldCommand.clientActionId,
       accepted: true,
+      version: 2,
     });
     expect(source.store.get().request?.phase).toBe("awaiting-result");
     receive({
@@ -223,6 +224,7 @@ describe("iframe source", () => {
       type: "interaction.result",
       clientActionId: command.clientActionId,
       accepted: true,
+      version: 2,
     });
     expect(await promise).toEqual({ accepted: true });
     vi.advanceTimersByTime(100);
@@ -341,6 +343,7 @@ describe("websocket source", () => {
       type: "interaction.result",
       clientActionId: command.clientActionId,
       accepted: true,
+      version: 2,
     });
     expect(await p).toEqual({ accepted: true });
     expect(source.store.get().request?.phase).toBe("awaiting-frame");
@@ -367,6 +370,7 @@ describe("websocket source", () => {
       type: "interaction.result",
       clientActionId: original.clientActionId,
       accepted: true,
+      version: 2,
     });
     await p;
     expect(source.store.get().request).toBeNull();

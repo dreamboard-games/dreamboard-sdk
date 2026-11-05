@@ -20,7 +20,7 @@ export interface PluginPlayerSummary {
 
 export interface PluginSessionDescriptor {
   readonly sessionId: string;
-  /** Turn order is the order of this array. */
+  /** Fixed display metadata; may omit seats. Frames own membership and turn order. */
   readonly players: readonly PluginPlayerSummary[];
   /**
    * Game image files by manifest path, such as `assets/cards/front.webp`.
@@ -88,6 +88,10 @@ export interface PluginGameplayFrame<
   Phase extends string = string,
   Interaction extends string = string,
 > {
+  /** Canonical player IDs in reducer seat/turn order. */
+  readonly players: readonly PlayerId[];
+  /** Client action that caused this committed frame, when known. */
+  readonly causedBy?: string;
   /** Latest committed display-event batch admitted for this seat. Reading a snapshot does not replay notifications. */
   readonly events: readonly ProjectedGameEvent[];
   readonly basis: GameplayBasis;

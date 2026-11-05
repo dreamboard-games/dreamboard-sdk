@@ -31,6 +31,7 @@ export function createReducerScenarioRunner(
         });
         const flow = readFlowState(state);
         const materialized = materializePluginGameplayFrame({
+          players: options.playerIds,
           currentPhase: flow.currentPhase,
           activePlayers: flow.activePlayers,
           dynamicProjection,
