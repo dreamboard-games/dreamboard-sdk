@@ -110,9 +110,17 @@ const {
   }),
   debug: false,
 });
-function Card({ id, draggable }: { id: string; draggable: boolean }) {
+function Card({
+  id,
+  draggable,
+}: {
+  id: string;
+  draggable: boolean | "visual";
+}) {
   const card = useGame((game) => game.cards.find(id));
-  const gesture = useCardGesture(id, { drag: draggable ? {} : false });
+  const gesture = useCardGesture(id, {
+    drag: draggable === "visual" ? "visual" : draggable ? {} : false,
+  });
   return card ? (
     <button
       {...card.getProps()}
@@ -160,7 +168,7 @@ function Drafts() {
   );
 }
 
-async function mount(draggable = true, row = false) {
+async function mount(draggable: boolean | "visual" = true, row = false) {
   const source = createTestSource(snapshot());
   const host = document.createElement("div");
   document.body.append(host);
@@ -257,6 +265,63 @@ test("a mouse drag keeps capture on the pressed control", async () => {
   expect(card.hasPointerCapture(1)).toBe(true);
   expect(document.body.hasPointerCapture(1)).toBe(false);
 });
+
+test.each(["mouse", "touch", "pen"] as const)(
+  "a visual %s drag never admits targets or submits even over an eligible action",
+  async (pointerType) => {
+    const { get, source } = await mount("visual");
+    const before = source.store.get().snapshot;
+    hitTesting(() => get("discard"));
+    const at = { pointerType, x: 10, y: 50 };
+    await down(get("red")!, at);
+    await move({ ...at, y: 20 });
+    expect(get("overlay")?.dataset.card).toBe("red");
+    expect(get("discard")!.getAttribute("data-drop-target")).not.toBe("true");
+    expect(get("discard")!.hasAttribute("data-drop-over")).toBe(false);
+    await up({ ...at, y: 20 });
+    await click(get("red")!);
+    expect(get("overlay")).toBeNull();
+    expect(get("drafts")!.textContent).toBe("{}");
+    expect(source.submissions).toEqual([]);
+    expect(source.store.get().snapshot).toBe(before);
+  },
+);
+
+test.each(["frame", "cancel", "Escape", "blur"] as const)(
+  "a visual pickup without available actions returns on %s",
+  async (ending) => {
+    const { get, source } = await mount("visual");
+    const initial = snapshot(2);
+    const waiting: SourceSnapshot = {
+      ...initial,
+      frame: {
+        ...initial.frame,
+        flow: { ...initial.frame.flow, activePlayers: [] },
+        availableInteractions: [],
+        zones: {
+          hand: {
+            alice: { ...initial.frame.zones.hand.alice, playableByCardId: {} },
+          },
+        },
+      },
+    };
+    await act(async () => source.emit(waiting));
+    const at = { pointerType: "mouse", x: 10, y: 50 } as const;
+    await down(get("red")!, at);
+    await move({ ...at, y: 20 });
+    expect(get("overlay")).not.toBeNull();
+    await act(async () => {
+      if (ending === "frame") source.emit(snapshot(3));
+      else if (ending === "Escape")
+        window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+      else if (ending === "blur") window.dispatchEvent(new Event("blur"));
+      else window.dispatchEvent(pointer("pointercancel", at));
+    });
+    expect(get("overlay")).toBeNull();
+    await up(at);
+    expect(source.submissions).toEqual([]);
+  },
+);
 
 test.each(["up", "cancel", "Escape", "blur", "unmount"] as const)(
   "an accepted touch drag releases its persistent capture on %s",
