@@ -59,7 +59,8 @@ export interface SelectionOptions<Value> {
 
 /** Inspection stays enabled when this control does not support dragging. */
 export interface CardGestureOptions<Game> {
-  readonly drag: false | TargetOptions<Game>;
+  /** "visual" picks up one card without targets, interaction drafts or submissions. Release returns it. */
+  readonly drag: false | "visual" | TargetOptions<Game>;
 }
 
 /** An area that runs this interaction with whichever card is dropped on it. */
@@ -272,7 +273,7 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
     ): CardGesture {
       const session = useGestureSession();
       const control = `${session.id}${useId()}`;
-      const routes = options.drag as false | RuntimeTargetOptions;
+      const routes = options.drag as false | "visual" | RuntimeTargetOptions;
       const latestRoutes = useRef(routes);
       useLayoutEffect(() => {
         latestRoutes.current = routes;
@@ -281,10 +282,11 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
         () => session.registerControl(control, () => latestRoutes.current),
         [session, control],
       );
-      const canDrag = useGame(
-        (snapshot) =>
-          routes !== false &&
-          (dragOf(snapshot)?.getCanDrag(cardId, routes) ?? false),
+      const canDrag = useGame((snapshot) =>
+        routes === "visual"
+          ? !!snapshot.cards.find(cardId)
+          : routes !== false &&
+            (dragOf(snapshot)?.getCanDrag(cardId, routes) ?? false),
       );
       const dragging = useGestureState(
         session,

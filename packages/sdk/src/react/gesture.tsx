@@ -311,13 +311,17 @@ export function createGestureSession(game: GestureGame) {
   const rows = new Map<string, CardRowLookup>();
   // A slide can end on a control other than the pressed one; it drags with
   // that mounted control's own routes.
-  const controls = new Map<string, () => false | RuntimeTargetOptions>();
+  const controls = new Map<
+    string,
+    () => false | "visual" | RuntimeTargetOptions
+  >();
   const followers = new Set<(point: Point) => void>();
   let press: {
     readonly recognizer: GestureRecognizer;
     readonly pointerType: string;
     readonly detach: () => void;
     dragging: boolean;
+    visual: boolean;
     area: string | null;
     target: RuntimeDropTarget | null;
   } | null = null;
@@ -433,7 +437,8 @@ export function createGestureSession(game: GestureGame) {
       set({ activeTarget: hover ?? focused, inspect: null });
     }
     // New frames, seats and sources cancel the semantic drag; end the press with it.
-    if (press?.dragging && !game.drag?.active) press.recognizer.cancel();
+    if (press?.dragging && !press.visual && !game.drag?.active)
+      press.recognizer.cancel();
     const drag = store.get().drag;
     if (
       drag?.settling &&
@@ -543,6 +548,16 @@ export function createGestureSession(game: GestureGame) {
     const drag = store.get().drag;
     if (!press?.dragging || !drag) return;
     pointer = at;
+    if (press.visual) {
+      draw(
+        {
+          x: at.x - drag.grab.x + drag.size.width / 2,
+          y: at.y - drag.grab.y + drag.size.height / 2,
+        },
+        false,
+      );
+      return;
+    }
     const ids = [...areas.keys()];
     const found = ids.map((id) => {
       const target = resolveDropArea(game.drag, areas.get(id)!(at));
@@ -647,7 +662,8 @@ export function createGestureSession(game: GestureGame) {
       Math.hypot(lag.x, lag.y) * decay < 0.5
         ? { x: 0, y: 0 }
         : { x: lag.x * decay, y: lag.y * decay };
-    const scrolling = press?.dragging ? autoScroll(elapsed / 16.7) : false;
+    const scrolling =
+      press?.dragging && !press.visual ? autoScroll(elapsed / 16.7) : false;
     if (scrolling || remeasure) {
       remeasure = false;
       retarget(pointer);
@@ -796,7 +812,7 @@ export function createGestureSession(game: GestureGame) {
     event: globalThis.PointerEvent,
     cardId: string,
     element: Element,
-    options: false | RuntimeTargetOptions,
+    options: false | "visual" | RuntimeTargetOptions,
   ) {
     if (disposed || press || event.button !== 0) return;
     const pending = store.get().drag;
@@ -806,7 +822,7 @@ export function createGestureSession(game: GestureGame) {
     let card: {
       cardId: string;
       element: Element;
-      options: false | RuntimeTargetOptions;
+      options: false | "visual" | RuntimeTargetOptions;
     } | null = { cardId, element, options };
     const row =
       event.pointerType === "mouse" ? null : element.closest("[data-card-row]");
@@ -843,8 +859,15 @@ export function createGestureSession(game: GestureGame) {
         dragStart(origin) {
           if (!card) return false;
           const { cardId, element, options } = card;
-          if (options === false || !game.drag?.begin(cardId, options))
+          const visual = options === "visual";
+          if (
+            options === false ||
+            (visual
+              ? !game.cards.find(cardId)
+              : !game.drag?.begin(cardId, options))
+          )
             return false;
+          press!.visual = visual;
           // Browse can unmount the implicitly captured touch/pen target.
           // Keep its events in this document, including inside an iframe.
           if (event.pointerType !== "mouse")
@@ -868,7 +891,9 @@ export function createGestureSession(game: GestureGame) {
           offset = { x: goal.x - origin.x, y: goal.y - origin.y };
           set({
             drag: {
-              cardIds: game.drag?.active?.cardIds ?? [cardId],
+              cardIds: visual
+                ? [cardId]
+                : (game.drag?.active?.cardIds ?? [cardId]),
               cardId,
               grab: { x: origin.x - box.left, y: origin.y - box.top },
               size: { width: box.width, height: box.height },
@@ -888,6 +913,7 @@ export function createGestureSession(game: GestureGame) {
         browse: scrubTo,
         end(kind, at) {
           const dragging = press!.dragging;
+          const visual = press!.visual;
           const pointerType = press!.pointerType;
           // A finger lifted from a scrub chooses the card under it, as a tap would.
           const chosen = scrubbing && kind === "browse" ? card?.element : null;
@@ -903,6 +929,10 @@ export function createGestureSession(game: GestureGame) {
             // A rejected drag or inspection-only mouse press may browse to a
             // different face. Its final physical point becomes the canonical target.
             if (kind === "browse" && pointerType === "mouse") hoverAt(at);
+            return;
+          }
+          if (visual) {
+            set({ drag: null });
             return;
           }
           const before = game.request;
@@ -950,13 +980,14 @@ export function createGestureSession(game: GestureGame) {
         },
         cancel(kind) {
           const dragging = press!.dragging;
+          const visual = press!.visual;
           release();
           if (scrubbing) activate(null);
           // Cancellation does not turn a non-tap into a selection on release.
           if (kind !== "tap") swallowNextClick();
           if (kind === "hold") set({ inspect: null });
           if (dragging) {
-            game.drag?.cancel();
+            if (!visual) game.drag?.cancel();
             set({ drag: null });
           }
         },
@@ -986,6 +1017,7 @@ export function createGestureSession(game: GestureGame) {
       recognizer,
       pointerType: event.pointerType,
       dragging: false,
+      visual: false,
       area: null,
       target: null,
       detach() {
@@ -1003,7 +1035,7 @@ export function createGestureSession(game: GestureGame) {
   function cardProps(
     cardId: string,
     control: string,
-    options: false | RuntimeTargetOptions,
+    options: false | "visual" | RuntimeTargetOptions,
     flags: { dragging: boolean; inspecting: "hold" | "hover" | null },
   ): CardGestureProps {
     return {
@@ -1141,7 +1173,10 @@ export function createGestureSession(game: GestureGame) {
       };
     },
     /** `read` returns a mounted card control's current drag routes. */
-    registerControl(control: string, read: () => false | RuntimeTargetOptions) {
+    registerControl(
+      control: string,
+      read: () => false | "visual" | RuntimeTargetOptions,
+    ) {
       controls.set(control, read);
       return () => {
         controls.delete(control);

@@ -350,6 +350,13 @@ pnpm add @dreamboard-games/sdk react@^19 react-dom@^19 @tanstack/react-store@0.1
 install the React adapter. The `/react` entry delegates selectors to that package;
 the application bundler resolves its supported React subscription dependencies.
 
+`useCardGesture(cardId, { drag: "visual" })` picks up a single visible card
+without activating interactions, offering drop targets or submitting commands.
+Release returns the card through the renderer's existing overlay animation.
+New snapshots, Escape and pointer cancellation end the pickup. The authored UI
+chooses where this mode applies, for example to its own hand outside its turn;
+it does not enable hand sorting or change gameplay permissions.
+
 `/react` classifies each card press as a tap, hold, drag or browse. Enable
 `dragFeature`, export `useCardGesture`, `useCardRow`, `useActiveCard`, `useDropArea` and `useDragOverlay` from the
 binding, and use the copied Hand and BoardTargets components or your own renderer.
