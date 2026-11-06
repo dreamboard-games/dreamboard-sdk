@@ -1,9 +1,17 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "dreamboard",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Find synced Dreamboard projects, edit card data, and customise game code.",
   "author": { "name": "Dreamboard Games" },
   "homepage": "https://dreamboard.games",
-  "repository": "https://github.com/dreamboard-games/dreamboard-sdk"
+  "repository": "https://github.com/dreamboard-games/dreamboard-sdk",
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "logo": "./assets/icon.png",
+        "composerIcon": "./assets/icon.png"
+      }
+    }
+  }
 }
