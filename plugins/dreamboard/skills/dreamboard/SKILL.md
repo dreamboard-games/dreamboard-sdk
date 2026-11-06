@@ -52,12 +52,12 @@ Empty cells preserve existing values or defaults. Cards absent from the table
 stay. Duplicate or ambiguous names must be resolved before applying. Image
 columns are not supported.
 
-Keep the request ID. If a response is lost, use `get_edit_request` or retry with
-exactly the same request ID, revision and payload. Never invent a replacement ID
-just because a call timed out. A stored result remains authoritative even if
-newer project revisions exist. On a stale revision, read again and reconcile the
-intended changes before submitting a new request. Do not automatically overwrite
-concurrent edits.
+Keep the request ID. If a response is lost, retry `update_cards` with exactly
+the same request ID, revision and payload to get its stored result. Never
+invent a replacement ID just because a call timed out. A stored result remains
+authoritative even if newer project revisions exist. On a stale revision, read
+again and reconcile the intended changes before submitting a new request. Do not
+automatically overwrite concurrent edits.
 
 Use `restore_card_edit` only when the user asks to revert an applied edit. Supply
 the original request ID and the expected saved revision. Recovery writes a new
