@@ -92,8 +92,10 @@ claude plugin validate plugins/dreamboard
 claude plugin validate .claude-plugin/marketplace.json
 ```
 
-Validate `plugin.json` and `mcp.json` against their declared Agent Plugins JSON
-schemas. Check all three catalog paths, then test sign-in and tool use in each
+Validate `plugin.json` against its declared Agent Plugins schema. For `mcp.json`,
+the generic 1.0.0 schema rejects the per-server `extensions` field that OpenAI
+uses for OAuth. Verify its DCR settings in the OpenAI connection panel.
+Check all three catalog paths, then test sign-in and tool use in each
 host against a deployed test backend before release. Local manifest validation
 does not prove OAuth or Git permissions.
 
