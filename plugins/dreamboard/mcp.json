@@ -3,7 +3,16 @@
   "mcpServers": {
     "dreamboard": {
       "type": "streamable-http",
-      "url": "https://api.dreamboard.games/mcp"
+      "url": "https://api.dreamboard.games/mcp",
+      "extensions": {
+        "com.openai": {
+          "auth": {
+            "type": "oauth",
+            "client": { "mode": "dcr" },
+            "baseScopes": ["dreamboard"]
+          }
+        }
+      }
     }
   }
 }
