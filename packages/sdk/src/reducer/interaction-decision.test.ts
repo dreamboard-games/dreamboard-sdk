@@ -10,7 +10,8 @@ import { InteractionSteps } from "./authoring/steps";
 
 import { createReducerTestingRuntime } from "../testing/reducer-runtime.js";
 import { createHash } from "node:crypto";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
+import * as collectorDomains from "./bundle/trusted/collector-domains";
 import { z } from "zod";
 import { cardInput, cardTarget, choiceTarget, formInput } from "./inputs";
 import { many } from "../reducer";
@@ -1801,6 +1802,64 @@ describe("trusted interaction decision pipeline", () => {
       valid: false,
       errorCode: "CARD_TYPE_NOT_ALLOWED",
     });
+  });
+
+  test("reuses card input domains within a projection while isolating seats and subsequent state", async () => {
+    const bundle = makeBundle();
+    const state = (
+      await bundle.initialize({
+        table: RuntimeJsonSchema.parse(createTable()),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
+    const collect = vi.spyOn(collectorDomains, "collectInteractionInputs");
+    try {
+      const project = () =>
+        bundle.project({
+          referenceBasis: testReferenceBasis,
+          state,
+          playerIds: ["player-1", "player-2"],
+        });
+      const projection = project();
+      const cardCalls = collect.mock.calls.filter(
+        ([interaction]) => interaction.presentation?.label === "Play spell",
+      );
+      expect(cardCalls.map(([, , playerId]) => playerId).sort()).toEqual([
+        "player-1",
+        "player-2",
+      ]);
+      const bid = (result: typeof projection, playerId: string) =>
+        hydrateRefs(
+          result.interactionsByRef,
+          result.seats[playerId].availableInteractionRefs,
+        ).find((descriptor) => descriptor.interactionId === "bidGold");
+      expect(bid(projection, "player-1")).toMatchObject({
+        inputs: [{ domain: { max: 1 } }],
+      });
+      expect(bid(projection, "player-2")).toMatchObject({
+        inputs: [{ domain: { max: 5 } }],
+      });
+      const table = createTable({ player1Gold: 3 });
+      state.domain.table = RuntimeJsonSchema.parse(table);
+      collect.mockClear();
+      const updated = project();
+      expect(bid(updated, "player-1")).toMatchObject({
+        inputs: [{ domain: { max: 3 } }],
+      });
+      expect(bid(updated, "player-2")).toMatchObject({
+        inputs: [{ domain: { max: 5 } }],
+      });
+      expect(
+        collect.mock.calls.filter(
+          ([interaction]) => interaction.presentation?.label === "Play spell",
+        ),
+      ).toHaveLength(2);
+      expect(bid(projection, "player-1")).toMatchObject({
+        inputs: [{ domain: { max: 1 } }],
+      });
+    } finally {
+      collect.mockRestore();
+    }
   });
 
   test("domain-aware form inputs project server-authored input domains", async () => {

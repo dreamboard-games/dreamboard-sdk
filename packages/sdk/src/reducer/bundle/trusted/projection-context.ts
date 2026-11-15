@@ -5,12 +5,18 @@ import type {
   ZoneDefinitions,
 } from "../../model";
 
+import type { InteractionInputDescriptorShape } from "./interaction-types";
+
 export type ProjectionContext<
   State extends { table: RuntimeTableRecord },
   Definitions extends ZoneDefinitions,
 > = {
   readonly domainState: State;
   readonly q: TableQueriesOfState<State, Definitions>;
+  readonly inputDomains: WeakMap<
+    object,
+    Map<string, readonly InteractionInputDescriptorShape[]>
+  >;
 };
 
 export function createProjectionContext<
@@ -24,5 +30,6 @@ export function createProjectionContext<
   return {
     domainState: options.domainState,
     q,
+    inputDomains: new WeakMap(),
   };
 }
