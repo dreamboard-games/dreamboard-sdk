@@ -332,9 +332,10 @@ describe("committed interaction steps", () => {
       [playerOne, "a"],
       [playerTwo, "b"],
     ] as const) {
-      const descriptor = projection.seats[playerId].availableInteractionRefs
-        .map((ref) => projection.interactionsByRef[ref])
-        .find((candidate) => candidate.interactionId === "choose");
+      const refs = projection.seats[playerId]?.availableInteractionRefs ?? [];
+      const descriptor = refs
+        .map((ref) => projection.interactionsByRef?.[ref])
+        .find((candidate) => candidate?.interactionId === "choose");
       expect(descriptor).toMatchObject({
         step: { index: 1, selected: { first: value } },
         inputs: [
