@@ -10,6 +10,7 @@ import { frame, session } from "./__fixtures__/frames.js";
 
 import {
   ClientGameplayFrameSchema,
+  GAMEPLAY_WIRE_PROTOCOL_VERSION,
   type ClientGameplayFrame,
 } from "../../shared/protocol/gameplay-wire.js";
 
@@ -44,15 +45,26 @@ class TestSocket extends EventTarget {
 }
 const accepted = {
   type: "auth.accepted",
+  protocolVersion: GAMEPLAY_WIRE_PROTOCOL_VERSION,
   expiresAt: "2099-01-01T00:00:00.000Z",
 };
-const snapshot = (version = 1) => ({
-  type: "session.snapshot",
-  frame: frame(version),
-  history: { entries: [] },
-  lifecycle: { status: "active" },
-});
-async function socketSource() {
+const snapshot = (version = 1) => {
+  const expanded = frame(version);
+  return {
+    type: "session.snapshot",
+    frame: {
+      players: expanded.players,
+      basis: expanded.basis,
+      events: expanded.events,
+      view: expanded.view,
+      flow: expanded.flow,
+      interactionsByRef: {},
+      availableInteractionRefs: [],
+      zones: {},
+    },
+  };
+};
+async function socketSource(auth: unknown = accepted) {
   vi.stubGlobal("WebSocket", TestSocket);
   const source = hostSource({
     url: "wss://host/gameplay",
@@ -64,7 +76,7 @@ async function socketSource() {
   await Promise.resolve();
   const socket = TestSocket.instances.at(-1)!;
   socket.open();
-  socket.receive(accepted);
+  socket.receive(auth);
   socket.receive(snapshot());
   return { source, socket };
 }
@@ -334,6 +346,7 @@ describe("websocket source", () => {
     const { source, socket } = await socketSource();
     expect(socket.sent[0]).toEqual({
       type: "auth.connect",
+      protocolVersion: GAMEPLAY_WIRE_PROTOCOL_VERSION,
       credential: { kind: "demo", secret: "fixture" },
       sessionId: session.sessionId,
       playerId: "alice",
@@ -368,11 +381,13 @@ describe("websocket source", () => {
     socket.receive(snapshot(99));
     expect(source.store.get().snapshot?.version).toBe(1);
     replacement.receive(snapshot(2));
+    const recoveredSnapshot = source.store.get().snapshot;
     replacement.receive({
       ...snapshot(2),
       acknowledgedClientActionId: original.clientActionId,
     });
     await p;
+    expect(source.store.get().snapshot).toBe(recoveredSnapshot);
     expect(source.store.get().request).toBeNull();
     source.dispose();
   });
@@ -494,3 +509,134 @@ it("preserves a startup credential failure before any snapshot or request", asyn
   });
   expect(source.store.get().failure).toBe(failure);
 });
+
+it.each([undefined, 1, 3])(
+  "rejects hosted protocol version %s before delivering a snapshot",
+  async (protocolVersion) => {
+    const { source, socket } = await socketSource({
+      ...accepted,
+      protocolVersion,
+    });
+    expect(source.store.get().connection).toBe("failed");
+    expect(source.store.get().snapshot).toBeNull();
+    expect(socket.sent).toHaveLength(1);
+  },
+);
+
+it("rejects expanded legacy snapshots after a current-version handshake", async () => {
+  const { source, socket } = await socketSource();
+  const before = source.store.get().snapshot;
+  socket.receive({ type: "session.snapshot", frame: frame(2) });
+  expect(source.store.get().connection).toBe("failed");
+  expect(source.store.get().snapshot).toBe(before);
+});
+
+it("hydrates compact descriptors before publishing and rejects malformed snapshots before acknowledgment", async () => {
+  const { source, socket } = await socketSource();
+  const descriptor = {
+    kind: "action",
+    phaseName: "play",
+    interactionKey: "play.move",
+    interactionId: "move",
+    label: "Move",
+    commit: { mode: "manual" },
+    availability: { status: "available" },
+    inputs: [],
+  };
+  const compact = {
+    ...snapshot(2),
+    frame: {
+      ...snapshot(2).frame,
+      interactionsByRef: { move: descriptor },
+      availableInteractionRefs: ["move"],
+      zones: {
+        hand: {
+          alice: {
+            tiles: [],
+            cardIds: ["card-1"],
+            cardViewsById: {},
+            cardBacksById: {},
+            playableByCardId: { "card-1": ["move"] },
+          },
+        },
+      },
+    },
+  };
+  socket.receive(compact);
+  const before = source.store.get().snapshot!;
+  expect(before.frame.availableInteractions).toEqual([descriptor]);
+  expect(before.frame.zones.hand.alice.playableByCardId["card-1"][0]).toBe(
+    before.frame.availableInteractions[0],
+  );
+  const pending = source.submit("move", {}).catch((error: unknown) => error);
+  const command = socket.sent.at(-1)!;
+  if (command.type !== "interaction.submit")
+    throw new Error("Expected submit command");
+  socket.receive({
+    ...compact,
+    acknowledgedClientActionId: command.clientActionId,
+    frame: { ...compact.frame, interactionsByRef: {} },
+  });
+  expect(await pending).toBeInstanceOf(Error);
+  expect(source.store.get().connection).toBe("failed");
+  expect(source.store.get().snapshot).toBe(before);
+});
+
+it.each([undefined, {}, { "assets/cards/spell.webp": new Blob(["front"]) }])(
+  "iframe ingress rejects malformed complete card views with assets %j",
+  (assets) => {
+    for (const card of [
+      { frontImage: "assets/cards/spell.webp" },
+      JSON.stringify({ frontImage: "assets/cards/spell.webp" }),
+      { id: "card-1", cardType: "spell", properties: {}, frontImage: 42 },
+    ]) {
+      const target = new EventTarget();
+      const parent = { postMessage: vi.fn() };
+      vi.stubGlobal("window", Object.assign(target, { parent }));
+      const source = iframeSource();
+      let sequence = 0;
+      const receive = (payload: unknown) =>
+        target.dispatchEvent(
+          Object.assign(new Event("message"), {
+            source: parent,
+            origin: "https://host",
+            data: {
+              protocol: DREAMBOARD_PLUGIN_PROTOCOL,
+              version: DREAMBOARD_PLUGIN_PROTOCOL_VERSION,
+              channelId: "channel",
+              sequence: ++sequence,
+              payload,
+            },
+          }),
+        );
+      receive({ type: "runtime.init", session: { ...session, assets } });
+      receive({ type: "gameplay.frame", frame: frame() });
+      const before = source.store.get().snapshot;
+      parent.postMessage.mockClear();
+      receive({
+        type: "gameplay.frame",
+        frame: {
+          ...frame(2),
+          zones: {
+            hand: {
+              alice: {
+                tiles: [],
+                cardIds: ["card-1"],
+                cardViewsById: { "card-1": card },
+                cardBacksById: {},
+                playableByCardId: {},
+              },
+            },
+          },
+        },
+      });
+      expect(source.store.get().connection).toBe("failed");
+      expect(source.store.get().snapshot).toBe(before);
+      expect(parent.postMessage).toHaveBeenCalledOnce();
+      expect(parent.postMessage.mock.calls[0][0]).toMatchObject({
+        payload: { type: "runtime.error" },
+      });
+      source.dispose();
+    }
+  },
+);

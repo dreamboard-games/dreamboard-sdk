@@ -8,8 +8,13 @@ import type {
   PlayerId,
   PluginGameplayFrame,
   ReducerSeatProjectionBundle,
-  ZoneHandlesSnapshot,
 } from "./frame.js";
+import {
+  hydrateCompactGameplayFrame,
+  visitInteractionRefs,
+  type CompactGameplayFrame,
+} from "./compact-frame.js";
+import type * as Wire from "../runtime-types.js";
 import type { RuntimeJson } from "../runtime-json.js";
 
 export interface MaterializePluginGameplayFrameInput {
@@ -31,6 +36,20 @@ export function materializePluginGameplayFrame(
   const dynamicProjection = SeatProjectionBundleSchema.parse(
     canonicalizePluginRuntimeJson(input.dynamicProjection),
   );
+  return PluginGameplayFrameSchema.parse(
+    hydrateCompactGameplayFrame(
+      materializeCompactGameplayFrame({ ...input, dynamicProjection }),
+    ),
+  );
+}
+
+/** Selects one seat from an already schema-validated all-seat projection. */
+export function materializeCompactGameplayFrame(
+  input: Omit<MaterializePluginGameplayFrameInput, "dynamicProjection"> & {
+    readonly dynamicProjection: Wire.SeatProjectionBundle;
+  },
+): CompactGameplayFrame {
+  const { dynamicProjection } = input;
   if (
     dynamicProjection.referenceBasis.sessionId !== input.sessionId ||
     dynamicProjection.referenceBasis.version !== input.version
@@ -40,18 +59,19 @@ export function materializePluginGameplayFrame(
     );
   }
   const registry = dynamicProjection.interactionsByRef ?? {};
-  const seat = dynamicProjection.seats[input.perspectivePlayerId] ?? null;
-
-  const availableInteractions =
-    seat == null
-      ? []
-      : hydrateInteractionRefs(
-          registry,
-          seat.availableInteractionRefs ?? [],
-          "availableInteractionRefs",
-        );
-  const zones =
-    seat?.zones == null ? {} : hydrateZones(registry, seat.zones, "zones");
+  const seat = dynamicProjection.seats[input.perspectivePlayerId];
+  const availableInteractionRefs = seat?.availableInteractionRefs ?? [];
+  const zones = seat?.zones ?? {};
+  const selected = new Map<string, InteractionDescriptor>();
+  visitInteractionRefs({ availableInteractionRefs, zones }, (ref, path) => {
+    if (selected.has(ref)) return;
+    if (!Object.hasOwn(registry, ref)) {
+      throw new Error(
+        `Seat projection ${path.join(".")} references '${ref}', which is missing from interactionsByRef.`,
+      );
+    }
+    selected.set(ref, registry[ref]);
+  });
 
   const frame = {
     players: input.players,
@@ -69,11 +89,12 @@ export function materializePluginGameplayFrame(
       activePlayers: [...input.activePlayers],
       simultaneousPhase: dynamicProjection.simultaneousPhase ?? null,
     },
-    availableInteractions,
+    interactionsByRef: Object.fromEntries(selected),
+    availableInteractionRefs,
     zones,
-  } satisfies PluginGameplayFrame;
+  } satisfies CompactGameplayFrame;
 
-  return PluginGameplayFrameSchema.parse(frame);
+  return frame;
 }
 
 function materializeView(
@@ -87,54 +108,4 @@ function materializeView(
   if (parts.length === 0) return null;
   // Admitting schemas guarantee records and reject authored `boards` fields.
   return Object.assign({}, ...parts) as Record<string, RuntimeJson>;
-}
-
-function hydrateZones(
-  registry: Readonly<Record<string, InteractionDescriptor>>,
-  value: NonNullable<ReducerSeatProjectionBundle["seats"][string]["zones"]>,
-  path: string,
-): Record<string, Record<string, ZoneHandlesSnapshot>> {
-  return Object.fromEntries(
-    Object.entries(value).map(([zoneId, hosts]) => [
-      zoneId,
-      Object.fromEntries(
-        Object.entries(hosts).map(([hostId, zone]) => [
-          hostId,
-          {
-            tiles: zone.tiles,
-            cardIds: zone.cardIds,
-            cardViewsById: zone.cardViewsById,
-            cardBacksById: zone.cardBacksById,
-            playableByCardId: Object.fromEntries(
-              Object.entries(zone.playableByCardId).map(([cardId, refs]) => [
-                cardId,
-                hydrateInteractionRefs(
-                  registry,
-                  refs,
-                  `${path}.${zoneId}.${hostId}.playableByCardId.${cardId}`,
-                ),
-              ]),
-            ),
-            ...(zone.shuffled ? { shuffled: true as const } : {}),
-          },
-        ]),
-      ),
-    ]),
-  );
-}
-
-function hydrateInteractionRefs(
-  registry: Readonly<Record<string, InteractionDescriptor>>,
-  value: readonly string[],
-  path: string,
-): InteractionDescriptor[] {
-  return value.map((ref, index) => {
-    const descriptor = registry[ref];
-    if (!descriptor) {
-      throw new Error(
-        `Seat projection ${path}[${index}] references '${ref}', which is missing from interactionsByRef.`,
-      );
-    }
-    return descriptor;
-  });
 }

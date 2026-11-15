@@ -3,9 +3,11 @@ import {
   ClientGameplayFrameSchema,
   ServerGameplayFrameSchema,
   GameplayCloseCode,
+  GAMEPLAY_WIRE_PROTOCOL_VERSION,
   type ClientGameplayFrame,
   type GameplayCredential,
 } from "../../shared/protocol/gameplay-wire.js";
+import { hydrateCompactGameplayFrame } from "../../shared/protocol/compact-frame.js";
 import { createSourceLifecycle } from "./lifecycle.js";
 import type { CommandSource, SourceCommand } from "./types.js";
 
@@ -99,6 +101,7 @@ export function hostSource(options: {
         try {
           send({
             type: "auth.connect",
+            protocolVersion: GAMEPLAY_WIRE_PROTOCOL_VERSION,
             credential,
             sessionId,
             playerId,
@@ -171,7 +174,10 @@ export function hostSource(options: {
             clearTimeout(snapshotTimer);
             snapshotTimer = undefined;
             reconnects = 0;
-            lifecycle.frame(frame.frame, frame.acknowledgedClientActionId);
+            lifecycle.frame(
+              hydrateCompactGameplayFrame(frame.frame),
+              frame.acknowledgedClientActionId,
+            );
           } else if (frame.type === "interaction.result")
             lifecycle.result(frame);
           else lifecycle.fail(new Error(frame.message));
