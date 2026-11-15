@@ -302,6 +302,54 @@ describe("committed interaction steps", () => {
     ).toBe(false);
   });
 
+  test("projects independent multistep domains for different seats and saved prefixes", async () => {
+    const { bundle, initialized } = await fixture();
+    let state = initialized.state;
+    for (const [playerId, value] of [
+      [playerOne, "a"],
+      [playerTwo, "b"],
+    ] as const) {
+      const result = await bundle.dispatch({
+        referenceBasis: testReferenceBasis,
+        state,
+        input: {
+          basis: testGameplayBasis(playerId),
+          kind: "interaction",
+          playerId,
+          interactionId: "choose",
+          params: { first: value },
+        },
+      });
+      if (result.kind !== "accept") throw new Error("first step rejected");
+      state = result.state;
+    }
+    const projection = bundle.project({
+      referenceBasis: testReferenceBasis,
+      state,
+      playerIds: [playerOne, playerTwo],
+    });
+    for (const [playerId, value] of [
+      [playerOne, "a"],
+      [playerTwo, "b"],
+    ] as const) {
+      const refs = projection.seats[playerId]?.availableInteractionRefs ?? [];
+      const descriptor = refs
+        .map((ref) => projection.interactionsByRef?.[ref])
+        .find((candidate) => candidate?.interactionId === "choose");
+      expect(descriptor).toMatchObject({
+        step: { index: 1, selected: { first: value } },
+        inputs: [
+          {
+            key: "second",
+            domain: {
+              choices: [{ value, label: value }],
+            },
+          },
+        ],
+      });
+    }
+  });
+
   test("preserves the pre-final prefix and RNG when authored reduction rejects", async () => {
     const { bundle, initialized } = await fixture({ rejectFinal: true });
     const first = await bundle.dispatch({

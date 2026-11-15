@@ -15,6 +15,7 @@ import {
 import { collectInteractionInputs } from "./collector-domains";
 import type {
   InteractionDecision,
+  InteractionInputDescriptorShape,
   InteractionAvailabilityShape,
   InteractionDescriptorShape,
   TrustedInteractionDescriptorShape,
@@ -292,15 +293,32 @@ export function buildInteractionDescriptor<
 
   const shouldMaterializeInputDomains =
     decision.available || decision.code === FrameworkErrorCodes.NO_LEGAL_INPUT;
-  const inputs = shouldMaterializeInputDomains
-    ? enrichResourceInputPresentation(
+  let inputs: readonly InteractionInputDescriptorShape[] = [];
+  if (shouldMaterializeInputDomains) {
+    // Only domains are shared: card-specific eligibility and satisfiability
+    // remain part of each decision. Step prefixes have their own object identity.
+    const cache = options.projection?.inputDomains;
+    let playerInputs = cache?.get(projectedInteraction);
+    const cached = playerInputs?.get(playerId);
+    if (cached) {
+      inputs = cached;
+    } else {
+      inputs = enrichResourceInputPresentation(
         collectInteractionInputs(projectedInteraction, domainState, playerId, {
           queries,
           definitions: scope.manifest,
         }),
         scope.manifest,
-      )
-    : [];
+      );
+      if (cache) {
+        if (!playerInputs) {
+          playerInputs = new Map();
+          cache.set(projectedInteraction, playerInputs);
+        }
+        playerInputs.set(playerId, inputs);
+      }
+    }
+  }
   const baseDescriptor = {
     phaseName,
     interactionKey: `${phaseName}.${interactionId}`,
