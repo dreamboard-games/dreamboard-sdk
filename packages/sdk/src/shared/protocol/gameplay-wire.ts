@@ -1,10 +1,14 @@
 import * as z from "zod";
 import {
   InteractionResultSchema,
-  PluginGameplayFrameSchema,
   SubmitInteractionCommandSchema,
   CancelInteractionCommandSchema,
 } from "./schema.js";
+import { CompactGameplayFrameSchema } from "./compact-frame.js";
+
+/** Hosted WebSocket contract; independent of the authored iframe protocol. */
+export const GAMEPLAY_WIRE_PROTOCOL_VERSION = 2;
+
 export const GameplayCloseCode = {
   GoingAway: 1001,
   CredentialExpired: 4000,
@@ -34,6 +38,7 @@ export const GameplayCredentialSchema = z.discriminatedUnion("kind", [
 export const AuthConnectFrameSchema = z
   .object({
     type: z.literal("auth.connect"),
+    protocolVersion: z.literal(GAMEPLAY_WIRE_PROTOCOL_VERSION),
     credential: GameplayCredentialSchema,
     sessionId: z.string().uuid(),
     playerId: z.string().min(1).max(128),
@@ -54,6 +59,7 @@ export const SessionResumeFrameSchema = z.object({
 
 export const AuthAcceptedFrameSchema = z.object({
   type: z.literal("auth.accepted"),
+  protocolVersion: z.literal(GAMEPLAY_WIRE_PROTOCOL_VERSION),
   expiresAt: z.string().datetime(),
 });
 
@@ -77,7 +83,7 @@ export const GameplayBackpressureFrameSchema = z.object({
 });
 export const SessionSnapshotFrameSchema = z.object({
   type: z.literal("session.snapshot"),
-  frame: PluginGameplayFrameSchema,
+  frame: CompactGameplayFrameSchema,
   acknowledgedClientActionId: z.string().min(1).optional(),
 });
 export const ClientGameplayFrameSchema = z.discriminatedUnion("type", [

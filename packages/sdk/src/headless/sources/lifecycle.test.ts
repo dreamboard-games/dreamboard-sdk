@@ -308,43 +308,6 @@ describe("source request lifecycle", () => {
     expect(revoke).toHaveBeenCalledExactlyOnceWith(view.frontImage);
     revoke.mockRestore();
   });
-  it.each([undefined, {}, { "assets/cards/spell.webp": new Blob(["front"]) }])(
-    "rejects malformed complete card views with assets %j",
-    (assets) => {
-      const x = createSourceLifecycle({
-        send: vi.fn(),
-        recover: vi.fn(),
-        close: vi.fn(),
-      });
-      x.session({
-        ...session,
-        assets,
-      });
-      for (const card of [
-        { frontImage: "assets/cards/spell.webp" },
-        JSON.stringify({ frontImage: "assets/cards/spell.webp" }),
-        { id: "card-1", cardType: "spell", properties: {}, frontImage: 42 },
-      ]) {
-        expect(() =>
-          x.frame({
-            ...frame(),
-            zones: {
-              hand: {
-                alice: {
-                  tiles: [],
-                  cardIds: ["card-1"],
-                  cardViewsById: { "card-1": card },
-                  cardBacksById: {},
-                  playableByCardId: {},
-                },
-              },
-            },
-          }),
-        ).toThrow();
-      }
-      x.source.dispose();
-    },
-  );
   it("static source is immutable and connection updates reuse frame", () => {
     const original = frame();
     const source = staticSource({

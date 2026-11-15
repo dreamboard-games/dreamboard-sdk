@@ -1,7 +1,6 @@
 import { playerSeatColor } from "../../shared/protocol/players.js";
 import { createStore } from "@tanstack/store";
 import {
-  PluginGameplayFrameSchema,
   PluginSessionDescriptorSchema,
   InteractionResultSchema,
   PluginToHostPayloadSchema,
@@ -186,9 +185,9 @@ export function createSourceLifecycle(options: {
         ]),
       );
     },
-    frame(value: unknown, acknowledgedClientActionId?: string) {
+    // Transport adapters admit frames before entering this shared lifecycle.
+    frame(parsed: PluginGameplayFrame, acknowledgedClientActionId?: string) {
       if (closed) return;
-      const parsed = PluginGameplayFrameSchema.parse(value);
       if (!session) {
         fail(new Error("Gameplay frame arrived before session metadata."));
         return;

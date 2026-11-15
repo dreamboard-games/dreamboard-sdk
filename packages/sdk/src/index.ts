@@ -92,6 +92,7 @@ export {
 export {
   type MaterializePluginGameplayFrameInput,
   materializePluginGameplayFrame,
+  materializeCompactGameplayFrame,
 } from "./shared/protocol/projection.js";
 export {
   GameEventDetailSchema,
@@ -127,6 +128,11 @@ export {
 
 export { RuntimeJsonSchema } from "./shared/runtime-json.js";
 export * from "./shared/protocol/gameplay-wire.js";
+export {
+  CompactGameplayFrameSchema,
+  hydrateCompactGameplayFrame,
+  type CompactGameplayFrame,
+} from "./shared/protocol/compact-frame.js";
 export { ViewCardSchema } from "./shared/domain/cards.js";
 export type { ViewCard } from "./shared/domain/cards.js";
 

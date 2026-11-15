@@ -524,6 +524,19 @@ and gameplay websocket schemas plus `materializePluginGameplayFrame` live at the
 root. Materialize the requested seat directly from its projection before publishing it;
 sources publish the canonical seat view and submit the exact frame basis.
 
+Hosted WebSockets require `GAMEPLAY_WIRE_PROTOCOL_VERSION` (2) in both
+`auth.connect` and `auth.accepted`. Their `session.snapshot.frame` is a
+self-contained `CompactGameplayFrame`: `interactionsByRef` contains exactly the
+descriptors referenced by that seat's `availableInteractionRefs` and zone card
+references. There is no cross-frame registry or delta state. Hosts call
+`materializeCompactGameplayFrame` with a schema-validated all-seat projection;
+it checks the projection basis and prunes the registry to the selected seat.
+At the receiving boundary, parse `SessionSnapshotFrameSchema` (or
+`ServerGameplayFrameSchema`) before calling `hydrateCompactGameplayFrame`.
+`hostSource` performs this admission and hydration automatically. Hydration
+retains shared descriptor objects and produces the existing `PluginGameplayFrame`;
+the authored iframe protocol remains version 11.
+
 Visible cards share one complete `ViewCard` shape: `id`, `cardType`, and JSON
 `properties`, plus optional `name`, `text`, `frontImage`, and `backImage`.
 `ViewCardSchema` validates this shape. Reducer and gameplay `cardViewsById` maps
