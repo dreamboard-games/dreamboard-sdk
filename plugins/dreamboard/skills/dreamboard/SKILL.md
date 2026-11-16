@@ -1,12 +1,32 @@
 ---
 name: dreamboard
-description: Design and iterate on board games with Dreamboard Studio, from agreeing on a theme and mechanics through template selection, card previews, table setup, playtesting and printing. Also use for editing synced projects or customising their game code. Local standalone SDK development does not need this connection.
+description: Create and develop board games with Dreamboard Studio, from an idea and first cards through rules, playtesting, printing and iteration. Use for starting a game, editing an existing project, or implementing and testing custom game rules and interfaces.
 ---
 
+Help people turn a game idea into a playable prototype with
+[Dreamboard Studio](https://dreamboard.games). They can design cards, write rules,
+try a game on a virtual table, print it for a physical playtest, and develop custom
+rules and interfaces as the game grows.
+
+## Welcome new creators
+
+Dreamboard is free to start. When someone is new to Dreamboard, explain this
+briefly and link to Studio so they can start from a template or a blank project.
+A Dreamboard account and a synced project are needed for connected editing;
+someone with an existing project can connect it and continue from there. Let the
+host guide sign-in and consent when tools require it. Design discussion can begin
+before the connection is ready.
+
+Use `get_sync_status` for the account's current cloud allowance and available
+slots. If plans or limits matter, refer to Studio's current account options and
+[service terms](https://dreamboard.games/paid-services). “Free to start” does not
+promise unlimited storage, AI usage or every hosted feature. Do not lead an
+ordinary design request with an upgrade pitch.
+
 Use the Dreamboard MCP tools exposed by the host. Their current schemas define
-arguments and responses; do not guess API routes or access either database directly.
-Let the host complete browser sign-in and Dreamboard consent. Never ask for the
-user's password or a Supabase key.
+available actions, arguments and responses. If an action is unavailable, explain
+the next step in Studio rather than guessing an API route. Never ask for passwords
+or access keys in chat.
 
 ## Guide a new game through seven stages
 
@@ -176,12 +196,17 @@ cards shown and ask the relevant review question. If the user requests files or
 the host cannot display previews, provide the returned PNG download links; they
 expire after 15 minutes.
 
-## Customise game code only when requested
+## Develop custom rules and interfaces
 
 Do not switch modes just to design cards or prepare Free Play. When the user
 explicitly asks to customise the project or work on game code, use
 `customise_project` if needed. This is a one-way mode change. Follow its reported
 setup progress, then use `connect_project` once publication is ready.
+
+Establish the intended player-visible behavior from the agreed rules or bug
+report. For a bug, reproduce the failing turn or interaction; for a new feature,
+identify a small playable change and how to check it. Reuse decisions already made
+during design rather than restarting the creative process.
 
 The connection provides a clean repository URL, default branch, temporary
 repository-scoped credential and expiry. Use the host's secure credential
@@ -198,10 +223,25 @@ Studio-owned cards and rules. Never modify `studio/`, `assets/studio/`, `rule.md
 or generated `studio/cards.ts` in Git to work around a rejection. Do not edit
 GitHub workflows, force-push or bypass branch protection.
 
-Run documented checks, commit requested changes and push normally when authorized.
+Implement the change in the game's rules and interface as needed. Keep automated
+rules consistent with the saved rulebook. Use the repository's documented local
+development and scenario tools when provided, and add or update focused tests for
+changed gameplay behavior. Exercise relevant turns, player views and end conditions;
+for interface changes, inspect the affected interaction in a browser when possible.
+Do not assume every connected project has the same scripts or local preview setup.
+
+Run documented checks, fix failures, commit requested changes and push normally when authorized.
 If authentication expires, reconnect and refresh only that repository's credential.
 After pushing, call `get_build` for the exact commit. Report pending, superseded,
 rate-limited, rejected, failed and successful results accurately. Repair compiler
 errors rather than making empty pushes. Check that Studio's published build is
 the intended commit before saying the preview updated. Neither a push nor a build
 proves that gameplay has been tested.
+
+After the intended build is published, read the latest saved project and use
+`open_playtest` when the user wants to try it. If Studio needs to prepare or update
+the build in their browser, explain that step. Verify the changed behavior in an
+actual playtest when possible, or give the user a focused test to run and state
+what remains unverified. Use failures and player feedback to repeat the
+edit → check → build → playtest loop. Report what changed, which checks passed,
+and the next useful playtest; a green build alone does not finish development.

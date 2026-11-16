@@ -13,7 +13,7 @@
       "interface": {
         "displayName": "Dreamboard",
         "shortDescription": "Design and playtest board games",
-        "longDescription": "Design a board game with Dreamboard Studio: agree on a theme and mechanics, choose a template, review prototype cards, prepare a playtest table and print. Also edit synced projects and customise game code. Device-only projects are available in Studio.",
+        "longDescription": "Dreamboard is free to start. Turn a game idea into a playable prototype: choose a template, review cards, write rules, prepare a playtest table and print. Develop custom rules and interfaces, check builds and iterate from playtest feedback. Connect a synced Studio project to edit with your agent.",
         "developerName": "Dreamboard Games",
         "category": "Productivity",
         "capabilities": ["Read", "Write"],
