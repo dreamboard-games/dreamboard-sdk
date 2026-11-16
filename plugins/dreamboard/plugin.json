@@ -1,17 +1,19 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "dreamboard",
-  "version": "0.1.4",
-  "description": "Find synced Dreamboard projects, edit card data, and customise game code.",
-  "author": { "name": "Dreamboard Games" },
+  "version": "0.1.5",
+  "description": "Design, playtest and print board games, edit synced cards, and customise game code.",
+  "author": {
+    "name": "Dreamboard Games"
+  },
   "homepage": "https://dreamboard.games",
   "repository": "https://github.com/dreamboard-games/dreamboard-sdk",
   "extensions": {
     "com.openai": {
       "interface": {
         "displayName": "Dreamboard",
-        "shortDescription": "Edit synced board games",
-        "longDescription": "Use Dreamboard Studio to find your synced game projects, preview and edit saved cards, and customise game code. Device-only projects are available in Studio.",
+        "shortDescription": "Design and playtest board games",
+        "longDescription": "Design a board game with Dreamboard Studio: agree on a theme and mechanics, choose a template, review prototype cards, prepare a playtest table and print. Also edit synced projects and customise game code. Device-only projects are available in Studio.",
         "developerName": "Dreamboard Games",
         "category": "Productivity",
         "capabilities": ["Read", "Write"],
