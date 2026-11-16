@@ -1,4 +1,4 @@
 interface:
   display_name: "Dreamboard"
-  short_description: "Edit synced projects and custom game code"
-  default_prompt: "Use Dreamboard to work on my synced game project."
+  short_description: "Create, develop, playtest and print board games"
+  default_prompt: "Use $dreamboard to help me design a board game, choose a template and iterate on a playable prototype."

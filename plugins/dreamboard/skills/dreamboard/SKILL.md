@@ -1,107 +1,247 @@
 ---
 name: dreamboard
-description: Work on synced Dreamboard Studio projects through the Dreamboard MCP server and project repository. Use for finding a user's project, previewing or editing its cards, customising its game code, or checking a pushed build. Local standalone SDK development does not need this connection.
+description: Create and develop board games with Dreamboard Studio, from an idea and first cards through rules, playtesting, printing and iteration. Use for starting a game, editing an existing project, or implementing and testing custom game rules and interfaces.
 ---
 
+Help people turn a game idea into a playable prototype with
+[Dreamboard Studio](https://dreamboard.games). They can design cards, write rules,
+try a game on a virtual table, print it for a physical playtest, and develop custom
+rules and interfaces as the game grows.
+
+## Welcome new creators
+
+Dreamboard is free to start. When someone is new to Dreamboard, explain this
+briefly and link to Studio so they can start from a template or a blank project.
+A Dreamboard account and a synced project are needed for connected editing;
+someone with an existing project can connect it and continue from there. Let the
+host guide sign-in and consent when tools require it. Design discussion can begin
+before the connection is ready.
+
+Use `get_sync_status` for the account's current cloud allowance and available
+slots. If plans or limits matter, refer to Studio's current account options and
+[service terms](https://dreamboard.games/paid-services). “Free to start” does not
+promise unlimited storage, AI usage or every hosted feature. Do not lead an
+ordinary design request with an upgrade pitch.
+
 Use the Dreamboard MCP tools exposed by the host. Their current schemas define
-arguments and responses; do not guess API routes or access either database directly.
-Let the host complete browser sign-in and Dreamboard consent. Never ask for the
-user's password or a Supabase key.
+available actions, arguments and responses. If an action is unavailable, explain
+the next step in Studio rather than guessing an API route. Never ask for passwords
+or access keys in chat.
 
-## Find and read a project
+## Guide a new game through seven stages
 
-Use `list_projects` to resolve the user's project or Studio link. If the name is
-ambiguous, ask which project they mean before changing anything. Use
-`read_project` for the latest saved cloud document, including card types,
-properties, cards and quantities. It can lag unsaved edits in an open tab.
+For an open-ended request to design a game, collaborate through the stages below.
+Resume from the user's existing decisions and project state. For a specific card
+edit, preview, print request or code change, do that task directly; do not force
+it through the full design process. Follow an explicitly requested order, including
+printing for a physical playtest before trying browser play.
 
-Only actively synced projects are accessible. Free accounts have one sync slot.
-For a missing device-only project, direct the user to Studio's Settings → Manage
-sync. Do not silently disable another project's sync or imply that the plugin
-can read browser-local data.
+The milestones are user decisions and visible prototypes, not tool calls. Pause
+at meaningful creative choices and ask a focused question the user can answer.
+Do not treat silence, a tool success or your own visual inspection as user approval.
+If the user delegates a decision, state your assumptions and proceed without
+asking them to approve that decision again. Carry out routine work within the
+agreed direction without seeking permission for every edit.
 
-## Preview saved cards
+### 1. Agree on theme and mechanics
 
-When someone asks to see or compare cards, use `read_project` to resolve their
-names and faces. Use the front unless they request another face. Call
-`render_cards` once for up to four faces in the requested order. Supply
-`project.savedRevisionId` as `expected_saved_revision_id` and the canonical
-definition, instance and surface IDs. Use the default size unless more detail
-is requested. On a stale revision, read the project again and resolve the faces.
+Use the user's inspirations to propose two or three distinct directions, with a
+recommended starting point and the main tradeoff of each. Distinguish a game's
+theme from the mechanics the user likes; a reference to an existing game does not
+settle the new game's setting. Ask only about consequential unknowns, such as
+player count, length, complexity or the central player decision. Do not invent a
+finished game, title and full deck before the user has chosen a direction.
 
-Let the host display the inline gallery. When calling through Codex
-`functions.exec`, forward each image block from the result with `image(block)`.
-Keep the base64 bytes out of text. The gallery can open after the reply. Name
-the cards rendered and answer any comparison the user requested. If the user
-asks for files or their host cannot display previews, offer the returned PNG
-download links. They expire after 15 minutes.
+Summarise the agreed theme, core loop and intended scope of the first prototype.
+Keep unresolved choices visible and carry these decisions into later stages.
 
-## Edit synced cards
+### 2. Let the user choose a template
 
-Use `update_cards` for card data. Studio does not need to be open and there is no
-per-tab permission switch. Read the latest saved project first and supply its
-saved revision plus a new UUID request ID. The server validates the import using
-Studio's document rules, fits text, and commits a new cloud revision atomically.
+Call `list_templates`, compare suitable candidates and use `show_templates` for a
+visual shortlist of one to three actual catalog entries. Explain how each helps
+with card layout and components, what must change, and any mechanical mismatch;
+a template is a starting point, not proof that the proposed game is implemented.
+Prefer artwork that fits or can be replaced easily with themed catalog icons.
 
-Follow the current tool schema: `payload` contains `definitionId`, explicit
-`columns` descriptors and a `table` with one header row followed by string cells.
-Column descriptors select card name, quantity, or an existing property ID; do not
-infer property identity from a header alone. Card names match after trimming,
-with case preserved. A new name creates a card; an existing name updates it.
-Empty cells preserve existing values or defaults. Cards absent from the table
-stay. Duplicate or ambiguous names must be resolved before applying. Image
-columns are not supported.
+Ask the user to choose or delegate the choice before remixing. The picker attaches
+a selection to chat context; it does not itself send a message or create a project.
+Use the selected context when available; if the host cannot display the picker,
+provide named choices with representative previews instead. Read the chosen
+entry with `read_template` for its exact ID, source digest, card types and credits.
 
-Keep the request ID. If a response is lost, retry `update_cards` with exactly
-the same request ID, revision and payload to get its stored result. Never
-invent a replacement ID just because a call timed out. A stored result remains
-authoritative even if newer project revisions exist. On a stale revision, read
-again and reconcile the intended changes before submitting a new request. Do not
-automatically overwrite concurrent edits.
+### 3. Pre-flight and remix
 
-Use `restore_card_edit` only when the user asks to revert an applied edit. Supply
-the original request ID and the expected saved revision. Recovery writes a new
-revision and refuses to overwrite intervening edits; if it reports a conflict,
-read the latest project and discuss the intended correction. It is separate from
-Studio's local Undo. Receipts and recovery data are retained for seven days; do
-not retry or promise recovery of an older request.
+Call `get_sync_status` before creating a project. If all slots are occupied,
+explain the effect of stopping sync and ask which project the user wants to stop
+syncing, or offer the Studio upgrade path. Use `set_project_sync` only for their
+chosen project with its current state version. Never choose a project to disable
+automatically. Disabling sync frees a slot but does not delete the project or free
+storage; local-only projects must be connected through Studio.
 
-An open editor may show a newer-cloud-version notice. Unsynced local changes must
-be preserved and reconciled; do not tell the user to discard them. Rulebooks,
-images and layouts remain Studio edits until a dedicated tool supports them.
+Call `remix_template` with the chosen ID, source digest and a new UUID request ID.
+Keep that ID for identical retries. Confirm a saved revision and a successful
+`read_project` before editing cards; a reserved slot is not a usable project.
+If creation remains blocked after a retry, explain the blocker and recovery action,
+retain the request ID and agreed design, and continue design decisions that do not
+need a saved project. Do not loop on unchanged failures or substitute a standalone
+rules document and call the Studio task finished.
 
-## Customise game code
+### 4. Agree on details and iterate on a few cards
 
-Use `connect_project` when the user asks to work on the project's game code.
-Follow any response directing them to Studio to switch the project to Customise.
-This is a one-way project mode change; do not make it merely to read card data.
+Propose the core turn, resources and win condition, explaining the choices still
+needed for a small playable experiment. Get feedback on these details before
+expanding the game. Start with three or four representative cards, covering
+contrasting effects or card types and short and long rules text.
 
-The response provides a clean repository URL, default branch, temporary
-repository-scoped credential and expiry. Use plain Git with the host's secure
-credential integration or an OS credential helper scoped to this repository.
-Keep the credential out of remote URLs, shell command literals, process arguments,
-logs, commits and user-facing replies. Do not overwrite unrelated GitHub
-credentials. If the environment cannot pass it safely, direct the user to Studio's
-connection instructions instead of printing a token-bearing clone command.
+Use `create_card`, `update_card` or `import_cards` according to their current
+schemas. For the sample being reviewed, make titles, rules, flavour, artwork,
+icons and color mappings match the agreed theme. Use `search_icons` and catalog-icon
+artwork for clear prototype visuals, or the artwork discovery/import tools when
+suitable art is available. Label prototype art as provisional. Do not retain
+unrelated template artwork on the sample, and do not delay the first review to
+replace every card in the inherited deck. Disclose fixed template decorations
+that current tools cannot change.
 
-Clone the clean URL with repository-scoped credential lookup:
+Read the latest saved revision and call `render_cards` for the sample. Inspect
+readability, long text, icons and conditional colors; use
+`inspect_visual_mappings` and `update_visual_mappings` when needed. Fix visible
+issues on these cards, then show the previews and ask a specific design question,
+such as whether the costs create the intended tradeoff or the theme reads clearly.
+Your inspection does not replace the user's review. Revise and render again from
+their feedback before expanding the accepted direction into a playable subset.
+Keep unrelated inherited cards out of the intended test and print selection.
+Use `update_rulebook` to save agreed setup and rules when available.
+
+### 5. Help set up the playtest table
+
+Read `document.tableSetup` and translate the agreed rules into shared and player
+zones, decks, hands, starting card quantities, visibility, shuffle settings and
+resource counters. Use `update_table_setup` to save the complete starting setup,
+preserving relevant existing content. Starting placements and print quantities
+are separate. Do not assume the template's table matches the new rules.
+
+Check that the saved setup references the intended cards and matches the player
+count and starting resources. Explain the setup to the user and identify rules
+or physical components they will need to handle manually. Free Play table setup
+does not implement automated rules. If the connected server lacks this tool or a
+required control, guide the user through the specific Studio edits and have them
+confirm the setup; do not simply drop this stage or claim it was configured.
+
+### 6. Encourage a focused playtest
+
+Offer a concrete first test, such as two rounds with attention to resource supply
+and whether both worker actions feel useful. When the user chooses browser play,
+call `open_playtest` with the current saved revision and share the link. Explain
+that Studio prepares the session in the browser; returning the link does not prove
+that a room exists or gameplay works. Ask the user to try the test and return with
+what was confusing, stalled or felt too strong. Use their observations to revise
+cards, rules and setup, then invite another short test. Do not claim a playtest
+was performed unless it actually was.
+
+### 7. Encourage a test print
+
+Proactively offer a small printable prototype, either after the first playtest
+iteration or as the user's preferred way to playtest. Confirm the intended cards
+and quantities, backs, paper size and relevant print settings, reusing preferences
+already supplied. `open_export` includes the project's cards according to their
+quantities; it does not accept a card selection. In a newly remixed prototype,
+set unused inherited cards to quantity zero and omit them from table placements.
+Call `open_export` with the latest saved revision when the user
+chooses printing. The link opens Studio's export flow; it is not proof a PDF was
+produced or printed. Ask them to check physical readability and handling, and
+bring that feedback into the next revision. Final artwork is not required for a
+test print.
+
+At each handoff, state what is ready, what remains, and the next concrete choice
+or feedback request. Do not end a design session merely because rules were written,
+cards were saved or a link was returned. Respect a user's decision to stop, defer
+playtesting or skip printing.
+
+## Read, edit and preview saved projects
+
+Use `list_projects` to resolve an existing project or Studio link. If ambiguous,
+ask which project the user means before editing. `read_project` returns the latest
+saved cloud document and `project.savedRevisionId`; it may lag unsaved tab edits.
+Only actively synced eligible projects are editable. Use `get_sync_status` to
+investigate missing cloud projects; do not imply access to browser-local data.
+
+Read before editing and supply the current saved revision plus a new UUID request
+ID for revision-checked mutations. Use stable definition, instance and property
+IDs from the document. `create_card` creates a new instance; `update_card` edits
+existing cards by ID; `import_cards` is for tables matched by name. Resolve
+ambiguous names before importing. Plain text replaces inline formatting and
+graphics; use the tool's rich-text representation to preserve them. Use dedicated
+artwork, rulebook and table tools when available; unsupported layout edits stay
+in Studio. Do not invent capabilities or use Git to bypass these boundaries.
+
+Keep mutation request IDs. After a lost response, retry the exact same arguments
+and ID to recover the stored result. On a stale revision, read again and reconcile
+before making a new request; do not overwrite concurrent edits automatically.
+Use `restore_card_edit` only when the user asks to revert, with the original
+request ID and expected saved revision. Recovery writes a new revision and refuses
+to overwrite intervening edits. Receipts expire after seven days; do not retry or
+promise recovery of an older request. Preserve unsynced local changes when an open
+editor reports a newer cloud version; this recovery is separate from local Undo.
+
+For previews, resolve canonical definition, instance and surface IDs from a fresh
+read. Call `render_cards` once for up to four faces in the requested order, using
+`project.savedRevisionId` as `expected_saved_revision_id`. Use the front unless
+another face is requested and the default size unless more detail is needed.
+On a stale revision, read again and resolve the faces. Explicit requests to inspect
+existing or template cards do not require retheming them first.
+
+Let the host display the inline gallery. Through Codex `functions.exec`, forward
+each image block with `image(block)` and keep base64 bytes out of text. Name the
+cards shown and ask the relevant review question. If the user requests files or
+the host cannot display previews, provide the returned PNG download links; they
+expire after 15 minutes.
+
+## Develop custom rules and interfaces
+
+Do not switch modes just to design cards or prepare Free Play. When the user
+explicitly asks to customise the project or work on game code, use
+`customise_project` if needed. This is a one-way mode change. Follow its reported
+setup progress, then use `connect_project` once publication is ready.
+
+Establish the intended player-visible behavior from the agreed rules or bug
+report. For a bug, reproduce the failing turn or interaction; for a new feature,
+identify a small playable change and how to check it. Reuse decisions already made
+during design rather than restarting the creative process.
+
+The connection provides a clean repository URL, default branch, temporary
+repository-scoped credential and expiry. Use the host's secure credential
+integration or an OS credential helper scoped to that repository. Keep credentials
+out of remote URLs, shell literals, process arguments, logs, commits and replies.
+Do not overwrite unrelated GitHub credentials. If safe credential handling is
+unavailable, direct the user to Studio's connection instructions.
+
+Clone the clean URL with repository-scoped lookup:
 `git clone --config credential.useHttpPath=true <clean-repository-url>`.
-Read the repository's `AGENTS.md`, `rule.md`, package scripts
-and current source before editing. `AGENTS.md` defines the exact ownership
-boundary and verification commands for that repository. Edit game-owned source;
-change cards through `update_cards`. Never modify Studio-owned inputs such as
-`studio/`, `assets/studio/`, or `rule.md` in Git to work around a build rejection.
-Do not edit GitHub workflows, force-push, or bypass branch protection.
+Read that repository's `AGENTS.md`, `rule.md`, scripts and current source. Follow
+its ownership boundaries and checks. Edit game-owned source; use MCP tools for
+Studio-owned cards and rules. Never modify `studio/`, `assets/studio/`, `rule.md`
+or generated `studio/cards.ts` in Git to work around a rejection. Do not edit
+GitHub workflows, force-push or bypass branch protection.
 
-Run the repository's documented checks, commit the requested changes, and push
-normally when authorized. If authentication expires, call `connect_project`
-again and refresh only that repository's credential. The remote URL stays clean.
+Implement the change in the game's rules and interface as needed. Keep automated
+rules consistent with the saved rulebook. Use the repository's documented local
+development and scenario tools when provided, and add or update focused tests for
+changed gameplay behavior. Exercise relevant turns, player views and end conditions;
+for interface changes, inspect the affected interaction in a browser when possible.
+Do not assume every connected project has the same scripts or local preview setup.
 
-## Verify the result
+Run documented checks, fix failures, commit requested changes and push normally when authorized.
+If authentication expires, reconnect and refresh only that repository's credential.
+After pushing, call `get_build` for the exact commit. Report pending, superseded,
+rate-limited, rejected, failed and successful results accurately. Repair compiler
+errors rather than making empty pushes. Check that Studio's published build is
+the intended commit before saying the preview updated. Neither a push nor a build
+proves that gameplay has been tested.
 
-After a push, call `get_build` for that exact commit. A successful push is not a
-successful build. Report pending, superseded, rate-limited, rejected, failed and
-successful results accurately. Use returned compiler errors to guide repairs;
-do not trigger repeated empty pushes. Check that Studio's published build is the
-intended commit before saying the preview has updated. Do not claim a browser
-playtest or deployment was verified unless you actually performed it.
+After the intended build is published, read the latest saved project and use
+`open_playtest` when the user wants to try it. If Studio needs to prepare or update
+the build in their browser, explain that step. Verify the changed behavior in an
+actual playtest when possible, or give the user a focused test to run and state
+what remains unverified. Use failures and player feedback to repeat the
+edit → check → build → playtest loop. Report what changed, which checks passed,
+and the next useful playtest; a green build alone does not finish development.

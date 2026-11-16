@@ -1,14 +1,14 @@
 # Dreamboard plugin
 
-Use Codex, Claude Code, or Cursor to find your synced Studio projects, edit card
-data and customise game code. The plugin shares one skill and remote MCP endpoint
-across the three hosts. The portable configuration uses `streamable-http`;
-Claude and Cursor's native configuration uses their `http` spelling. It contains
-no credentials or local server.
+Turn a game idea into a playable prototype with Codex, Claude Code, or Cursor and
+[Dreamboard Studio](https://dreamboard.games). Choose a template, create and review
+cards, write rules, set up a playtest table, and print a test deck. For custom game
+rules and interfaces, develop the code, run checks, verify the build and playtest
+the result.
 
-The hosted MCP endpoint and its OAuth integration must be deployed before sign-in
-works. Shipping these plugin files alone does not enable the backend. Installation
-also does not publish the plugin to any host's public directory.
+Dreamboard is free to start. Create an account and sync a project to work on it
+with your agent, or connect an existing project. Current allowances and plan
+details are available in Studio and the [service terms](https://dreamboard.games/paid-services).
 
 ## Install
 
@@ -67,10 +67,13 @@ A setup click is not proof of a connection: complete Dreamboard sign-in and cons
 
 ## Use
 
-Try “Find my Dreamboard projects” or “Help me customise this Studio game.”
-Only actively synced projects are available; free accounts can sync one project.
-Device-only projects still work in Studio. Use Settings → Manage sync to choose
-which project to connect.
+Try “Help me make a two-player card game,” “Show me my cards,” or “Implement and
+test this game's scoring.” Start with a few cards, try the core loop, then use
+playtest feedback to refine the rules and expand the deck.
+
+Only actively synced projects are available to the plugin. Device-only projects
+still work in Studio. Use Studio's cloud project settings to choose which project
+to connect; the agent can check your current sync allowance.
 
 Reading uses the latest saved cloud revision. Card edits are validated and saved
 directly to the synced project, even while Studio is closed. Concurrent changes
@@ -86,6 +89,13 @@ stops new remote authoring access; already issued Git credentials expire at thei
 normal expiry.
 
 ## Maintainer checks
+
+The plugin shares one skill and remote MCP endpoint across the three hosts. The
+portable configuration uses `streamable-http`; Claude and Cursor's native
+configuration uses their `http` spelling. It contains no credentials or local
+server. The hosted endpoint and OAuth integration must be deployed before sign-in
+works. Shipping these files does not deploy the service or publish the plugin to
+a host's public directory.
 
 ```sh
 claude plugin validate plugins/dreamboard
