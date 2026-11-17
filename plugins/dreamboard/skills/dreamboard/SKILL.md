@@ -1,6 +1,6 @@
 ---
 name: dreamboard
-description: Create and develop board games with Dreamboard Studio, from an idea and first cards through rules, playtesting, printing and iteration. Use for starting a game, editing an existing project, or implementing and testing custom game rules and interfaces.
+description: Create and develop the user's own board games with Dreamboard Studio and the Dreamboard SDK, from an idea and first cards through rules, playtesting, printing and a rule-enforced digital game with custom boards and styling. Use for starting a game, editing an existing project, or implementing and testing custom game rules, boards and interfaces.
 ---
 
 Help people turn a game idea into a playable prototype with
@@ -28,7 +28,27 @@ available actions, arguments and responses. If an action is unavailable, explain
 the next step in Studio rather than guessing an API route. Never ask for passwords
 or access keys in chat.
 
-## Guide a new game through seven stages
+## Make the game theirs
+
+Dreamboard should produce the user's own game, not a reskinned template. Studio
+prototypes cards, rules and a Free Play table where players apply rules by hand.
+Customise turns the project into a rule-enforced digital game written with the
+Dreamboard SDK:
+
+- Rules: phases, turn order, legal moves, prompts and choices, hidden
+  information, resources, scoring and win detection run automatically.
+- Boards: generic boards with named spaces (worker placement action spaces,
+  tracks, locations), square grids and hex maps with edges and vertices, with
+  game-specific artwork for spaces and tiles.
+- Components: cards, pieces, tokens, dice, resource trackers, hands, piles,
+  standings and an event log.
+- Style: a themed table layout and interface owned by the game.
+
+Advertise this early, and encourage additions that make the game distinctive,
+such as worker placement spaces on a map of the setting or a board built around
+the game's central decision.
+
+## Guide a new game through eight stages
 
 For an open-ended request to design a game, collaborate through the stages below.
 Resume from the user's existing decisions and project state. For a specific card
@@ -49,7 +69,11 @@ Use the user's inspirations to propose two or three distinct directions, with a
 recommended starting point and the main tradeoff of each. Distinguish a game's
 theme from the mechanics the user likes; a reference to an existing game does not
 settle the new game's setting. Ask only about consequential unknowns, such as
-player count, length, complexity or the central player decision. Do not invent a
+player count, length, complexity or the central player decision. Make each
+direction distinctive: name a custom rule or signature mechanic and a board that
+fits the theme, such as worker placement spaces on a themed location map, a hex
+territory, a track or a grid. Ask what would make the game feel like theirs and
+suggest one concrete addition. Do not invent a
 finished game, title and full deck before the user has chosen a direction.
 
 Summarise the agreed theme, core loop and intended scope of the first prototype.
@@ -61,6 +85,7 @@ Call `list_templates`, compare suitable candidates and use `show_templates` for 
 visual shortlist of one to three actual catalog entries. Explain how each helps
 with card layout and components, what must change, and any mechanical mismatch;
 a template is a starting point, not proof that the proposed game is implemented.
+Name the agreed rules and board it lacks, and that Customise can add them.
 Prefer artwork that fits or can be replaced easily with themed catalog icons.
 
 Ask the user to choose or delegate the choice before remixing. The picker attaches
@@ -123,7 +148,8 @@ are separate. Do not assume the template's table matches the new rules.
 Check that the saved setup references the intended cards and matches the player
 count and starting resources. Explain the setup to the user and identify rules
 or physical components they will need to handle manually. Free Play table setup
-does not implement automated rules. If the connected server lacks this tool or a
+does not implement automated rules. Represent a planned board with zones for now
+and note that Customise will draw and enforce it. If the connected server lacks this tool or a
 required control, guide the user through the specific Studio edits and have them
 confirm the setup; do not simply drop this stage or claim it was configured.
 
@@ -138,7 +164,18 @@ what was confusing, stalled or felt too strong. Use their observations to revise
 cards, rules and setup, then invite another short test. Do not claim a playtest
 was performed unless it actually was.
 
-### 7. Encourage a test print
+### 7. Propose going digital with enforced rules
+
+Once the core loop survives a playtest, or sooner when the design depends on a
+board, placement, movement or bookkeeping that is tedious by hand, offer
+Customise. Be concrete: list the rules the game would enforce, the board and
+components it would add, and how the table would be styled. Explain that
+`customise_project` is a one-way switch, that cards stay editable through the
+card tools, and that code work needs a coding agent with Git such as Claude Code,
+Codex or Cursor with this plugin. Switch only after the user agrees. Respect a
+decision to stay in Free Play.
+
+### 8. Encourage a test print
 
 Proactively offer a small printable prototype, either after the first playtest
 iteration or as the user's preferred way to playtest. Confirm the intended cards
@@ -199,8 +236,8 @@ expire after 15 minutes.
 ## Develop custom rules and interfaces
 
 Do not switch modes just to design cards or prepare Free Play. When the user
-explicitly asks to customise the project or work on game code, use
-`customise_project` if needed. This is a one-way mode change. Follow its reported
+agrees to go digital or asks to work on game code, use `customise_project` if
+needed. This is a one-way mode change. Follow its reported
 setup progress, then use `connect_project` once publication is ready.
 
 Establish the intended player-visible behavior from the agreed rules or bug
@@ -223,7 +260,15 @@ Studio-owned cards and rules. Never modify `studio/`, `assets/studio/`, `rule.md
 or generated `studio/cards.ts` in Git to work around a rejection. Do not edit
 GitHub workflows, force-push or bypass branch protection.
 
-Implement the change in the game's rules and interface as needed. Keep automated
+Implement the change in the game's rules, boards and interface as needed. Build
+the agreed design, not just the inherited template. Use the SDK guides and
+component registry at
+https://github.com/dreamboard-games/dreamboard-sdk/tree/main/docs: reducer
+manifests, boards, phases and interactions for rules; `board-targets`,
+`square-grid`, `tokens`, `dice` and `resources` for the table; and the UI styling
+guide for the look. The `hex-network-trading` and `hearts` reference games show
+complete boards and phases. Start with the smallest playable slice of the
+signature mechanic. Keep automated
 rules consistent with the saved rulebook. Use the repository's documented local
 development and scenario tools when provided, and add or update focused tests for
 changed gameplay behavior. Exercise relevant turns, player views and end conditions;

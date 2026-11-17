@@ -1,4 +1,4 @@
 interface:
   display_name: "Dreamboard"
-  short_description: "Create, develop, playtest and print board games"
+  short_description: "Design custom board games with enforced rules"
   default_prompt: "Use $dreamboard to help me design a board game, choose a template and iterate on a playable prototype."
