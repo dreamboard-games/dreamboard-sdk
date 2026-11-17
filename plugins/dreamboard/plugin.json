@@ -12,7 +12,7 @@
     "com.openai": {
       "interface": {
         "displayName": "Dreamboard",
-        "shortDescription": "Design and playtest board games",
+        "shortDescription": "Design & playtest board games",
         "longDescription": "Dreamboard is free to start. Turn a game idea into a playable prototype: choose a template, review cards, write rules, prepare a playtest table and print. Develop custom rules and interfaces, check builds and iterate from playtest feedback. Connect a synced Studio project to edit with your agent.",
         "developerName": "Dreamboard Games",
         "category": "Productivity",
