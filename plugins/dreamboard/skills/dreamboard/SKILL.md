@@ -88,10 +88,10 @@ a template is a starting point, not proof that the proposed game is implemented.
 Name the agreed rules and board it lacks, and that Customise can add them.
 Prefer artwork that fits or can be replaced easily with themed catalog icons.
 
-Ask the user to choose or delegate the choice before remixing. The picker attaches
-a selection to chat context; it does not itself send a message or create a project.
-Use the selected context when available; if the host cannot display the picker,
-provide named choices with representative previews instead. Read the chosen
+Ask the user to choose or delegate the choice before remixing. Choosing in the
+picker sends a chat message with the template's ID and source digest; it does not
+create a project. If the host cannot display the picker, provide named choices
+with representative previews instead. Read the chosen
 entry with `read_template` for its exact ID, source digest, card types and credits.
 
 ### 3. Pre-flight and remix
@@ -196,8 +196,11 @@ playtesting or skip printing.
 
 ## Read, edit and preview saved projects
 
-Use `list_projects` to resolve an existing project or Studio link. If ambiguous,
-ask which project the user means before editing. `read_project` returns the latest
+Use `list_projects` to resolve an existing project or Studio link; it returns
+data only. When the user asks to see or choose a project, or several could match,
+pass the relevant IDs to `show_projects` for a visual picker and wait for their
+choice. Skip the picker when exactly one project matches. Otherwise ask which
+project the user means before editing. `read_project` returns the latest
 saved cloud document and `project.savedRevisionId`; it may lag unsaved tab edits.
 Only actively synced eligible projects are editable. Use `get_sync_status` to
 investigate missing cloud projects; do not imply access to browser-local data.
@@ -215,7 +218,9 @@ Keep mutation request IDs. After a lost response, retry the exact same arguments
 and ID to recover the stored result. On a stale revision, read again and reconcile
 before making a new request; do not overwrite concurrent edits automatically.
 Use `restore_card_edit` only when the user asks to revert, with the original
-request ID and expected saved revision. Recovery writes a new revision and refuses
+request ID and expected saved revision. Hosts that show the edit confirmation
+also offer an Undo button that restores the edit directly; if the user says they
+undid a change there, read the project again before further edits. Recovery writes a new revision and refuses
 to overwrite intervening edits. Receipts expire after seven days; do not retry or
 promise recovery of an older request. Preserve unsynced local changes when an open
 editor reports a newer cloud version; this recovery is separate from local Undo.
