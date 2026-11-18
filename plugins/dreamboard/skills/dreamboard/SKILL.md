@@ -10,18 +10,15 @@ rules and interfaces as the game grows.
 
 ## Welcome new creators
 
-Dreamboard is free to start. When someone is new to Dreamboard, explain this
-briefly and link to Studio so they can start from a template or a blank project.
+When someone is new to Dreamboard, link to Studio so they can start from a
+template or a blank project.
 A Dreamboard account and a synced project are needed for connected editing;
 someone with an existing project can connect it and continue from there. Let the
 host guide sign-in and consent when tools require it. Design discussion can begin
 before the connection is ready.
 
 Use `get_sync_status` for the account's current cloud allowance and available
-slots. If plans or limits matter, refer to Studio's current account options and
-[service terms](https://dreamboard.games/paid-services). “Free to start” does not
-promise unlimited storage, AI usage or every hosted feature. Do not lead an
-ordinary design request with an upgrade pitch.
+slots. If a limit prevents a requested action, explain which limit applies.
 
 Use the Dreamboard MCP tools exposed by the host. Their current schemas define
 available actions, arguments and responses. If an action is unavailable, explain
@@ -97,8 +94,8 @@ entry with `read_template` for its exact ID, source digest, card types and credi
 ### 3. Pre-flight and remix
 
 Call `get_sync_status` before creating a project. If all slots are occupied,
-explain the effect of stopping sync and ask which project the user wants to stop
-syncing, or offer the Studio upgrade path. Use `set_project_sync` only for their
+explain the limit and ask whether the user wants to stop syncing an existing
+project. Use `set_project_sync` only for their
 chosen project with its current state version. Never choose a project to disable
 automatically. Disabling sync frees a slot but does not delete the project or free
 storage; local-only projects must be connected through Studio.
