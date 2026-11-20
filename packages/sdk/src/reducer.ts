@@ -164,3 +164,8 @@ export type {
   BoardEdgeId,
   BoardVertexId,
 } from "./shared/domain/board-identities.js";
+
+export {
+  offeredInteraction,
+  offeredInputDomain,
+} from "./reducer/bundle/offered-interaction";

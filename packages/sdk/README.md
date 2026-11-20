@@ -273,6 +273,73 @@ the SDK's model.
 To migrate an older manifest, replace each card's `type` with `id` and set
 `cardType` explicitly (often to the former `type` value).
 
+## Author a bot strategy
+
+Each game can publish named strategies alongside its reducer. Give each strategy
+a stable ID and a short description that helps players choose one for a seat.
+A strategy sees the same frame as that seat's UI, including its own cards, the
+public trick, and the interactions offered on the current step.
+
+For a game with a `playing.playCard` interaction:
+
+```ts
+import {
+  createReducerBundle,
+  offeredInputDomain,
+  offeredInteraction,
+  type BotStrategy,
+} from "@dreamboard-games/sdk/reducer";
+import game from "./game";
+
+const firstLegal: BotStrategy<typeof game> = {
+  id: "first-legal",
+  name: "First Legal Card",
+  description: "Plays the first eligible card in hand order.",
+  decide(frame) {
+    const play = offeredInteraction(frame, "playing.playCard");
+    const cards = offeredInputDomain(play, "cardId", "cardTarget");
+    const card = frame.view?.hand.find(({ id }) =>
+      cards?.eligibleTargets.includes(id),
+    );
+    return card
+      ? { interactionId: "playCard", params: { cardId: card.id } }
+      : null;
+  },
+};
+
+export default createReducerBundle(game, { botStrategies: [firstLegal] });
+```
+
+Look up an interaction using its phase-qualified key and return the ordinary
+interaction ID with its current input parameters. For a multi-step interaction,
+read the new frame after each accepted step. Return `null` when the seat has no
+decision. Use a stable tie-breaker so the same frame produces the same move.
+Keep the strategy in the reducer entry and use the catalogue's ID when selecting
+a strategy for a particular seat.
+
+The Hearts reference game has two complete examples. **Penalty Dodger** passes
+dangerous spades and tries to play below the highest card of the lead suit.
+**Moon Chaser** passes low cards and plays high to win tricks. Both choose from
+the same eligible hand cards during the sealed pass and all thirteen tricks.
+[Hearts strategy implementations](https://github.com/dreamboard-games/dreamboard-sdk/blob/main/examples/reference-games/hearts/app/bot-strategies.ts)
+
+Use a seeded local source to test a decision through normal submission. For
+an authored checkpoint, use `scenarioSource(game, scenario, { bundle, at, as })`
+with the same reducer bundle. The result includes the choice and its acceptance
+or rejection. The source returns `null` for a strategy that declines to act.
+
+```ts
+const source = await localSource(game, { bundle, players: 4, seed: 7 });
+try {
+  source.switchSeat("player-1");
+  const turn = await source.playBotTurn("penalty-dodger");
+  assert.equal(turn?.decision.interactionId, "submit");
+  assert.equal(turn.result.accepted, true);
+} finally {
+  source.dispose();
+}
+```
+
 ## Reducer runner contract
 
 `createReducerBundle(game)` returns exactly the contract version and three
