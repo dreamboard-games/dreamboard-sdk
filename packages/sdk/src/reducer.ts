@@ -43,6 +43,7 @@ export {
   type SparseMap,
 } from "./reducer/schema-helpers";
 export { FrameworkErrorCodes } from "./reducer/model";
+export type { BotDecision, BotStrategy } from "./reducer/bundle/bot-strategies";
 export { createReducerBundle } from "./reducer/bundle";
 export type { ReducerBundle, ReducerBundleOptions } from "./reducer/bundle";
 export { noopDiagnosticsSink } from "./reducer/diagnostics";

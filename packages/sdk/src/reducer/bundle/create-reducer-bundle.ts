@@ -1,3 +1,4 @@
+import { createBotCapability } from "./bot-strategies";
 import type * as Wire from "../../shared/runtime-types";
 import { REDUCER_CONTRACT_VERSION } from "../../shared/worker-contract";
 import type { GameEvent, GameOutcome } from "../../shared/domain/results";
@@ -112,7 +113,7 @@ export function createReducerBundle<
   View extends ViewOfContract<Contract>,
 >(
   definition: ReducerGameDefinition<Contract, Definitions, View>,
-  options: ReducerBundleOptions = {},
+  options: ReducerBundleOptions<typeof definition> = {},
 ): ReducerBundle {
   const codec = createIngressRuntimeCodec(definition);
   // The codec validates the authored schemas; its erased phase return type
@@ -136,6 +137,7 @@ export function createReducerBundle<
   const projection = createProjectionBuilder(scope, interactions);
   let submissionCounter = 0;
   return {
+    ...createBotCapability(options.botStrategies),
     reducerContractVersion: REDUCER_CONTRACT_VERSION,
     async initialize({ table, playerIds, rngSeed, options }) {
       const parsed = codec.parseInitialTable(table, playerIds);

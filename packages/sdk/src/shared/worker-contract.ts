@@ -1,3 +1,5 @@
+import type { PluginGameplayFrame } from "./protocol/frame.js";
+import { BotStrategyCatalogSchema } from "./runtime-schema.js";
 import * as z from "zod";
 import type * as Wire from "./runtime-types.js";
 
@@ -7,6 +9,12 @@ export type MaybePromise<T> = T | Promise<T>;
 
 export interface ReducerBundleContract {
   readonly reducerContractVersion: Wire.ReducerContractVersion;
+  /** Optional capability on the existing ABI. Legacy bundles omit both fields. */
+  readonly botStrategies?: readonly Wire.BotStrategyMetadata[];
+  decideBot?(input: {
+    strategyId: string;
+    frame: PluginGameplayFrame;
+  }): Wire.BotDecision;
   initialize(
     input: Wire.InitializeRequest,
   ): MaybePromise<Wire.InitializeResult>;
@@ -18,12 +26,20 @@ const callable = z.custom<(...args: never[]) => unknown>(
   (value) => typeof value === "function",
 );
 // Admission checks identity and callables without wrapping/replacing methods.
-const bundleSchema = z.object({
-  reducerContractVersion: z.literal(REDUCER_CONTRACT_VERSION),
-  initialize: callable,
-  dispatch: callable,
-  project: callable,
-});
+const bundleSchema = z
+  .object({
+    reducerContractVersion: z.literal(REDUCER_CONTRACT_VERSION),
+    initialize: callable,
+    dispatch: callable,
+    project: callable,
+    botStrategies: BotStrategyCatalogSchema.optional(),
+    decideBot: callable.optional(),
+  })
+  .refine(
+    (bundle) =>
+      (bundle.botStrategies === undefined) === (bundle.decideBot === undefined),
+    "Bot strategies and decideBot must be provided together.",
+  );
 
 export function assertReducerBundleContract(
   value: unknown,
@@ -41,5 +57,10 @@ export function assertReducerBundleContract(
     );
   }
   const method = result.error.issues[0]?.path[0];
+  if (!method || method === "botStrategies" || method === "decideBot") {
+    throw new Error(
+      `Reducer bundle ${source} has an invalid bot strategy contract: ${result.error.message}`,
+    );
+  }
   throw new Error(`Reducer bundle ${source} is missing ${String(method)}().`);
 }
