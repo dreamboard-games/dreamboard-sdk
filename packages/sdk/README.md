@@ -342,9 +342,9 @@ try {
 
 ## Reducer runner contract
 
-`createReducerBundle(game)` returns exactly the contract version and three
-operations: `initialize(input)`, `dispatch({ state, input, referenceBasis })`,
-and `project({ state, playerIds, referenceBasis })`. The runner contract is `0.11.0`; hosts must
+`createReducerBundle(game)` exposes the contract version and the operations
+`initialize(input)`, `dispatch({ state, input, referenceBasis })`,
+and `project({ state, playerIds, referenceBasis })`. When strategies are registered, the bundle also exposes their metadata in `botStrategies` and their decision function in `decideBot`. The runner contract is `0.11.0`; hosts must
 require that exact version. The host supplies `referenceBasis: { sessionId, version }`:
 use a fresh session ID for each authority lifetime, increment version exactly once
 for every accepted input, and advance it on restore without restoring an old
