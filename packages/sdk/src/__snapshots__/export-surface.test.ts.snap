@@ -32,6 +32,8 @@ exports[`public export surface > reducer export names are stable 1`] = `
   "memoize",
   "noopDiagnosticsSink",
   "normalizeCommandParams",
+  "offeredInputDomain",
+  "offeredInteraction",
   "parseBoardElementId",
   "parseBoardSpaceHostId",
   "parsePerPlayerInstanceId",

@@ -25,7 +25,7 @@ no added fictional setting that makes the rules harder to recognise.
 
 ## Players and objective
 
-- Exactly 4 human players.
+- Exactly 4 seats. A human or a game-authored strategy can control a seat.
 - Capture as few penalty points as possible over one 13-trick hand.
 - The player or players with the lowest final score win.
 
@@ -150,7 +150,7 @@ competition rank, so a ranking may be `1, 2, 2, 4`.
 
 - No cumulative match to 100 points and no repeated hands.
 - No right, across, or hold passing rounds; the only pass direction is left.
-- No 3-player, 5-player, partnership, or bot rules.
+- No 3-player, 5-player, or partnership rules.
 - No Jack-of-Diamonds bonus, spot-heart values, or other scoring variants.
 - No alternative moon choice such as subtracting 26 from the shooter's score.
 - No checked-in deal or mid-hand base state as the normal setup path.

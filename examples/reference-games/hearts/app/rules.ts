@@ -10,7 +10,7 @@ import {
 
 type Q = typeof hearts.types.Queries;
 
-const RANK_VALUE: Readonly<Record<string, number>> = {
+export const RANK_VALUE: Readonly<Record<string, number>> = {
   "2": 2,
   "3": 3,
   "4": 4,

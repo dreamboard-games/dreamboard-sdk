@@ -6,8 +6,11 @@ import {
   inspectScenario,
   probeScenarioCommand,
   replayScenario,
+  scenarioSource,
+  localSource,
 } from "@dreamboard-games/sdk/testing";
 import game from "../app/game.ts";
+import bundle from "../app/index.ts";
 import allHearts from "./scenarios/card-legality-all-hearts.scenario.ts";
 import firstLead from "./scenarios/card-legality-first-lead.scenario.ts";
 import allPenalty from "./scenarios/card-legality-first-trick-all-penalty.scenario.ts";
@@ -563,4 +566,77 @@ test("the canonical full-hand replay is byte-stable", async () => {
   assert.deepEqual(first.state(), second.state());
   assert.deepEqual(first.diagnostics.events, second.diagnostics.events);
   assert.equal(first.checkpointDigest, second.checkpointDigest);
+});
+
+test("the two strategies choose different passes and tricks at the same checkpoints", async () => {
+  for (const [scenario, at, as, choices] of [
+    [
+      completeGame,
+      "opening",
+      "player-1",
+      [
+        {
+          interactionId: "submit",
+          params: { cardIds: ["spades-A", "diamonds-K", "spades-10"] },
+        },
+        {
+          interactionId: "submit",
+          params: { cardIds: ["clubs-3", "hearts-3", "hearts-4"] },
+        },
+      ],
+    ],
+    [
+      followSuit,
+      { segment: "given", completed: 5 },
+      "player-3",
+      [
+        { interactionId: "playCard", params: { cardId: "clubs-4" } },
+        { interactionId: "playCard", params: { cardId: "clubs-A" } },
+      ],
+    ],
+  ] as const) {
+    const source = await scenarioSource(game, scenario, { bundle, at, as });
+    try {
+      const checkpoint = source.checkpoint();
+      for (const [index, strategyId] of [
+        "penalty-dodger",
+        "moon-chaser",
+      ].entries()) {
+        source.restore(checkpoint);
+        const turn = await source.playBotTurn(strategyId);
+        assert.deepEqual(turn?.result, { accepted: true });
+        assert.deepEqual(turn.decision, choices[index]);
+      }
+    } finally {
+      source.dispose();
+    }
+  }
+});
+
+test("four strategy-controlled seats pass and play a complete seeded hand", async () => {
+  const source = await localSource(game, { bundle, players: 4, seed: 7 });
+  const strategies = [
+    "moon-chaser",
+    "penalty-dodger",
+    "moon-chaser",
+    "penalty-dodger",
+  ];
+  try {
+    for (let turn = 0; turn < 56; turn++) {
+      const snapshot = source.inspect();
+      const player = snapshot.frame.flow.activePlayers[0];
+      source.switchSeat(player);
+      const seat = snapshot.frame.players.indexOf(player);
+      const action = await source.playBotTurn(strategies[seat]);
+      assert.deepEqual(action?.result, { accepted: true });
+      assert.equal(
+        action.decision.interactionId,
+        turn < 4 ? "submit" : "playCard",
+      );
+    }
+    assert.equal(source.checkpoint().terminal?.reason.code, "HAND_COMPLETE");
+    assert.equal(await source.playBotTurn("moon-chaser"), null);
+  } finally {
+    source.dispose();
+  }
 });

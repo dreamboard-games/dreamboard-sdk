@@ -1,3 +1,4 @@
+import type { ReducerBundleContract } from "../../shared/worker-contract.js";
 import type {
   AnyReducerGameDefinition,
   ReducerGameContractLike,
@@ -18,18 +19,23 @@ export async function scenarioSource<
 >(
   game: Game & { readonly contract: Contract },
   scenario: ScenarioDefinition<Game>,
-  options: { at?: ScenarioCheckpointSelector; as?: string } = {},
+  options: {
+    bundle?: ReducerBundleContract;
+    at?: ScenarioCheckpointSelector;
+    as?: string;
+  } = {},
 ): Promise<LocalSource<Game>> {
   const materialized = await materializeScenarioRuntimeCheckpoint({
     game,
     scenario,
+    bundle: options.bundle,
     ...(options.at === undefined
       ? {}
       : { at: resolveScenarioCheckpoint(scenario, options.at) }),
   });
   return createLocalProvider(
     game,
-    createReducerTestingRuntime(game),
+    createReducerTestingRuntime(game, {}, options.bundle),
     materialized.playerIds,
     { state: materialized.state, terminal: materialized.terminal },
     options.as ?? materialized.playerIds[0],

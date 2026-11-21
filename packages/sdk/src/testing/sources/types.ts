@@ -5,6 +5,7 @@ import type {
   SourceSnapshot,
 } from "../../headless/sources/types.js";
 import type {
+  BotDecision,
   GameOutcome,
   ReducerSessionState,
 } from "../../shared/runtime-types.js";
@@ -20,6 +21,11 @@ export interface LocalSource<Game>
     CommandSource,
     ApplySource<ScenarioCommandOf<Game>, Promise<SubmitResult>> {
   switchSeat(playerId: string): void;
+  /** Ask the configured reducer bundle for one decision from the selected seat. */
+  playBotTurn(strategyId: string): Promise<{
+    readonly decision: NonNullable<BotDecision>;
+    readonly result: SubmitResult;
+  } | null>;
   checkpoint(): LocalCheckpoint;
   /** Parses untrusted checkpoint JSON before replacing state. */
   restore(checkpoint: unknown): void;

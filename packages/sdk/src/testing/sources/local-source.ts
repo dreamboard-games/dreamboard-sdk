@@ -1,3 +1,4 @@
+import type { ReducerBundleContract } from "../../shared/worker-contract.js";
 import type {
   AnyReducerGameDefinition,
   ReducerGameContractLike,
@@ -48,6 +49,7 @@ export async function localSource<
 >(
   game: Game & { readonly contract: Contract },
   options: {
+    bundle?: ReducerBundleContract;
     players: number;
     seed: number;
     as?: string;
@@ -56,7 +58,7 @@ export async function localSource<
 ): Promise<LocalSource<Game>> {
   const setup = game.contract.manifest.normalSetup;
   const playerIds = resolvePlayerRoster(game, options.players);
-  const runtime = createReducerTestingRuntime(game);
+  const runtime = createReducerTestingRuntime(game, {}, options.bundle);
   const initial = await runtime.initialize({
     table: RuntimeJsonSchema.parse(setup.createInitialTable({ playerIds })),
     playerIds,
@@ -268,6 +270,20 @@ export function createLocalProvider<
     async submit(interactionId, params) {
       assertIdle();
       return lifecycle.source.submit(interactionId, params);
+    },
+    async playBotTurn(strategyId) {
+      assertIdle();
+      if (!runtime.decideBot)
+        throw new Error(
+          "The local source requires a bundle with bot strategies.",
+        );
+      const decision = runtime.decideBot({ strategyId, frame: makeFrame() });
+      if (!decision) return null;
+      const result = await lifecycle.source.submit(
+        decision.interactionId,
+        decision.params,
+      );
+      return { decision, result };
     },
     async cancel(interactionId) {
       assertIdle();

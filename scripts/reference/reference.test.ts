@@ -17,7 +17,7 @@ test("reference games are ordinary authored workspace packages", async () => {
     );
     assert.equal(game.packageJson.scripts?.generate, undefined);
     const entry = await readFile(path.join(game.dir, "app/index.ts"), "utf8");
-    assert.match(entry, /createReducerBundle\(game\)/);
+    assert.match(entry, /export default createReducerBundle\(game\s*[,)]/);
     assert.doesNotMatch(entry, /generated|shared\//i);
   }
 });
