@@ -15,11 +15,15 @@ export const InputSelectionSchema = z.discriminatedUnion("mode", [
   z
     .object({
       mode: z.literal("many"),
-      min: z.number().int(),
-      max: z.number().int().optional(),
+      min: z.number().int().nonnegative(),
+      max: z.number().int().nonnegative().optional(),
       distinct: z.boolean().optional(),
     })
-    .strict(),
+    .strict()
+    .refine(({ min, max }) => max === undefined || max >= min, {
+      path: ["max"],
+      message: "Maximum selection count must be at least the minimum.",
+    }),
 ]);
 
 export const InteractionChoiceOptionSchema = z

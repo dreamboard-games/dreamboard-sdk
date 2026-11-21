@@ -50,6 +50,16 @@ describe("canonical interaction admission", () => {
     },
     { type: "boundedNumber", min: 0, max: Infinity },
     { type: "resourceMap", resources: [{ resourceId: "wood", min: 0 }] },
+    {
+      type: "choice",
+      choices: [],
+      selection: { mode: "many", min: -1, max: -1, order: "unordered" },
+    },
+    {
+      type: "choice",
+      choices: [],
+      selection: { mode: "many", min: 3, max: 2 },
+    },
     { type: "choice", choices: [], extra: true },
   ])("rejects malformed domain %# at worker and UI authority", (domain) => {
     expect(InputDomainSchema.safeParse(domain).success).toBe(false);

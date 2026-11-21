@@ -20,7 +20,8 @@ defineBots(game, {
           selectedCard.value + view.shield,
         "passing.submit": ({ cards }) => {
           // @ts-expect-error Resolved selections are readonly.
-          cards.push(cards[0]);
+          const mutable: (typeof cards)[number][] = cards;
+          void mutable;
           return cards.reduce((score, card) => score + card.value, 0);
         },
       },

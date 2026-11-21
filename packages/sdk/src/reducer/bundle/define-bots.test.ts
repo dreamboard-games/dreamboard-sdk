@@ -116,7 +116,9 @@ describe("defineBots", () => {
 
   test("uses projected order for ties and supplies the original objects", () => {
     const resolve = vi.fn((view: View) => [...view.hand].reverse());
-    const choose = vi.fn((_args: { selectedCard: Card; view: View }) => 0);
+    const choose = vi.fn<(args: { selectedCard: Card; view: View }) => number>(
+      () => 0,
+    );
     const empty = vi.fn(() => 0);
     const decide = setup({ resolve, choose, empty });
     expect(decide(seat([playCard, end]))).toEqual({
@@ -174,28 +176,46 @@ describe("defineBots", () => {
     expect(empty).not.toHaveBeenCalled();
   });
 
+  test("rejects a negative fixed selection count on direct decision calls", () => {
+    const invalidPass = offer("passing.submit", [
+      cardInput("cardIds", ["four", "three", "two", "ace"], {
+        mode: "many",
+        min: -1,
+        max: -1,
+        distinct: true,
+        order: "unordered",
+      }),
+    ]);
+    expect(() => setup()(seat([invalidPass]))).toThrow(
+      "Combination count must be a nonnegative integer.",
+    );
+  });
+
   test.each([
     {
       resolve: () => {
         throw new Error("private resolver data");
       },
       category: "resolver_failed",
+      message:
+        "Bot card resolver failed. Every eligible card must resolve exactly once.",
     },
     {
       choose: () => {
         throw { private: "private scorer data" };
       },
       category: "scorer_failed",
+      message: "Bot scorer failed.",
     },
   ])(
     "reports $category without the callback exception",
-    ({ category, ...handlers }) => {
+    ({ category, message, ...handlers }) => {
       expect(() => setup(handlers)(seat([playCard]))).toThrow(
         expect.objectContaining({
           name: "BotStrategyError",
           category,
           interactionKey: "play.choose",
-          message: expect.not.stringContaining("private"),
+          message,
         }),
       );
     },
