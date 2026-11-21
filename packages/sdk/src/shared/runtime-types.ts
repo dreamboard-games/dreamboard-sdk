@@ -31,6 +31,10 @@ export type ReducerDomainState = z.infer<
 export type ReducerSessionState = z.infer<
   typeof Schemas.ReducerSessionStateSchema
 >;
+export type BotDecision = z.infer<typeof Schemas.BotDecisionSchema>;
+export type BotStrategyMetadata = z.infer<
+  typeof Schemas.BotStrategyMetadataSchema
+>;
 export type GameInputInteraction = z.infer<
   typeof Schemas.GameInputInteractionSchema
 >;

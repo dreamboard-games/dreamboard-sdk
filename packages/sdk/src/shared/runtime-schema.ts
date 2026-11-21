@@ -181,6 +181,26 @@ export const GameInputInteractionSchema = z.strictObject({
   params: RuntimeJsonSchema,
 });
 
+/** Strategies choose the same interaction and params as a seated player. */
+export const BotDecisionSchema = GameInputInteractionSchema.pick({
+  interactionId: true,
+  params: true,
+}).nullable();
+
+export const BotStrategyMetadataSchema = z.strictObject({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  description: z.string().min(1),
+});
+
+export const BotStrategyCatalogSchema = z
+  .array(BotStrategyMetadataSchema)
+  .refine(
+    (strategies) =>
+      new Set(strategies.map(({ id }) => id)).size === strategies.length,
+    "Bot strategy IDs must be unique.",
+  );
+
 export const GameInputCancelSchema = z.strictObject({
   kind: z.literal("interaction.cancel"),
   basis: GameplayBasisSchema,

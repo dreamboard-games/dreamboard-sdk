@@ -21,6 +21,30 @@ describe("assertReducerBundleContract", () => {
     ).not.toThrow();
   });
 
+  test("admits the optional bot capability only with a valid catalog and decision method", () => {
+    const metadata = {
+      id: "first",
+      name: "First",
+      description: "Picks the first move.",
+    };
+    const bundle = {
+      ...validBundle(),
+      botStrategies: [metadata],
+      decideBot: () => null,
+    };
+    expect(() => assertReducerBundleContract(bundle, "game")).not.toThrow();
+    for (const invalid of [
+      { ...bundle, decideBot: undefined },
+      { ...bundle, botStrategies: undefined },
+      { ...bundle, botStrategies: [metadata, metadata] },
+      { ...bundle, botStrategies: [{ ...metadata, id: "" }] },
+    ]) {
+      expect(() => assertReducerBundleContract(invalid, "game")).toThrow(
+        "invalid bot strategy contract",
+      );
+    }
+  });
+
   test("rejects a bundle from an older contract version", () => {
     const candidate = {
       ...validBundle(),

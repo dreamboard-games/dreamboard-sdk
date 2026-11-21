@@ -65,7 +65,7 @@ export function createReducerTestingRuntime<
   View extends ViewOfContract<Contract>,
 >(
   definition: ReducerGameDefinition<Contract, Definitions, View>,
-  options: ReducerBundleOptions = {},
+  options: ReducerBundleOptions<typeof definition> = {},
   bundle: ReducerBundleContract = createReducerBundle(definition, options),
 ): ReducerTestingRuntime {
   const codec = createIngressRuntimeCodec(definition);
