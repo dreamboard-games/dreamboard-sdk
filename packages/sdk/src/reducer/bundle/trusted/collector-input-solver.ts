@@ -1,10 +1,13 @@
 import { zonePositions } from "../../../shared/position-target.js";
+import { canonicalizeInputSelection } from "../../../shared/input-domain.js";
+import { enumerateCombinations } from "../../inputs/combinations.js";
 import { createStateQueries } from "../../table-queries";
 import type {
   AnyInteractionSpec,
   CollectorState,
   InputCollector,
   InputDomainDescriptor,
+  InputSelectionDescriptor,
   ManifestContract,
   TableOfState,
   TableQueriesOfState,
@@ -326,7 +329,7 @@ function valueSourceForCollector(
   );
   const base = baseValuesForDomain(domain, collector, context);
   const selection = collector.selection ?? domain.selection;
-  const selected = applySelection(base, selection);
+  const selected = applySelection(base, selection, domain);
   const resolved = collector.schema.safeParse(undefined).success
     ? withAbsentCollectorValue(selected)
     : selected;
@@ -345,7 +348,13 @@ function valueSourceForCollector(
       (selection.max === undefined || fixedValue.length <= selection.max) &&
       (!selection.distinct || new Set(keys).size === keys.length) &&
       fixedValue.every((value) => sourceContainsValue(base, value));
-    return { complete: true, values: () => (valid ? [fixedValue] : []) };
+    return {
+      complete: true,
+      values: () =>
+        valid
+          ? [canonicalizeInputSelection(fixedValue, selection, domain)]
+          : [],
+    };
   }
   if (!resolved.complete) {
     return fixedCollectorValueSource(context, collector, fixedValue);
@@ -609,7 +618,7 @@ function choiceListValueSource(domain: {
     complete: true,
     values: function* () {
       for (let count = min; count <= cappedMax; count += 1) {
-        yield* enumerateCombinations(choices, count, 0, []);
+        yield* enumerateCombinations(choices, count);
       }
     },
   };
@@ -617,17 +626,8 @@ function choiceListValueSource(domain: {
 
 function applySelection(
   source: ValueSource,
-  selection:
-    | {
-        readonly mode: "single";
-      }
-    | {
-        readonly mode: "many";
-        readonly min: number;
-        readonly max?: number;
-        readonly distinct?: boolean;
-      }
-    | undefined,
+  selection: InputSelectionDescriptor | undefined,
+  domain: InputDomainDescriptor,
 ): ValueSource {
   if (selection?.mode !== "many") return source;
   if (!source.complete) return incompleteValueSource();
@@ -637,39 +637,33 @@ function applySelection(
   if (max !== undefined && (!Number.isSafeInteger(max) || max < min)) {
     return incompleteValueSource();
   }
-  if (max === undefined && !selection.distinct) {
-    return {
-      complete: false,
-      values: function* () {
-        yield* enumerateSequencesFromSource(source.values, min, []);
-      },
-    };
-  }
+  const distinct = selection.distinct === true;
+  const unordered = selection.order === "unordered";
   return {
-    complete: true,
+    complete: max !== undefined || distinct,
     values: function* () {
-      if (selection.distinct && max === undefined) {
-        for (let count = min; ; count += 1) {
-          let yielded = false;
-          for (const combination of enumerateCombinationsFromSource(
-            source.values,
-            count,
-            0,
-            [],
-          )) {
-            yielded = true;
-            yield combination;
-          }
-          if (!yielded) return;
-        }
-      }
-      const finiteMax = max ?? min;
-      for (let count = min; count <= finiteMax; count += 1) {
-        if (selection.distinct) {
-          yield* enumerateCombinationsFromSource(source.values, count, 0, []);
-        } else {
+      const upper = max ?? (distinct ? Infinity : min);
+      for (let count = min; count <= upper; count += 1) {
+        if (!unordered && !distinct) {
           yield* enumerateSequencesFromSource(source.values, count, []);
+          continue;
         }
+        let yielded = false;
+        for (const combination of enumerateCombinationsFromSource(
+          source.values,
+          count,
+          distinct,
+          0,
+          [],
+        )) {
+          yielded = true;
+          if (unordered) {
+            yield canonicalizeInputSelection(combination, selection, domain);
+          } else {
+            yield* enumeratePermutations(combination, []);
+          }
+        }
+        if (!yielded) return;
       }
     },
   };
@@ -678,6 +672,7 @@ function applySelection(
 function* enumerateCombinationsFromSource<Value>(
   values: () => Iterable<Value>,
   count: number,
+  distinct: boolean,
   start: number,
   current: readonly Value[],
 ): Iterable<Value[]> {
@@ -688,10 +683,13 @@ function* enumerateCombinationsFromSource<Value>(
   let index = 0;
   for (const value of values()) {
     if (index >= start) {
-      yield* enumerateCombinationsFromSource(values, count, index + 1, [
-        ...current,
-        value,
-      ]);
+      yield* enumerateCombinationsFromSource(
+        values,
+        count,
+        distinct,
+        distinct ? index + 1 : index,
+        [...current, value],
+      );
     }
     index += 1;
   }
@@ -711,21 +709,19 @@ function* enumerateSequencesFromSource<Value>(
   }
 }
 
-function* enumerateCombinations<Value>(
-  values: readonly Value[],
-  count: number,
-  start: number,
+function* enumeratePermutations<Value>(
+  remaining: readonly Value[],
   current: readonly Value[],
 ): Iterable<Value[]> {
-  if (current.length === count) {
+  if (remaining.length === 0) {
     yield [...current];
     return;
   }
-  for (let index = start; index < values.length; index += 1) {
-    yield* enumerateCombinations(values, count, index + 1, [
-      ...current,
-      values[index],
-    ]);
+  for (const [index, value] of remaining.entries()) {
+    yield* enumeratePermutations(
+      remaining.filter((_, candidate) => candidate !== index),
+      [...current, value],
+    );
   }
 }
 

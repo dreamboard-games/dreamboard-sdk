@@ -30,6 +30,13 @@ function input(): Parameters<typeof materializeCompactGameplayFrame>[0] {
         domain: {
           type: "choice",
           choices: cardIds.map((value) => ({ value, label: value })),
+          selection: {
+            mode: "many",
+            min: 3,
+            max: 3,
+            distinct: true,
+            order: "unordered",
+          },
         },
       },
     ],
@@ -96,6 +103,15 @@ describe("compact gameplay snapshots", () => {
     const hydrated = hydrateCompactGameplayFrame(admitted);
     expect(hydrated).toEqual(materializePluginGameplayFrame(source));
     expect(PluginGameplayFrameSchema.parse(hydrated)).toEqual(hydrated);
+    expect(
+      hydrated.availableInteractions[0].inputs[0].domain.selection,
+    ).toEqual({
+      mode: "many",
+      min: 3,
+      max: 3,
+      distinct: true,
+      order: "unordered",
+    });
     expect(hydrated.zones.deck.table.playableByCardId["card-0"][0]).toBe(
       hydrated.availableInteractions[0],
     );

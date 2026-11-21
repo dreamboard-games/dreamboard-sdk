@@ -18,6 +18,7 @@ export const InputSelectionSchema = z.discriminatedUnion("mode", [
       min: z.number().int(),
       max: z.number().int().optional(),
       distinct: z.boolean().optional(),
+      order: z.enum(["ordered", "unordered"]).optional(),
     })
     .strict(),
 ]);

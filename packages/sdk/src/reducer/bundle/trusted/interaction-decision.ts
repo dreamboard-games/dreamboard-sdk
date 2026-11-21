@@ -424,6 +424,9 @@ export function createInteractionDecisionResolver<
         : parseForSubmit
           ? parseInteractionParams(interaction, params, {
               skipRng: true,
+              state: projection?.domainState ?? scope.toDomainState(state),
+              playerId,
+              definitions: scope.manifest,
             })
           : ({
               ok: true,

@@ -120,6 +120,10 @@ commits exactly one current value. Factories receive only earlier parsed
 `selected` values; descriptors expose only the current input. The final commit
 runs complete-parameter validation and the reducer once. Use explicit `null`
 for a no-target choice, and `many(...)` for one atomic multi-selection.
+Selections preserve submission order by default. Set `order: "unordered"` if
+all permutations mean the same thing. The runtime normalizes unordered values
+using the projected order for eligible targets and choices. `distinct: true`
+independently requires each value to be selected at most once.
 
 ```ts
 const choose = play.interaction({

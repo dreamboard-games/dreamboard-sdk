@@ -162,6 +162,7 @@ function createGame({
 }
 
 function createCardPassGame(options?: {
+  order?: "ordered" | "unordered";
   commit?: {
     mode: "manual";
   };
@@ -199,6 +200,7 @@ function createCardPassGame(options?: {
               {
                 count: 3,
                 distinct: true,
+                order: options?.order,
               },
             ),
           },
@@ -494,104 +496,111 @@ describe("simultaneousPlayer phases", () => {
     });
   });
 
-  test("collects three-card simultaneous submissions with server-authoritative validation", async () => {
-    const bundle = createReducerTestingRuntime(createCardPassGame());
-    const initial = (
-      await bundle.initialize({
-        table: RuntimeJsonSchema.parse(createCardTable()),
-        playerIds: ["player-1", "player-2", "player-3"],
-      })
-    ).state;
+  test.each([undefined, "ordered", "unordered"] as const)(
+    "collects three-card submissions with %s order",
+    async (order) => {
+      const bundle = createReducerTestingRuntime(createCardPassGame({ order }));
+      const initial = (
+        await bundle.initialize({
+          table: RuntimeJsonSchema.parse(createCardTable()),
+          playerIds: ["player-1", "player-2", "player-3"],
+        })
+      ).state;
 
-    const projection = bundle.project({
-      referenceBasis: testReferenceBasis,
-      state: initial,
-      playerIds: ["player-1"],
-    });
-    const submit = hydrateRefs(
-      projection.interactionsByRef,
-      projection.seats["player-1"]?.availableInteractionRefs,
-    ).find((interaction) => interaction.interactionId === "submit");
-    expect(submit?.inputs).toMatchObject([
-      {
-        key: "cardIds",
-        domain: {
-          type: "cardTarget",
-          projection: "resolved",
-          targetKind: "card",
-          zoneIds: ["hand"],
-          eligibleTargets: ["card-1", "card-2", "card-3"],
-          selection: {
-            mode: "many",
-            min: 3,
-            max: 3,
-            distinct: true,
+      const projection = bundle.project({
+        referenceBasis: testReferenceBasis,
+        state: initial,
+        playerIds: ["player-1"],
+      });
+      const submit = hydrateRefs(
+        projection.interactionsByRef,
+        projection.seats["player-1"]?.availableInteractionRefs,
+      ).find((interaction) => interaction.interactionId === "submit");
+      expect(submit?.inputs).toMatchObject([
+        {
+          key: "cardIds",
+          domain: {
+            type: "cardTarget",
+            projection: "resolved",
+            targetKind: "card",
+            zoneIds: ["hand"],
+            eligibleTargets: ["card-1", "card-2", "card-3"],
+            selection: {
+              mode: "many",
+              min: 3,
+              max: 3,
+              distinct: true,
+              ...(order === undefined ? {} : { order }),
+            },
           },
         },
-      },
-    ]);
-    expect(submit?.commit).toEqual({ mode: "manual" });
+      ]);
+      expect(submit?.commit).toEqual({ mode: "manual" });
 
-    await expect(
-      bundle.validateInput({
+      await expect(
+        bundle.validateInput({
+          referenceBasis: testReferenceBasis,
+          state: initial,
+          input: submitCardsInput("player-1", ["card-1", "card-2"]),
+        }),
+      ).resolves.toMatchObject({
+        valid: false,
+        errorCode: "INVALID_INPUT_COUNT",
+      });
+      await expect(
+        bundle.validateInput({
+          referenceBasis: testReferenceBasis,
+          state: initial,
+          input: submitCardsInput("player-1", ["card-1", "card-1", "card-2"]),
+        }),
+      ).resolves.toMatchObject({
+        valid: false,
+        errorCode: "DUPLICATE_INPUT_VALUE",
+      });
+      await expect(
+        bundle.validateInput({
+          referenceBasis: testReferenceBasis,
+          state: initial,
+          input: submitCardsInput("player-1", ["card-1", "card-2", "card-4"]),
+        }),
+      ).resolves.toMatchObject({
+        valid: false,
+        errorCode: "COMPONENT_TARGET_NOT_ELIGIBLE",
+      });
+
+      const first = await bundle.dispatch({
         referenceBasis: testReferenceBasis,
         state: initial,
-        input: submitCardsInput("player-1", ["card-1", "card-2"]),
-      }),
-    ).resolves.toMatchObject({
-      valid: false,
-      errorCode: "INVALID_INPUT_COUNT",
-    });
-    await expect(
-      bundle.validateInput({
-        referenceBasis: testReferenceBasis,
-        state: initial,
-        input: submitCardsInput("player-1", ["card-1", "card-1", "card-2"]),
-      }),
-    ).resolves.toMatchObject({
-      valid: false,
-      errorCode: "DUPLICATE_INPUT_VALUE",
-    });
-    await expect(
-      bundle.validateInput({
-        referenceBasis: testReferenceBasis,
-        state: initial,
-        input: submitCardsInput("player-1", ["card-1", "card-2", "card-4"]),
-      }),
-    ).resolves.toMatchObject({
-      valid: false,
-      errorCode: "COMPONENT_TARGET_NOT_ELIGIBLE",
-    });
+        input: submitCardsInput("player-1", ["card-3", "card-2", "card-1"]),
+      });
+      expect(first.kind).toBe("accept");
+      if (first.kind !== "accept") return;
+      expect(first.state.domain.publicState).toEqual({ resolved: [] });
 
-    const first = await bundle.dispatch({
-      referenceBasis: testReferenceBasis,
-      state: initial,
-      input: submitCardsInput("player-1", ["card-1", "card-2", "card-3"]),
-    });
-    expect(first.kind).toBe("accept");
-    if (first.kind !== "accept") return;
-    expect(first.state.domain.publicState).toEqual({ resolved: [] });
-
-    const second = await bundle.dispatch({
-      referenceBasis: testReferenceBasis,
-      state: first.state,
-      input: submitCardsInput("player-2", ["card-4", "card-5", "card-6"]),
-    });
-    expect(second.kind).toBe("accept");
-    if (second.kind !== "accept") return;
-    expect(second.state.domain.publicState).toEqual({
-      resolved: [
-        {
-          playerId: "player-1",
-          cardIds: ["card-1", "card-2", "card-3"],
-        },
-        {
-          playerId: "player-2",
-          cardIds: ["card-4", "card-5", "card-6"],
-        },
-      ],
-    });
-  });
+      const second = await bundle.dispatch({
+        referenceBasis: testReferenceBasis,
+        state: first.state,
+        input: submitCardsInput("player-2", ["card-4", "card-5", "card-6"]),
+      });
+      expect(second.kind).toBe("accept");
+      if (second.kind !== "accept") return;
+      expect(second.state.domain.publicState).toEqual({
+        resolved: [
+          {
+            playerId: "player-1",
+            cardIds:
+              order === "unordered"
+                ? ["card-1", "card-2", "card-3"]
+                : ["card-3", "card-2", "card-1"],
+          },
+          {
+            playerId: "player-2",
+            cardIds: ["card-4", "card-5", "card-6"],
+          },
+        ],
+      });
+    },
+  );
 
   test("rejects auto submit for many-input simultaneous submissions", () => {
     expect(() =>

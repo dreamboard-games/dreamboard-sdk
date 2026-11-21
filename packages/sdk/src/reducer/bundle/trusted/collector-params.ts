@@ -1,5 +1,6 @@
 import type { ZoneDefinitions } from "../../model";
 import {
+  canonicalizeInputSelection,
   inputValueInDomain,
   inputValueKey,
 } from "../../../shared/input-domain";
@@ -23,14 +24,31 @@ export function parseInteractionParams<
 >(
   interaction: AnyInteractionSpec<DomainState, Manifest>,
   rawParams: unknown,
-  options: { skipRng?: boolean } = {},
+  options: {
+    skipRng?: boolean;
+    state: DomainState;
+    playerId: string;
+    definitions: ZoneDefinitions;
+  },
 ):
   | { ok: true; params: Record<string, unknown> }
   | { ok: false; message: string } {
   const collectors = interactionInputsOf(interaction);
   const record = (rawParams ?? {}) as Record<string, unknown>;
   if (interaction.paramsSchema) {
-    const result = interaction.paramsSchema.safeParse(record);
+    const normalized = { ...record };
+    let q: ReturnType<typeof createStateQueries> | undefined;
+    for (const [key, collector] of Object.entries(collectors)) {
+      const selection = collector.selection;
+      if (selection?.mode !== "many" || selection.order !== "unordered")
+        continue;
+      const value = normalized[key];
+      if (!Array.isArray(value)) continue;
+      q ??= createStateQueries(options.state, options.definitions);
+      const domain = collector.domain?.(options.state, options.playerId, q);
+      normalized[key] = canonicalizeInputSelection(value, selection, domain);
+    }
+    const result = interaction.paramsSchema.safeParse(normalized);
     if (!result.success) {
       return {
         ok: false,
@@ -111,14 +129,28 @@ export function validateCollectorTargets<
   const queries = () =>
     (queriesLazy ??= createStateQueries(domainState, definitions));
   for (const [key, collector] of Object.entries(collectors)) {
+    const value = params[key];
+    const q = queries();
+    const domain = collector.domain?.(domainState, playerId, q);
     const issue = validateCollectorValue(
       collector,
       domainState,
       playerId,
-      queries(),
-      params[key],
+      q,
+      value,
+      domain,
     );
     if (issue) return makeValidationError(issue.errorCode, issue.message);
+    if (
+      collector.selection?.mode === "many" &&
+      collector.selection.order === "unordered"
+    ) {
+      params[key] = canonicalizeInputSelection(
+        value,
+        collector.selection,
+        domain,
+      );
+    }
   }
   return { valid: true };
 }

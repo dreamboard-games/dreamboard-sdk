@@ -369,6 +369,41 @@ describe("trusted collector input solver", () => {
     ).toEqual({ status: "yes" });
   });
 
+  test.each([
+    { order: "ordered", max: 2, status: "yes" },
+    { order: "ordered", max: undefined, status: "yes" },
+    { order: "unordered", max: 2, status: "no" },
+  ] as const)(
+    "finds reverse-only assignments with $order order and max $max according to the selection",
+    ({ order, max, status }) => {
+      const interaction = {
+        reduce: () => undefined,
+        inputs: {
+          cards: many(
+            formInput.choice({
+              defaultValue: "a",
+              choices: [
+                { value: "a", label: "A" },
+                { value: "b", label: "B" },
+              ],
+            }),
+            { min: 2, max, distinct: true, order },
+          ),
+        },
+      };
+      expect(
+        hasAnyCollectorInputAssignment({
+          interaction,
+          domainState,
+          definitions: inputDefinitions,
+          playerId: "player-1",
+          acceptsAssignment: ({ cards }) =>
+            JSON.stringify(cards) === '["b","a"]',
+        }),
+      ).toMatchObject({ status });
+    },
+  );
+
   test("rejects invalid evaluation budgets before touching collector state", () => {
     expect(() =>
       enumerateCollectorInputAssignments({

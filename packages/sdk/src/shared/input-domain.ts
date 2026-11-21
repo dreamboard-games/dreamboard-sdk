@@ -101,6 +101,39 @@ export function inputValueInDomain(
   return inputDomainErrors(domain, value, selection, options).length === 0;
 }
 
+/** Unordered selections follow domain order where the domain lists its values. */
+export function canonicalizeInputSelection(
+  value: unknown,
+  selection?: InputSelectionDescriptor,
+  domain?: InputDomainDescriptor,
+): unknown {
+  if (selection?.mode !== "many" || selection.order !== "unordered")
+    return value;
+  if (!Array.isArray(value)) return value;
+  const values: readonly unknown[] = value;
+  const choices =
+    domain?.type === "cardTarget" ||
+    domain?.type === "tileTarget" ||
+    domain?.type === "boardTarget"
+      ? domain.eligibleTargets
+      : domain?.type === "choice"
+        ? domain.choices.map((choice) => choice.value)
+        : [];
+  const positions = new Map<string, number>();
+  choices.forEach((choice, index) =>
+    positions.set(inputValueKey(choice), index),
+  );
+  return values
+    .map((item) => ({ item, key: inputValueKey(item) }))
+    .sort(
+      (a, b) =>
+        (positions.get(a.key) ?? choices.length) -
+          (positions.get(b.key) ?? choices.length) ||
+        (a.key < b.key ? -1 : a.key > b.key ? 1 : 0),
+    )
+    .map(({ item }) => item);
+}
+
 /** One selectable option, including an option within a choiceList or many input. */
 export function inputTargetInDomain(
   domain: InputDomainDescriptor,
