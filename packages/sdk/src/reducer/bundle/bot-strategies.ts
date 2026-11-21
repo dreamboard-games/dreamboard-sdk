@@ -13,6 +13,8 @@ import type {
   ViewOfDefinition,
 } from "../model/definition.js";
 
+import { registeredStrategies, type DefinedBots } from "./define-bots.js";
+
 export type BotDecision<Game> =
   | {
       [Phase in PhaseNamesOfDefinition<Game>]: {
@@ -36,9 +38,15 @@ export interface BotStrategy<Game> extends Wire.BotStrategyMetadata {
 }
 
 export function createBotCapability<Game>(
-  strategies: readonly BotStrategy<Game>[] | undefined,
+  registration: DefinedBots<Game> | undefined,
 ): Pick<ReducerBundleContract, "botStrategies" | "decideBot"> {
-  if (!strategies?.length) return {};
+  if (!registration) return {};
+  const strategies = registration[registeredStrategies];
+  if (!strategies)
+    throw new TypeError(
+      "Register bot strategies with defineBots(game, config).",
+    );
+  if (!strategies.length) return {};
   const botStrategies = BotStrategyCatalogSchema.parse(
     strategies.map(({ id, name, description }) => ({ id, name, description })),
   );

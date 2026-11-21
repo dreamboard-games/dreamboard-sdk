@@ -128,6 +128,24 @@ export const game = authoring.assemble({
   },
 });
 
+export const stagedGame = authoring.assemble({
+  view,
+  phases: {
+    play: playPhase,
+    passing: passing.define({
+      kind: "simultaneousPlayer",
+      actors: ({ q }) => q.player.order(),
+      initialState: () => ({}),
+      submit: {
+        steps: passing
+          .steps()
+          .input("cardId", passing.inputs.card({ from: ["hand"] })),
+      },
+      resolve: noop,
+    }),
+  },
+});
+
 export const metadata = {
   id: "test",
   name: "Test",
