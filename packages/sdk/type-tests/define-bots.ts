@@ -130,7 +130,7 @@ defineBots(game, {
         "passing.submit": {
           *candidates({ eligible, selection, view }) {
             // @ts-expect-error Eligible cards retain the readonly array type.
-            eligible.cards.pop();
+            eligible.cards[0] = eligible.cards[1];
             const ranked = [...eligible.cards].sort(
               (a, b) => b.value - a.value,
             );
