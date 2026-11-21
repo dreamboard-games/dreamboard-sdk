@@ -363,6 +363,34 @@ export type PhaseAuthoring<
       string,
       InputCollector
     >,
+    const Kind extends "player" | "simultaneousPlayer" | "auto" =
+      "player" | "simultaneousPlayer" | "auto",
+  >(
+    definition: PhaseDefinitionWithoutState<
+      PhaseDefinition<
+        PhaseStateSchema,
+        BoundState<Contract>,
+        BoundManifest<Contract>,
+        SubmitCollectors,
+        Record<string, never>,
+        OptionsOfContract<Contract>,
+        ContractErrorCode<Contract>
+      >
+    > & { kind: Kind; interactions?: never },
+  ): PhaseDefinition<
+    PhaseStateSchema,
+    BoundState<Contract>,
+    BoundManifest<Contract>,
+    SubmitCollectors,
+    Record<string, never>,
+    OptionsOfContract<Contract>,
+    ContractErrorCode<Contract>
+  > & { kind: Kind };
+  define<
+    SubmitCollectors extends Record<string, InputCollector> = Record<
+      string,
+      InputCollector
+    >,
     Interactions extends InteractionMap<
       BoundPhaseState<Contract, PhaseStateSchema>,
       BoundManifest<Contract>
@@ -636,7 +664,10 @@ function createPhaseAuthoring<
           ReturnType<typeof defineInteractionRule<Contract, PhaseStateSchema>>
         >[0],
       ) as typeof rule,
-    define: (definition) => ({ ...definition, state: schema }),
+    define: ((definition: object) => ({
+      ...definition,
+      state: schema,
+    })) as PhaseAuthoring<Contract, PhaseStateSchema>["define"],
     inputs: createBoundInputBuilders(contract),
     types: phantomTypes<PhaseTypes<Contract, PhaseStateSchema>>(),
   };
