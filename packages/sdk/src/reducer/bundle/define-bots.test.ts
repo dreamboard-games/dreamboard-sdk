@@ -78,7 +78,8 @@ function seat(
 
 function setup({
   resolve = (view: View) => view.hand,
-  choose = ({ selectedCard }: { selectedCard: Card }) => -selectedCard.rank,
+  choose = ({ selectedCard }: { selectedCard: Card; view: View }) =>
+    -selectedCard.rank,
   pass = ({ cards }: { cards: readonly Card[] }) =>
     cards.reduce((total, card) => total + card.rank, 0),
   empty = ({ view }: { view: View }) => -view.shield,

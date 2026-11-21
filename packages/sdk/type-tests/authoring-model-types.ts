@@ -477,16 +477,16 @@ optionPhase.interaction({
   cost: () => ({ gold: 1 }),
   reduce: () => {},
 });
+// @ts-expect-error Phase guidance metadata was removed.
 optionPhase.define({
   kind: "player",
   initialState: () => ({ rolled: false }),
-  // @ts-expect-error Phase guidance metadata was removed.
   guidance: { summary: "Removed" },
 });
+// @ts-expect-error Phase zone wiring metadata was removed.
 optionPhase.define({
   kind: "player",
   initialState: () => ({ rolled: false }),
-  // @ts-expect-error Phase zone wiring metadata was removed.
   zones: ["hand"],
 });
 // @ts-expect-error Ordinary form choices replace prompt collectors.

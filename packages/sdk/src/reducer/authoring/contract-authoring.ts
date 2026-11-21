@@ -321,6 +321,28 @@ export type PhaseAuthoring<
     >,
     { steps: unknown }
   >;
+  interaction<
+    Collectors extends Record<string, InputCollector>,
+    ParamsSchema extends z.core.SomeType,
+  >(
+    spec: Extract<
+      InteractionSpec<
+        Collectors,
+        BoundPhaseState<Contract, PhaseStateSchema>,
+        BoundManifest<Contract>,
+        ContractErrorCode<Contract>
+      >,
+      { inputs: unknown }
+    > & { paramsSchema: ParamsSchema },
+  ): Extract<
+    InteractionSpec<
+      Collectors,
+      BoundPhaseState<Contract, PhaseStateSchema>,
+      BoundManifest<Contract>,
+      ContractErrorCode<Contract>
+    >,
+    { inputs: unknown }
+  > & { paramsSchema: ParamsSchema };
   interaction<Collectors extends Record<string, InputCollector>>(
     spec: Extract<
       InteractionSpec<
@@ -358,13 +380,12 @@ export type PhaseAuthoring<
     BoundManifest<Contract>,
     ContractErrorCode<Contract>
   >;
+  /** Preserve the submit collectors when there are no ordinary interactions. */
   define<
     SubmitCollectors extends Record<string, InputCollector> = Record<
       string,
       InputCollector
     >,
-    const Kind extends "player" | "simultaneousPlayer" | "auto" =
-      "player" | "simultaneousPlayer" | "auto",
   >(
     definition: PhaseDefinitionWithoutState<
       PhaseDefinition<
@@ -376,7 +397,7 @@ export type PhaseAuthoring<
         OptionsOfContract<Contract>,
         ContractErrorCode<Contract>
       >
-    > & { kind: Kind; interactions?: never },
+    > & { kind: "simultaneousPlayer"; interactions?: never },
   ): PhaseDefinition<
     PhaseStateSchema,
     BoundState<Contract>,
@@ -385,7 +406,7 @@ export type PhaseAuthoring<
     Record<string, never>,
     OptionsOfContract<Contract>,
     ContractErrorCode<Contract>
-  > & { kind: Kind };
+  > & { kind: "simultaneousPlayer" };
   define<
     SubmitCollectors extends Record<string, InputCollector> = Record<
       string,

@@ -167,7 +167,8 @@ export type ScenarioSchemaOutput<
       : Schema extends z.ZodExactOptional<infer Inner>
         ? ScenarioSchemaOutput<Inner, Value> | undefined
         : Schema extends z.ZodNullable<infer Inner>
-          ? ScenarioSchemaOutput<Inner, Value> | null
+          ? | ScenarioSchemaOutput<Inner, Exclude<Value, null>>
+            | (null extends Value ? null : never)
           : Schema extends z.ZodDefault<infer Inner>
             ? ScenarioSchemaOutput<Inner, Value>
             : Schema extends z.ZodPrefault<infer Inner>
@@ -185,10 +186,7 @@ export type ScenarioSchemaOutput<
                       : Schema extends z.ZodTuple<infer Items, infer Rest>
                         ? ScenarioTupleOutput<Items, Rest, Value>
                         : Schema extends z.ZodObject<infer Shape>
-                          ? ScenarioObjectOutput<
-                              Shape,
-                              Value & z.output<Schema>
-                            >
+                          ? ScenarioObjectOutput<Shape, Value>
                           : Schema extends z.ZodRecord<infer Key, infer Element>
                             ? Key extends ManifestIdSchema<unknown, "playerId">
                               ? never
@@ -262,13 +260,25 @@ type ScenarioStepParams<Params> = {
     Partial<Record<Exclude<keyof Params, Key>, never>>;
 }[keyof Params];
 
+type CollectorValues<Collectors> = {
+  [Key in keyof Collectors]: CollectorValueOf<Collectors[Key]>;
+};
+
+/** Match author parameter schemas while preserving collector value refinements. */
 type ScenarioParamsOfInteraction<Interaction> = Interaction extends {
   readonly steps: unknown;
 }
   ? ScenarioStepParams<
       ScenarioParamsOfCollectors<InputCollectorsOfInteraction<Interaction>>
     >
-  : ScenarioParamsOfCollectors<InputCollectorsOfInteraction<Interaction>>;
+  : Interaction extends {
+        readonly paramsSchema: infer Schema extends z.core.SomeType;
+      }
+    ? ScenarioSchemaOutput<
+        Schema,
+        CollectorValues<InputCollectorsOfInteraction<Interaction>>
+      >
+    : ScenarioParamsOfCollectors<InputCollectorsOfInteraction<Interaction>>;
 
 export type ScenarioCommand<
   InteractionId extends string = string,
