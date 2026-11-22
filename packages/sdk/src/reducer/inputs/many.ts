@@ -10,23 +10,29 @@ import type {
 } from "../model/spec";
 import type { SchemaLike } from "../model/table";
 
-export type ManyOptions =
-  | {
-      count: number;
-      distinct?: boolean;
-    }
-  | {
-      min?: number;
-      max?: number;
-      distinct?: boolean;
-    };
+export type ManyOptions = (
+  { count: number } | { min?: number; max?: number }
+) & {
+  distinct?: boolean;
+};
+
+type ManySelection = Extract<InputSelectionDescriptor, { mode: "many" }>;
+
+type AuthoredSelection<Options extends ManyOptions> = ManySelection &
+  Pick<Options, Extract<keyof Options, "distinct">> &
+  (Options extends { count: infer Count extends number }
+    ? { readonly min: Count; readonly max: Count }
+    : Pick<Options, Extract<keyof Options, "min" | "max">>);
 
 type NonRngCollector = InputCollector<SchemaLike<unknown>, CollectorState> & {
   readonly kind: Exclude<InputCollector["kind"], "rng">;
 };
 
 /** Lift the value schema while retaining the collector's exact domain and routing. */
-export type ManyInputCollector<Collector extends NonRngCollector> = Omit<
+export type ManyInputCollector<
+  Collector extends NonRngCollector,
+  Options extends ManyOptions = ManyOptions,
+> = Omit<
   Collector,
   | "schema"
   | "selection"
@@ -36,12 +42,10 @@ export type ManyInputCollector<Collector extends NonRngCollector> = Omit<
 > &
   CollectorValueWitness<CollectorValueOf<Collector>[]> & {
     readonly schema: z.ZodArray<Collector["schema"]>;
-    readonly selection: Extract<InputSelectionDescriptor, { mode: "many" }>;
+    readonly selection: AuthoredSelection<Options>;
   };
 
-function normalizeManyOptions(
-  options: ManyOptions,
-): Extract<InputSelectionDescriptor, { mode: "many" }> {
+function normalizeManyOptions(options: ManyOptions): ManySelection {
   if ("count" in options) {
     assertNonNegativeInteger(options.count, "many(...).count");
     return {
@@ -80,10 +84,14 @@ function assertManyKind(kind: InputCollector["kind"]): void {
   }
 }
 
-export function many<Collector extends NonRngCollector>(
+export function many<
+  Collector extends NonRngCollector,
+  const Options extends ManyOptions,
+>(
   collector: Collector,
-  options: ManyOptions,
-): ManyInputCollector<Collector> {
+  options: Options &
+    Record<Exclude<keyof Options, "min" | "max" | "count" | "distinct">, never>,
+): ManyInputCollector<Collector, Options> {
   assertManyKind(collector.kind);
   const {
     schema,
@@ -104,6 +112,6 @@ export function many<Collector extends NonRngCollector>(
       | keyof CollectorValueWitness<unknown>
     >),
     schema: z.array<Collector["schema"]>(schema),
-    selection: normalizeManyOptions(options),
+    selection: normalizeManyOptions(options) as AuthoredSelection<Options>,
   };
 }

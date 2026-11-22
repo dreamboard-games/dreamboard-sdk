@@ -64,8 +64,8 @@ defineBots(game, {
 defineBots(game, {
   resolve,
   strategies: [
-    // @ts-expect-error Ordered selections require an explicit skip.
-    { ...metadata, score: { ...allSkipped, "play.ordered": scoreCard } },
+    // @ts-expect-error Selections allowing repeated picks require an explicit skip.
+    { ...metadata, score: { ...allSkipped, "play.repeated": scoreCard } },
   ],
 });
 defineBots(game, {

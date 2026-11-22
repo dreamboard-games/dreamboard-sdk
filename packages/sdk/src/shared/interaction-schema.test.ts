@@ -53,7 +53,7 @@ describe("canonical interaction admission", () => {
     {
       type: "choice",
       choices: [],
-      selection: { mode: "many", min: -1, max: -1, order: "unordered" },
+      selection: { mode: "many", min: -1, max: -1 },
     },
     {
       type: "choice",

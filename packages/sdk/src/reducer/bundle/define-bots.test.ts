@@ -64,7 +64,6 @@ const passCards = offer("passing.submit", [
     min: 3,
     max: 3,
     distinct: true,
-    order: "unordered",
   }),
 ]);
 const end = offer("play.end");
@@ -184,7 +183,6 @@ describe("defineBots", () => {
         min: -1,
         max: -1,
         distinct: true,
-        order: "unordered",
       }),
     ]);
     expect(() => setup()(seat([invalidPass]))).toThrow(

@@ -56,7 +56,6 @@ type CardBinding<Key, Collector> = Collector extends { readonly kind: "card" }
           readonly min: infer Min extends number;
           readonly max: infer Max extends number;
           readonly distinct: true;
-          readonly order: "unordered";
         };
       }
       ? number extends Min
@@ -233,11 +232,7 @@ function* candidates<View>(
     }
     return;
   }
-  if (
-    !selection.distinct ||
-    selection.min !== selection.max ||
-    selection.order !== "unordered"
-  ) {
+  if (!selection.distinct || selection.min !== selection.max) {
     throw new BotStrategyError("unsupported_interaction", offer.interactionKey);
   }
   for (const cards of enumerateCombinations(eligible, selection.min)) {

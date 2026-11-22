@@ -87,12 +87,10 @@ const playPhase = play.define({
       },
       reduce: noop,
     }),
-    ordered: play.interaction({
+    repeated: play.interaction({
       inputs: {
         cardIds: many(handCard, {
           count: 2,
-          distinct: true,
-          order: "ordered",
         }),
       },
       reduce: noop,
@@ -103,7 +101,6 @@ const playPhase = play.define({
           min: 1,
           max: 2,
           distinct: true,
-          order: "unordered",
         }),
       },
       reduce: noop,
@@ -123,7 +120,6 @@ export const game = authoring.assemble({
           cardIds: many(passing.inputs.card({ from: ["hand"] }), {
             count: 3,
             distinct: true,
-            order: "unordered",
           }),
         },
       },
@@ -144,6 +140,6 @@ export const skips = {
   "play.staged": "skip",
   "play.multi": "skip",
   "play.form": "skip",
-  "play.ordered": "skip",
+  "play.repeated": "skip",
   "play.variable": "skip",
 } as const;
