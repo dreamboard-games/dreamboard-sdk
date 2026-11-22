@@ -18,16 +18,16 @@ const model = createGame({
 });
 const play = model.phase("play");
 
-const picks = many(
-  play.inputs.form.choice({
-    choices: [
-      { value: "a", label: "A" },
-      { value: "b", label: "B" },
-    ],
-    defaultValue: () => undefined,
-  }),
-  { min: 1, max: 2, distinct: true },
-);
+const choice = play.inputs.form.choice({
+  choices: [
+    { value: "a", label: "A" },
+    { value: "b", label: "B" },
+  ],
+  defaultValue: () => undefined,
+});
+const picks = many(choice, { min: 1, max: 2, distinct: true });
+// @ts-expect-error many() selections are always unordered.
+many(choice, { count: 2, order: "ordered" });
 const valid: z.infer<typeof picks.schema> = ["a", "b"];
 // @ts-expect-error many(choice) takes an array, not the inner scalar.
 const scalar: z.infer<typeof picks.schema> = "a";

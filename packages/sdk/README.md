@@ -120,6 +120,9 @@ commits exactly one current value. Factories receive only earlier parsed
 `selected` values; descriptors expose only the current input. The final commit
 runs complete-parameter validation and the reducer once. Use explicit `null`
 for a no-target choice, and `many(...)` for one atomic multi-selection.
+Each `many(...)` selection is unordered. The reducer receives eligible targets
+and choices in projected domain order, regardless of the order players pick them. `distinct: true`
+independently requires each value to be selected at most once.
 
 ```ts
 const choose = play.interaction({
@@ -669,9 +672,7 @@ features(core, context) {
 
 Use `game.cardSelection.set(ids)`, `.toggle(id)` and `.clear()` for authored
 controls. A selected group can drop only onto an interaction with a `many(...)`
-card input that admits the entire group. Dropping submits that input once in
-selection order, replacing its draft; it never submits a sequence of single-card
-moves. The reducer remains responsible for validating and applying the group
+card input that admits the entire group. Dropping submits the group once and replaces its draft. The reducer remains responsible for validating and applying the group
 atomically. An unselected card retains ordinary single-card draft behavior.
 `useDragOverlay().cardIds` identifies all lifted cards; `cardId` is the anchor.
 

@@ -494,7 +494,7 @@ describe("simultaneousPlayer phases", () => {
     });
   });
 
-  test("collects three-card simultaneous submissions with server-authoritative validation", async () => {
+  test("commits three-card submissions in eligible hand order", async () => {
     const bundle = createReducerTestingRuntime(createCardPassGame());
     const initial = (
       await bundle.initialize({
@@ -566,7 +566,7 @@ describe("simultaneousPlayer phases", () => {
     const first = await bundle.dispatch({
       referenceBasis: testReferenceBasis,
       state: initial,
-      input: submitCardsInput("player-1", ["card-1", "card-2", "card-3"]),
+      input: submitCardsInput("player-1", ["card-3", "card-2", "card-1"]),
     });
     expect(first.kind).toBe("accept");
     if (first.kind !== "accept") return;

@@ -258,7 +258,7 @@ describe("trusted collector input solver", () => {
     ).toEqual({ status: "no", inputKey: "cards" });
   });
 
-  test("validates a complete full-deck selection directly and preserves its order", () => {
+  test("validates a complete full-deck selection directly and normalizes it to domain order", () => {
     const cards = Array.from(
       { length: 36 },
       (_, index) => `card-${String(36 - index).padStart(2, "0")}`,
@@ -273,7 +273,11 @@ describe("trusted collector input solver", () => {
     expect(hasAnyCollectorInputAssignment(options)).toEqual({ status: "yes" });
     expect(
       enumerateCollectorInputAssignments({ ...options, maxEvaluations: 2 }),
-    ).toEqual({ status: "enumerated", assignments: [{ cards }], evaluated: 2 });
+    ).toEqual({
+      status: "enumerated",
+      assignments: [{ cards: [...cards].reverse() }],
+      evaluated: 2,
+    });
     expect(
       hasAnyCollectorInputAssignment({
         ...options,
@@ -303,6 +307,23 @@ describe("trusted collector input solver", () => {
       ).toEqual({ status: "no", inputKey: "cards" });
     },
   );
+
+  test("normalizes a fixed selection from a collector without an enumerable domain", () => {
+    const tags = many({ kind: "form", schema: z.string() }, { count: 3 });
+    expect(
+      enumerateCollectorInputAssignments({
+        interaction: { reduce: () => undefined, inputs: { tags } },
+        domainState,
+        definitions: inputDefinitions,
+        playerId: "player-1",
+        initialValues: { tags: ["b", "a", "a"] },
+        maxEvaluations: 2,
+      }),
+    ).toMatchObject({
+      status: "enumerated",
+      assignments: [{ tags: ["a", "a", "b"] }],
+    });
+  });
 
   test("accepts repeated fixed values when the selection permits them", () => {
     expect(
@@ -368,6 +389,37 @@ describe("trusted collector input solver", () => {
       }),
     ).toEqual({ status: "yes" });
   });
+
+  test.each([2, undefined])(
+    "rejects reverse-only assignments with max %s",
+    (max) => {
+      const interaction = {
+        reduce: () => undefined,
+        inputs: {
+          cards: many(
+            formInput.choice({
+              defaultValue: "a",
+              choices: [
+                { value: "a", label: "A" },
+                { value: "b", label: "B" },
+              ],
+            }),
+            { min: 2, max, distinct: true },
+          ),
+        },
+      };
+      expect(
+        hasAnyCollectorInputAssignment({
+          interaction,
+          domainState,
+          definitions: inputDefinitions,
+          playerId: "player-1",
+          acceptsAssignment: ({ cards }) =>
+            JSON.stringify(cards) === '["b","a"]',
+        }),
+      ).toMatchObject({ status: "no" });
+    },
+  );
 
   test("rejects invalid evaluation budgets before touching collector state", () => {
     expect(() =>

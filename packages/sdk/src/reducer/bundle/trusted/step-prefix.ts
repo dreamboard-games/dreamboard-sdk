@@ -7,6 +7,7 @@ import type {
   PlayerIdOfState,
 } from "../../model";
 import { createStateQueries } from "../../table-queries";
+import { canonicalizeInputSelection } from "../../../shared/input-domain";
 import { validateCollectorValue } from "./collector-params";
 
 export type StepPrefix = {
@@ -56,9 +57,15 @@ export function evaluateStepPrefix<
       issue = `Value for step '${entry.key}' is no longer eligible.`;
       break;
     }
-    selected[entry.key] = parsed.data;
+    selected[entry.key] = canonicalizeInputSelection(
+      parsed.data,
+      collector.selection,
+      domain,
+    );
     collectors[entry.key] = collector;
-    validValues.push(value);
+    validValues.push(
+      canonicalizeInputSelection(value, collector.selection, domain),
+    );
     current = undefined;
   }
   if (values.length > steps.entries.length)
