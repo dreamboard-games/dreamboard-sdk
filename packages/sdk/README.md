@@ -331,7 +331,7 @@ move goes through the same reducer validation as a human submission.
 
 Use `"skip"` for an interaction the bot deliberately declines. Supported
 scoring shapes are zero inputs, a single card and one fixed, distinct card
-selection declared with `order: "unordered"`. Skipping the only available
+selection declared with `many()`. Skipping the only available
 interaction leaves the seat pending. Ties follow frame offer order, eligible
 ID order for exhaustive choices, and yield order for custom proposals.
 An empty candidate list declines that offer. A null seat view produces no decision.

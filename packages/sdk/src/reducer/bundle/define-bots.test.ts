@@ -181,7 +181,6 @@ describe("defineBots", () => {
         min: 3,
         max: 3,
         distinct: true,
-        order: "unordered",
       }),
     ]);
     expect(setup({ pass: score })(seat([repeated]))).toEqual({
