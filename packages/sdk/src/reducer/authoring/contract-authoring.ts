@@ -386,6 +386,7 @@ export type PhaseAuthoring<
       string,
       InputCollector
     >,
+    SubmitSpec extends object = Record<never, never>,
   >(
     definition: PhaseDefinitionWithoutState<
       PhaseDefinition<
@@ -397,7 +398,11 @@ export type PhaseAuthoring<
         OptionsOfContract<Contract>,
         ContractErrorCode<Contract>
       >
-    > & { kind: "simultaneousPlayer"; interactions?: never },
+    > & {
+      kind: "simultaneousPlayer";
+      submit?: SubmitSpec;
+      interactions?: never;
+    },
   ): PhaseDefinition<
     PhaseStateSchema,
     BoundState<Contract>,
@@ -406,7 +411,7 @@ export type PhaseAuthoring<
     Record<string, never>,
     OptionsOfContract<Contract>,
     ContractErrorCode<Contract>
-  > & { kind: "simultaneousPlayer" };
+  > & { kind: "simultaneousPlayer"; submit?: SubmitSpec };
   define<
     SubmitCollectors extends Record<string, InputCollector> = Record<
       string,
@@ -418,6 +423,7 @@ export type PhaseAuthoring<
     > = Record<string, never>,
     const Kind extends "player" | "simultaneousPlayer" | "auto" =
       "player" | "simultaneousPlayer" | "auto",
+    SubmitSpec extends object = Record<never, never>,
   >(
     definition: PhaseDefinitionWithoutState<
       PhaseDefinition<
@@ -429,7 +435,7 @@ export type PhaseAuthoring<
         OptionsOfContract<Contract>,
         ContractErrorCode<Contract>
       >
-    > & { kind: Kind },
+    > & { kind: Kind; submit?: SubmitSpec },
   ): PhaseDefinition<
     PhaseStateSchema,
     BoundState<Contract>,
@@ -438,7 +444,7 @@ export type PhaseAuthoring<
     Interactions,
     OptionsOfContract<Contract>,
     ContractErrorCode<Contract>
-  > & { kind: Kind };
+  > & { kind: Kind; submit?: SubmitSpec };
   readonly inputs: BoundInputBuilders<Contract>;
   /** Compile-time only. Reading any member at runtime throws. */
   readonly types: PhaseTypes<Contract, PhaseStateSchema>;

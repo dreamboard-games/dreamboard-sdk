@@ -1,4 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
+import { createReducerBundle, defineBots } from "../../reducer";
 import { frame } from "../../headless/sources/__fixtures__/frames";
 import type {
   InteractionDescriptor,
@@ -12,12 +13,21 @@ import {
   playerView,
   skips,
 } from "./__fixtures__/scored-bot-game";
-import { createBotCapability } from "./bot-strategies";
-import { defineBots, registeredStrategies } from "./define-bots";
 
 type Game = typeof game;
 type View = typeof playerView;
 type Card = View["hand"][number];
+type PassScore = (args: { cards: readonly Card[]; view: View }) => number;
+type PassHandler =
+  | PassScore
+  | {
+      candidates(context: {
+        view: View;
+        eligible: { cards: readonly Card[] };
+        selection: { cards: { count: number } };
+      }): Iterable<{ cards: readonly Card[] }>;
+      score: PassScore;
+    };
 
 function offer(
   interactionKey: InteractionKey<Game>,
@@ -82,6 +92,11 @@ function setup({
   pass = ({ cards }: { cards: readonly Card[] }) =>
     cards.reduce((total, card) => total + card.rank, 0),
   empty = ({ view }: { view: View }) => -view.shield,
+}: {
+  resolve?: (view: View) => readonly Card[];
+  choose?: (args: { selectedCard: Card; view: View }) => number;
+  pass?: PassHandler;
+  empty?: (args: { view: View }) => number;
 } = {}) {
   const registered = defineBots(game, {
     resolve: { card: resolve },
@@ -97,7 +112,9 @@ function setup({
       },
     ],
   });
-  const { decideBot } = createBotCapability(registered[registeredStrategies]);
+  const { decideBot } = createReducerBundle(game, {
+    botStrategies: registered,
+  });
   return (frame: PluginGameplayFrame) =>
     decideBot?.({ strategyId: metadata.id, frame });
 }
@@ -154,6 +171,135 @@ describe("defineBots", () => {
       ["four", "two", "ace"],
       ["three", "two", "ace"],
     ]);
+  });
+
+  test("does not enumerate duplicate card IDs from aliased offers", () => {
+    const score = vi.fn(() => 0);
+    const repeated = offer("passing.submit", [
+      cardInput("cardIds", ["four", "three", "four", "two"], {
+        mode: "many",
+        min: 3,
+        max: 3,
+        distinct: true,
+      }),
+    ]);
+    expect(setup({ pass: score })(seat([repeated]))).toEqual({
+      interactionId: "submit",
+      params: { cardIds: ["four", "three", "two"] },
+    });
+    expect(score).toHaveBeenCalledTimes(1);
+  });
+
+  test("scores only proposals and restores projected order before scoring", () => {
+    const score = vi.fn(({ cards }: { cards: readonly Card[] }) =>
+      cards.reduce((sum, card) => sum + card.rank, 0),
+    );
+    const decide = setup({
+      pass: {
+        *candidates({ eligible, selection, view }) {
+          expect(view).toBe(playerView);
+          expect(eligible.cards.map(({ id }) => id)).toEqual([
+            "four",
+            "three",
+            "two",
+            "ace",
+          ]);
+          yield {
+            cards: [...eligible.cards]
+              .reverse()
+              .slice(-selection.cards.count)
+              .map((card) => ({ ...card, rank: -1 })),
+          };
+        },
+        score,
+      },
+    });
+    expect(decide(seat([passCards]))).toEqual({
+      interactionId: "submit",
+      params: { cardIds: ["four", "three", "two"] },
+    });
+    expect(score).toHaveBeenCalledExactlyOnceWith({
+      view: playerView,
+      cards: [playerView.hand[3], playerView.hand[2], playerView.hand[1]],
+    });
+  });
+
+  test("retains proposal yield order on ties", () => {
+    expect(
+      setup({
+        pass: {
+          *candidates({ eligible }) {
+            yield { cards: eligible.cards.slice(1) };
+            yield { cards: eligible.cards.slice(0, 3) };
+          },
+          score: () => 0,
+        },
+      })(seat([passCards])),
+    ).toEqual({
+      interactionId: "submit",
+      params: { cardIds: ["three", "two", "ace"] },
+    });
+  });
+
+  test("continues with other offers when a generator yields no proposals", () => {
+    const score = vi.fn(() => 0);
+    const decide = setup({ pass: { candidates: () => [], score } });
+    expect(decide(seat([passCards]))).toBeNull();
+    expect(decide(seat([passCards, end]))).toEqual({
+      interactionId: "end",
+      params: {},
+    });
+    expect(score).not.toHaveBeenCalled();
+  });
+
+  test.each([
+    ["wrong count", (cards: readonly Card[]) => cards.slice(0, 2)],
+    [
+      "duplicate card",
+      (cards: readonly Card[]) => [cards[0], cards[0], cards[1]],
+    ],
+    [
+      "ineligible card ID",
+      (cards: readonly Card[]) => [
+        { ...cards[0], id: "four-99" as const },
+        cards[1],
+        cards[2],
+      ],
+    ],
+  ])("rejects a proposal with %s before scoring", (_, propose) => {
+    const score = vi.fn(() => 0);
+    const decide = setup({
+      pass: {
+        candidates: ({ eligible }) => [{ cards: propose(eligible.cards) }],
+        score,
+      },
+    });
+    expect(() => decide(seat([passCards]))).toThrow(
+      expect.objectContaining({
+        category: "invalid_candidate",
+        interactionKey: "passing.submit",
+      }),
+    );
+    expect(score).not.toHaveBeenCalled();
+  });
+
+  test("reports generator iteration failures without the exception value", () => {
+    const decide = setup({
+      pass: {
+        *candidates({ eligible }) {
+          yield { cards: eligible.cards.slice(0, 3) };
+          throw new Error("private generator data");
+        },
+        score: () => 0,
+      },
+    });
+    expect(() => decide(seat([passCards]))).toThrow(
+      expect.objectContaining({
+        category: "candidate_generator_failed",
+        interactionKey: "passing.submit",
+        message: "Bot candidate generator failed.",
+      }),
+    );
   });
 
   test("skips unavailable actions, explicit skips and null views", () => {

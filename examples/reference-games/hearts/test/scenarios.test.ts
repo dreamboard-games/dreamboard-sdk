@@ -10,6 +10,7 @@ import {
   localSource,
 } from "@dreamboard-games/sdk/testing";
 import game from "../app/game.ts";
+import { RANK_VALUE } from "../app/rules.ts";
 import bundle from "../app/index.ts";
 import allHearts from "./scenarios/card-legality-all-hearts.scenario.ts";
 import firstLead from "./scenarios/card-legality-first-lead.scenario.ts";
@@ -577,11 +578,11 @@ test("the two strategies choose different passes and tricks at the same checkpoi
       [
         {
           interactionId: "submit",
-          params: { cardIds: ["spades-A", "diamonds-K", "spades-10"] },
+          params: { cardIds: ["spades-10", "diamonds-K", "spades-A"] },
         },
         {
           interactionId: "submit",
-          params: { cardIds: ["clubs-3", "hearts-3", "hearts-4"] },
+          params: { cardIds: ["clubs-3", "hearts-4", "hearts-3"] },
         },
       ],
     ],
@@ -606,6 +607,68 @@ test("the two strategies choose different passes and tricks at the same checkpoi
         const turn = await source.playBotTurn(strategyId);
         assert.deepEqual(turn?.result, { accepted: true });
         assert.deepEqual(turn.decision, choices[index]);
+      }
+    } finally {
+      source.dispose();
+    }
+  }
+});
+
+test("both direct passes achieve the exhaustive maximum on the same hand", async () => {
+  for (const seed of [7, 11, 23]) {
+    const source = await localSource(game, { bundle, players: 4, seed });
+    try {
+      const start = source.checkpoint();
+      for (const seat of source.inspect().frame.players) {
+        for (const strategy of ["penalty-dodger", "moon-chaser"]) {
+          source.restore(start);
+          source.switchSeat(seat);
+          const view = source.inspect().frame.view as ReturnType<
+            typeof game.view
+          >;
+          const values = new Map(
+            view.hand.map((card) => {
+              const rank = RANK_VALUE[card.properties.rank];
+              const risk =
+                card.id === "spades-Q"
+                  ? 100
+                  : rank +
+                    (card.properties.suit === "spades" && rank > 12 ? 50 : 0);
+              return [
+                String(card.id),
+                strategy === "moon-chaser" ? -rank : risk,
+              ] as const;
+            }),
+          );
+          const weights = [...values.values()];
+          let highest = -Infinity;
+          let count = 0;
+          for (let a = 0; a < weights.length; a++)
+            for (let b = a + 1; b < weights.length; b++)
+              for (let c = b + 1; c < weights.length; c++) {
+                highest = Math.max(
+                  highest,
+                  weights[a] + weights[b] + weights[c],
+                );
+                count++;
+              }
+          assert.equal(count, 286);
+          const turn = await source.playBotTurn(strategy);
+          assert.deepEqual(turn?.result, { accepted: true });
+          const params = turn.decision.params;
+          assert(
+            params && typeof params === "object" && !Array.isArray(params),
+          );
+          const ids = params.cardIds;
+          assert(
+            Array.isArray(ids) &&
+              ids.every((id): id is string => typeof id === "string"),
+          );
+          assert.equal(
+            ids.reduce((total, id) => total + values.get(id)!, 0),
+            highest,
+          );
+        }
       }
     } finally {
       source.dispose();

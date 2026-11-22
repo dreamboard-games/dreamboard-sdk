@@ -105,6 +105,22 @@ type ResolvedArgs<Binding, Card> = Binding extends {
   ? Record<Alias, Multiple extends true ? readonly Card[] : Card>
   : object;
 
+type CardAlias<Binding> = Binding extends { alias: infer Name extends string }
+  ? Name
+  : never;
+
+type CandidateGenerator<Binding, View, Card> = (context: {
+  view: View;
+  eligible: Readonly<Record<CardAlias<Binding>, readonly Card[]>>;
+  selection: Readonly<Record<CardAlias<Binding>, { readonly count: number }>>;
+}) => Iterable<Record<CardAlias<Binding>, readonly Card[]>>;
+
+type CandidateHandler<Binding, View, Card> = {
+  candidates: CandidateGenerator<Binding, View, Card> &
+    (Binding extends { multiple: true } ? unknown : never);
+  score: Scorer<{ view: View } & Record<CardAlias<Binding>, readonly Card[]>>;
+};
+
 type RequiredSkips<Game, HasResolver extends boolean> = {
   [Key in keyof Bindings<Game>]: [Bindings<Game>[Key]] extends [never]
     ? Key
@@ -126,6 +142,7 @@ type AuthoredStrategy<
   score: {
     [Key in Keys]:
       | "skip"
+      | CandidateHandler<Bindings<Game>[Key], SeatView<Game>, Card>
       | Scorer<
           { view: SeatView<Game> } & ResolvedArgs<Bindings<Game>[Key], Card>
         >;
@@ -142,6 +159,9 @@ const diagnosticMessages = {
     "Bot card resolver failed. Every eligible card must resolve exactly once.",
   scorer_failed: "Bot scorer failed.",
   invalid_score: "Bot score must be finite.",
+  candidate_generator_failed: "Bot candidate generator failed.",
+  invalid_candidate:
+    "Bot proposal must contain the required number of distinct eligible cards.",
 } as const;
 
 type BotStrategyErrorCategory = keyof typeof diagnosticMessages;
@@ -178,7 +198,7 @@ function resolvedCards<View>(
   } catch {
     throw new BotStrategyError("resolver_failed", interactionKey);
   }
-  return ids.map((id) => {
+  return Array.from(wanted, (id) => {
     const card = byId.get(id);
     if (!card) throw new BotStrategyError("resolver_failed", interactionKey);
     return { id, card };
@@ -192,15 +212,71 @@ type Candidate = {
   params: Record<string, string | string[]>;
 };
 
+type Proposal = Record<string, readonly VisibleCard[]>;
+
+type RuntimeCandidateHandler = {
+  candidates(context: object): Iterable<Proposal>;
+  score: Scorer<object>;
+};
+
+function* generatedProposals(
+  handler: RuntimeCandidateHandler,
+  context: object,
+  interactionKey: string,
+): Iterable<Proposal> {
+  try {
+    yield* handler.candidates(context);
+  } catch {
+    throw new BotStrategyError("candidate_generator_failed", interactionKey);
+  }
+}
+
+function* proposedSelections<View>(
+  handler: RuntimeCandidateHandler,
+  eligible: readonly ResolvedCard[],
+  count: number,
+  alias: string,
+  view: View,
+  interactionKey: string,
+): Iterable<readonly ResolvedCard[]> {
+  const context = {
+    view,
+    eligible: { [alias]: eligible.map(({ card }) => card) },
+    selection: { [alias]: { count } },
+  };
+  for (const proposal of generatedProposals(handler, context, interactionKey)) {
+    let ordered: ResolvedCard[];
+    try {
+      const cards = proposal?.[alias];
+      if (!Array.isArray(cards) || cards.length !== count) {
+        throw new BotStrategyError("invalid_candidate", interactionKey);
+      }
+      const proposedIds = new Set(cards.map(({ id }: VisibleCard) => id));
+      ordered = eligible.filter(({ id }) => proposedIds.has(id));
+    } catch {
+      throw new BotStrategyError("invalid_candidate", interactionKey);
+    }
+    if (ordered.length !== count) {
+      throw new BotStrategyError("invalid_candidate", interactionKey);
+    }
+    yield ordered;
+  }
+}
+
 function* candidates<View>(
   offer: InteractionDescriptor,
   view: View,
   resolve: CardResolver<View, VisibleCard> | undefined,
+  handler: Scorer<object> | RuntimeCandidateHandler,
 ): Iterable<Candidate> {
   if (offer.step || offer.inputs.length > 1) {
     throw new BotStrategyError("unsupported_interaction", offer.interactionKey);
   }
   const [input] = offer.inputs;
+  const generate = typeof handler !== "function";
+  if (generate && input?.domain.selection?.mode !== "many") {
+    throw new BotStrategyError("unsupported_interaction", offer.interactionKey);
+  }
   if (!input) {
     yield { args: {}, params: {} };
     return;
@@ -235,7 +311,17 @@ function* candidates<View>(
   if (!selection.distinct || selection.min !== selection.max) {
     throw new BotStrategyError("unsupported_interaction", offer.interactionKey);
   }
-  for (const cards of enumerateCombinations(eligible, selection.min)) {
+  const selections = generate
+    ? proposedSelections(
+        handler,
+        eligible,
+        selection.min,
+        alias,
+        view,
+        offer.interactionKey,
+      )
+    : enumerateCombinations(eligible, selection.min);
+  for (const cards of selections) {
     yield {
       args: { [alias]: cards.map(({ card }) => card) },
       params: { [key]: cards.map(({ id }) => id) },
@@ -250,7 +336,12 @@ function scoredStrategy<Game>(
   // The descriptor supplies the same input keys and card domain as the game
   // definition that typed the scorer. Each key is paired with its scorer here.
   const score = new Map(
-    Object.entries(strategy.score as Record<string, "skip" | Scorer<object>>),
+    Object.entries(
+      strategy.score as Record<
+        string,
+        "skip" | Scorer<object> | RuntimeCandidateHandler
+      >,
+    ),
   );
   return {
     id: strategy.id,
@@ -268,10 +359,19 @@ function scoredStrategy<Game>(
         if (!handler) {
           throw new BotStrategyError("missing_handler", offer.interactionKey);
         }
-        for (const { args, params } of candidates(offer, view, resolve)) {
+        for (const { args, params } of candidates(
+          offer,
+          view,
+          resolve,
+          handler,
+        )) {
           let value: number;
           try {
-            value = handler({ ...args, view });
+            const context = { ...args, view };
+            value =
+              typeof handler === "function"
+                ? handler(context)
+                : handler.score(context);
           } catch {
             throw new BotStrategyError("scorer_failed", offer.interactionKey);
           }

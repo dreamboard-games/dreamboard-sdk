@@ -43,7 +43,7 @@ export {
   type SparseMap,
 } from "./reducer/schema-helpers";
 export { FrameworkErrorCodes } from "./reducer/model";
-export type { BotDecision, BotStrategy } from "./reducer/bundle/bot-strategies";
+export { defineBots } from "./reducer/bundle/define-bots";
 export { createReducerBundle } from "./reducer/bundle";
 export type { ReducerBundle, ReducerBundleOptions } from "./reducer/bundle";
 export { noopDiagnosticsSink } from "./reducer/diagnostics";
@@ -164,8 +164,3 @@ export type {
   BoardEdgeId,
   BoardVertexId,
 } from "./shared/domain/board-identities.js";
-
-export {
-  offeredInteraction,
-  offeredInputDomain,
-} from "./reducer/bundle/offered-interaction";

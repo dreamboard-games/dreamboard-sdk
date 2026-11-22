@@ -278,53 +278,67 @@ To migrate an older manifest, replace each card's `type` with `id` and set
 
 ## Author a bot strategy
 
-Each game can publish named strategies alongside its reducer. Give each strategy
-a stable ID and a short description that helps players choose one for a seat.
-A strategy sees the same frame as that seat's UI, including its own cards, the
-public trick, and the interactions offered on the current step.
-
-For a game with a `playing.playCard` interaction:
+Register a game's strategies together with `defineBots`. By default, a bot scores the choices
+enumerated from its seat's available interactions. The highest finite score wins
+across all offered interactions, including actions with empty parameters.
+Give each personality a stable ID for the seat picker.
 
 ```ts
-import {
-  createReducerBundle,
-  offeredInputDomain,
-  offeredInteraction,
-  type BotStrategy,
-} from "@dreamboard-games/sdk/reducer";
+import { createReducerBundle, defineBots } from "@dreamboard-games/sdk/reducer";
 import game from "./game";
+import { RANK_VALUE } from "./rules";
 
-const firstLegal: BotStrategy<typeof game> = {
-  id: "first-legal",
-  name: "First Legal Card",
-  description: "Plays the first eligible card in hand order.",
-  decide(frame) {
-    const play = offeredInteraction(frame, "playing.playCard");
-    const cards = offeredInputDomain(play, "cardId", "cardTarget");
-    const card = frame.view?.hand.find(({ id }) =>
-      cards?.eligibleTargets.includes(id),
-    );
-    return card
-      ? { interactionId: "playCard", params: { cardId: card.id } }
-      : null;
-  },
-};
+const botStrategies = defineBots(game, {
+  resolve: { card: (view) => view.hand },
+  strategies: [
+    {
+      id: "moon-chaser",
+      name: "Moon Chaser",
+      description: "Passes low cards and plays high to win tricks.",
+      score: {
+        "passing.submit": ({ cards }) =>
+          -cards.reduce((sum, c) => sum + RANK_VALUE[c.properties.rank], 0),
+        "playing.playCard": ({ card }) => RANK_VALUE[card.properties.rank],
+      },
+    },
+  ],
+});
 
-export default createReducerBundle(game, { botStrategies: [firstLegal] });
+export default createReducerBundle(game, { botStrategies });
 ```
 
-Look up an interaction using its phase-qualified key and return the ordinary
-interaction ID with its current input parameters. For a multi-step interaction,
-read the new frame after each accepted step. Return `null` when the seat has no
-decision. Use a stable tie-breaker so the same frame produces the same move.
-Keep the strategy in the reducer entry and use the catalogue's ID when selecting
-a strategy for a particular seat.
+The shared resolver supplies visible objects for eligible IDs. For an unordered
+pass of three distinct cards, `cards` is one legal triple. From a hand of 13,
+the SDK evaluates 286 triples. To propose a shortlist, replace that one pass
+function with an object containing `candidates` and `score`. The SDK checks
+each proposal against the projected card IDs and selection constraints, then
+passes the selected objects to the scorer in eligible-ID order. The winning
+move goes through the same reducer validation as a human submission.
 
-The Hearts reference game has two complete examples. **Penalty Dodger** passes
-dangerous spades and tries to play below the highest card of the lead suit.
-**Moon Chaser** passes low cards and plays high to win tricks. Both choose from
-the same eligible hand cards during the sealed pass and all thirteen tricks.
-[Hearts strategy implementations](https://github.com/dreamboard-games/dreamboard-sdk/blob/main/examples/reference-games/hearts/app/bot-strategies.ts)
+```ts
+"passing.submit": {
+  *candidates({ eligible, selection }) {
+    const lowFirst = [...eligible.cards].sort(
+      (a, b) => RANK_VALUE[a.properties.rank] - RANK_VALUE[b.properties.rank],
+    );
+    yield { cards: lowFirst.slice(0, selection.cards.count) };
+  },
+  score({ cards }) {
+    return -cards.reduce((sum, c) => sum + RANK_VALUE[c.properties.rank], 0);
+  },
+},
+```
+
+Use `"skip"` for an interaction the bot deliberately declines. Supported
+scoring shapes are zero inputs, a single card and one fixed, distinct card
+selection declared with `many()`. Skipping the only available
+interaction leaves the seat pending. Ties follow frame offer order, eligible
+ID order for exhaustive choices, and yield order for custom proposals.
+An empty candidate list declines that offer. A null seat view produces no decision.
+
+Both Hearts strategies use the same resolver. Penalty Dodger sheds dangerous
+spades and ducks tricks. Moon Chaser keeps high cards and tries to win.
+[Hearts strategies](https://github.com/dreamboard-games/dreamboard-sdk/blob/main/examples/reference-games/hearts/app/bot-strategies.ts)
 
 Use a seeded local source to test a decision through normal submission. For
 an authored checkpoint, use `scenarioSource(game, scenario, { bundle, at, as })`

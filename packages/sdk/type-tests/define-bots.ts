@@ -2,8 +2,9 @@ import {
   game,
   metadata,
   skips,
+  stagedGame,
 } from "../src/reducer/bundle/__fixtures__/scored-bot-game";
-import { defineBots } from "../src/reducer/bundle/define-bots";
+import { defineBots } from "../src/reducer";
 
 defineBots(game, {
   resolve: {
@@ -112,5 +113,72 @@ defineBots(game, {
   strategies: [
     // @ts-expect-error Committed steps must be skipped even if they begin with a card.
     { ...metadata, score: { ...allSkipped, "play.staged": scoreCard } },
+  ],
+});
+
+defineBots(game, {
+  resolve: {
+    card: (view) =>
+      view.hand.map((card) => ({ ...card, value: card.rank * 2 })),
+  },
+  strategies: [
+    {
+      ...metadata,
+      score: {
+        ...allSkipped,
+        "play.choose": ({ selectedCard }) => selectedCard.value,
+        "passing.submit": {
+          *candidates({ eligible, selection, view }) {
+            // @ts-expect-error Eligible cards retain the readonly array type.
+            eligible.cards[0] = eligible.cards[1];
+            const ranked = [...eligible.cards].sort(
+              (a, b) => b.value - a.value,
+            );
+            yield {
+              cards: ranked.slice(0, selection.cards.count + view.shield),
+            };
+          },
+          score: ({ cards }) =>
+            cards.reduce((total, card) => total + card.value, 0),
+        },
+      },
+    },
+  ],
+});
+
+const invalidCandidateHandler = {
+  candidates: () => [{ selectedCard: "ace" }],
+  score: scoreCard,
+};
+defineBots(game, {
+  resolve,
+  strategies: [
+    {
+      ...metadata,
+      // @ts-expect-error Candidate generators require one fixed unordered selection.
+      score: { ...allSkipped, "play.choose": invalidCandidateHandler },
+    },
+  ],
+});
+defineBots(game, {
+  resolve,
+  strategies: [
+    {
+      ...metadata,
+      // @ts-expect-error Proposals must contain the resolved collection field.
+      score: { ...allSkipped, "passing.submit": invalidCandidateHandler },
+    },
+  ],
+});
+
+defineBots(stagedGame, {
+  resolve,
+  strategies: [{ ...metadata, score: allSkipped }],
+});
+defineBots(stagedGame, {
+  resolve,
+  strategies: [
+    // @ts-expect-error A committed-step simultaneous submit must be skipped.
+    { ...metadata, score: { ...allSkipped, "passing.submit": scoreCard } },
   ],
 });

@@ -2,12 +2,7 @@ import { compileManifest } from "./manifest/compiler";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { frame } from "../headless/sources/__fixtures__/frames";
-import {
-  createReducerBundle,
-  type BotDecision,
-  type BotStrategy,
-  createGame,
-} from "../reducer";
+import { createReducerBundle, defineBots, createGame } from "../reducer";
 import {
   type ClientParamsOfInteractionOfDefinition,
   type PhaseNamesOfDefinition,
@@ -121,32 +116,23 @@ describe("createGame", () => {
       name: "Ready",
       description: "Chooses the ready mood.",
     };
-    const ready: BotStrategy<typeof game> = {
-      ...strategy,
-      decide(seat) {
-        if (seat.flow.currentPhase !== "playerTurn") return null;
-        return { interactionId: "chooseMood", params: { mood: "ready" } };
-      },
-    };
-    const bundle = createReducerBundle(game, { botStrategies: [ready] });
+    const botStrategies = defineBots(game, {
+      resolve: {},
+      strategies: [{ ...strategy, score: { "playerTurn.chooseMood": "skip" } }],
+    });
+    const bundle = createReducerBundle(game, { botStrategies });
     expect(bundle.botStrategies).toEqual([strategy]);
+    expect(() =>
+      createReducerBundle(game, {
+        // @ts-expect-error Strategies must be registered together with defineBots.
+        botStrategies: [{ ...strategy, decide: () => null }],
+      }),
+    ).toThrow("defineBots");
     const seat = frame();
     expect(bundle.decideBot?.({ strategyId: "ready", frame: seat })).toBeNull();
-    expect(
-      bundle.decideBot?.({
-        strategyId: "ready",
-        frame: { ...seat, flow: { ...seat.flow, currentPhase: "playerTurn" } },
-      }),
-    ).toEqual({ interactionId: "chooseMood", params: { mood: "ready" } });
     expect(() =>
       bundle.decideBot?.({ strategyId: "missing", frame: seat }),
     ).toThrow("Unknown bot strategy");
-    type Decision = NonNullable<BotDecision<typeof game>>;
-    const typed = [true, true] satisfies [
-      Expect<Equal<Decision["interactionId"], "chooseMood">>,
-      Expect<Equal<Decision["params"], { mood: "ready" | "wait" }>>,
-    ];
-    expect(typed).toEqual([true, true]);
     type PhaseNames = PhaseNamesOfDefinition<typeof game>;
     type Params = ClientParamsOfInteractionOfDefinition<
       typeof game,
