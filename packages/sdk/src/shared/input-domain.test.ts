@@ -62,7 +62,6 @@ test("resource map selections use value identity independent of key order", () =
     min: 2,
     max: 2,
     distinct: true,
-    order: "unordered",
   } as const;
   const domain = {
     type: "resourceMap",

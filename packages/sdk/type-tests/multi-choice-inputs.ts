@@ -26,23 +26,12 @@ const choice = play.inputs.form.choice({
   defaultValue: () => undefined,
 });
 const picks = many(choice, { min: 1, max: 2, distinct: true });
+// @ts-expect-error many() selections are always unordered.
+many(choice, { count: 2, order: "ordered" });
 const valid: z.infer<typeof picks.schema> = ["a", "b"];
 // @ts-expect-error many(choice) takes an array, not the inner scalar.
 const scalar: z.infer<typeof picks.schema> = "a";
 void [valid, scalar];
-
-const unordered = many(choice, {
-  count: 2,
-  distinct: true,
-  order: "unordered",
-});
-const unorderedSelection: {
-  order: "unordered";
-  distinct: true;
-  min: 2;
-  max: 2;
-} = unordered.selection;
-void unorderedSelection;
 
 import type { CoreInstance } from "../src/headless/model.js";
 const definition = model.assemble({

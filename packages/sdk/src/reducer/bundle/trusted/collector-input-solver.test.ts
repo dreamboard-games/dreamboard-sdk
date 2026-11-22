@@ -258,7 +258,7 @@ describe("trusted collector input solver", () => {
     ).toEqual({ status: "no", inputKey: "cards" });
   });
 
-  test("validates a complete full-deck selection directly and preserves its order", () => {
+  test("validates a complete full-deck selection directly and normalizes it to domain order", () => {
     const cards = Array.from(
       { length: 36 },
       (_, index) => `card-${String(36 - index).padStart(2, "0")}`,
@@ -273,7 +273,11 @@ describe("trusted collector input solver", () => {
     expect(hasAnyCollectorInputAssignment(options)).toEqual({ status: "yes" });
     expect(
       enumerateCollectorInputAssignments({ ...options, maxEvaluations: 2 }),
-    ).toEqual({ status: "enumerated", assignments: [{ cards }], evaluated: 2 });
+    ).toEqual({
+      status: "enumerated",
+      assignments: [{ cards: [...cards].reverse() }],
+      evaluated: 2,
+    });
     expect(
       hasAnyCollectorInputAssignment({
         ...options,
@@ -303,6 +307,23 @@ describe("trusted collector input solver", () => {
       ).toEqual({ status: "no", inputKey: "cards" });
     },
   );
+
+  test("normalizes a fixed selection from a collector without an enumerable domain", () => {
+    const tags = many({ kind: "form", schema: z.string() }, { count: 3 });
+    expect(
+      enumerateCollectorInputAssignments({
+        interaction: { reduce: () => undefined, inputs: { tags } },
+        domainState,
+        definitions: inputDefinitions,
+        playerId: "player-1",
+        initialValues: { tags: ["b", "a", "a"] },
+        maxEvaluations: 2,
+      }),
+    ).toMatchObject({
+      status: "enumerated",
+      assignments: [{ tags: ["a", "a", "b"] }],
+    });
+  });
 
   test("accepts repeated fixed values when the selection permits them", () => {
     expect(
@@ -369,13 +390,9 @@ describe("trusted collector input solver", () => {
     ).toEqual({ status: "yes" });
   });
 
-  test.each([
-    { order: "ordered", max: 2, status: "yes" },
-    { order: "ordered", max: undefined, status: "yes" },
-    { order: "unordered", max: 2, status: "no" },
-  ] as const)(
-    "finds reverse-only assignments with $order order and max $max according to the selection",
-    ({ order, max, status }) => {
+  test.each([2, undefined])(
+    "rejects reverse-only assignments with max %s",
+    (max) => {
       const interaction = {
         reduce: () => undefined,
         inputs: {
@@ -387,7 +404,7 @@ describe("trusted collector input solver", () => {
                 { value: "b", label: "B" },
               ],
             }),
-            { min: 2, max, distinct: true, order },
+            { min: 2, max, distinct: true },
           ),
         },
       };
@@ -400,7 +417,7 @@ describe("trusted collector input solver", () => {
           acceptsAssignment: ({ cards }) =>
             JSON.stringify(cards) === '["b","a"]',
         }),
-      ).toMatchObject({ status });
+      ).toMatchObject({ status: "no" });
     },
   );
 

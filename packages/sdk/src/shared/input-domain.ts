@@ -107,8 +107,7 @@ export function canonicalizeInputSelection(
   selection?: InputSelectionDescriptor,
   domain?: InputDomainDescriptor,
 ): unknown {
-  if (selection?.mode !== "many" || selection.order !== "unordered")
-    return value;
+  if (selection?.mode !== "many") return value;
   if (!Array.isArray(value)) return value;
   const values: readonly unknown[] = value;
   const choices =

@@ -40,8 +40,7 @@ export function parseInteractionParams<
     let q: ReturnType<typeof createStateQueries> | undefined;
     for (const [key, collector] of Object.entries(collectors)) {
       const selection = collector.selection;
-      if (selection?.mode !== "many" || selection.order !== "unordered")
-        continue;
+      if (selection?.mode !== "many") continue;
       const value = normalized[key];
       if (!Array.isArray(value)) continue;
       q ??= createStateQueries(options.state, options.definitions);
@@ -141,10 +140,7 @@ export function validateCollectorTargets<
       domain,
     );
     if (issue) return makeValidationError(issue.errorCode, issue.message);
-    if (
-      collector.selection?.mode === "many" &&
-      collector.selection.order === "unordered"
-    ) {
+    if (collector.selection?.mode === "many") {
       params[key] = canonicalizeInputSelection(
         value,
         collector.selection,

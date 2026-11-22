@@ -357,7 +357,7 @@ function valueSourceForCollector(
     };
   }
   if (!resolved.complete) {
-    return fixedCollectorValueSource(context, collector, fixedValue);
+    return fixedCollectorValueSource(context, collector, fixedValue, domain);
   }
   if (selection?.mode === "many" && !Array.isArray(fixedValue)) {
     const eligible = sourceContainsValue(base, fixedValue);
@@ -393,6 +393,7 @@ function fixedCollectorValueSource(
   context: SolverContext,
   collector: InputCollector,
   fixedValue: unknown,
+  domain?: InputDomainDescriptor,
 ): ValueSource {
   const schemaResult = collector.schema.safeParse(fixedValue);
   const targetValues =
@@ -412,7 +413,13 @@ function fixedCollectorValueSource(
   return {
     complete: true,
     values: function* () {
-      if (schemaResult.success && targetValid) yield fixedValue;
+      if (schemaResult.success && targetValid) {
+        yield canonicalizeInputSelection(
+          fixedValue,
+          collector.selection,
+          domain,
+        );
+      }
     },
   };
 }
@@ -638,16 +645,11 @@ function applySelection(
     return incompleteValueSource();
   }
   const distinct = selection.distinct === true;
-  const unordered = selection.order === "unordered";
   return {
     complete: max !== undefined || distinct,
     values: function* () {
       const upper = max ?? (distinct ? Infinity : min);
       for (let count = min; count <= upper; count += 1) {
-        if (!unordered && !distinct) {
-          yield* enumerateSequencesFromSource(source.values, count, []);
-          continue;
-        }
         let yielded = false;
         for (const combination of enumerateCombinationsFromSource(
           source.values,
@@ -657,11 +659,7 @@ function applySelection(
           [],
         )) {
           yielded = true;
-          if (unordered) {
-            yield canonicalizeInputSelection(combination, selection, domain);
-          } else {
-            yield* enumeratePermutations(combination, []);
-          }
+          yield canonicalizeInputSelection(combination, selection, domain);
         }
         if (!yielded) return;
       }
@@ -692,36 +690,6 @@ function* enumerateCombinationsFromSource<Value>(
       );
     }
     index += 1;
-  }
-}
-
-function* enumerateSequencesFromSource<Value>(
-  values: () => Iterable<Value>,
-  count: number,
-  current: readonly Value[],
-): Iterable<Value[]> {
-  if (current.length === count) {
-    yield [...current];
-    return;
-  }
-  for (const value of values()) {
-    yield* enumerateSequencesFromSource(values, count, [...current, value]);
-  }
-}
-
-function* enumeratePermutations<Value>(
-  remaining: readonly Value[],
-  current: readonly Value[],
-): Iterable<Value[]> {
-  if (remaining.length === 0) {
-    yield [...current];
-    return;
-  }
-  for (const [index, value] of remaining.entries()) {
-    yield* enumeratePermutations(
-      remaining.filter((_, candidate) => candidate !== index),
-      [...current, value],
-    );
   }
 }
 

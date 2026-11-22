@@ -35,7 +35,6 @@ function input(): Parameters<typeof materializeCompactGameplayFrame>[0] {
             min: 3,
             max: 3,
             distinct: true,
-            order: "unordered",
           },
         },
       },
@@ -110,7 +109,6 @@ describe("compact gameplay snapshots", () => {
       min: 3,
       max: 3,
       distinct: true,
-      order: "unordered",
     });
     expect(hydrated.zones.deck.table.playableByCardId["card-0"][0]).toBe(
       hydrated.availableInteractions[0],

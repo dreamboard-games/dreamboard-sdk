@@ -26,7 +26,6 @@ export default passing.define({
       cardIds: many(passing.inputs.card({ from: ["hand"] }), {
         count: 3,
         distinct: true,
-        order: "unordered",
       }),
     },
   },
