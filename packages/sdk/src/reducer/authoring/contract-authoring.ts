@@ -321,6 +321,28 @@ export type PhaseAuthoring<
     >,
     { steps: unknown }
   >;
+  interaction<
+    Collectors extends Record<string, InputCollector>,
+    ParamsSchema extends z.core.SomeType,
+  >(
+    spec: Extract<
+      InteractionSpec<
+        Collectors,
+        BoundPhaseState<Contract, PhaseStateSchema>,
+        BoundManifest<Contract>,
+        ContractErrorCode<Contract>
+      >,
+      { inputs: unknown }
+    > & { paramsSchema: ParamsSchema },
+  ): Extract<
+    InteractionSpec<
+      Collectors,
+      BoundPhaseState<Contract, PhaseStateSchema>,
+      BoundManifest<Contract>,
+      ContractErrorCode<Contract>
+    >,
+    { inputs: unknown }
+  > & { paramsSchema: ParamsSchema };
   interaction<Collectors extends Record<string, InputCollector>>(
     spec: Extract<
       InteractionSpec<
@@ -358,6 +380,33 @@ export type PhaseAuthoring<
     BoundManifest<Contract>,
     ContractErrorCode<Contract>
   >;
+  /** Preserve the submit collectors when there are no ordinary interactions. */
+  define<
+    SubmitCollectors extends Record<string, InputCollector> = Record<
+      string,
+      InputCollector
+    >,
+  >(
+    definition: PhaseDefinitionWithoutState<
+      PhaseDefinition<
+        PhaseStateSchema,
+        BoundState<Contract>,
+        BoundManifest<Contract>,
+        SubmitCollectors,
+        Record<string, never>,
+        OptionsOfContract<Contract>,
+        ContractErrorCode<Contract>
+      >
+    > & { kind: "simultaneousPlayer"; interactions?: never },
+  ): PhaseDefinition<
+    PhaseStateSchema,
+    BoundState<Contract>,
+    BoundManifest<Contract>,
+    SubmitCollectors,
+    Record<string, never>,
+    OptionsOfContract<Contract>,
+    ContractErrorCode<Contract>
+  > & { kind: "simultaneousPlayer" };
   define<
     SubmitCollectors extends Record<string, InputCollector> = Record<
       string,
@@ -636,7 +685,10 @@ function createPhaseAuthoring<
           ReturnType<typeof defineInteractionRule<Contract, PhaseStateSchema>>
         >[0],
       ) as typeof rule,
-    define: (definition) => ({ ...definition, state: schema }),
+    define: ((definition: object) => ({
+      ...definition,
+      state: schema,
+    })) as PhaseAuthoring<Contract, PhaseStateSchema>["define"],
     inputs: createBoundInputBuilders(contract),
     types: phantomTypes<PhaseTypes<Contract, PhaseStateSchema>>(),
   };
