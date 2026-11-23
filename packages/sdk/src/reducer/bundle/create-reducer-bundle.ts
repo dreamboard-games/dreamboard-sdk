@@ -170,6 +170,7 @@ export function createReducerBundle<
       });
       const result = executor.dispatch(combinedState, input, referenceBasis);
       if (result.type === "reject") {
+        result.message ??= scope.errorMessages.get(result.errorCode);
         scope.diagnostics.event({
           type: "submitRejected",
           submissionId,

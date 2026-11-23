@@ -4,7 +4,9 @@
 import type { GameInstance } from "@dreamboard-games/sdk";
 export function submitReady(game: GameInstance<unknown>, key: string) {
   const interaction = game.interactions.find(key);
-  return interaction?.getIsReady() ? interaction.submit() : undefined;
+  return interaction?.getIsAvailable() && interaction.getIsReady()
+    ? interaction.submit()
+    : undefined;
 }
 ```
 

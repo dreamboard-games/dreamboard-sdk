@@ -110,14 +110,6 @@ export function createInteractionDecisionResolver<
     View
   >;
 
-  const contractErrors =
-    (scope.definition.contract as { errors?: Record<string, string> }).errors ??
-    {};
-
-  function defaultMessageForCode(code: string): string | undefined {
-    return contractErrors[code];
-  }
-
   function issueFromRule(
     rule: InteractionRuleIssue,
     message?: string,
@@ -125,7 +117,8 @@ export function createInteractionDecisionResolver<
     return {
       ruleId: rule.ruleId,
       errorCode: rule.errorCode,
-      message: message ?? rule.message ?? defaultMessageForCode(rule.errorCode),
+      message:
+        message ?? rule.message ?? scope.errorMessages.get(rule.errorCode),
     };
   }
 
@@ -142,7 +135,7 @@ export function createInteractionDecisionResolver<
         message:
           result.message ??
           rule.message ??
-          defaultMessageForCode(result.errorCode),
+          scope.errorMessages.get(result.errorCode),
       };
     }
     return undefined;
@@ -803,7 +796,7 @@ export function createInteractionDecisionResolver<
           ruleId: rule.id,
           outcome: "notEvaluated",
           errorCode: rule.errorCode,
-          message: rule.message ?? defaultMessageForCode(rule.errorCode),
+          message: rule.message ?? scope.errorMessages.get(rule.errorCode),
         });
         continue;
       }

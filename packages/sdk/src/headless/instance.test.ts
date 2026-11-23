@@ -385,6 +385,14 @@ describe("headless instance", () => {
     expect(game.interactions.get("play.move").getStep()?.selected).toEqual({
       first: "b",
     });
+    const blocked = game.interactions.find("play.move");
+    expect(blocked?.getAvailability()).toEqual(next.availability);
+    expect(await blocked?.submit()).toEqual({
+      accepted: false,
+      errorCode: "UNAVAILABLE",
+      message: "No targets",
+    });
+    expect(x.source.submissions).toHaveLength(1);
     const cancellation = game.interactions.get("play.move").cancel();
     expect(x.source.submissions.at(-1)?.operation).toBe("cancel");
     x.ack();

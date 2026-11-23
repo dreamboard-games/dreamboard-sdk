@@ -174,15 +174,15 @@ class InteractionObject {
   get game() {
     return this.owner.instance;
   }
-  getAvailability() {
-    return this.descriptor.availability;
-  }
-  getIsAvailable(params?: Values) {
+  getAvailability(params?: Values) {
     const descriptor =
       params === undefined
         ? this.descriptor
         : this.owner.descriptorFor(this.descriptor, params);
-    return descriptor.availability.status === "available";
+    return descriptor.availability;
+  }
+  getIsAvailable(params?: Values) {
+    return this.getAvailability(params).status === "available";
   }
   getUnavailableReason() {
     return this.descriptor.availability.status === "available"
@@ -1269,10 +1269,19 @@ class Controller {
     )
       return { accepted: false, errorCode: "BUSY" };
     if (!interaction) return { accepted: false, errorCode: "UNAVAILABLE" };
+    if (!cancel) {
+      const availability = interaction.getAvailability(params);
+      if (availability.status !== "available")
+        return {
+          accepted: false,
+          errorCode: "UNAVAILABLE",
+          message: availability.reason,
+        };
+    }
     if (
       cancel
         ? !interaction.getStep()?.canCancel
-        : !interaction.getIsAvailable(params) || !interaction.getIsReady(params)
+        : !interaction.getIsReady(params)
     )
       return { accepted: false, errorCode: "UNAVAILABLE" };
     if (!("submit" in source) || !("cancel" in source))

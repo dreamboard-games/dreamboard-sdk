@@ -490,7 +490,9 @@ export interface InteractionBase<G, K extends InteractionKey<G>> {
   readonly help?: string;
   readonly kind: "inputs" | "steps";
   readonly game: CoreInstance<G>;
-  getAvailability(): InteractionDescriptor["availability"];
+  getAvailability(
+    params?: InteractionParams<G, K>,
+  ): InteractionDescriptor["availability"];
   getIsAvailable(params?: InteractionParams<G, K>): boolean;
   getUnavailableReason(): string | null;
   getStep(): InteractionDescriptor["step"] | null;

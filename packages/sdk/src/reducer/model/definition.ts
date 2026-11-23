@@ -243,6 +243,7 @@ export type GameStateOf<Source> = Source extends {
 
 /** Structural contract used by the runtime; authored generics retain their exact schemas. */
 export type ReducerGameContractLike = {
+  errors?: Readonly<Record<string, string>>;
   manifest: ReducerManifestContractLike<RuntimeTableRecord>;
   options: SchemaLike<RuntimeRecord>;
   state: StateDefinition<
