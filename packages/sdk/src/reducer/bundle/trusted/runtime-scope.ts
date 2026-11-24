@@ -84,6 +84,7 @@ export interface TrustedRuntimeScope<
   View extends ViewOfContract<Contract>,
 > {
   definition: TrustedDefinition<Contract, Definitions, View>;
+  errorMessages: ReadonlyMap<string, string>;
   manifest: ManifestContractOf<Contract> & ExactManifestContractOf<Contract>;
   diagnostics: ReducerDiagnosticsEmitter;
   registry: TrustedRuntimeRegistry<Contract, Definitions, View>;
@@ -242,6 +243,7 @@ export function createTrustedRuntimeScope<
 
   return {
     definition,
+    errorMessages: new Map(Object.entries(definition.contract.errors ?? {})),
     manifest,
     diagnostics: createReducerDiagnosticsEmitter(options.diagnostics),
     registry,

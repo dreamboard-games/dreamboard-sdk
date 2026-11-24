@@ -17,13 +17,25 @@ ID lookups use `get` when the entity is required and `find` when presence is con
 ```ts
 const card = game.cards.get(cardId);
 const interaction = game.interactions.find("play.place");
-if (interaction) interaction.getInput("space").setValue(spaceId);
+if (interaction) {
+  const availability = interaction.getAvailability();
+  if (availability.status === "available") {
+    interaction.getInput("space").setValue(spaceId);
+  } else {
+    showDisabledAction(interaction.label, availability.reason);
+  }
+}
 ```
 
 `get` returns a non-nullable entity or throws an error naming the missing ID. This
 applies to players, zones, cards, boards, interactions, and inputs. `getInput`/`findInput`
 and a zone's `getCard`/`findCard` follow the same rule. `players.next` requires a
 player in the current seating order.
+
+An absent interaction has no control for this seat. A visible interaction can be
+blocked even when every player is active. Render its disabled control with the
+projected reason. Check availability and `getIsReady()` before enabling submit,
+or use `getSubmitProps()` for the native button state.
 
 A valid manifest ID does not guarantee membership in the current snapshot: a player
 may not be seated, an interaction may belong to another phase, or a card may have moved

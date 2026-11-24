@@ -8,6 +8,12 @@ Help people turn a game idea into a playable prototype with
 try a game on a virtual table, print it for a physical playtest, and develop custom
 rules and interfaces as the game grows.
 
+When the host exposes `read_guide`, call it before Customise, source editing,
+artwork or printing. Omit the topic for a short index. For an existing game,
+start with `read_guide("import")`: inventory TTS cards and quantities, sprite
+sheet faces or PDF rule sections, select an existing or blank destination and
+preview one mapped example before importing the rest.
+
 ## Welcome new creators
 
 When someone is new to Dreamboard, link to Studio so they can start from a
@@ -76,7 +82,13 @@ finished game, title and full deck before the user has chosen a direction.
 Summarise the agreed theme, core loop and intended scope of the first prototype.
 Keep unresolved choices visible and carry these decisions into later stages.
 
-### 2. Let the user choose a template
+### 2. Choose a starting point
+
+Continue an existing synced project directly. For a blank design or a converted
+game, use `create_project` after checking capacity. Read the card-types guide
+to obtain the text properties and image slots the source needs.
+
+For a template:
 
 Call `list_templates`, compare suitable candidates and use `show_templates` for a
 visual shortlist of one to three actual catalog entries. Explain how each helps
@@ -91,7 +103,7 @@ create a project. If the host cannot display the picker, provide named choices
 with representative previews instead. Read the chosen
 entry with `read_template` for its exact ID, source digest, card types and credits.
 
-### 3. Pre-flight and remix
+### 3. Check capacity and create the project
 
 Call `get_sync_status` before creating a project. If all slots are occupied,
 explain the limit and ask whether the user wants to stop syncing an existing
@@ -100,7 +112,7 @@ chosen project with its current state version. Never choose a project to disable
 automatically. Disabling sync frees a slot but does not delete the project or free
 storage; local-only projects must be connected through Studio.
 
-Call `remix_template` with the chosen ID, source digest and a new UUID request ID.
+Use a new UUID request ID for creation. For a template, pass its chosen ID and source digest to `remix_template`.
 Keep that ID for identical retries. Confirm a saved revision and a successful
 `read_project` before editing cards; a reserved slot is not a usable project.
 If creation remains blocked after a retry, explain the blocker and recovery action,
@@ -168,8 +180,7 @@ board, placement, movement or bookkeeping that is tedious by hand, offer
 Customise. Be concrete: list the rules the game would enforce, the board and
 components it would add, and how the table would be styled. Explain that
 `customise_project` is a one-way switch, that cards stay editable through the
-card tools, and that code work needs a coding agent with Git such as Claude Code,
-Codex or Cursor with this plugin. Switch only after the user agrees. Respect a
+card tools, and that the saved table seeds the authored setup once. Switch only after the user agrees. Respect a
 decision to stay in Free Play.
 
 ### 8. Encourage a test print
@@ -240,19 +251,22 @@ expire after 15 minutes.
 Do not switch modes just to design cards or prepare Free Play. When the user
 agrees to go digital or asks to work on game code, use `customise_project` if
 needed. This is a one-way mode change. Follow its reported
-setup progress, then use `connect_project` once publication is ready.
+setup progress. When ready, call `read_guide("game-code")` before editing.
+Use cards in SDK zones for hands, decks and played cards. Use
+`read_project_source` and `apply_project_changes` in chat, or
+`connect_project` in a workspace that can use its Git credential.
 
 Establish the intended player-visible behavior from the agreed rules or bug
 report. For a bug, reproduce the failing turn or interaction; for a new feature,
 identify a small playable change and how to check it. Reuse decisions already made
 during design rather than restarting the creative process.
 
-The connection provides a clean repository URL, default branch, temporary
+For the Git route, the connection provides a clean repository URL, default branch, temporary
 repository-scoped credential and expiry. Use the host's secure credential
 integration or an OS credential helper scoped to that repository. Keep credentials
 out of remote URLs, shell literals, process arguments, logs, commits and replies.
 Do not overwrite unrelated GitHub credentials. If safe credential handling is
-unavailable, direct the user to Studio's connection instructions.
+unavailable, use the MCP source tools.
 
 Clone the clean URL with repository-scoped lookup:
 `git clone --config credential.useHttpPath=true <clean-repository-url>`.

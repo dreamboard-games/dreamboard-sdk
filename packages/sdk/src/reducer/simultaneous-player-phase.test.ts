@@ -93,6 +93,7 @@ function createGame({
   rejectRight?: boolean;
 } = {}) {
   const contract = createModel({
+    errors: { RETRY: "Choose again." },
     manifest,
     phases: { choose: z.object({}) },
     state: {
@@ -270,7 +271,7 @@ describe("simultaneousPlayer phases", () => {
     expect(rejected).toEqual({
       kind: "reject",
       errorCode: "RETRY",
-      message: undefined,
+      message: "Choose again.",
     });
     expect(first.state).toEqual(saved);
     const accepted = await submit(first.state, "player-2", "left");

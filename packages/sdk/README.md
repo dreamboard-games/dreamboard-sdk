@@ -582,6 +582,12 @@ atomic `interaction.submit(params)` path available to authored action buttons.
 Explicit params are validated against the current projected descriptor without
 mutating drafts. Existing `submit()` continues to submit the interaction draft
 and defaults; both forms share availability and in-flight lifecycle barriers.
+
+`interactions.find(key)` returns a visible action even when it is blocked.
+Use `getAvailability()` for its status and reason, and `getSubmitProps()` to
+disable the button while blocked or missing inputs. A blocked submit returns
+`UNAVAILABLE` with the reason. For reducer rejections, `tx.reject(code)` uses
+the game's declared error text and `tx.reject(code, message)` overrides it.
 The headless feature installs no DOM listeners.
 
 ## Local development and tests
