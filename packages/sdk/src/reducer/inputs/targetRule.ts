@@ -100,25 +100,40 @@ export function createTargetRule<
     options.missingCandidateIssue ?? DEFAULT_MISSING_CANDIDATE_ISSUE;
   const equals = options.equals ?? Object.is;
 
+  const validateCandidate = (
+    ctx: TargetContext<State, Definitions>,
+    targetId: Target,
+  ): ValidationIssue | null => {
+    for (const predicate of predicates) {
+      if (!predicate.test({ ...ctx, targetId })) {
+        return { errorCode: predicate.errorCode, message: predicate.message };
+      }
+    }
+    return null;
+  };
+
   const validate = (
     ctx: TargetContext<State, Definitions>,
     target: unknown,
+    resolved = candidates(ctx),
   ): ValidationIssue | null => {
-    for (const candidate of candidates(ctx)) {
-      if (!equals(candidate, target)) continue;
-      for (const predicate of predicates) {
-        if (!predicate.test({ ...ctx, targetId: candidate })) {
-          return { errorCode: predicate.errorCode, message: predicate.message };
-        }
-      }
-      return null;
+    for (const candidate of resolved) {
+      if (equals(candidate, target)) return validateCandidate(ctx, candidate);
     }
     return missingCandidateIssue;
   };
 
   const rule: TargetRule<State, Target, Definitions> = {
-    eligible: (ctx) =>
-      candidates(ctx).filter((targetId) => validate(ctx, targetId) == null),
+    eligible(ctx) {
+      const resolved = candidates(ctx);
+      if (equals === Object.is)
+        return resolved.filter(
+          (candidate) => validateCandidate(ctx, candidate) == null,
+        );
+      return resolved.filter(
+        (target) => validate(ctx, target, resolved) == null,
+      );
+    },
     validate,
     isEligible: (ctx, target) => validate(ctx, target) == null,
     bind: (ctx) => ({
