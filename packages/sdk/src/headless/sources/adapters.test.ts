@@ -163,37 +163,42 @@ describe("iframe source", () => {
     expect(source.store.get().connection).toBe("failed");
   });
 
-  it("closes and reports malformed pinned host ingress but ignores other channels", () => {
-    const target = new EventTarget();
-    const parent = {
-      postMessage:
-        vi.fn<(message: PluginToHostEnvelope, targetOrigin: string) => void>(),
-    };
-    vi.stubGlobal("window", Object.assign(target, { parent }));
-    const source = iframeSource();
-    const receive = (payload: unknown, channelId = "channel") =>
-      target.dispatchEvent(
-        Object.assign(new Event("message"), {
-          source: parent,
-          origin: "https://host",
-          data: {
-            protocol: DREAMBOARD_PLUGIN_PROTOCOL,
-            version: DREAMBOARD_PLUGIN_PROTOCOL_VERSION,
-            channelId,
-            sequence: 1,
-            payload,
-          },
-        }),
+  it.each(["gameplay.frame", "gameplay.compact-frame"] as const)(
+    "closes and reports malformed pinned %s ingress but ignores other channels",
+    (type) => {
+      const target = new EventTarget();
+      const parent = {
+        postMessage:
+          vi.fn<
+            (message: PluginToHostEnvelope, targetOrigin: string) => void
+          >(),
+      };
+      vi.stubGlobal("window", Object.assign(target, { parent }));
+      const source = iframeSource();
+      const receive = (payload: unknown, channelId = "channel") =>
+        target.dispatchEvent(
+          Object.assign(new Event("message"), {
+            source: parent,
+            origin: "https://host",
+            data: {
+              protocol: DREAMBOARD_PLUGIN_PROTOCOL,
+              version: DREAMBOARD_PLUGIN_PROTOCOL_VERSION,
+              channelId,
+              sequence: 1,
+              payload,
+            },
+          }),
+        );
+      receive({ type: "runtime.init", session });
+      receive({ type, frame: {} }, "unrelated");
+      expect(source.store.get().connection).toBe("connecting");
+      receive({ type, frame: {} });
+      expect(source.store.get().connection).toBe("failed");
+      expect(parent.postMessage.mock.calls.at(-1)?.[0].payload.type).toBe(
+        "runtime.error",
       );
-    receive({ type: "runtime.init", session });
-    receive({ type: "gameplay.frame", frame: {} }, "unrelated");
-    expect(source.store.get().connection).toBe("connecting");
-    receive({ type: "gameplay.frame", frame: {} });
-    expect(source.store.get().connection).toBe("failed");
-    expect(parent.postMessage.mock.calls.at(-1)?.[0].payload.type).toBe(
-      "runtime.error",
-    );
-  });
+    },
+  );
 
   it("pins sender/origin/channel, binds seat and requests missing frames", async () => {
     vi.useFakeTimers();
@@ -228,6 +233,12 @@ describe("iframe source", () => {
     receive({ type: "runtime.init", session }, "https://attacker", {});
     expect(source.store.get().snapshot).toBeNull();
     receive({ type: "runtime.init", session });
+    expect(
+      parent.postMessage.mock.calls.slice(0, 2).map(([item]) => item.payload),
+    ).toEqual([
+      { type: "runtime.capabilities", compactGameplayFrames: true },
+      { type: "runtime.ready" },
+    ]);
     receive({ type: "gameplay.frame", frame: frame() });
     expect(source.store.get().snapshot?.me).toBe("alice");
     expect(source.store.get().snapshot?.frame).not.toHaveProperty("basis");
@@ -246,13 +257,15 @@ describe("iframe source", () => {
       ),
     ).toBe(true);
     receive({
-      type: "gameplay.frame",
-      frame: frame(2),
+      type: "gameplay.compact-frame",
+      frame: snapshot(2).frame,
       acknowledgedClientActionId: command.clientActionId,
     });
     expect(await promise).toEqual({ accepted: true });
     expect(source.store.get().request).toBeNull();
-    receive({ type: "gameplay.frame", frame: frame(3, "bob") });
+    receive({ type: "gameplay.compact-frame", frame: snapshot(3).frame });
+    expect(source.store.get().snapshot?.frame.view).toEqual({ score: 3 });
+    receive({ type: "gameplay.frame", frame: frame(4, "bob") });
     expect(source.store.get().connection).toBe("failed");
     const state = source.store.get();
     receive({ type: "gameplay.frame", frame: frame(4) });

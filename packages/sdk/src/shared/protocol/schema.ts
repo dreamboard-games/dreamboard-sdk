@@ -59,7 +59,14 @@ export {
   InteractionAvailabilitySchema,
   InteractionDescriptorSchema,
 } from "../interaction-schema.js";
-import { InteractionDescriptorSchema } from "../interaction-schema.js";
+import {
+  InteractionDescriptorSchema,
+  ZoneInteractionRefsSchema,
+} from "../interaction-schema.js";
+import {
+  visitInteractionRefs,
+  type CompactGameplayFrame,
+} from "./compact-frame.js";
 
 export const ZoneHandlesSnapshotSchema = z
   .object({
@@ -131,6 +138,41 @@ export const PluginGameplayFrameSchema = SeatFrameSchema.extend({
   basis: GameplayBasisSchema,
 }) satisfies z.ZodType<PluginGameplayFrame>;
 
+export const CompactGameplayFrameSchema = PluginGameplayFrameSchema.omit({
+  availableInteractions: true,
+  zones: true,
+})
+  .extend({
+    interactionsByRef: z.record(z.string(), InteractionDescriptorSchema),
+    availableInteractionRefs: z.array(z.string()),
+    zones: z.record(
+      z.string(),
+      z.record(z.string(), ZoneInteractionRefsSchema),
+    ),
+  })
+  .superRefine((frame, context) => {
+    const reachable = new Set<string>();
+    visitInteractionRefs(frame, (ref, path) => {
+      reachable.add(ref);
+      if (!Object.hasOwn(frame.interactionsByRef, ref)) {
+        context.addIssue({
+          code: "custom",
+          path,
+          message: `Missing interaction reference '${ref}'.`,
+        });
+      }
+    });
+    for (const ref of Object.keys(frame.interactionsByRef)) {
+      if (!reachable.has(ref)) {
+        context.addIssue({
+          code: "custom",
+          path: ["interactionsByRef", ref],
+          message: `Unused interaction reference '${ref}'.`,
+        });
+      }
+    }
+  }) satisfies z.ZodType<CompactGameplayFrame>;
+
 /** Only rejections are standalone wire results; success accompanies a frame. */
 export const InteractionResultSchema = z
   .object({
@@ -173,11 +215,24 @@ export const HostToPluginPayloadSchema = z.discriminatedUnion("type", [
       acknowledgedClientActionId: z.string().min(1).optional(),
     })
     .strict(),
+  z
+    .object({
+      type: z.literal("gameplay.compact-frame"),
+      frame: CompactGameplayFrameSchema,
+      acknowledgedClientActionId: z.string().min(1).optional(),
+    })
+    .strict(),
   InteractionResultSchema,
 ]) satisfies z.ZodType<HostToPluginPayload>;
 
 export const PluginToHostPayloadSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("runtime.ready") }).strict(),
+  z
+    .object({
+      type: z.literal("runtime.capabilities"),
+      compactGameplayFrames: z.literal(true),
+    })
+    .strict(),
   z
     .object({
       type: z.literal("runtime.resume"),

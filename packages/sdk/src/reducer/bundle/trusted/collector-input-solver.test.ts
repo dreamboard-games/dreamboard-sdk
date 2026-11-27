@@ -1,9 +1,10 @@
 import { perPlayerInstanceId } from "../../../shared/domain/per-player-instance.js";
+import * as inputDomain from "../../../shared/input-domain.js";
 import {
   createInputTestState,
   inputDefinitions,
 } from "../../input-test-fixtures";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { z } from "zod";
 import {
   boardInput,
@@ -233,6 +234,7 @@ describe("trusted collector input solver", () => {
   }
 
   test("finds a selected card in a full deck without materializing every group", () => {
+    using canonicalize = vi.spyOn(inputDomain, "canonicalizeInputSelection");
     expect(
       hasAnyCollectorInputAssignment({
         interaction: selectionInteraction(),
@@ -244,6 +246,7 @@ describe("trusted collector input solver", () => {
           Array.isArray(cards) && cards.includes("card-36"),
       }),
     ).toEqual({ status: "yes" });
+    expect(canonicalize).not.toHaveBeenCalled();
   });
 
   test("rejects a missing selected card without traversing the full deck power set", () => {
@@ -376,19 +379,22 @@ describe("trusted collector input solver", () => {
     ).toEqual({ status: "no", inputKey: "cards" });
   });
 
-  test("keeps all matching group witnesses available after the first is rejected", () => {
-    expect(
-      hasAnyCollectorInputAssignment({
-        interaction: selectionInteraction({ count: 2, distinct: true }),
-        domainState,
-        definitions: inputDefinitions,
-        playerId: "player-1",
-        initialValues: { cards: "card-36" },
-        acceptsAssignment: ({ cards }) =>
-          JSON.stringify(cards) === JSON.stringify(["card-02", "card-36"]),
-      }),
-    ).toEqual({ status: "yes" });
-  });
+  test.each([{ count: 2 }, { min: 1 }])(
+    "keeps all matching group witnesses when earlier candidates are rejected (%j)",
+    (bounds) => {
+      expect(
+        hasAnyCollectorInputAssignment({
+          interaction: selectionInteraction({ ...bounds, distinct: true }),
+          domainState,
+          definitions: inputDefinitions,
+          playerId: "player-1",
+          initialValues: { cards: "card-36" },
+          acceptsAssignment: ({ cards }) =>
+            JSON.stringify(cards) === JSON.stringify(["card-02", "card-36"]),
+        }),
+      ).toEqual({ status: "yes" });
+    },
+  );
 
   test.each([2, undefined])(
     "rejects reverse-only assignments with max %s",

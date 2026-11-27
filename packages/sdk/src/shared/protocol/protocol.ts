@@ -5,6 +5,7 @@ import type {
   PluginSessionDescriptor,
 } from "./frame.js";
 import type { RuntimeJson } from "../runtime-json.js";
+import type { CompactGameplayFrame } from "./compact-frame.js";
 
 export const DREAMBOARD_PLUGIN_PROTOCOL = "dreamboard-plugin" as const;
 export const DREAMBOARD_PLUGIN_PROTOCOL_VERSION = 11 as const;
@@ -48,10 +49,19 @@ export type HostToPluginPayload =
       /** Confirms a durable action covered by this frame. Independent of causedBy. */
       readonly acknowledgedClientActionId?: string;
     }
+  | {
+      readonly type: "gameplay.compact-frame";
+      readonly frame: CompactGameplayFrame;
+      readonly acknowledgedClientActionId?: string;
+    }
   | Extract<InteractionResult, { accepted: false }>;
 
 export type PluginToHostPayload =
   | { readonly type: "runtime.ready" }
+  | {
+      readonly type: "runtime.capabilities";
+      readonly compactGameplayFrames: true;
+    }
   | { readonly type: "runtime.resume"; readonly pendingClientActionId?: string }
   | {
       readonly type: "runtime.ack";

@@ -3,6 +3,7 @@ import {
   DREAMBOARD_PLUGIN_PROTOCOL_VERSION,
 } from "../../shared/protocol/protocol.js";
 import { HostToPluginEnvelopeSchema } from "../../shared/protocol/schema.js";
+import { hydrateCompactGameplayFrame } from "../../shared/protocol/compact-frame.js";
 import type { PluginToHostPayload } from "../../shared/protocol/protocol.js";
 import { createSourceLifecycle } from "./lifecycle.js";
 import type { CommandSource } from "./types.js";
@@ -85,9 +86,18 @@ export function iframeSource(
     const payload = envelope.payload;
     if (payload.type === "runtime.init") {
       lifecycle.session(payload.session);
-      if (isOpen()) send({ type: "runtime.ready" });
+      if (isOpen()) {
+        // Older hosts can ignore the capability and still receive ready.
+        send({ type: "runtime.capabilities", compactGameplayFrames: true });
+        send({ type: "runtime.ready" });
+      }
     } else if (payload.type === "gameplay.frame")
       lifecycle.frame(payload.frame, payload.acknowledgedClientActionId);
+    else if (payload.type === "gameplay.compact-frame")
+      lifecycle.frame(
+        hydrateCompactGameplayFrame(payload.frame),
+        payload.acknowledgedClientActionId,
+      );
     else lifecycle.result(payload);
     if (isOpen()) send({ type: "runtime.ack", sequence: envelope.sequence });
   }

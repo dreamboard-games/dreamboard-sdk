@@ -1,11 +1,5 @@
-import * as z from "zod";
-import {
-  InteractionDescriptorSchema,
-  ZoneInteractionRefsSchema,
-} from "../interaction-schema.js";
 import type { ZoneInteractionRefs } from "../interaction-schema.js";
 import type { InteractionDescriptor, PluginGameplayFrame } from "./frame.js";
-import { PluginGameplayFrameSchema } from "./schema.js";
 
 /** Self-contained hosted snapshot. References are local to this frame. */
 export type CompactGameplayFrame = Omit<
@@ -18,41 +12,6 @@ export type CompactGameplayFrame = Omit<
     Record<string, Readonly<Record<string, ZoneInteractionRefs>>>
   >;
 };
-
-export const CompactGameplayFrameSchema = PluginGameplayFrameSchema.omit({
-  availableInteractions: true,
-  zones: true,
-})
-  .extend({
-    interactionsByRef: z.record(z.string(), InteractionDescriptorSchema),
-    availableInteractionRefs: z.array(z.string()),
-    zones: z.record(
-      z.string(),
-      z.record(z.string(), ZoneInteractionRefsSchema),
-    ),
-  })
-  .superRefine((frame, context) => {
-    const reachable = new Set<string>();
-    visitInteractionRefs(frame, (ref, path) => {
-      reachable.add(ref);
-      if (!Object.hasOwn(frame.interactionsByRef, ref)) {
-        context.addIssue({
-          code: "custom",
-          path,
-          message: `Missing interaction reference '${ref}'.`,
-        });
-      }
-    });
-    for (const ref of Object.keys(frame.interactionsByRef)) {
-      if (!reachable.has(ref)) {
-        context.addIssue({
-          code: "custom",
-          path: ["interactionsByRef", ref],
-          message: `Unused interaction reference '${ref}'.`,
-        });
-      }
-    }
-  }) satisfies z.ZodType<CompactGameplayFrame>;
 
 /** Traverses references without reparsing descriptors for every card. */
 export function visitInteractionRefs(
