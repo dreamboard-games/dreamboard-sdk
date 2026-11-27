@@ -3,8 +3,8 @@ import {
   InteractionResultSchema,
   SubmitInteractionCommandSchema,
   CancelInteractionCommandSchema,
+  CompactGameplayFrameSchema,
 } from "./schema.js";
-import { CompactGameplayFrameSchema } from "./compact-frame.js";
 
 /** Hosted WebSocket contract; independent of the authored iframe protocol. */
 export const GAMEPLAY_WIRE_PROTOCOL_VERSION = 2;

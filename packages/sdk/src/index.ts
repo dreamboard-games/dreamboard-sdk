@@ -118,6 +118,7 @@ export {
   SystemActionEventSchema,
   SubmitInteractionCommandSchema,
   CancelInteractionCommandSchema,
+  CompactGameplayFrameSchema,
   ZoneHandlesSnapshotSchema,
   createPluginProtocolEnvelopeSchema,
   parseHostToPluginEnvelope,
@@ -129,7 +130,6 @@ export {
 export { RuntimeJsonSchema } from "./shared/runtime-json.js";
 export * from "./shared/protocol/gameplay-wire.js";
 export {
-  CompactGameplayFrameSchema,
   hydrateCompactGameplayFrame,
   type CompactGameplayFrame,
 } from "./shared/protocol/compact-frame.js";

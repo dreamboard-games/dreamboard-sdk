@@ -1,8 +1,6 @@
+import { CompactGameplayFrameSchema } from "./schema.js";
 import { describe, expect, test } from "vitest";
-import {
-  CompactGameplayFrameSchema,
-  hydrateCompactGameplayFrame,
-} from "./compact-frame.js";
+import { hydrateCompactGameplayFrame } from "./compact-frame.js";
 import {
   materializeCompactGameplayFrame,
   materializePluginGameplayFrame,
