@@ -4,6 +4,7 @@ import {
 } from "../shared/__fixtures__/reference-basis.js";
 import { compileManifest } from "./manifest/compiler";
 import { RuntimeJsonSchema } from "../shared/runtime-json";
+import * as runtimeJson from "../shared/protocol/json";
 import { getPlayerResourceAmount } from "./table/resource-ops";
 import { createGame as createModel } from "../reducer";
 import { InteractionSteps } from "./authoring/steps";
@@ -1128,11 +1129,20 @@ describe("trusted interaction decision pipeline", () => {
         playerIds: ["player-1", "player-2"],
       })
     ).state;
+    using digest = vi.spyOn(runtimeJson, "digestPluginRuntimeJson");
     const projection = bundle.project({
       referenceBasis: testReferenceBasis,
       state,
       playerIds: ["player-1"],
     });
+    const playSelectedDigests = digest.mock.calls.filter(
+      ([input]) =>
+        input !== null &&
+        typeof input === "object" &&
+        "interactionId" in input &&
+        input.interactionId === "playSelected",
+    );
+    expect(playSelectedDigests).toHaveLength(2);
     const playZone = projection.seats["player-1"]?.zones?.playZone["player-1"];
     expect(
       hydrateCardRefs(projection, playZone?.playableByCardId["card-a"]).find(

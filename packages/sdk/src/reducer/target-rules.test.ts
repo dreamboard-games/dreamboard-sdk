@@ -2,7 +2,7 @@ import type { BoardVertexId } from "../shared/domain/board-identities.js";
 import { perPlayerInstanceId } from "../shared/domain/per-player-instance.js";
 import { createInputTestState, inputDefinitions } from "./input-test-fixtures";
 import { createStateQueries } from "./table-queries";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import {
   boardInput,
   boardTarget,
@@ -130,7 +130,9 @@ describe("target rules", () => {
       })
       .build();
 
-    expect(target.eligible(ctx)).toEqual(["card-a"]);
+    const zones = vi.fn(q.zones);
+    expect(target.eligible({ ...ctx, q: { ...q, zones } })).toEqual(["card-a"]);
+    expect(zones).toHaveBeenCalledExactlyOnceWith("hand");
     expect(target.bind(ctx).isEligible("card-b")).toBe(false);
 
     const input = cardInput<CollectorState, "card-a" | "card-b">({ target });

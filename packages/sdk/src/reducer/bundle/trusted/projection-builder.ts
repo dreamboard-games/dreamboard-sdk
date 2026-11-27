@@ -111,22 +111,33 @@ export function createProjectionBuilder<
   ): DescriptorRegistry {
     const byRef: Record<string, InteractionDescriptorShape> = {};
     const byHash = new Map<string, string>();
+    const byDescriptor = new Map<string, string>();
     return {
       add(descriptor, actorSeat) {
         return measureProjectionTiming(timing, "descriptorHashMs", () => {
+          // Cards in the same zone often offer the same descriptor. Reuse its
+          // reference before computing replay digests, which are seat-scoped.
+          const key = `${actorSeat}:${canonicalJson(descriptor)}`;
+          const cached = byDescriptor.get(key);
+          if (cached) return cached;
+
           const enriched = descriptorWithBrowserReplayDigests(
             descriptor,
             actorSeat,
           );
           const fingerprint = canonicalJson(enriched);
           const existing = byHash.get(fingerprint);
-          if (existing) return existing;
+          if (existing) {
+            byDescriptor.set(key, existing);
+            return existing;
+          }
           const base =
             typeof enriched.interactionId === "string" &&
             enriched.interactionId.length > 0
               ? enriched.interactionId
               : "interaction";
           const ref = `${base}:${fnv1a64(fingerprint)}`;
+          byDescriptor.set(key, ref);
           byHash.set(fingerprint, ref);
           byRef[ref] = enriched;
           return ref;
