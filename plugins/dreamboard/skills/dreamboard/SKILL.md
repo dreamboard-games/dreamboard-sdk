@@ -10,7 +10,7 @@ rules and interfaces as the game grows.
 
 When the host exposes `read_guide`, call it before Customise, source editing,
 artwork or printing. Omit the topic for a short index. For an existing game,
-start with `read_guide("import")`: inventory TTS cards and quantities, sprite
+start with `read_guide` with the import topic: inventory TTS cards and quantities, sprite
 sheet faces or PDF rule sections, select an existing or blank destination and
 preview one mapped example before importing the rest.
 
@@ -23,7 +23,7 @@ someone with an existing project can connect it and continue from there. Let the
 host guide sign-in and consent when tools require it. Design discussion can begin
 before the connection is ready.
 
-Use `get_sync_status` for the account's current cloud allowance and available
+Use `read_sync_status` for the account's current cloud allowance and available
 slots. If a limit prevents a requested action, explain which limit applies.
 
 Use the Dreamboard MCP tools exposed by the host. Their current schemas define
@@ -105,7 +105,7 @@ entry with `read_template` for its exact ID, source digest, card types and credi
 
 ### 3. Check capacity and create the project
 
-Call `get_sync_status` before creating a project. If all slots are occupied,
+Call `read_sync_status` before creating a project. If all slots are occupied,
 explain the limit and ask whether the user wants to stop syncing an existing
 project. Use `set_project_sync` only for their
 chosen project with its current state version. Never choose a project to disable
@@ -136,9 +136,10 @@ unrelated template artwork on the sample, and do not delay the first review to
 replace every card in the inherited deck. Disclose fixed template decorations
 that current tools cannot change.
 
-Read the latest saved revision and call `render_cards` for the sample. Inspect
+Read the latest saved revision and call `preview_cards` for the sample. Inspect
 readability, long text, icons and conditional colors; use
-`inspect_visual_mappings` and `update_visual_mappings` when needed. Fix visible
+the card-types guide to inspect mappings with `read_project` and edit them with
+`update_card_type_template`. Fix visible
 issues on these cards, then show the previews and ask a specific design question,
 such as whether the costs create the intended tradeoff or the theme reads clearly.
 Your inspection does not replace the user's review. Revise and render again from
@@ -166,8 +167,10 @@ confirm the setup; do not simply drop this stage or claim it was configured.
 
 Offer a concrete first test, such as two rounds with attention to resource supply
 and whether both worker actions feel useful. When the user chooses browser play,
-call `open_playtest` with the current saved revision and share the link. Explain
-that Studio prepares the session in the browser; returning the link does not prove
+call `get_playtest_link` with the current saved revision and share the link. Explain
+that the project owner signs in and Studio prepares the session in the browser.
+In Free Play the players apply the rules. In Customise the published game code
+handles its authored rules. Returning the link does not prove
 that a room exists or gameplay works. Ask the user to try the test and return with
 what was confusing, stalled or felt too strong. Use their observations to revise
 cards, rules and setup, then invite another short test. Do not claim a playtest
@@ -188,10 +191,10 @@ decision to stay in Free Play.
 Proactively offer a small printable prototype, either after the first playtest
 iteration or as the user's preferred way to playtest. Confirm the intended cards
 and quantities, backs, paper size and relevant print settings, reusing preferences
-already supplied. `open_export` includes the project's cards according to their
+already supplied. `get_export_link` includes the project's cards according to their
 quantities; it does not accept a card selection. In a newly remixed prototype,
 set unused inherited cards to quantity zero and omit them from table placements.
-Call `open_export` with the latest saved revision when the user
+Call `get_export_link` with the latest saved revision when the user
 chooses printing. The link opens Studio's export flow; it is not proof a PDF was
 produced or printed. Ask them to check physical readability and handling, and
 bring that feedback into the next revision. Final artwork is not required for a
@@ -210,7 +213,7 @@ pass the relevant IDs to `show_projects` for a visual picker and wait for their
 choice. Skip the picker when exactly one project matches. Otherwise ask which
 project the user means before editing. `read_project` returns the latest
 saved cloud document and `project.savedRevisionId`; it may lag unsaved tab edits.
-Only actively synced eligible projects are editable. Use `get_sync_status` to
+Only actively synced eligible projects are editable. Use `read_sync_status` to
 investigate missing cloud projects; do not imply access to browser-local data.
 
 Read before editing and supply the current saved revision plus a new UUID request
@@ -225,18 +228,32 @@ in Studio. Do not invent capabilities or use Git to bypass these boundaries.
 Keep mutation request IDs. After a lost response, retry the exact same arguments
 and ID to recover the stored result. On a stale revision, read again and reconcile
 before making a new request; do not overwrite concurrent edits automatically.
-Use `restore_card_edit` only when the user asks to revert, with the original
-request ID and expected saved revision. Hosts that show the edit confirmation
-also offer an Undo button that restores the edit directly; if the user says they
-undid a change there, read the project again before further edits. Recovery writes a new revision and refuses
-to overwrite intervening edits. Receipts expire after seven days; do not retry or
-promise recovery of an older request. Preserve unsynced local changes when an open
-editor reports a newer cloud version; this recovery is separate from local Undo.
+Use `restore_project_before_edit` with the original request ID when the user asks
+to revert. If the restore would replace later saves, show the returned warning
+and obtain agreement before submitting the confirmed current revision. Restore
+receipts expire after seven days.
 
 For previews, resolve canonical definition, instance and surface IDs from a fresh
-read. Call `render_cards` once for up to four faces in the requested order, using
+read. Call `preview_cards` once for up to four faces in the requested order, using
 `project.savedRevisionId` as `expected_saved_revision_id`. Use the front unless
 another face is requested and the default size unless more detail is needed.
+To preview a proposed card change, pass the same edits that `update_card` would
+save as `card_edits`. For a shared design change, pass `template_edit`. Use one
+or two faces for a comparison. For example:
+
+```json preview_cards
+{
+  "project_id": "<project>",
+  "expected_saved_revision_id": "<savedRevisionId>",
+  "targets": [
+    { "definitionId": "<type>", "instanceId": "<card>", "surfaceId": "<front>" }
+  ],
+  "card_edits": [
+    { "definitionId": "<type>", "instanceId": "<card>", "name": "Moon Ace" }
+  ]
+}
+```
+
 On a stale revision, read again and resolve the faces. Explicit requests to inspect
 existing or template cards do not require retheming them first.
 
@@ -244,14 +261,14 @@ Let the host display the inline gallery. Through Codex `functions.exec`, forward
 each image block with `image(block)` and keep base64 bytes out of text. Name the
 cards shown and ask the relevant review question. If the user requests files or
 the host cannot display previews, provide the returned PNG download links; they
-expire after 15 minutes.
+expire after 24 hours.
 
 ## Develop custom rules and interfaces
 
 Do not switch modes just to design cards or prepare Free Play. When the user
-agrees to go digital or asks to work on game code, use `customise_project` if
+agrees to switch to Customise or asks to work on an existing Customise game, use `customise_project` if
 needed. This is a one-way mode change. Follow its reported
-setup progress. When ready, call `read_guide("game-code")` before editing.
+setup progress. When ready, call `read_guide` with the game-code topic before editing.
 Use cards in SDK zones for hands, decks and played cards. Use
 `read_project_source` and `apply_project_changes` in chat, or
 `connect_project` in a workspace that can use its Git credential.
@@ -293,14 +310,14 @@ Do not assume every connected project has the same scripts or local preview setu
 
 Run documented checks, fix failures, commit requested changes and push normally when authorized.
 If authentication expires, reconnect and refresh only that repository's credential.
-After pushing, call `get_build` for the exact commit. Report pending, superseded,
+After pushing, call `read_build_status` for the exact commit. Report pending, superseded,
 rate-limited, rejected, failed and successful results accurately. Repair compiler
 errors rather than making empty pushes. Check that Studio's published build is
 the intended commit before saying the preview updated. Neither a push nor a build
 proves that gameplay has been tested.
 
 After the intended build is published, read the latest saved project and use
-`open_playtest` when the user wants to try it. If Studio needs to prepare or update
+`get_playtest_link` when the user wants to try it. If Studio needs to prepare or update
 the build in their browser, explain that step. Verify the changed behavior in an
 actual playtest when possible, or give the user a focused test to run and state
 what remains unverified. Use failures and player feedback to repeat the

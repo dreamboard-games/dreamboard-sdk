@@ -78,7 +78,7 @@ to connect; the agent can check your current sync allowance.
 Reading uses the latest saved cloud revision. Card edits are validated and saved
 directly to the synced project, even while Studio is closed. Concurrent changes
 are checked against the saved revision. Each edit has a seven-day recovery receipt;
-reverting writes a new revision and refuses to overwrite subsequent edits.
+reverting writes a new revision and requires confirmation to replace subsequent edits.
 This recovery is separate from the editor's local Undo.
 Game code uses a private project repository and temporary, repository-scoped Git
 credentials. Credentials expire after one hour and must be renewed through the
@@ -105,6 +105,11 @@ claude plugin validate .claude-plugin/marketplace.json
 Validate `plugin.json` against its declared Agent Plugins schema. For `mcp.json`,
 the generic 1.0.0 schema rejects the per-server `extensions` field that OpenAI
 uses for OAuth. Verify its DCR settings in the OpenAI connection panel.
+Before releasing changes to the skill or MCP, run the backend's
+`mcpDocsReleaseCheck` Gradle task with `-PmcpSkillFile=<absolute path to this plugin’s skills/dreamboard/SKILL.md>`.
+It checks this candidate and the bundled guides against the backend's advertised tools.
+Label JSON call examples with the tool name after `json` on the opening fence.
+
 Check all three catalog paths, then test sign-in and tool use in each
 host against a deployed test backend before release. Local manifest validation
 does not prove OAuth or Git permissions.
