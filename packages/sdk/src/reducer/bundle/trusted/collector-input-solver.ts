@@ -365,12 +365,22 @@ function valueSourceForCollector(
       complete: true,
       values: function* () {
         if (!eligible) return;
-        for (const candidate of resolved.values()) {
+        let remaining = resolved;
+        // A known string is the only possible singleton that contains it.
+        if (
+          typeof fixedValue === "string" &&
+          selection.min <= 1 &&
+          (selection.max === undefined || selection.max >= 1)
+        ) {
+          yield [fixedValue];
+          if (selection.max === 1) return;
+          remaining = applySelection(base, { ...selection, min: 2 }, domain);
+        }
+        const key = canonicalJson(fixedValue);
+        for (const candidate of remaining.values()) {
           if (
             Array.isArray(candidate) &&
-            candidate.some(
-              (value) => canonicalJson(value) === canonicalJson(fixedValue),
-            )
+            candidate.some((value) => canonicalJson(value) === key)
           )
             yield candidate;
         }
